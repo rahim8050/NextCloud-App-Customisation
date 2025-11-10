@@ -1,0 +1,6 @@
+.drafts[data-v-2fe3b388] .dialog__content{min-height:200px}.drafts__wrapper[data-v-2fe3b388]{display:grid;grid-template-columns:1fr 1fr;grid-gap:var(--default-grid-baseline)}.drafts__empty[data-v-2fe3b388]{margin:0 !important}
+.poll-editor__wrapper[data-v-6ff4bdf8]{display:flex;align-items:flex-end;gap:var(--default-grid-baseline)}.poll-editor__caption[data-v-6ff4bdf8]{margin:calc(var(--default-grid-baseline)*2) 0 var(--default-grid-baseline);font-weight:bold;color:var(--color-primary-element)}.poll-editor__option[data-v-6ff4bdf8]{display:flex;align-items:flex-end;gap:var(--default-grid-baseline);width:100%;margin-bottom:calc(var(--default-grid-baseline)*2)}.poll-editor__settings[data-v-6ff4bdf8]{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}.poll-editor__back-button[data-v-6ff4bdf8]{position:absolute !important;top:var(--default-grid-baseline);inset-inline-start:var(--default-grid-baseline);z-index:1}
+.internal-warning[data-v-ef3773e0]{margin:var(--default-grid-baseline) !important}
+.talk-tab__wrapper[data-v-756108a4]{display:flex;flex-direction:column;justify-content:flex-end;height:100%;padding:var(--default-grid-baseline) 0}.talk-tab__call-button[data-v-756108a4]{margin:0 auto calc(var(--default-grid-baseline)*2)}.talk-tab__chat-view[data-v-756108a4]{overflow:hidden}
+
+/*# sourceMappingURL=files-sidebar-tab-chunk.chunk.css.map*/

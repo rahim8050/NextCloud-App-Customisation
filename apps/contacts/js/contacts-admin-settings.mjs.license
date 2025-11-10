@@ -1,0 +1,7 @@
+SPDX-License-Identifier: agpl
+SPDX-FileCopyrightText: John Molakvoæ <skjnldsv@protonmail.com>
+
+This file is generated from multiple sources. Included packages:
+- contacts
+	- version: 8.0.6
+	- license: agpl
