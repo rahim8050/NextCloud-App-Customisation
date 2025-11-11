@@ -1,0 +1,27 @@
+OC.L10N.register(
+    "collectives",
+    {
+    "Share link" : "Baglanyşyk paýlaş",
+    "Settings" : "Sazlamalar",
+    "Remove" : "Aýyrmak",
+    "Loading…" : "Ýüklenýär…",
+    "Edit" : "Redaktirläň",
+    "Choose" : "saýlamak",
+    "Cancel" : "ýatyrmak",
+    "Create" : "Dörediň",
+    "Back" : "Yzyna",
+    "Delete" : "Pozmak",
+    "Rename" : "Adyny üýtgetmek",
+    "Add to favorites" : "Saýlananlara goşuň",
+    "Download" : "Göçürip almak",
+    "Favorites" : "Halanýanlar",
+    "Favorite" : "Halaýan",
+    "Deleted" : "Öçürildi",
+    "Set password" : "Paroly düzüň",
+    "Password" : "Açarsöz",
+    "Add another link" : "Başga bir baglanyşyk goşuň",
+    "Unshare" : "Paýlaşma",
+    "Sharing" : "Paýlaşmak",
+    "Link copied" : "Link-yň nusgasy alyndy"
+},
+"nplurals=2; plural=(n != 1);");

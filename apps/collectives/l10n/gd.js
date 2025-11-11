@@ -1,0 +1,27 @@
+OC.L10N.register(
+    "collectives",
+    {
+    "Share link" : "Ceangal co-roinnidh",
+    "Settings" : "Roghainnean",
+    "Remove" : "Thoir air falbh",
+    "Loading…" : "’Ga luchdadh…",
+    "Edit" : "Deasaich",
+    "Choose" : "Tagh",
+    "Cancel" : "Sguir dheth",
+    "Create" : "Cruthaich",
+    "Back" : "Air ais",
+    "Delete" : "Sguab às",
+    "Rename" : "Thoir ainm ùr air",
+    "Add to favorites" : "Cuir ris na h-annsachdan",
+    "Download" : "Luchdaich a-nuas",
+    "Favorites" : "Annsachdan",
+    "Favorite" : "Annsachd",
+    "Deleted" : "Chaidh a sguabadh às",
+    "Set password" : "Suidhich facal-faire",
+    "Password" : "Facal-faire",
+    "Add another link" : "Cuir ceangal eile ris",
+    "Unshare" : "Na co-roinn tuilleadh",
+    "Sharing" : "Co-roinneadh",
+    "Link copied" : "Chaidh lethbhreac dhen cheangal a dhèanamh"
+},
+"nplurals=4; plural=(n==1 || n==11) ? 0 : (n==2 || n==12) ? 1 : (n > 2 && n < 20) ? 2 : 3;");
