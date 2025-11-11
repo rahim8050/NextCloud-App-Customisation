@@ -35,7 +35,7 @@ This repository contains a collection of custom Nextcloud apps and enhancements 
 3. Configure the app settings as needed in the admin interface.
 ### Development
 # This project follows production-grade best practices:
-- Code linted and type-checked using Bandit, Ruff, MyPy (Python) / Pint, Larastan, PHPStan (PHP).
+- Code linted and type-checked using Pint, Larastan, and PHPStan (PHP), with frontend code reviewed using ESLint, Prettier, Stylelint, and TailwindCSS conventions.
 - Secure authentication via OAuth2 / Nextcloud tokens.
 - API endpoints validated and rate-limited.
 - Environment-based configuration and secrets management.
