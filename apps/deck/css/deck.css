@@ -1,0 +1,23 @@
+/**
+ * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+.icon-deck {
+	background-image: url(../img/deck-dark.svg);
+	filter: var(--background-invert-if-dark);
+}
+
+.icon-deck-white, .icon-deck.icon-white {
+	background-image: url(../img/deck.svg);
+	filter: var(--background-invert-if-dark);
+}
+
+input[type=submit].icon-confirm {
+	border-color: var(--color-border-maxcontrast) !important;
+	border-left: none;
+}
+
+input[type=text]:focus+input[type=submit].icon-confirm,
+input[type=text]:hover+input[type=submit].icon-confirm {
+	border-color: var(--color-main-text) !important;
+}

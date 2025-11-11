@@ -1,0 +1,31 @@
+.filelist-collectives-wrapper[data-v-a558f688] {
+  padding: 28px 30px 0 50px;
+  margin-bottom: 20px;
+  display: flex;
+  overflow: hidden;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.filelist-collectives-wrapper .infobox[data-v-a558f688] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--color-background-hover);
+  border-left-color: var(--color-primary-element);
+  border-radius: var(--border-radius);
+  padding: 1em;
+  padding-left: 0.5em;
+  border-left-width: 0.3em;
+  border-left-style: solid;
+  margin-bottom: 0.5em;
+}
+.filelist-collectives-wrapper .infobox .content[data-v-a558f688] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 1em;
+  margin-bottom: 0;
+}
+.filelist-collectives-wrapper .infobox .content .button[data-v-a558f688] {
+  margin-left: 12px;
+}

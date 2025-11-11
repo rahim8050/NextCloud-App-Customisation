@@ -1,0 +1,27 @@
+{ "translations": {
+    "Share link" : "Rhannu dolen",
+    "Settings" : "Gosodiadau",
+    "Loading…" : "Yn llwytho…",
+    "View" : "Golwg",
+    "Edit" : "Golygu",
+    "Choose" : "Dewisa",
+    "Restore" : "Adfer",
+    "Delete permanently" : "Dileu'n barhaol",
+    "Cancel" : "Diddymu",
+    "Create" : "Creu",
+    "Go back" : "Nôl",
+    "Back" : "Nôl",
+    "Delete" : "Dileu",
+    "Rename" : "Ailenwi",
+    "Done" : "Done",
+    "Download" : "Llwytho i lawr",
+    "Title" : "Teitl",
+    "Favorites" : "Ffefrynnau",
+    "Favorite" : "Ffefryn",
+    "Deleted" : "Wedi dileu",
+    "Add another link" : "Ychwanegu dolen arall",
+    "Unshare" : "Dad-rannu",
+    "Link copied" : "Dolen wedi'i gopïo",
+    "Copied" : "Copïwyd"
+},"pluralForm" :"nplurals=4; plural=(n==1) ? 0 : (n==2) ? 1 : (n != 8 && n != 11) ? 2 : 3;"
+}

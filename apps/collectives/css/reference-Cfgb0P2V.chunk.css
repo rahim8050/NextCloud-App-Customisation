@@ -1,0 +1,22 @@
+.collective-page[data-v-d740de26] {
+  width: 100%;
+  white-space: normal;
+  padding: 12px !important;
+  display: flex;
+  text-decoration: unset !important;
+  color: var(--color-main-text) !important;
+}
+.collective-page--image[data-v-d740de26] {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+.collective-page--image .page-emoji[data-v-d740de26] {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  font-size: 50px;
+}
+.collective-page .spacer[data-v-d740de26] {
+  flex-grow: 1;
+}

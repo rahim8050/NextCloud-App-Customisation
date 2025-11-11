@@ -1,3 +1,61 @@
 config/config.php
 data/
 .updater/
+# Composer dependencies
+/vendor/
+/composer.lock
+
+# PHPStorm & IDE settings
+/.idea/
+/.vscode/
+
+# Node modules (if you use any frontend tools)
+node_modules/
+
+# Logs and cache
+*.log
+tmp/
+cache/
+data/
+
+# Nextcloud data directory (should not be inside repo)
+/nextcloud-data/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+/dist/
+/build/
+
+# Uploaded files or media
+/uploads/
+/media/
+
+# Nextcloud specific
+appinfo/
+config/
+themes/
+
+# Lock files
+*.lock
+
+# PHPUnit cache
+.phpunit.result.cache
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Ignore .htaccess only if you do not want to version control it
+# (Usually recommended to keep for Nextcloud apps)
+/.htaccess
+
