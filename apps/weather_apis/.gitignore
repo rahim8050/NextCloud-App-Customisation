@@ -1,0 +1,8 @@
+/vendor/
+/node_modules/
+/.php-cs-fixer.cache
+/.phpunit.result.cache
+/.psalm-cache/
+
+# Root .gitignore ignores *.lock; keep this app's lockfile tracked
+!composer.lock
