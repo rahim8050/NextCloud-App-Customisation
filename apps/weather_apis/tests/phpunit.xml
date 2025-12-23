@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <phpunit
-	bootstrap="tests/bootstrap.php"
-	colors="true"
-	verbose="true"
-	failOnWarning="true"
-	failOnRisky="true"
+  bootstrap="bootstrap.php"
+  colors="true"
+  verbose="true"
+  failOnWarning="true"
+  failOnRisky="true"
 >
-	<testsuites>
-		<testsuite name="Weather APIs app tests">
-			<directory suffix="Test.php">./tests/unit</directory>
-		</testsuite>
-	</testsuites>
+  <testsuites>
+    <testsuite name="Weather APIs app tests">
+      <directory suffix="Test.php">./unit</directory>
+    </testsuite>
+  </testsuites>
 </phpunit>
