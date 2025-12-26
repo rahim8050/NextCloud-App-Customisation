@@ -6,6 +6,9 @@ This file is the operating contract for any automated agent (Codex/LLM) modifyin
 
 - This app is in **pre-integration** mode: docs + tooling only. Do **not** add controllers/services/routes or Django calls unless the task explicitly requests it.
 - Unknown backend details must be marked as explicit TODOs (endpoint paths, auth header name, payload schema, etc.).
+- This app is in **integration-foundations** mode: settings UI, config keys, validators, DI wiring, and tests are allowed.
+- Outbound HTTP / DRF calls must remain behind the service layer (`WeatherApiClient`) and must only be introduced when the task explicitly requests it.
+- Unknown backend details must be marked as explicit TODOs (endpoint paths, auth header name, payload schema, etc.). Do not guess.
 
 ## 1) Scope and boundaries
 
@@ -25,6 +28,14 @@ This file is the operating contract for any automated agent (Codex/LLM) modifyin
 - **Controllers**: HTTP + JSON only (input validation, auth/permissions, status codes, response shaping). No business logic, no outbound HTTP.
 - **Service layer**: All business logic and all outbound HTTP to the Django backend lives here (single client: `WeatherApiClient`).
 - **Settings**: Admin-only settings UI writes config keys; the service reads config keys at runtime.
+
+### Allowed exception (integration-foundations)
+- Admin settings UI may introduce:
+  - `lib/Sections/*` (`IIconSection`)
+  - `lib/Settings/*` (`ISettings`)
+  - A minimal admin-only controller + route to persist config (no outbound HTTP)
+  - Templates + JS for the settings page
+- Any HTTP to DRF remains forbidden unless explicitly requested and must live only in `WeatherApiClient`.
 
 ### File layout (when code exists)
 - `appinfo/` (`info.xml`, `routes.php`)
@@ -62,12 +73,17 @@ Every “rule” here must have an enforcement path: unit tests, static analysis
   - host is `localhost`
 - Resolve host (`A` + `AAAA`) and reject if any resolved IP is in a blocked range (IPv4/IPv6 loopback, link-local, private, reserved, multicast, documentation ranges, CGNAT).
 - If DNS resolution fails, fail closed (do not attempt the request).
+- Provide a documented admin-only override for local dev scenarios where HTTPS termination isn’t available:
+  - config key `dev_allow_insecure_local_http` (bool, default `false`)
+  - config key `dev_allowlist_hosts` (string, blank by default; comma or newline separated entries)
+  - When the override is `true`, `base_url` may be `http`, but only if the host exactly matches an allowlisted entry.
+  - Private/reserved IPs remain blocked unless the host is allowlisted while the override flag is enabled.
 
 **Enforcement**
 - Unit tests for URL validation, DNS/IP blocking, and redirect/timeout options.
 - PR checklist item: “All outbound HTTP is via `WeatherApiClient` + `IClientService` with redirects disabled + timeouts set.”
 
-> TODO (dev ergonomics): If local HTTP is required for dev, introduce an explicit admin-only toggle (default false) and limit it to `localhost`/`127.0.0.1`/`[::1]`.
+> TODO (dev ergonomics): Document the allowed hosts/addresses for `dev_allow_insecure_local_http` + `dev_allowlist_hosts` so audits know which entries are legitimate dev targets.
 
 ### 3.2 Secrets handling
 
@@ -153,6 +169,8 @@ All keys are scoped to app id `weather_apis` in Nextcloud app config.
 - `base_url` (string): required; validated per SSRF rules; no embedded credentials; **HTTPS-only**
 - `api_key` (string): optional/required TBD; stored encrypted via `ICrypto`
 - `timeout_seconds` (int): required; bounded (TODO define bounds; recommend 1–30)
+- `dev_allow_insecure_local_http` (bool): default `false`; enables the dev allowlist override described above
+- `dev_allowlist_hosts` (string): comma or newline separated hosts; when the dev override is enabled, only allowlisted hosts may resolve to private/reserved IPs or use `http`
 
 ### 4.2 Backend endpoints (placeholders; do not guess)
 
@@ -181,8 +199,18 @@ Keep controller responses stable and simple:
 All PRs for this app must satisfy:
 - PHP lint, style check, static analysis, and unit tests via composer scripts documented in `apps/weather_apis/CONTRIBUTING.md`.
 - No real network calls in tests; mock `IClientService`/`IClient`/`IResponse`.
-- Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).
+- Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).+- All PRs for this app must satisfy (and MUST be runnable locally):
+  - `composer run gate` (aggregates lint + style + static analysis + tests)
+  - No real network calls in tests; mock `IClientService`/`IClient`/`IResponse`.
+  - Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).
 
+### Gate command contract
+- `composer run gate` MUST exist and MUST fail the build on:
+  - PHP syntax errors
+  - coding-style violations
+  - static analysis violations
+  - failing tests
+- Agents must paste gate output into the PR summary.
 ## 6) Change workflow for agents
 
 When making changes:
@@ -192,3 +220,5 @@ When making changes:
 4) Add/adjust tests.
 5) Update docs for any config keys or endpoints.
 6) Provide a final summary (what changed + how to run gates).
+
+7) Confirm `composer run gate` passes (or explain why and how to reproduce failures).
