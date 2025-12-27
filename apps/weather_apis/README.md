@@ -69,3 +69,14 @@ Error:
 ## Development
 
 See `apps/weather_apis/CONTRIBUTING.md`.
+
+## Dev / Integration testing
+
+To avoid curl “malformed URL” errors and to keep repeatable requests to the proxy endpoints, use the helper script:
+
+```bash
+scripts/curl_json.sh "http://nextcloud/apps/weather_apis/api/v1/integration/whoami" --file payload.json
+scripts/curl_json.sh --get "http://nextcloud/ocs/v2.php/apps/weather_apis/api/v1/integration/whoami?format=json"
+```
+
+The script strips CR/LF from the URL, rejects whitespace, and always emits either a POST with `Content-Type: application/json` or a GET request depending on the arguments.

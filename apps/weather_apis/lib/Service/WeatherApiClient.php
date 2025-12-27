@@ -8,9 +8,9 @@ use Closure;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\ICache;
-use OCP\ILogger;
+use Psr\Log\LoggerInterface;
 
-final class WeatherApiClient {
+final class WeatherApiClient implements WeatherApiClientInterface {
 	private const TOKEN_PATH = '/api/v1/integration/token/';
 	private const WHOAMI_PATH = '/api/v1/integration/whoami/';
 	private const TOKEN_CACHE_KEY = 'integration_access_token';
@@ -25,7 +25,7 @@ final class WeatherApiClient {
 		private readonly UrlValidator $urlValidator,
 		private readonly TokenSigner $tokenSigner,
 		private readonly ICache $cache,
-		private readonly ILogger $logger,
+		private readonly LoggerInterface $logger,
 		?callable $timeProvider = null,
 		?callable $nonceProvider = null,
 	) {

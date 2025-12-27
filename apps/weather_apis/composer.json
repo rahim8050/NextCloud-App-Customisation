@@ -34,12 +34,15 @@
     "cs:check": "php-cs-fixer fix --dry-run --diff",
     "cs:fix": "php-cs-fixer fix",
     "stan": "psalm --no-cache --threads=1 --config=psalm.xml",
-    "psalm": "@stan",
+    "psalm": "php vendor/bin/psalm --no-cache --threads=1 --config=psalm.xml",
     "test": "phpunit -c tests/phpunit.xml --colors=always",
     "test:unit": "@test",
     "lint:js": "bash -lc 'cd ../..; files=$(git ls-files \"apps/weather_apis/**/*.js\" \"apps/weather_apis/**/*.mjs\" \"apps/weather_apis/**/*.cjs\" \"apps/weather_apis/**/*.ts\" \"apps/weather_apis/**/*.tsx\" \"apps/weather_apis/**/*.vue\"); if [ -z \"$files\" ]; then echo \"No frontend files; skipping ESLint.\"; exit 0; fi; ./node_modules/.bin/eslint --config apps/weather_apis/.eslintrc.cjs --ignore-path apps/weather_apis/.eslintignore --no-error-on-unmatched-pattern $files'",
     "lint:css": "bash -lc 'cd ../..; files=$(git ls-files \"apps/weather_apis/**/*.scss\" \"apps/weather_apis/**/*.vue\"); if [ -z \"$files\" ]; then echo \"No SCSS/Vue files; skipping Stylelint.\"; exit 0; fi; ./node_modules/.bin/stylelint --ignore-path apps/weather_apis/.stylelintignore $files'",
     "format": "bash -lc 'cd ../..; mode=\"$1\"; js=$(git ls-files \"apps/weather_apis/**/*.js\" \"apps/weather_apis/**/*.mjs\" \"apps/weather_apis/**/*.cjs\" \"apps/weather_apis/**/*.ts\" \"apps/weather_apis/**/*.tsx\" \"apps/weather_apis/**/*.vue\"); css=$(git ls-files \"apps/weather_apis/**/*.scss\" \"apps/weather_apis/**/*.vue\"); fix=\"--fix\"; [ \"$mode\" = \"--check\" ] && fix=\"\"; if [ -n \"$js\" ]; then ./node_modules/.bin/eslint --config apps/weather_apis/.eslintrc.cjs --ignore-path apps/weather_apis/.eslintignore --no-error-on-unmatched-pattern $fix $js; else echo \"No frontend files; skipping ESLint.\"; fi; if [ -n \"$css\" ]; then ./node_modules/.bin/stylelint --ignore-path apps/weather_apis/.stylelintignore $fix $css; else echo \"No SCSS/Vue files; skipping Stylelint.\"; fi' --",
     "gate": "composer run lint && composer run cs:check && composer run psalm && composer run test"
+  },
+  "require": {
+    "symfony/yaml": "^6.4"
   }
 }

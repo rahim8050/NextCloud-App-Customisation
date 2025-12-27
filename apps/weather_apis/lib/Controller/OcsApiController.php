@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Controller;
 
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\OCSController;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
-final class ApiController extends Controller {
+final class OcsApiController extends OCSController {
 	use WhoamiRequestHandlerTrait;
 
 	public function __construct(
@@ -24,10 +24,6 @@ final class ApiController extends Controller {
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
-	}
-
-	public function getWhoami(): DataResponse {
-		return $this->handleIntegrationWhoamiRequest($this->request, $this->weatherApiClient, $this->userSession, $this->groupManager, $this->logger);
 	}
 
 	public function getIntegrationWhoami(): DataResponse {

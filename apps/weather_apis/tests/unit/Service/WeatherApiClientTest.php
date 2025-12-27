@@ -14,9 +14,9 @@ use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\ICache;
 use OCP\IConfig;
-use OCP\ILogger;
 use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 final class WeatherApiClientTest extends TestCase {
 	public function testRequestOptionsEnforceTimeoutsAndRedirects(): void {
@@ -147,7 +147,7 @@ final class WeatherApiClientTest extends TestCase {
 			new UrlValidator(fn (string $host): array => ['93.184.216.34']),
 			new TokenSigner(),
 			$cache,
-			$this->createMock(ILogger::class),
+			$this->createMock(LoggerInterface::class),
 			fn (): int => 123,
 			fn (): string => 'nonce',
 		);
