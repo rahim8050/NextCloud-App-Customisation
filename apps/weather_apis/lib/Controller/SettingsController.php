@@ -33,6 +33,9 @@ final class SettingsController extends Controller {
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
+
+		// Ensure form submissions with browser Accept headers still receive JSON.
+		$this->registerResponder('xhtml+xml', fn ($data) => $this->buildResponse($data, 'json'));
 	}
 
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
@@ -44,13 +47,14 @@ final class SettingsController extends Controller {
 			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
 		}
 
-		$baseUrl = trim((string)$this->request->getParam('baseUrl', ''));
-		$clientId = trim((string)$this->request->getParam('clientId', ''));
-		$timeout = (int)$this->request->getParam('timeoutSeconds', $this->appConfig->getTimeoutSeconds());
-		$devAllowHttp = filter_var($this->request->getParam('devAllowHttp', false), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
-		$devAllowlistHosts = trim((string)$this->request->getParam('devAllowlistHosts', ''));
-		$apiKey = trim((string)$this->request->getParam('apiKey', ''));
-		$signingSecret = trim((string)$this->request->getParam('signingSecret', ''));
+		$params = $this->request->getParams();
+		$baseUrl = trim((string)($params['baseUrl'] ?? ''));
+		$clientId = trim((string)($params['clientId'] ?? ''));
+		$timeout = (int)($params['timeoutSeconds'] ?? $this->appConfig->getTimeoutSeconds());
+		$devAllowHttp = filter_var($params['devAllowHttp'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+		$devAllowlistHosts = trim((string)($params['devAllowlistHosts'] ?? ''));
+		$apiKey = trim((string)($params['apiKey'] ?? ''));
+		$signingSecret = trim((string)($params['signingSecret'] ?? ''));
 
 		if ($baseUrl === '') {
 			return $this->buildErrorResponse('invalid_argument', 'Base URL is required.', $requestId, Http::STATUS_BAD_REQUEST);

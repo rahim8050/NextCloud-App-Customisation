@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
+use OCP\IURLGenerator;
 use OCP\Settings\IDelegatedSettings;
 
 final class AdminSettings implements IDelegatedSettings {
@@ -15,6 +16,7 @@ final class AdminSettings implements IDelegatedSettings {
 		private readonly string $appName,
 		private readonly IL10N $l10n,
 		private readonly AppConfig $appConfig,
+		private readonly IURLGenerator $urlGenerator,
 	) {
 	}
 
@@ -43,6 +45,7 @@ final class AdminSettings implements IDelegatedSettings {
 			'devAllowlistHosts' => $this->appConfig->getDevAllowlistHosts(),
 			'secretSet' => $this->appConfig->hasHmacSecret(),
 			'apiKeySet' => $this->appConfig->hasApiKey(),
+			'saveUrl' => $this->urlGenerator->linkToRoute('weather_apis.settings.saveAdmin'),
 		]);
 	}
 

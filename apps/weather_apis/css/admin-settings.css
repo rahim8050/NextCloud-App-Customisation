@@ -1,0 +1,201 @@
+.weather-apis-settings {
+	max-width: 720px;
+	/* Make the settings area feel like a “panel” without fighting Nextcloud */
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: calc(var(--border-radius) + 2px);
+	background: var(--color-main-background, var(--color-background-hover));
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.weather-apis-settings__form {
+	display: grid;
+	gap: 18px;
+	margin-top: 12px;
+}
+
+/* Keep your structure, but make each group feel intentional */
+.weather-apis-settings .form-group {
+	display: grid;
+	gap: 8px;
+}
+
+/* If your markup has labels, this will make them crisp */
+.weather-apis-settings .form-group label {
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--color-main-text);
+	letter-spacing: 0.1px;
+}
+
+/* Inputs */
+.weather-apis-settings .form-group input,
+.weather-apis-settings .form-group textarea {
+	width: 100%;
+	max-width: 560px;
+
+	padding: 10px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	color: var(--color-main-text);
+
+	transition:
+		border-color 120ms ease,
+		box-shadow 120ms ease,
+		background-color 120ms ease;
+}
+
+/* Give textareas a nicer default */
+.weather-apis-settings .form-group textarea {
+	min-height: 96px;
+	resize: vertical;
+	line-height: 1.35;
+}
+
+/* Hover helps discoverability */
+.weather-apis-settings .form-group input:hover,
+.weather-apis-settings .form-group textarea:hover {
+	border-color: color-mix(in srgb, var(--color-border) 65%, var(--color-main-text) 35%);
+}
+
+/* Focus state: clear but not obnoxious */
+.weather-apis-settings .form-group input:focus-visible,
+.weather-apis-settings .form-group textarea:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 25%, transparent);
+}
+
+/* Secret fields: “card within a card” */
+.weather-apis-settings .form-group.secret-field {
+	background: var(--color-background-hover);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	padding: 12px;
+
+	/* subtle emphasis */
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+	position: relative;
+}
+
+/* Add an accent stripe without changing markup */
+.weather-apis-settings .form-group.secret-field::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 10px;
+	bottom: 10px;
+	width: 3px;
+	border-radius: 3px;
+	background: var(--color-primary-element, var(--color-primary, #0082c9));
+	opacity: 0.55;
+}
+
+.weather-apis-settings .form-group.secret-field .hint {
+	margin: 6px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+/* --- FIX: checkbox/toggle rows stop floating and align nicely --- */
+.weather-apis-settings .form-group:has(input[type="checkbox"]) {
+	/* Two columns: label/text left, control right */
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	column-gap: 12px;
+	row-gap: 6px;
+}
+
+/* Put label on the left */
+.weather-apis-settings .form-group:has(input[type="checkbox"]) label {
+	grid-column: 1;
+	margin: 0;
+	line-height: 1.3;
+}
+
+/* Put checkbox on the right (no more center float) */
+.weather-apis-settings .form-group:has(input[type="checkbox"]) input[type="checkbox"] {
+	grid-column: 2;
+	justify-self: end;
+	margin: 0;
+	transform: translateY(1px);
+}
+
+/* Any helper text in checkbox groups should sit beneath, full width */
+.weather-apis-settings .form-group:has(input[type="checkbox"]) .hint,
+.weather-apis-settings .form-group:has(input[type="checkbox"]) small,
+.weather-apis-settings .form-group:has(input[type="checkbox"]) .description,
+.weather-apis-settings .form-group:has(input[type="checkbox"]) .dev-note {
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+/* Status: make it look like a tiny inline alert */
+.weather-apis-settings__status {
+	min-height: 18px;
+	font-size: 13px;
+	line-height: 1.25;
+
+	padding: 8px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	background: transparent;
+
+	/* Don’t stretch a blank status block too much */
+	width: fit-content;
+	max-width: 100%;
+}
+
+.weather-apis-settings__status.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.weather-apis-settings__status.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+/* Responsive: keep it comfy on small screens */
+@media (max-width: 720px) {
+	.weather-apis-settings {
+		max-width: 100%;
+		padding: 12px;
+	}
+
+	.weather-apis-settings .form-group input,
+	.weather-apis-settings .form-group textarea {
+		max-width: 100%;
+	}
+
+	/* Checkbox groups stack on mobile */
+	.weather-apis-settings .form-group:has(input[type="checkbox"]) {
+		grid-template-columns: 1fr;
+	}
+
+	.weather-apis-settings .form-group:has(input[type="checkbox"]) input[type="checkbox"] {
+		grid-column: 1;
+		justify-self: start;
+	}
+}
+/* Hide inline success message (use toast for success instead) */
+.weather-apis-settings__status.success {
+	display: none;
+}
+
+/* Optional: only show the status block when it's an error */
+.weather-apis-settings__status {
+	display: none;
+}
+
+.weather-apis-settings__status.error {
+	display: inline-block; /* keeps it compact */
+}

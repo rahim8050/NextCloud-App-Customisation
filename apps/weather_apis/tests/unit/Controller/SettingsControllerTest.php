@@ -9,6 +9,7 @@ use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -87,6 +88,49 @@ final class SettingsControllerTest extends TestCase {
 		$this->assertSame('encrypted:existing-secret', $storage['hmac_secret']);
 	}
 
+	public function testJsonPayloadUsesParamsArray(): void {
+		$params = [
+			'baseUrl' => 'https://example.com/',
+			'clientId' => 'client-id',
+			'timeoutSeconds' => 12,
+			'devAllowHttp' => false,
+			'devAllowlistHosts' => '',
+			'apiKey' => 'new-key',
+			'signingSecret' => 'new-secret',
+		];
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $name, $default = null) => $default,
+		);
+		$request->method('getParams')->willReturn($params);
+		$request->method('getHeader')->willReturn('');
+
+		$storage = [
+			'timeout_seconds' => '10',
+			'dev_allow_insecure_local_http' => '0',
+			'dev_allowlist_hosts' => '',
+			'api_key' => 'encrypted:existing',
+			'hmac_secret' => 'encrypted:existing-secret',
+		];
+		$config = $this->createAppConfig($storage);
+
+		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
+
+		$controller = $this->createController($request, $config, $validator, true);
+		$response = $controller->saveAdmin();
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['ok' => true], $response->getData());
+
+		$this->assertSame('https://example.com', $storage['base_url']);
+		$this->assertSame('client-id', $storage['hmac_client_id']);
+		$this->assertSame('12', $storage['timeout_seconds']);
+		$this->assertSame('0', $storage['dev_allow_insecure_local_http']);
+		$this->assertSame('encrypted:new-key', $storage['api_key']);
+		$this->assertSame('encrypted:new-secret', $storage['hmac_secret']);
+	}
+
 	public function testInvalidBaseUrlYieldsBadRequest(): void {
 		$request = $this->createRequest([
 			'baseUrl' => 'ftp://example',
@@ -153,6 +197,24 @@ final class SettingsControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
+	public function testXhtmlAcceptBuildsJsonResponse(): void {
+		$request = $this->createRequest([]);
+		$storage = [
+			'timeout_seconds' => '10',
+			'dev_allow_insecure_local_http' => '0',
+			'dev_allowlist_hosts' => '',
+		];
+		$config = $this->createAppConfig($storage);
+		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
+
+		$controller = $this->createController($request, $config, $validator, true);
+		$response = $controller->buildResponse(['ok' => true], 'xhtml+xml');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['ok' => true], $response->getData());
+	}
+
 	private function createAppConfig(array &$storage): AppConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
@@ -207,6 +269,7 @@ final class SettingsControllerTest extends TestCase {
 		$request->method('getParam')->willReturnCallback(
 			fn (string $name, $default = null) => $params[$name] ?? $default,
 		);
+		$request->method('getParams')->willReturn($params);
 		$request->method('getHeader')->willReturn('');
 
 		return $request;

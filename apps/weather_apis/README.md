@@ -18,7 +18,45 @@ These keys will be stored in Nextcloud app config under app id `weather_apis`.
 
 Configure these values via Settings → Administration → Weather APIs. Secrets (API key/signing secret) are stored encrypted and are never rendered back to the browser; leave those fields blank when saving to keep existing values.
 
-> TODO: When integration starts, document defaults, admin settings UI fields, and any additional non-secret toggles. Production always enforces HTTPS and public IPs; use `dev_allow_insecure_local_http` + `dev_allowlist_hosts` only for tight development exception cases.
+> TODO: When integration starts, document defaults and any additional non-secret toggles. Production always enforces HTTPS and public IPs; use `dev_allow_insecure_local_http` + `dev_allowlist_hosts` only for tight development exception cases.
+
+## Integration: Backend connection
+
+This app connects to the DRF backend through the admin-configured base URL, typically pointing at a reverse proxy in front of the Django service. Exact DRF endpoints and headers are tracked in the "Backend contract" section below and in `docs/integration.md`.
+
+### Admin settings fields
+
+- Base URL (`baseUrl`): Scheme + host + optional path for the DRF reverse proxy (for example `https://example.local/api`). Production must use HTTPS; the dev override is limited to allowlisted hosts.
+- Client ID (`clientId`): HMAC client identifier used for the integration token handshake.
+- API key (`apiKey`): Backend auth secret stored encrypted at rest; never displayed back in the UI.
+- Signing secret (`signingSecret`): HMAC secret used to sign token requests; stored encrypted at rest and never displayed back in the UI.
+- Timeout seconds (`timeoutSeconds`): Total timeout for outbound HTTP to the backend (bounded; see config table above).
+- Dev: allow insecure local HTTP (`devAllowHttp`): Enables `http` only when the host is explicitly allowlisted.
+- Dev: allowlist hosts (`devAllowlistHosts`): Comma- or newline-separated hostnames allowed when the dev override is enabled (exact match required).
+
+### Connectivity test
+
+Direct app route:
+```bash
+curl -u admin:APP_PASSWORD \
+  -H "Accept: application/json" \
+  "https://nextcloud.example.com/index.php/apps/weather_apis/api/v1/integration/whoami"
+```
+
+OCS route:
+```bash
+curl -u admin:APP_PASSWORD \
+  -H "OCS-APIRequest: true" \
+  "https://nextcloud.example.com/ocs/v2.php/apps/weather_apis/api/v1/integration/whoami?format=json"
+```
+
+### Troubleshooting
+
+- CSRF/requesttoken: Admin settings saves require a valid `requesttoken` (use the UI or send the header when posting).
+- Permissions: Settings and integration endpoints are admin-only; non-admin sessions return 401/403.
+- Allowlist/SSRF blocks: Base URL validation fails if HTTPS is missing, the host is disallowed, or DNS resolves to blocked ranges.
+- Timeouts: Slow or unreachable backends return `backend_timeout`; verify reverse proxy reachability and `timeout_seconds`.
+- Reverse proxy headers: Ensure `Host` and `X-Forwarded-Proto` are forwarded correctly and Nextcloud overwrite settings match the proxy URL.
 
 ## Backend contract (confirmed for the integration proof-of-concept)
 

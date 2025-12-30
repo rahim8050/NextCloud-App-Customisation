@@ -1,10 +1,13 @@
 <?php
+style('weather_apis', 'admin-settings');
 script('weather_apis', 'admin-settings');
 ?>
-<div class="section">
+<div class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>">
+		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>" />
+		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
 			<label for="weather-apis-base-url"><?php p($l->t('Base URL')); ?></label>
 			<input id="weather-apis-base-url" type="url" name="baseUrl" value="<?php p($_['baseUrl']); ?>" required />
@@ -45,6 +48,6 @@ script('weather_apis', 'admin-settings');
 		</div>
 
 		<input type="submit" class="button primary" value="<?php p($l->t('Save')); ?>" />
-		<div id="weather-apis-settings-status" class="status"></div>
+		<div id="weather-apis-settings-status" class="status weather-apis-settings__status"></div>
 	</form>
 </div>

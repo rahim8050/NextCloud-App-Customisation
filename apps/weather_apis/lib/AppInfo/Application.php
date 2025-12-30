@@ -102,6 +102,7 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IL10N::class),
 				$c->get(AppConfig::class),
+				$c->get(IURLGenerator::class),
 			);
 		});
 
