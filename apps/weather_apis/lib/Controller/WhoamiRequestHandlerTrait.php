@@ -42,6 +42,7 @@ trait WhoamiRequestHandlerTrait {
 		} catch (WeatherApiException $exception) {
 			$logger->error('Weather API call failed', [
 				'errorCode' => $exception->getErrorCode(),
+				'reason' => $exception->getReason(),
 				'requestId' => $requestId,
 			]);
 
@@ -50,6 +51,7 @@ trait WhoamiRequestHandlerTrait {
 				$exception->getMessage(),
 				$requestId,
 				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getReason(),
 			);
 		} catch (\Throwable $throwable) {
 			$logger->error('Weather API call failed', [
@@ -61,14 +63,25 @@ trait WhoamiRequestHandlerTrait {
 		}
 	}
 
-	private function buildErrorResponse(string $code, string $message, string $requestId, int $status): DataResponse {
+	private function buildErrorResponse(
+		string $code,
+		string $message,
+		string $requestId,
+		int $status,
+		?string $reason = null,
+	): DataResponse {
+		$details = new \stdClass();
+		if ($code === 'backend_unavailable' && $reason !== null && $reason !== '') {
+			$details->reason = $reason;
+		}
+
 		return new DataResponse([
 			'status' => 'error',
 			'error' => [
 				'code' => $code,
 				'message' => $message,
 				'requestId' => $requestId,
-				'details' => new \stdClass(),
+				'details' => $details,
 			],
 		], $status);
 	}

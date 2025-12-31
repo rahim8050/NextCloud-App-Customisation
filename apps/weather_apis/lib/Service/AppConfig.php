@@ -56,6 +56,10 @@ final class AppConfig {
 		return trim($this->config->getAppValue(self::APP_ID, self::KEY_DEV_ALLOWLIST_HOSTS, ''));
 	}
 
+	public function isAllowLocalRemoteServers(): bool {
+		return $this->config->getSystemValueBool('allow_local_remote_servers', false);
+	}
+
 	public function setBaseUrl(string $value): void {
 		$normalized = rtrim(trim($value), '/');
 		$this->config->setAppValue(self::APP_ID, self::KEY_BASE_URL, $normalized);

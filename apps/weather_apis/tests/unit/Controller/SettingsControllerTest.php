@@ -8,7 +8,6 @@ use OCA\WeatherApis\Controller\SettingsController;
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -45,7 +44,7 @@ final class SettingsControllerTest extends TestCase {
 
 		$controller = $this->createController($request, $config, $validator, true);
 		$response = $controller->saveAdmin();
-		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(['ok' => true], $response->getData());
 
@@ -119,7 +118,7 @@ final class SettingsControllerTest extends TestCase {
 
 		$controller = $this->createController($request, $config, $validator, true);
 		$response = $controller->saveAdmin();
-		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(['ok' => true], $response->getData());
 
@@ -151,7 +150,14 @@ final class SettingsControllerTest extends TestCase {
 		$controller = $this->createController($request, $config, $validator, true);
 		$response = $controller->saveAdmin();
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-		$this->assertSame('invalid_argument', $response->getData()['error']['code']);
+		$data = json_decode(
+			json_encode($response->getData(), JSON_THROW_ON_ERROR),
+			true,
+			512,
+			JSON_THROW_ON_ERROR,
+		);
+		/** @var array<string, mixed> $data */
+		$this->assertSame('invalid_argument', $data['error']['code']);
 	}
 
 	public function testTimeoutOutOfRangeIsRejected(): void {
@@ -220,6 +226,7 @@ final class SettingsControllerTest extends TestCase {
 		$config->method('getAppValue')->willReturnCallback(
 			fn (string $appId, string $key, $default = '') => $storage[$key] ?? $default,
 		);
+		$config->method('getSystemValueBool')->willReturn(false);
 
 		$config->method('setAppValue')->willReturnCallback(
 			function (string $appId, string $key, $value) use (&$storage): void {

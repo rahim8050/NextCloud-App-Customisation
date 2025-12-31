@@ -43,13 +43,26 @@ final class UrlValidator {
 	}
 
 	/**
+	 * @return array<int, string>
+	 */
+	public function parseAllowlistHosts(string $value): array {
+		return $this->normalizeAllowlist($value);
+	}
+
+	/**
 	 * @param string $url
 	 * @param bool $devAllowInsecureLocalHttp
 	 * @param string $devAllowlistHosts
+	 * @param bool $allowLocalRemoteServers
 	 *
 	 * @throws InvalidArgumentException
 	 */
-	public function validate(string $url, bool $devAllowInsecureLocalHttp, string $devAllowlistHosts): void {
+	public function validate(
+		string $url,
+		bool $devAllowInsecureLocalHttp,
+		string $devAllowlistHosts,
+		bool $allowLocalRemoteServers = false,
+	): void {
 		$parts = parse_url($url);
 		if ($parts === false) {
 			throw new InvalidArgumentException('Unable to parse the URL.');
@@ -81,6 +94,7 @@ final class UrlValidator {
 		$allowlist = $this->normalizeAllowlist($devAllowlistHosts);
 		$hostIsAllowlisted = in_array($normalizedHost, $allowlist, true);
 		$devOverrideActive = $devAllowInsecureLocalHttp && $hostIsAllowlisted;
+		$localAccessAllowed = $devOverrideActive || $allowLocalRemoteServers;
 
 		if ($scheme !== 'https' && !$devOverrideActive) {
 			throw new InvalidArgumentException('Insecure URLs require the dev override.');
@@ -92,7 +106,7 @@ final class UrlValidator {
 		}
 
 		foreach ($resolvedIps as $ip) {
-			if ($this->isBlockedIp($ip) && !$devOverrideActive) {
+			if ($this->isBlockedIp($ip) && !$localAccessAllowed) {
 				throw new InvalidArgumentException('URL resolves to a blocked IP address.');
 			}
 		}

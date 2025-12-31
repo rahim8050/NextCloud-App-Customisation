@@ -7,6 +7,7 @@ namespace OCA\WeatherApis\Service;
 use Closure;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
+use OCP\Http\Client\LocalServerException;
 use OCP\ICache;
 use Psr\Log\LoggerInterface;
 
@@ -37,16 +38,16 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	 * @throws WeatherApiException
 	 */
 	public function whoami(string $correlationId): array {
-		$baseUrl = $this->resolveValidatedBaseUrl();
-		$token = $this->getCachedToken($baseUrl, $correlationId);
+		$context = $this->resolveValidatedBaseUrlContext();
+		$token = $this->getCachedToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
 
 		try {
-			return $this->fetchWhoami($baseUrl, $token, $correlationId);
+			return $this->fetchWhoami($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
 		} catch (WeatherApiException $exception) {
 			if ($exception->getErrorCode() === 'unauthorized') {
-				$token = $this->mintToken($baseUrl, $correlationId);
+				$token = $this->mintToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
 
-				return $this->fetchWhoami($baseUrl, $token, $correlationId);
+				return $this->fetchWhoami($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
 			}
 
 			throw $exception;
@@ -56,7 +57,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @throws WeatherApiException
 	 */
-	private function mintToken(string $baseUrl, string $correlationId): string {
+	private function mintToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
 		$client = $this->clientService->newClient();
 		$nonce = ($this->nonceProvider)();
 		$timestamp = (string)($this->timeProvider)();
@@ -72,7 +73,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 		$signature = hash_hmac('sha256', $canonical, $this->appConfig->getHmacSecret());
 
-		$options = $this->buildBaseOptions($correlationId);
+		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
 		$options['headers'] = array_merge($options['headers'], [
 			'Content-Type' => 'application/json',
 			'X-API-Key' => $this->appConfig->getApiKey(),
@@ -107,10 +108,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @throws WeatherApiException
 	 */
-	private function fetchWhoami(string $baseUrl, string $token, string $correlationId): array {
+	private function fetchWhoami(string $baseUrl, string $token, bool $allowLocalAddress, string $correlationId): array {
 		$client = $this->clientService->newClient();
 
-		$options = $this->buildBaseOptions($correlationId);
+		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
 		$options['headers'] = array_merge($options['headers'], [
 			'Authorization' => 'Bearer ' . $token,
 		]);
@@ -131,29 +132,66 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @throws WeatherApiException
 	 */
-	private function resolveValidatedBaseUrl(): string {
+	private function resolveValidatedBaseUrlContext(): array {
 		$baseUrl = $this->appConfig->getBaseUrl();
-		if ($baseUrl === '') {
+		$baseUrlPresent = $baseUrl !== '';
+		$devAllowHttp = $this->appConfig->isDevAllowInsecureLocalHttp();
+		$allowlistHosts = $this->appConfig->getDevAllowlistHosts();
+		$allowLocalRemoteServers = $this->appConfig->isAllowLocalRemoteServers();
+
+		$parts = $baseUrlPresent ? parse_url($baseUrl) : false;
+		$parsed = is_array($parts);
+		$scheme = $parsed ? strtolower($parts['scheme'] ?? '') : '';
+		$host = $parsed ? strtolower($parts['host'] ?? '') : '';
+		$port = $parsed ? ($parts['port'] ?? null) : null;
+
+		$allowlist = $this->urlValidator->parseAllowlistHosts($allowlistHosts);
+		$hostAllowlisted = $host !== '' && in_array($host, $allowlist, true);
+		$devOverrideActive = $devAllowHttp && $hostAllowlisted;
+		$localAccessAllowed = $devOverrideActive || $allowLocalRemoteServers;
+		$localAccessSource = $devOverrideActive ? 'dev_allowlist'
+			: ($allowLocalRemoteServers ? 'system_config' : 'none');
+
+		$this->logger->debug('Weather API base URL validation context', [
+			'baseUrlPresent' => $baseUrlPresent,
+			'baseUrlParsed' => $parsed,
+			'scheme' => $scheme,
+			'host' => $host,
+			'port' => $port,
+			'devAllowHttp' => $devAllowHttp,
+			'allowLocalRemoteServers' => $allowLocalRemoteServers,
+			'allowlistCount' => count($allowlist),
+			'hostAllowlisted' => $hostAllowlisted,
+			'devOverrideActive' => $devOverrideActive,
+			'localAccessAllowed' => $localAccessAllowed,
+			'localAccessSource' => $localAccessSource,
+		]);
+
+		if (!$baseUrlPresent) {
 			throw new WeatherApiException('invalid_argument', 'Base URL is not configured.');
 		}
 
 		try {
 			$this->urlValidator->validate(
 				$baseUrl,
-				$this->appConfig->isDevAllowInsecureLocalHttp(),
-				$this->appConfig->getDevAllowlistHosts(),
+				$devAllowHttp,
+				$allowlistHosts,
+				$allowLocalRemoteServers,
 			);
 		} catch (\InvalidArgumentException $exception) {
 			throw new WeatherApiException('invalid_argument', 'Configured base URL is invalid.', $exception);
 		}
 
-		return rtrim($baseUrl, '/');
+		return [
+			'baseUrl' => rtrim($baseUrl, '/'),
+			'allowLocalAddress' => $localAccessAllowed,
+		];
 	}
 
-	private function buildBaseOptions(string $correlationId): array {
+	private function buildBaseOptions(string $correlationId, bool $allowLocalAddress): array {
 		$timeout = $this->appConfig->getTimeoutSeconds();
 
-		return [
+		$options = [
 			'timeout' => $timeout,
 			'connect_timeout' => min(10, $timeout),
 			'verify' => true,
@@ -162,6 +200,14 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				'X-Request-Id' => $correlationId,
 			],
 		];
+
+		if ($allowLocalAddress) {
+			$options['nextcloud'] = [
+				'allow_local_address' => true,
+			];
+		}
+
+		return $options;
 	}
 
 	private function buildEndpoint(string $baseUrl, string $path): string {
@@ -201,8 +247,12 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		$code = $this->determineErrorCode($status);
+		$reason = null;
+		if ($code === 'backend_unavailable') {
+			$reason = 'http_status_' . $status;
+		}
 
-		throw new WeatherApiException($code, 'Backend returned HTTP ' . $status . '.');
+		throw new WeatherApiException($code, 'Backend returned HTTP ' . $status . '.', null, $reason);
 	}
 
 	private function determineErrorCode(int $status): string {
@@ -220,12 +270,38 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			return $throwable;
 		}
 
-		$normalized = match (true) {
-			str_contains(strtolower($throwable->getMessage()), 'timeout') => 'backend_timeout',
-			default => 'backend_unavailable',
-		};
+		$message = strtolower($throwable->getMessage());
 
-		return new WeatherApiException($normalized, 'Backend request failed.', $throwable);
+		if (str_contains($message, 'timeout')) {
+			return new WeatherApiException('backend_timeout', 'Backend request failed.', $throwable, 'timeout');
+		}
+
+		return new WeatherApiException(
+			'backend_unavailable',
+			'Backend request failed.',
+			$throwable,
+			$this->mapUnavailableReason($throwable, $message),
+		);
+	}
+
+	private function mapUnavailableReason(\Throwable $throwable, string $message): string {
+		if ($throwable instanceof LocalServerException) {
+			return 'local_address_blocked';
+		}
+
+		if (str_contains($message, 'could not resolve') || str_contains($message, 'dns')) {
+			return 'dns_resolution_failed';
+		}
+
+		if (str_contains($message, 'connection refused')) {
+			return 'connection_refused';
+		}
+
+		if (str_contains($message, 'ssl') || str_contains($message, 'certificate')) {
+			return 'tls_failed';
+		}
+
+		return 'request_failed';
 	}
 
 	private function bodyToString(mixed $body): string {
@@ -238,12 +314,12 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		return (string)$body;
 	}
 
-	private function getCachedToken(string $baseUrl, string $correlationId): string {
+	private function getCachedToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
 		$value = $this->cache->get($this->getTokenCacheKey());
 		if (is_string($value) && $value !== '') {
 			return $value;
 		}
 
-		return $this->mintToken($baseUrl, $correlationId);
+		return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
 	}
 }

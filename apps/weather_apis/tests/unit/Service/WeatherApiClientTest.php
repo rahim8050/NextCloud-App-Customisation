@@ -164,6 +164,7 @@ final class WeatherApiClientTest extends TestCase {
 			[AppConfig::APP_ID, 'api_key', '', 'encrypted-api'],
 			[AppConfig::APP_ID, 'hmac_secret', '', 'encrypted-secret'],
 		]);
+		$config->method('getSystemValueBool')->willReturn(false);
 
 		$crypto = $this->createMock(ICrypto::class);
 		$crypto->method('decrypt')->willReturnCallback(fn (string $value): string => match ($value) {

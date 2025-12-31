@@ -12,7 +12,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
-use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -40,7 +40,7 @@ final class SettingsController extends Controller {
 
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	#[PasswordConfirmationRequired]
-	public function saveAdmin(): DataResponse {
+	public function saveAdmin(): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$user = $this->userSession->getUser();
 		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
@@ -76,7 +76,12 @@ final class SettingsController extends Controller {
 		}
 
 		try {
-			$this->urlValidator->validate($baseUrl, $devAllowHttp, $devAllowlistHosts);
+			$this->urlValidator->validate(
+				$baseUrl,
+				$devAllowHttp,
+				$devAllowlistHosts,
+				$this->appConfig->isAllowLocalRemoteServers(),
+			);
 		} catch (InvalidArgumentException $exception) {
 			return $this->buildErrorResponse('invalid_argument', $exception->getMessage(), $requestId, Http::STATUS_BAD_REQUEST);
 		}
@@ -103,11 +108,11 @@ final class SettingsController extends Controller {
 			return $this->buildErrorResponse('backend_error', 'Unable to save settings.', $requestId, Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
-		return new DataResponse(['ok' => true]);
+		return new JSONResponse(['ok' => true]);
 	}
 
-	private function buildErrorResponse(string $code, string $message, string $requestId, int $status): DataResponse {
-		return new DataResponse([
+	private function buildErrorResponse(string $code, string $message, string $requestId, int $status): JSONResponse {
+		return new JSONResponse([
 			'status' => 'error',
 			'error' => [
 				'code' => $code,

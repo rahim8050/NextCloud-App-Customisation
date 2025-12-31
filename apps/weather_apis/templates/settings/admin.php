@@ -2,7 +2,7 @@
 style('weather_apis', 'admin-settings');
 script('weather_apis', 'admin-settings');
 ?>
-<div class="section weather-apis-settings">
+<div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
 	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>">

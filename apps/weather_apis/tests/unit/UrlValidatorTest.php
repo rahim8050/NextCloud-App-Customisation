@@ -19,7 +19,7 @@ final class UrlValidatorTest extends TestCase {
 		]);
 
 		$this->expectException(InvalidArgumentException::class);
-		$validator->validate('http://example.com', false, '');
+		$validator->validate('http://example.com', false, '', false);
 	}
 
 	public function testAcceptsHttpsPublicHost(): void {
@@ -27,7 +27,7 @@ final class UrlValidatorTest extends TestCase {
 			'example.com' => ['93.184.216.34'],
 		]);
 
-		$validator->validate('https://example.com', false, '');
+		$validator->validate('https://example.com', false, '', false);
 		$this->assertTrue(true);
 	}
 
@@ -37,7 +37,7 @@ final class UrlValidatorTest extends TestCase {
 		]);
 
 		$this->expectException(InvalidArgumentException::class);
-		$validator->validate('https://172.25.121.28', false, '');
+		$validator->validate('https://172.25.121.28', false, '', false);
 	}
 
 	public function testAcceptsHttpPrivateWhenDevOverrideEnabled(): void {
@@ -45,7 +45,16 @@ final class UrlValidatorTest extends TestCase {
 			'172.25.121.28' => ['172.25.121.28'],
 		]);
 
-		$validator->validate('http://172.25.121.28', true, '172.25.121.28');
+		$validator->validate('http://172.25.121.28', true, '172.25.121.28', false);
+		$this->assertTrue(true);
+	}
+
+	public function testAcceptsLocalhostIpWhenDevOverrideAllowlisted(): void {
+		$validator = $this->createValidator([
+			'127.0.0.1' => ['127.0.0.1'],
+		]);
+
+		$validator->validate('http://127.0.0.1:8001', true, '127.0.0.1', false);
 		$this->assertTrue(true);
 	}
 }
