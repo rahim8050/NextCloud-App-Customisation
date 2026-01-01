@@ -16,13 +16,13 @@ use PHPUnit\Framework\TestCase;
 final class AdminSettingsTest extends TestCase {
 	public function testFormProvidesSaveUrl(): void {
 		$storage = [
-			'base_url' => 'https://example.com',
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
-			'api_key' => '',
-			'hmac_secret' => '',
-			'hmac_client_id' => '',
+			'baseUrl' => 'https://example.com',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'apiKey' => '',
+			'hmacSecret' => '',
+			'clientId' => '',
 		];
 
 		$config = $this->createMock(IConfig::class);
@@ -35,10 +35,20 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->once())
+		$urlGenerator->expects($this->exactly(4))
 			->method('linkToRoute')
-			->with('weather_apis.settings.saveAdmin')
-			->willReturn('/apps/weather_apis/settings/admin');
+			->withConsecutive(
+				['weather_apis.settings.saveAdmin'],
+				['weather_apis.adminConfig.generateCredentials'],
+				['weather_apis.adminConfig.rotateHmac'],
+				['weather_apis.adminConfig.getConfig'],
+			)
+			->willReturnOnConsecutiveCalls(
+				'/apps/weather_apis/settings/admin',
+				'/apps/weather_apis/api/v1/admin/generate-credentials',
+				'/apps/weather_apis/api/v1/admin/rotate-hmac',
+				'/apps/weather_apis/api/v1/admin/config',
+			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $urlGenerator);
 		$response = $settings->getForm();
@@ -47,5 +57,8 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertArrayHasKey('saveUrl', $response->getParams());
 		$this->assertNotSame('', $response->getParams()['saveUrl']);
 		$this->assertSame('/apps/weather_apis/settings/admin', $response->getParams()['saveUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/generate-credentials', $response->getParams()['generateCredentialsUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/rotate-hmac', $response->getParams()['rotateHmacUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/config', $response->getParams()['configUrl']);
 	}
 }

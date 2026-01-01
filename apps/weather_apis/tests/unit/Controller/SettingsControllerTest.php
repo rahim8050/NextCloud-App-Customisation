@@ -25,18 +25,18 @@ final class SettingsControllerTest extends TestCase {
 			'clientId' => 'client-id',
 			'timeoutSeconds' => '15',
 			'devAllowHttp' => true,
-			'devAllowlistHosts' => 'host1',
+			'allowlistHosts' => 'host1',
 			'apiKey' => 'new-key',
-			'signingSecret' => 'new-secret',
+			'hmacSecret' => 'new-secret',
 		];
 
 		$request = $this->createRequest($params);
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
-			'api_key' => 'encrypted:existing',
-			'hmac_secret' => 'encrypted:existing-secret',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'apiKey' => 'encrypted:existing',
+			'hmacSecret' => 'encrypted:existing-secret',
 		];
 		$config = $this->createAppConfig($storage);
 
@@ -48,13 +48,13 @@ final class SettingsControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(['ok' => true], $response->getData());
 
-		$this->assertSame('https://example.com', $storage['base_url']);
-		$this->assertSame('client-id', $storage['hmac_client_id']);
-		$this->assertSame('15', $storage['timeout_seconds']);
-		$this->assertSame('1', $storage['dev_allow_insecure_local_http']);
-		$this->assertSame('host1', $storage['dev_allowlist_hosts']);
-		$this->assertSame('encrypted:new-key', $storage['api_key']);
-		$this->assertSame('encrypted:new-secret', $storage['hmac_secret']);
+		$this->assertSame('https://example.com', $storage['baseUrl']);
+		$this->assertSame('client-id', $storage['clientId']);
+		$this->assertSame('15', $storage['timeoutSeconds']);
+		$this->assertSame('1', $storage['devAllowHttp']);
+		$this->assertSame('host1', $storage['allowlistHosts']);
+		$this->assertSame('encrypted:new-key', $storage['apiKey']);
+		$this->assertSame('encrypted:new-secret', $storage['hmacSecret']);
 	}
 
 	public function testEmptySecretsAreNotWritten(): void {
@@ -63,18 +63,18 @@ final class SettingsControllerTest extends TestCase {
 			'clientId' => 'client-id',
 			'timeoutSeconds' => '15',
 			'devAllowHttp' => false,
-			'devAllowlistHosts' => '',
+			'allowlistHosts' => '',
 			'apiKey' => '',
-			'signingSecret' => '',
+			'hmacSecret' => '',
 		];
 
 		$request = $this->createRequest($params);
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
-			'api_key' => 'encrypted:existing',
-			'hmac_secret' => 'encrypted:existing-secret',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'apiKey' => 'encrypted:existing',
+			'hmacSecret' => 'encrypted:existing-secret',
 		];
 		$config = $this->createAppConfig($storage);
 
@@ -83,19 +83,19 @@ final class SettingsControllerTest extends TestCase {
 		$controller = $this->createController($request, $config, $validator, true);
 		$response = $controller->saveAdmin();
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame('encrypted:existing', $storage['api_key']);
-		$this->assertSame('encrypted:existing-secret', $storage['hmac_secret']);
+		$this->assertSame('encrypted:existing', $storage['apiKey']);
+		$this->assertSame('encrypted:existing-secret', $storage['hmacSecret']);
 	}
 
 	public function testJsonPayloadUsesParamsArray(): void {
 		$params = [
-			'baseUrl' => 'https://example.com/',
-			'clientId' => 'client-id',
-			'timeoutSeconds' => 12,
-			'devAllowHttp' => false,
-			'devAllowlistHosts' => '',
-			'apiKey' => 'new-key',
-			'signingSecret' => 'new-secret',
+			'base_url' => 'https://example.com/',
+			'hmac_client_id' => 'client-id',
+			'timeout_seconds' => 12,
+			'dev_allow_insecure_local_http' => false,
+			'dev_allowlist_hosts' => 'legacy-host',
+			'api_key' => 'new-key',
+			'hmac_secret' => 'new-secret',
 		];
 
 		$request = $this->createMock(IRequest::class);
@@ -106,11 +106,11 @@ final class SettingsControllerTest extends TestCase {
 		$request->method('getHeader')->willReturn('');
 
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
-			'api_key' => 'encrypted:existing',
-			'hmac_secret' => 'encrypted:existing-secret',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'apiKey' => 'encrypted:existing',
+			'hmacSecret' => 'encrypted:existing-secret',
 		];
 		$config = $this->createAppConfig($storage);
 
@@ -122,12 +122,13 @@ final class SettingsControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(['ok' => true], $response->getData());
 
-		$this->assertSame('https://example.com', $storage['base_url']);
-		$this->assertSame('client-id', $storage['hmac_client_id']);
-		$this->assertSame('12', $storage['timeout_seconds']);
-		$this->assertSame('0', $storage['dev_allow_insecure_local_http']);
-		$this->assertSame('encrypted:new-key', $storage['api_key']);
-		$this->assertSame('encrypted:new-secret', $storage['hmac_secret']);
+		$this->assertSame('https://example.com', $storage['baseUrl']);
+		$this->assertSame('client-id', $storage['clientId']);
+		$this->assertSame('12', $storage['timeoutSeconds']);
+		$this->assertSame('0', $storage['devAllowHttp']);
+		$this->assertSame('legacy-host', $storage['allowlistHosts']);
+		$this->assertSame('encrypted:new-key', $storage['apiKey']);
+		$this->assertSame('encrypted:new-secret', $storage['hmacSecret']);
 	}
 
 	public function testInvalidBaseUrlYieldsBadRequest(): void {
@@ -136,13 +137,13 @@ final class SettingsControllerTest extends TestCase {
 			'clientId' => 'client-id',
 			'timeoutSeconds' => '15',
 			'devAllowHttp' => false,
-			'devAllowlistHosts' => '',
+			'allowlistHosts' => '',
 		]);
 
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
 		];
 		$config = $this->createAppConfig($storage);
 		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
@@ -166,13 +167,13 @@ final class SettingsControllerTest extends TestCase {
 			'clientId' => 'client-id',
 			'timeoutSeconds' => '999',
 			'devAllowHttp' => false,
-			'devAllowlistHosts' => '',
+			'allowlistHosts' => '',
 		]);
 
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
 		];
 		$config = $this->createAppConfig($storage);
 		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
@@ -188,13 +189,13 @@ final class SettingsControllerTest extends TestCase {
 			'clientId' => 'client-id',
 			'timeoutSeconds' => '15',
 			'devAllowHttp' => false,
-			'devAllowlistHosts' => '',
+			'allowlistHosts' => '',
 		]);
 
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
 		];
 		$config = $this->createAppConfig($storage);
 		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
@@ -206,9 +207,9 @@ final class SettingsControllerTest extends TestCase {
 	public function testXhtmlAcceptBuildsJsonResponse(): void {
 		$request = $this->createRequest([]);
 		$storage = [
-			'timeout_seconds' => '10',
-			'dev_allow_insecure_local_http' => '0',
-			'dev_allowlist_hosts' => '',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
 		];
 		$config = $this->createAppConfig($storage);
 		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
@@ -224,7 +225,9 @@ final class SettingsControllerTest extends TestCase {
 	private function createAppConfig(array &$storage): AppConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			fn (string $appId, string $key, $default = '') => $storage[$key] ?? $default,
+			function (string $appId, string $key, $default = '') use (&$storage) {
+				return $storage[$key] ?? $default;
+			},
 		);
 		$config->method('getSystemValueBool')->willReturn(false);
 

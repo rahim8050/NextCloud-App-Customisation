@@ -99,6 +99,49 @@
 	line-height: 1.35;
 }
 
+.weather-apis-credentials__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-credentials {
+	display: grid;
+	gap: 12px;
+	padding: 12px;
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+}
+
+.weather-apis-credentials[hidden] {
+	display: none;
+}
+
+.weather-apis-credentials__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.weather-apis-credentials__row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.weather-apis-credentials__row input {
+	flex: 1;
+	max-width: 420px;
+}
+
+.weather-apis-credentials .warning {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+}
+
 /* --- FIX: checkbox/toggle rows stop floating and align nicely --- */
 .weather-apis-settings .form-group:has(input[type="checkbox"]) {
 	/* Two columns: label/text left, control right */

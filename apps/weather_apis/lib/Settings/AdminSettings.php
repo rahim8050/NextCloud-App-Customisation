@@ -31,7 +31,7 @@ final class AdminSettings implements IDelegatedSettings {
 	public function getForm(): TemplateResponse {
 		$clientId = '';
 		try {
-			$clientId = $this->appConfig->getHmacClientId();
+			$clientId = $this->appConfig->getClientId();
 		} catch (InvalidArgumentException) {
 			// ignored – display empty field until value is saved
 		}
@@ -41,11 +41,14 @@ final class AdminSettings implements IDelegatedSettings {
 			'baseUrl' => $this->appConfig->getBaseUrl(),
 			'clientId' => $clientId,
 			'timeoutSeconds' => $this->appConfig->getTimeoutSeconds(),
-			'devAllowHttp' => $this->appConfig->isDevAllowInsecureLocalHttp(),
-			'devAllowlistHosts' => $this->appConfig->getDevAllowlistHosts(),
-			'secretSet' => $this->appConfig->hasHmacSecret(),
+			'devAllowHttp' => $this->appConfig->isDevAllowHttp(),
+			'allowlistHosts' => $this->appConfig->getAllowlistHosts(),
+			'hmacSecretSet' => $this->appConfig->hasHmacSecret(),
 			'apiKeySet' => $this->appConfig->hasApiKey(),
 			'saveUrl' => $this->urlGenerator->linkToRoute('weather_apis.settings.saveAdmin'),
+			'generateCredentialsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.generateCredentials'),
+			'rotateHmacUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.rotateHmac'),
+			'configUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.getConfig'),
 		]);
 	}
 
@@ -56,6 +59,15 @@ final class AdminSettings implements IDelegatedSettings {
 	public function getAuthorizedAppConfig(): array {
 		return [
 			AppConfig::APP_ID => [
+				'/^baseUrl$/',
+				'/^clientId$/',
+				'/^apiKey$/',
+				'/^hmacSecret$/',
+				'/^hmacSecretPrevious$/',
+				'/^hmacSecretPreviousExpiresAt$/',
+				'/^timeoutSeconds$/',
+				'/^devAllowHttp$/',
+				'/^allowlistHosts$/',
 				'/^base_url$/',
 				'/^timeout_seconds$/',
 				'/^dev_allow_insecure_local_http$/',
@@ -63,6 +75,8 @@ final class AdminSettings implements IDelegatedSettings {
 				'/^api_key$/',
 				'/^hmac_client_id$/',
 				'/^hmac_secret$/',
+				'/^signingSecret$/',
+				'/^devAllowlistHosts$/',
 			],
 		];
 	}

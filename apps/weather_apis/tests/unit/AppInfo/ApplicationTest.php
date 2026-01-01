@@ -54,16 +54,22 @@ final class ApplicationTest extends TestCase {
 	}
 
 	private function createConfigMock(): IConfig {
+		$storage = [
+			'baseUrl' => 'https://example.com',
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'clientId' => 'client',
+			'apiKey' => 'api-key',
+			'hmacSecret' => 'encrypted-secret',
+		];
+
 		$config = $this->createMock(IConfig::class);
-		$config->method('getAppValue')->willReturnMap([
-			[AppConfig::APP_ID, 'base_url', '', 'https://example.com'],
-			[AppConfig::APP_ID, 'timeout_seconds', '10', '10'],
-			[AppConfig::APP_ID, 'dev_allow_insecure_local_http', '0', '0'],
-			[AppConfig::APP_ID, 'dev_allowlist_hosts', '', ''],
-			[AppConfig::APP_ID, 'hmac_client_id', '', 'client'],
-			[AppConfig::APP_ID, 'api_key', '', 'api-key'],
-			[AppConfig::APP_ID, 'hmac_secret', '', 'secret'],
-		]);
+		$config->method('getAppValue')->willReturnCallback(
+			function (string $appId, string $key, $default = '') use ($storage) {
+				return $storage[$key] ?? $default;
+			},
+		);
 
 		return $config;
 	}
@@ -72,7 +78,7 @@ final class ApplicationTest extends TestCase {
 		$crypto = $this->createMock(ICrypto::class);
 		$crypto->method('decrypt')->willReturnCallback(static fn (string $value): string => match ($value) {
 			'api-key' => 'plain-api',
-			'secret' => 'plain-secret',
+			'encrypted-secret' => 'plain-secret',
 			default => 'fallback',
 		});
 		$crypto->method('encrypt')->willReturnCallback(static fn (string $value, string $password = '') => $value);

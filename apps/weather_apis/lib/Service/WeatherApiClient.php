@@ -77,7 +77,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$options['headers'] = array_merge($options['headers'], [
 			'Content-Type' => 'application/json',
 			'X-API-Key' => $this->appConfig->getApiKey(),
-			'X-Client-Id' => $this->appConfig->getHmacClientId(),
+			'X-Client-Id' => $this->appConfig->getClientId(),
 			'X-Timestamp' => $timestamp,
 			'X-Nonce' => $nonce,
 			'X-Signature' => $signature,
@@ -136,7 +136,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$baseUrl = $this->appConfig->getBaseUrl();
 		$baseUrlPresent = $baseUrl !== '';
 		$devAllowHttp = $this->appConfig->isDevAllowInsecureLocalHttp();
-		$allowlistHosts = $this->appConfig->getDevAllowlistHosts();
+		$allowlistHosts = $this->appConfig->getAllowlistHosts();
 		$allowLocalRemoteServers = $this->appConfig->isAllowLocalRemoteServers();
 
 		$parts = $baseUrlPresent ? parse_url($baseUrl) : false;

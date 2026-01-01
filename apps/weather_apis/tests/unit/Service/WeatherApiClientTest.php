@@ -154,16 +154,22 @@ final class WeatherApiClientTest extends TestCase {
 	}
 
 	private function createAppConfig(): AppConfig {
+		$storage = [
+			'baseUrl' => 'https://example.com',
+			'timeoutSeconds' => '15',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+			'clientId' => 'client-id',
+			'apiKey' => 'encrypted-api',
+			'hmacSecret' => 'encrypted-secret',
+		];
+
 		$config = $this->createMock(IConfig::class);
-		$config->method('getAppValue')->willReturnMap([
-			[AppConfig::APP_ID, 'base_url', '', 'https://example.com'],
-			[AppConfig::APP_ID, 'timeout_seconds', '10', '15'],
-			[AppConfig::APP_ID, 'dev_allow_insecure_local_http', '0', '0'],
-			[AppConfig::APP_ID, 'dev_allowlist_hosts', '', ''],
-			[AppConfig::APP_ID, 'hmac_client_id', '', 'client-id'],
-			[AppConfig::APP_ID, 'api_key', '', 'encrypted-api'],
-			[AppConfig::APP_ID, 'hmac_secret', '', 'encrypted-secret'],
-		]);
+		$config->method('getAppValue')->willReturnCallback(
+			function (string $appId, string $key, $default = '') use ($storage) {
+				return $storage[$key] ?? $default;
+			},
+		);
 		$config->method('getSystemValueBool')->willReturn(false);
 
 		$crypto = $this->createMock(ICrypto::class);
