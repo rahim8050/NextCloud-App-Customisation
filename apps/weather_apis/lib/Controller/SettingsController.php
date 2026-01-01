@@ -48,13 +48,18 @@ final class SettingsController extends Controller {
 		}
 
 		$params = $this->request->getParams();
-		$baseUrl = trim((string)($params['baseUrl'] ?? ''));
-		$clientId = trim((string)($params['clientId'] ?? ''));
-		$timeout = (int)($params['timeoutSeconds'] ?? $this->appConfig->getTimeoutSeconds());
-		$devAllowHttp = filter_var($params['devAllowHttp'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
-		$devAllowlistHosts = trim((string)($params['devAllowlistHosts'] ?? ''));
-		$apiKey = trim((string)($params['apiKey'] ?? ''));
-		$signingSecret = trim((string)($params['signingSecret'] ?? ''));
+		$baseUrl = trim($this->pickParam($params, ['baseUrl', 'base_url'], ''));
+		$clientId = trim($this->pickParam($params, ['clientId', 'hmac_client_id'], ''));
+		$timeoutRaw = $this->pickParam($params, ['timeoutSeconds', 'timeout_seconds'], (string)$this->appConfig->getTimeoutSeconds());
+		$timeout = (int)$timeoutRaw;
+		$devAllowHttp = filter_var(
+			$this->pickParam($params, ['devAllowHttp', 'dev_allow_insecure_local_http'], '0'),
+			FILTER_VALIDATE_BOOLEAN,
+			FILTER_NULL_ON_FAILURE,
+		) ?? false;
+		$allowlistHosts = trim($this->pickParam($params, ['allowlistHosts', 'devAllowlistHosts', 'dev_allowlist_hosts'], ''));
+		$apiKey = trim($this->pickParam($params, ['apiKey', 'api_key'], ''));
+		$hmacSecret = trim($this->pickParam($params, ['hmacSecret', 'signingSecret', 'hmac_secret'], ''));
 
 		if ($baseUrl === '') {
 			return $this->buildErrorResponse('invalid_argument', 'Base URL is required.', $requestId, Http::STATUS_BAD_REQUEST);
@@ -71,7 +76,7 @@ final class SettingsController extends Controller {
 		if ($timeout < 1 || $timeout > 30) {
 			return $this->buildErrorResponse('invalid_argument', 'Timeout must be between 1 and 30 seconds.', $requestId, Http::STATUS_BAD_REQUEST);
 		}
-		if (strlen($devAllowlistHosts) > self::DEV_ALLOWLIST_MAX_LENGTH) {
+		if (strlen($allowlistHosts) > self::DEV_ALLOWLIST_MAX_LENGTH) {
 			return $this->buildErrorResponse('invalid_argument', 'Allowlist is too long.', $requestId, Http::STATUS_BAD_REQUEST);
 		}
 
@@ -79,7 +84,7 @@ final class SettingsController extends Controller {
 			$this->urlValidator->validate(
 				$baseUrl,
 				$devAllowHttp,
-				$devAllowlistHosts,
+				$allowlistHosts,
 				$this->appConfig->isAllowLocalRemoteServers(),
 			);
 		} catch (InvalidArgumentException $exception) {
@@ -90,15 +95,17 @@ final class SettingsController extends Controller {
 			$this->appConfig->setBaseUrl($baseUrl);
 			$this->appConfig->setClientId($clientId);
 			$this->appConfig->setTimeoutSeconds($timeout);
-			$this->appConfig->setDevAllowInsecureLocalHttp($devAllowHttp);
-			$this->appConfig->setDevAllowlistHosts($devAllowlistHosts);
+			$this->appConfig->setDevAllowHttp($devAllowHttp);
+			$this->appConfig->setAllowlistHosts($allowlistHosts);
 
 			if ($apiKey !== '') {
 				$this->appConfig->setApiKey($apiKey);
 			}
-			if ($signingSecret !== '') {
-				$this->appConfig->setHmacSecret($signingSecret);
+			if ($hmacSecret !== '') {
+				$this->appConfig->rotateHmacSecret($hmacSecret);
 			}
+
+			$this->appConfig->migrateLegacyConfig();
 		} catch (\Throwable $throwable) {
 			$this->logger->error('Failed to persist weather settings', [
 				'requestId' => $requestId,
@@ -109,6 +116,20 @@ final class SettingsController extends Controller {
 		}
 
 		return new JSONResponse(['ok' => true]);
+	}
+
+	/**
+	 * @param array<string, mixed> $params
+	 * @param list<string> $names
+	 */
+	private function pickParam(array $params, array $names, string $default): string {
+		foreach ($names as $name) {
+			if (array_key_exists($name, $params)) {
+				return (string)$params[$name];
+			}
+		}
+
+		return $default;
 	}
 
 	private function buildErrorResponse(string $code, string $message, string $requestId, int $status): JSONResponse {

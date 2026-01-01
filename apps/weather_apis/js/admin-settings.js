@@ -22,10 +22,20 @@
 		const baseUrlInput = form.querySelector('[name="baseUrl"]')
 		const clientIdInput = form.querySelector('[name="clientId"]')
 		const apiKeyInput = form.querySelector('[name="apiKey"]')
-		const signingSecretInput = form.querySelector('[name="signingSecret"]')
+		const hmacSecretInput = form.querySelector('[name="hmacSecret"]')
 		const timeoutInput = form.querySelector('[name="timeoutSeconds"]')
 		const devAllowHttpInput = form.querySelector('[name="devAllowHttp"]')
-		const allowlistInput = form.querySelector('[name="devAllowlistHosts"]')
+		const allowlistInput = form.querySelector('[name="allowlistHosts"]')
+		const generateUrl = form.dataset.generateUrl || ''
+		const rotateUrl = form.dataset.rotateUrl || ''
+		const credentialsPanel = document.getElementById('weather-apis-credentials-panel')
+		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
+		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
+		const copyClientIdButton = document.getElementById('weather-apis-copy-client-id')
+		const copySecretButton = document.getElementById('weather-apis-copy-secret')
+		const closeCredentialsButton = document.getElementById('weather-apis-credentials-close')
+		const generateButton = document.getElementById('weather-apis-generate-credentials')
+		const rotateButton = document.getElementById('weather-apis-rotate-secret')
 
 		const toText = (value, fallback = '') => {
 			if (typeof value === 'string') return value
@@ -41,6 +51,11 @@
 			}
 
 			return String(value ?? fallback)
+		}
+
+		const clearStatus = () => {
+			status.textContent = ''
+			status.classList.remove('success', 'error')
 		}
 
 		const pickMessage = (data, fallback) => toText(
@@ -71,6 +86,217 @@
 			if (typeof n.show === 'function') {
 				try { n.show(text) } catch { /* noop */ }
 			}
+		}
+
+		const readJsonResponse = async (response) => {
+			const text = await response.text()
+			if (!text) {
+				return { parsed: false, data: {}, text }
+			}
+
+			try {
+				return { parsed: true, data: JSON.parse(text), text }
+			} catch {
+				return { parsed: false, data: {}, text }
+			}
+		}
+
+		const showParseError = (text) => {
+			const snippet = text.trim().slice(0, 200)
+			const message = snippet || 'Unable to parse response.'
+			status.textContent = message
+			status.classList.add('error')
+			toast(message)
+		}
+
+		const clearCredentialsPanel = () => {
+			if (generatedClientIdInput) {
+				generatedClientIdInput.value = ''
+			}
+			if (generatedSecretInput) {
+				generatedSecretInput.value = ''
+			}
+			if (credentialsPanel) {
+				credentialsPanel.hidden = true
+			}
+		}
+
+		const showCredentials = (clientId, hmacSecret) => {
+			if (generatedClientIdInput) {
+				generatedClientIdInput.value = clientId
+			}
+			if (generatedSecretInput) {
+				generatedSecretInput.value = hmacSecret
+			}
+			if (credentialsPanel) {
+				credentialsPanel.hidden = false
+			}
+		}
+
+		const copyToClipboard = async (value, inputEl) => {
+			if (!value) return false
+
+			if (navigator?.clipboard?.writeText) {
+				try {
+					await navigator.clipboard.writeText(value)
+					return true
+				} catch {
+					// fall through to legacy copy
+				}
+			}
+
+			if (!inputEl) return false
+
+			try {
+				inputEl.focus()
+				inputEl.select()
+				inputEl.setSelectionRange(0, inputEl.value.length)
+				const ok = document.execCommand('copy')
+				inputEl.blur()
+				return ok
+			} catch {
+				return false
+			}
+		}
+
+		const buildTokenFormData = () => {
+			const formData = new FormData()
+			if (requestToken) {
+				formData.set('requesttoken', requestToken)
+			}
+			return formData
+		}
+
+		const runAdminAction = async (url, onSuccess) => {
+			if (!url) {
+				const message = 'Admin action is not available.'
+				status.textContent = message
+				status.classList.add('error')
+				toast(message)
+				return
+			}
+
+			clearStatus()
+			clearCredentialsPanel()
+
+			const response = await fetch(url, {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					'Accept': 'application/json',
+					requesttoken: requestToken,
+					'OCS-APIRequest': 'true',
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+				body: buildTokenFormData(),
+			})
+
+			const { parsed, data, text } = await readJsonResponse(response)
+			if (!parsed) {
+				showParseError(text)
+				return
+			}
+
+			const isOk = response.ok && data?.ok === true
+			if (!isOk) {
+				const message = pickMessage(data, 'Unable to perform admin action.')
+				status.textContent = message
+				status.classList.add('error')
+				toast(message)
+				return
+			}
+
+			onSuccess(data)
+		}
+
+		const handleGenerate = async () => {
+			await runAdminAction(generateUrl, (data) => {
+				const clientId = typeof data?.clientId === 'string' ? data.clientId : ''
+				const hmacSecret = typeof data?.hmacSecret === 'string' ? data.hmacSecret : ''
+
+				if (!clientId || !hmacSecret) {
+					const message = 'Credential response is malformed.'
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
+					return
+				}
+
+				if (clientIdInput) {
+					clientIdInput.value = clientId
+				}
+
+				showCredentials(clientId, hmacSecret)
+				toast('Generated credentials. Shown once.')
+			})
+		}
+
+		const handleRotate = async () => {
+			await runAdminAction(rotateUrl, (data) => {
+				const hmacSecret = typeof data?.hmacSecret === 'string' ? data.hmacSecret : ''
+				if (!hmacSecret) {
+					const message = 'Rotation response is malformed.'
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
+					return
+				}
+
+				const clientId = clientIdInput?.value ?? ''
+				showCredentials(clientId, hmacSecret)
+				toast('Rotated secret. Shown once.')
+			})
+		}
+
+		if (generateButton) {
+			generateButton.addEventListener('click', () => {
+				handleGenerate().catch((error) => {
+					const message = error instanceof Error ? error.message : 'Unable to generate credentials.'
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
+				})
+			})
+		}
+
+		if (rotateButton) {
+			rotateButton.addEventListener('click', () => {
+				handleRotate().catch((error) => {
+					const message = error instanceof Error ? error.message : 'Unable to rotate secret.'
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
+				})
+			})
+		}
+
+		if (closeCredentialsButton) {
+			closeCredentialsButton.addEventListener('click', () => {
+				clearCredentialsPanel()
+			})
+		}
+
+		if (copyClientIdButton && generatedClientIdInput) {
+			copyClientIdButton.addEventListener('click', () => {
+				const value = generatedClientIdInput.value.trim()
+				copyToClipboard(value, generatedClientIdInput).then((ok) => {
+					const message = ok ? 'Client ID copied.' : 'Unable to copy client ID.'
+					toast(message)
+				})
+			})
+		}
+
+		if (copySecretButton && generatedSecretInput) {
+			copySecretButton.addEventListener('click', () => {
+				const value = generatedSecretInput.value.trim()
+				copyToClipboard(value, generatedSecretInput).then((ok) => {
+					const message = ok ? 'Secret copied.' : 'Unable to copy secret.'
+					toast(message)
+					if (ok) {
+						generatedSecretInput.value = ''
+					}
+				})
+			})
 		}
 
 		const requirePasswordConfirmationAsync = () => new Promise((resolve) => {
@@ -112,8 +338,8 @@
 			formData.set('baseUrl', (baseUrlInput?.value ?? '').trim())
 			formData.set('clientId', (clientIdInput?.value ?? '').trim())
 			formData.set('apiKey', (apiKeyInput?.value ?? '').trim())
-			formData.set('signingSecret', (signingSecretInput?.value ?? '').trim())
-			formData.set('devAllowlistHosts', (allowlistInput?.value ?? '').trim())
+			formData.set('hmacSecret', (hmacSecretInput?.value ?? '').trim())
+			formData.set('allowlistHosts', (allowlistInput?.value ?? '').trim())
 			formData.set('devAllowHttp', devAllowHttpInput?.checked ? '1' : '0')
 
 			const parsedTimeout = Number.parseInt(timeoutInput?.value ?? '10', 10)
@@ -129,8 +355,7 @@
 
 		form.addEventListener('submit', (event) => {
 			event.preventDefault()
-			status.textContent = ''
-			status.classList.remove('success', 'error')
+			clearStatus()
 
 			const performSave = async (allowPasswordRetry = true) => {
 				const response = await fetch(action, {
@@ -145,24 +370,9 @@
 					body: buildFormData(),
 				})
 
-				const text = await response.text()
-				let data = {}
-				let parsed = false
-				if (text) {
-					try {
-						data = JSON.parse(text)
-						parsed = true
-					} catch {
-						parsed = false
-					}
-				}
-
+				const { parsed, data, text } = await readJsonResponse(response)
 				if (!parsed) {
-					const snippet = text.trim().slice(0, 200)
-					const message = snippet || 'Unable to parse response.'
-					status.textContent = message
-					status.classList.add('error')
-					toast(message)
+					showParseError(text)
 					return
 				}
 
@@ -188,7 +398,7 @@
 
 				// Keep same behavior: clear secrets after successful save
 				if (apiKeyInput) apiKeyInput.value = ''
-				if (signingSecretInput) signingSecretInput.value = ''
+				if (hmacSecretInput) hmacSecretInput.value = ''
 			}
 
 			;(async () => {

@@ -6,19 +6,25 @@ Status: **pre-integration** (docs + tooling only). See `apps/weather_apis/AGENTS
 
 ## Configuration keys (contract)
 
-These keys will be stored in Nextcloud app config under app id `weather_apis`.
+These keys are stored in Nextcloud app config under app id `weather_apis` and are the canonical schema going forward.
 
 | Key | Type | Purpose | Validation |
 | --- | ---- | ------- | ---------- |
-| `base_url` | string | Django API base URL | **HTTPS-only**, no embedded credentials, SSRF-safe host/IP (see `AGENTS.md`) |
-| `api_key` | string (encrypted) | Backend auth secret | Stored encrypted via `ICrypto`; never displayed back in UI |
-| `timeout_seconds` | int | Outbound HTTP timeout | TODO define bounds (recommend 1–30) |
-| `dev_allow_insecure_local_http` | bool | Explicit dev override | Default `false`; when `true`, allows `http` only for allowlisted hosts (see `dev_allowlist_hosts`) |
-| `dev_allowlist_hosts` | string | Hosts allowed under the dev override | Comma- or newline-separated entries; host must match exactly before private IPs/`http` are permitted |
+| `baseUrl` | string | Django API base URL | **HTTPS-only**, no embedded credentials, SSRF-safe host/IP (see `AGENTS.md`) |
+| `clientId` | string | DRF integration client id (HMAC client id) | Required |
+| `apiKey` | string (encrypted) | Backend auth secret | Stored encrypted via `ICrypto`; never displayed back in UI |
+| `hmacSecret` | string (encrypted) | HMAC signing secret | Stored encrypted via `ICrypto`; never displayed back in UI |
+| `hmacSecretPrevious` | string (optional) | Previous HMAC secret for rotation | Used only inside the rotation grace window |
+| `hmacSecretPreviousExpiresAt` | int (optional) | Unix timestamp when the previous secret expires | Rotation grace window expiry |
+| `timeoutSeconds` | int | Outbound HTTP timeout | TODO define bounds (recommend 1–30) |
+| `devAllowHttp` | bool | Explicit dev override | Default `false`; when `true`, allows `http` only for allowlisted hosts |
+| `allowlistHosts` | string | Hosts allowed under the dev override | Comma- or newline-separated entries; host must match exactly before private IPs/`http` are permitted |
 
-Configure these values via Settings → Administration → Weather APIs. Secrets (API key/signing secret) are stored encrypted and are never rendered back to the browser; leave those fields blank when saving to keep existing values.
+Legacy keys (`base_url`, `api_key`, `hmac_secret`, `hmac_client_id`, `timeout_seconds`, `dev_allow_insecure_local_http`, `dev_allowlist_hosts`) are still accepted on save and are migrated one-way into the canonical schema.
 
-> TODO: When integration starts, document defaults and any additional non-secret toggles. Production always enforces HTTPS and public IPs; use `dev_allow_insecure_local_http` + `dev_allowlist_hosts` only for tight development exception cases.
+Configure these values via Settings → Administration → Weather APIs. Secrets are write-only in the UI; leave those fields blank when saving to keep existing values.
+
+> TODO: When integration starts, document defaults and any additional non-secret toggles. Production always enforces HTTPS and public IPs; use `devAllowHttp` + `allowlistHosts` only for tight development exception cases.
 
 ## Integration: Backend connection
 
@@ -29,10 +35,23 @@ This app connects to the DRF backend through the admin-configured base URL, typi
 - Base URL (`baseUrl`): Scheme + host + optional path for the DRF reverse proxy (for example `https://example.local/api`). Production must use HTTPS; the dev override is limited to allowlisted hosts.
 - Client ID (`clientId`): HMAC client identifier used for the integration token handshake.
 - API key (`apiKey`): Backend auth secret stored encrypted at rest; never displayed back in the UI.
-- Signing secret (`signingSecret`): HMAC secret used to sign token requests; stored encrypted at rest and never displayed back in the UI.
+- HMAC secret (`hmacSecret`): Secret used to sign token requests; stored encrypted at rest via `ICrypto` and never displayed back in the UI. When rotated, the previous secret is kept for a 24h grace window.
 - Timeout seconds (`timeoutSeconds`): Total timeout for outbound HTTP to the backend (bounded; see config table above).
 - Dev: allow insecure local HTTP (`devAllowHttp`): Enables `http` only when the host is explicitly allowlisted.
-- Dev: allowlist hosts (`devAllowlistHosts`): Comma- or newline-separated hostnames allowed when the dev override is enabled (exact match required).
+- Dev: allowlist hosts (`allowlistHosts`): Comma- or newline-separated hostnames allowed when the dev override is enabled (exact match required).
+
+### Admin credential actions
+
+In Settings → Administration → Weather APIs, admins can generate and rotate HMAC credentials without using shell commands.
+
+- Generate client + secret: `POST /apps/weather_apis/api/v1/admin/generate-credentials` (admin-only, CSRF required)
+  - Generates a client id if missing and always rotates the HMAC secret.
+  - Returns `{ ok: true, clientId, hmacSecret }` once; the UI shows the secret only after the request.
+- Rotate secret: `POST /apps/weather_apis/api/v1/admin/rotate-hmac` (admin-only, CSRF required)
+  - Always rotates the HMAC secret.
+  - Returns `{ ok: true, hmacSecret }` once; the UI shows the secret only after the request.
+
+`apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + `hmacSecret`.
 
 ### Connectivity test
 
@@ -55,13 +74,13 @@ curl -u admin:APP_PASSWORD \
 - CSRF/requesttoken: Admin settings saves require a valid `requesttoken` (use the UI or send the header when posting).
 - Permissions: Settings and integration endpoints are admin-only; non-admin sessions return 401/403.
 - Allowlist/SSRF blocks: Base URL validation fails if HTTPS is missing, the host is disallowed, or DNS resolves to blocked ranges.
-- Timeouts: Slow or unreachable backends return `backend_timeout`; verify reverse proxy reachability and `timeout_seconds`.
+- Timeouts: Slow or unreachable backends return `backend_timeout`; verify reverse proxy reachability and `timeoutSeconds`.
 - Reverse proxy headers: Ensure `Host` and `X-Forwarded-Proto` are forwarded correctly and Nextcloud overwrite settings match the proxy URL.
 
 ## Backend contract (confirmed for the integration proof-of-concept)
 
 ### Token handshake
-- Endpoint: `POST {base_url}/api/v1/integration/token/`
+- Endpoint: `POST {baseUrl}/api/v1/integration/token/`
 - Headers:
   * `Content-Type: application/json`
   * `X-API-Key: <api key>`
@@ -79,7 +98,7 @@ curl -u admin:APP_PASSWORD \
   6. SHA256 hash of the request body (empty body hash is `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`)
 
 ### Whoami
-- Endpoint: `GET {base_url}/api/v1/integration/whoami/`
+- Endpoint: `GET {baseUrl}/api/v1/integration/whoami/`
 - Headers:
   * `Authorization: Bearer <access token>`
   * `X-Request-Id: <correlation id>` (propagated from the caller or a generated UUID)
