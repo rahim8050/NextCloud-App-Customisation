@@ -6,7 +6,7 @@ script('weather_apis', 'admin-settings');
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
 	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>">
-		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>" />
+		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
 			<label for="weather-apis-base-url"><?php p($l->t('Base URL')); ?></label>

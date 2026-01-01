@@ -44,6 +44,8 @@ final class AdminSettingsTest extends TestCase {
 		$response = $settings->getForm();
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertArrayHasKey('saveUrl', $response->getParams());
+		$this->assertNotSame('', $response->getParams()['saveUrl']);
 		$this->assertSame('/apps/weather_apis/settings/admin', $response->getParams()['saveUrl']);
 	}
 }

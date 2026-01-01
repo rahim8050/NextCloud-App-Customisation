@@ -10,9 +10,13 @@
 
 		const action = form.getAttribute('action') || ''
 		const requestTokenInput = form.querySelector('input[name="requesttoken"]')
-		const requestToken = String(requestTokenInput?.value ?? window.OC?.requestToken ?? '').trim()
-		if (!action || !requestToken) {
+		const requestToken = String(window.OC?.requestToken ?? requestTokenInput?.value ?? '').trim()
+		if (!action) {
 			return
+		}
+
+		if (requestTokenInput && requestToken && requestTokenInput.value !== requestToken) {
+			requestTokenInput.value = requestToken
 		}
 
 		const baseUrlInput = form.querySelector('[name="baseUrl"]')
@@ -103,35 +107,64 @@
 			return /password confirmation/i.test(msg)
 		}
 
+		const buildFormData = () => {
+			const formData = new FormData(form)
+			formData.set('baseUrl', (baseUrlInput?.value ?? '').trim())
+			formData.set('clientId', (clientIdInput?.value ?? '').trim())
+			formData.set('apiKey', (apiKeyInput?.value ?? '').trim())
+			formData.set('signingSecret', (signingSecretInput?.value ?? '').trim())
+			formData.set('devAllowlistHosts', (allowlistInput?.value ?? '').trim())
+			formData.set('devAllowHttp', devAllowHttpInput?.checked ? '1' : '0')
+
+			const parsedTimeout = Number.parseInt(timeoutInput?.value ?? '10', 10)
+			const timeout = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? String(parsedTimeout) : '10'
+			formData.set('timeoutSeconds', timeout)
+
+			if (requestToken) {
+				formData.set('requesttoken', requestToken)
+			}
+
+			return formData
+		}
+
 		form.addEventListener('submit', (event) => {
 			event.preventDefault()
 			status.textContent = ''
 			status.classList.remove('success', 'error')
-
-			const payload = {
-				baseUrl: (baseUrlInput?.value ?? '').trim(),
-				clientId: (clientIdInput?.value ?? '').trim(),
-				apiKey: (apiKeyInput?.value ?? '').trim(),
-				signingSecret: (signingSecretInput?.value ?? '').trim(),
-				timeoutSeconds: Number.parseInt(timeoutInput?.value ?? '10', 10) || 10,
-				devAllowHttp: Boolean(devAllowHttpInput?.checked),
-				devAllowlistHosts: (allowlistInput?.value ?? '').trim(),
-			}
 
 			const performSave = async (allowPasswordRetry = true) => {
 				const response = await fetch(action, {
 					method: 'POST',
 					credentials: 'same-origin',
 					headers: {
-						'Content-Type': 'application/json',
 						'Accept': 'application/json',
 						requesttoken: requestToken,
+						'OCS-APIRequest': 'true',
 						'X-Requested-With': 'XMLHttpRequest',
 					},
-					body: JSON.stringify(payload),
+					body: buildFormData(),
 				})
 
-				const data = await response.json().catch(() => ({}))
+				const text = await response.text()
+				let data = {}
+				let parsed = false
+				if (text) {
+					try {
+						data = JSON.parse(text)
+						parsed = true
+					} catch {
+						parsed = false
+					}
+				}
+
+				if (!parsed) {
+					const snippet = text.trim().slice(0, 200)
+					const message = snippet || 'Unable to parse response.'
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
+					return
+				}
 
 				// Requirement: if password confirmation is required, prompt then retry once
 				if (allowPasswordRetry && isPasswordConfirmationRequired(response, data)) {
@@ -139,7 +172,8 @@
 					return performSave(false)
 				}
 
-				if (!response.ok) {
+				const isOk = response.ok && data?.status === 'ok'
+				if (!isOk) {
 					const message = pickMessage(data, 'Unable to save settings.')
 					status.textContent = message
 					status.classList.add('error')
@@ -147,7 +181,7 @@
 					return
 				}
 
-				const message = pickMessage(data, 'Settings saved.')
+				const message = pickMessage(data, 'Saved and verified against DRF.')
 				status.textContent = message
 				status.classList.add('success')
 				toast(message) // ✅ toast on success
