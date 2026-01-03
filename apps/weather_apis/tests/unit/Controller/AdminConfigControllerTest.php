@@ -6,7 +6,11 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Service\AppConfig;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -29,11 +33,15 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertTrue($data['ok']);
 		$this->assertNotSame('', $data['clientId']);
 		$this->assertNotSame('', $data['hmacSecret']);
+		$this->assertNotSame('old-secret', $data['hmacSecret']);
 
 		$this->assertSame($data['clientId'], $storage['clientId']);
 		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
 		$this->assertSame('encrypted:old-secret', $storage['hmacSecretPrevious']);
 		$this->assertNotSame('', $storage['hmacSecretPreviousExpiresAt']);
+
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
 	}
 
 	public function testGenerateCredentialsKeepsExistingClientId(): void {
@@ -62,9 +70,13 @@ final class AdminConfigControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertTrue($data['ok']);
+		$this->assertNotSame('old-secret', $data['hmacSecret']);
 		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
 		$this->assertSame('encrypted:old-secret', $storage['hmacSecretPrevious']);
 		$this->assertNotSame('', $storage['hmacSecretPreviousExpiresAt']);
+
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
 	}
 
 	public function testConfigResponseOmitsSecrets(): void {
@@ -110,6 +122,22 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame(403, $response->getStatus());
 		$data = $this->decodeResponse($response);
 		$this->assertFalse($data['ok']);
+	}
+
+	public function testCredentialEndpointsRequireAdminAndPasswordConfirmation(): void {
+		$this->assertMethodHasAttribute('generateCredentials', AuthorizedAdminSetting::class);
+		$this->assertMethodHasAttribute('generateCredentials', PasswordConfirmationRequired::class);
+		$this->assertMethodHasAttribute('rotateHmac', AuthorizedAdminSetting::class);
+		$this->assertMethodHasAttribute('rotateHmac', PasswordConfirmationRequired::class);
+	}
+
+	public function testCredentialEndpointsRequireCsrf(): void {
+		$this->assertMethodLacksAttribute('generateCredentials', NoCSRFRequired::class);
+		$this->assertMethodLacksAttribute('rotateHmac', NoCSRFRequired::class);
+	}
+
+	public function testConfigEndpointRequiresAdmin(): void {
+		$this->assertMethodHasAttribute('getConfig', AuthorizedAdminSetting::class);
 	}
 
 	private function createController(AppConfig $appConfig, bool $isAdmin = true): AdminConfigController {
@@ -165,5 +193,33 @@ final class AdminConfigControllerTest extends TestCase {
 
 		/** @var array<string, mixed> $data */
 		return $data;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function getResponseHeaders(JSONResponse $response): array {
+		$reflection = new \ReflectionProperty(Response::class, 'headers');
+		$reflection->setAccessible(true);
+		$headers = $reflection->getValue($response);
+
+		return is_array($headers) ? $headers : [];
+	}
+
+	private function assertMethodHasAttribute(string $method, string $attributeClass): void {
+		$reflection = new \ReflectionMethod(AdminConfigController::class, $method);
+		$this->assertNotEmpty(
+			$reflection->getAttributes($attributeClass),
+			sprintf('%s is missing %s', $method, $attributeClass),
+		);
+	}
+
+	private function assertMethodLacksAttribute(string $method, string $attributeClass): void {
+		$reflection = new \ReflectionMethod(AdminConfigController::class, $method);
+		$this->assertSame(
+			[],
+			$reflection->getAttributes($attributeClass),
+			sprintf('%s should not have %s', $method, $attributeClass),
+		);
 	}
 }

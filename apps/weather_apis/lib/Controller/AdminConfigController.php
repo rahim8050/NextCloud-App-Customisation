@@ -6,8 +6,11 @@ namespace OCA\WeatherApis\Controller;
 
 use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -24,9 +27,11 @@ final class AdminConfigController extends Controller {
 		parent::__construct($appName, $request);
 	}
 
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	#[PasswordConfirmationRequired]
 	public function generateCredentials(): JSONResponse {
 		if ($response = $this->ensureAdmin()) {
-			return $response;
+			return $this->withNoStore($response);
 		}
 
 		$clientId = $this->resolveClientId();
@@ -34,28 +39,31 @@ final class AdminConfigController extends Controller {
 		$this->appConfig->rotateHmacSecret($hmacSecret);
 		$this->appConfig->migrateLegacyConfig();
 
-		return new JSONResponse([
+		return $this->withNoStore(new JSONResponse([
 			'ok' => true,
 			'clientId' => $clientId,
 			'hmacSecret' => $hmacSecret,
-		]);
+		]));
 	}
 
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	#[PasswordConfirmationRequired]
 	public function rotateHmac(): JSONResponse {
 		if ($response = $this->ensureAdmin()) {
-			return $response;
+			return $this->withNoStore($response);
 		}
 
 		$hmacSecret = $this->generateHmacSecret();
 		$this->appConfig->rotateHmacSecret($hmacSecret);
 		$this->appConfig->migrateLegacyConfig();
 
-		return new JSONResponse([
+		return $this->withNoStore(new JSONResponse([
 			'ok' => true,
 			'hmacSecret' => $hmacSecret,
-		]);
+		]));
 	}
 
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	public function getConfig(): JSONResponse {
 		if ($response = $this->ensureAdmin()) {
 			return $response;
@@ -116,5 +124,10 @@ final class AdminConfigController extends Controller {
 		}
 
 		return null;
+	}
+
+	private function withNoStore(JSONResponse $response): JSONResponse {
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
 	}
 }

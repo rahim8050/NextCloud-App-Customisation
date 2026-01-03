@@ -57,4 +57,13 @@ final class UrlValidatorTest extends TestCase {
 		$validator->validate('http://127.0.0.1:8001', true, '127.0.0.1', false);
 		$this->assertTrue(true);
 	}
+
+	public function testDevOverrideRequiresAllowlistedHost(): void {
+		$validator = $this->createValidator([
+			'example.com' => ['93.184.216.34'],
+		]);
+
+		$this->expectException(InvalidArgumentException::class);
+		$validator->validate('http://example.com', true, 'other.example.com', false);
+	}
 }

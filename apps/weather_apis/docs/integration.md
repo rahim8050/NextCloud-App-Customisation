@@ -5,7 +5,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 ## Flow (step list)
 
 1. An admin configures the settings fields in Nextcloud (`baseUrl`, `clientId`, `apiKey`, `hmacSecret`, `timeoutSeconds`, and dev allowlist fields).
-2. The app validates the base URL (SSRF rules). `apiKey` and `hmacSecret` are stored encrypted at rest and are never rendered back in the UI.
+2. The app validates the base URL (SSRF rules). `apiKey` and `hmacSecret` are stored encrypted at rest; the settings form never renders stored secrets (new HMAC secrets are returned once on generate/rotate).
 3. Admins can generate or rotate the HMAC credentials from the settings UI without using shell commands.
 4. On an integration call (for example `whoami`), `WeatherApiClient` constructs the token request (see the backend contract for the exact path and headers).
 5. The request is sent to the configured reverse proxy URL, which forwards to DRF.
@@ -26,7 +26,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 
 ## Security notes
 
-- Secrets are never rendered back in the UI. `apiKey` and `hmacSecret` are encrypted at rest via `ICrypto`.
+- Secrets are stored encrypted at rest via `ICrypto`; the settings form never renders stored secrets (new HMAC secrets are returned once on generate/rotate).
 - When `hmacSecret` is rotated, the previous secret is kept in `hmacSecretPrevious` with an expiry timestamp (`hmacSecretPreviousExpiresAt`) for a 24h grace window.
 - Logs never include secrets or authorization headers; only request metadata is logged.
 

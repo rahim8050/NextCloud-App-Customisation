@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Controller;
 
 use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
@@ -107,10 +108,13 @@ final class SettingsController extends Controller {
 
 			$this->appConfig->migrateLegacyConfig();
 		} catch (\Throwable $throwable) {
-			$this->logger->error('Failed to persist weather settings', [
-				'requestId' => $requestId,
-				'error' => $throwable->getMessage(),
-			]);
+			$this->logger->error(
+				'Failed to persist weather settings',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
 
 			return $this->buildErrorResponse('backend_error', 'Unable to save settings.', $requestId, Http::STATUS_INTERNAL_SERVER_ERROR);
 		}

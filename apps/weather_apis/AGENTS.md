@@ -4,9 +4,8 @@ This file is the operating contract for any automated agent (Codex/LLM) modifyin
 
 ## 0) Current status (read first)
 
-- This app is in **pre-integration** mode: docs + tooling only. Do **not** add controllers/services/routes or Django calls unless the task explicitly requests it.
-- Unknown backend details must be marked as explicit TODOs (endpoint paths, auth header name, payload schema, etc.).
-- This app is in **integration-foundations** mode: settings UI, config keys, validators, DI wiring, and tests are allowed.
+- This app is in **pre-integration** mode for outbound DRF calls; integration-foundations work is allowed (settings UI, config keys, validators, DI wiring, minimal admin-only controllers/routes, templates + JS, and tests).
+- Do **not** add new controllers/services/routes beyond the settings/admin foundations unless the task explicitly requests it.
 - Outbound HTTP / DRF calls must remain behind the service layer (`WeatherApiClient`) and must only be introduced when the task explicitly requests it.
 - Unknown backend details must be marked as explicit TODOs (endpoint paths, auth header name, payload schema, etc.). Do not guess.
 
@@ -54,7 +53,7 @@ Every “rule” here must have an enforcement path: unit tests, static analysis
 ### 3.1 Outbound HTTP / SSRF defenses
 
 **Routing rule**
-- The only outbound target is the admin-configured `base_url`. Never accept a user-provided full URL (scheme/host/port) in any endpoint.
+- The only outbound target is the admin-configured `baseUrl`. Never accept a user-provided full URL (scheme/host/port) in any endpoint.
 
 **Client rule**
 - All outbound HTTP must go through Nextcloud `OCP\Http\Client\IClientService` (no raw curl, no `file_get_contents`).
@@ -63,10 +62,10 @@ Every “rule” here must have an enforcement path: unit tests, static analysis
 - Redirects must be disabled. Do not follow 3xx responses (prevents redirect-to-metadata SSRF).
 
 **Timeout rule**
-- Enforce strict timeouts (connect + total). `timeout_seconds` must be admin-configurable and bounded.
+- Enforce strict timeouts (connect + total). `timeoutSeconds` must be admin-configurable and bounded.
 
 **URL validation rule (at save-time and at request-time)**
-- Parse `base_url` and reject if:
+- Parse `baseUrl` and reject if:
   - scheme is not `https`
   - URL contains embedded credentials (`user:pass@host`)
   - host is missing
@@ -74,24 +73,26 @@ Every “rule” here must have an enforcement path: unit tests, static analysis
 - Resolve host (`A` + `AAAA`) and reject if any resolved IP is in a blocked range (IPv4/IPv6 loopback, link-local, private, reserved, multicast, documentation ranges, CGNAT).
 - If DNS resolution fails, fail closed (do not attempt the request).
 - Provide a documented admin-only override for local dev scenarios where HTTPS termination isn’t available:
-  - config key `dev_allow_insecure_local_http` (bool, default `false`)
-  - config key `dev_allowlist_hosts` (string, blank by default; comma or newline separated entries)
-  - When the override is `true`, `base_url` may be `http`, but only if the host exactly matches an allowlisted entry.
+  - config key `devAllowHttp` (bool, default `false`)
+  - config key `allowlistHosts` (string, blank by default; comma or newline separated entries)
+  - When the override is `true`, `baseUrl` may be `http`, but only if the host exactly matches an allowlisted entry.
   - Private/reserved IPs remain blocked unless the host is allowlisted while the override flag is enabled.
 
 **Enforcement**
 - Unit tests for URL validation, DNS/IP blocking, and redirect/timeout options.
 - PR checklist item: “All outbound HTTP is via `WeatherApiClient` + `IClientService` with redirects disabled + timeouts set.”
 
-> TODO (dev ergonomics): Document the allowed hosts/addresses for `dev_allow_insecure_local_http` + `dev_allowlist_hosts` so audits know which entries are legitimate dev targets.
+> TODO (dev ergonomics): Document the allowed hosts/addresses for `devAllowHttp` + `allowlistHosts` so audits know which entries are legitimate dev targets.
 
 ### 3.2 Secrets handling
 
 **Storage rule**
-- The `api_key` must be stored encrypted at rest using `OCP\Security\ICrypto` before writing to app config.
+- The `apiKey` must be stored encrypted at rest using `OCP\Security\ICrypto` before writing to app config.
 
 **Exposure rule**
-- Never return secrets in any API response (including to admins). Settings UI must not display stored secrets; only allow replacing them.
+- Never return secrets in any API response (including to admins).
+- Exception: ONLY the admin credential generation/rotation endpoints may return the newly generated plaintext `hmacSecret` once. These responses must be admin-only, require CSRF/requesttoken + password confirmation, and include `Cache-Control: no-store`.
+- Settings UI must not display stored secrets; only allow replacing them.
 
 **Logging rule**
 - Never log:
@@ -166,17 +167,23 @@ Never expose backend stack traces, internal URLs, or raw backend payloads.
 
 All keys are scoped to app id `weather_apis` in Nextcloud app config.
 
-- `base_url` (string): required; validated per SSRF rules; no embedded credentials; **HTTPS-only**
-- `api_key` (string): optional/required TBD; stored encrypted via `ICrypto`
-- `timeout_seconds` (int): required; bounded (TODO define bounds; recommend 1–30)
-- `dev_allow_insecure_local_http` (bool): default `false`; enables the dev allowlist override described above
-- `dev_allowlist_hosts` (string): comma or newline separated hosts; when the dev override is enabled, only allowlisted hosts may resolve to private/reserved IPs or use `http`
+- `baseUrl` (string): required; validated per SSRF rules; no embedded credentials; **HTTPS-only**
+- `clientId` (string): required; HMAC client identifier
+- `apiKey` (string): optional/required TBD; stored encrypted via `ICrypto`
+- `hmacSecret` (string): stored encrypted via `ICrypto`
+- `hmacSecretPrevious` (string, optional): previous HMAC secret for rotation grace window
+- `hmacSecretPreviousExpiresAt` (int, optional): Unix timestamp for previous secret expiry
+- `timeoutSeconds` (int): required; bounded (TODO define bounds; recommend 1–30)
+- `devAllowHttp` (bool): default `false`; enables the dev allowlist override described above
+- `allowlistHosts` (string): comma or newline separated hosts; when the dev override is enabled, only allowlisted hosts may resolve to private/reserved IPs or use `http`
+
+Legacy snake_case keys (`base_url`, `api_key`, `hmac_secret`, `hmac_client_id`, `timeout_seconds`, `dev_allow_insecure_local_http`, `dev_allowlist_hosts`) are accepted on save only and are migrated one-way into the canonical schema.
 
 ### 4.2 Backend endpoints (placeholders; do not guess)
 
 Document the Django API contract here and keep it updated. Until confirmed, keep explicit TODOs:
-- Health check: `GET {base_url}/<TODO:health-path>` → 200 JSON (used by `ping()`)
-- Forecast: `GET {base_url}/<TODO:forecast-path>?lat={lat}&lon={lon}&date={date?}` → 200 JSON
+- Health check: `GET {baseUrl}/<TODO:health-path>` → 200 JSON (used by `ping()`)
+- Forecast: `GET {baseUrl}/<TODO:forecast-path>?lat={lat}&lon={lon}&date={date?}` → 200 JSON
 - Auth header: `<TODO: header name + format>` (e.g., `Authorization: Bearer …` or `X-Api-Key: …`)
 
 ### 4.3 Normalized success shape (Nextcloud API responses)
@@ -199,10 +206,7 @@ Keep controller responses stable and simple:
 All PRs for this app must satisfy:
 - PHP lint, style check, static analysis, and unit tests via composer scripts documented in `apps/weather_apis/CONTRIBUTING.md`.
 - No real network calls in tests; mock `IClientService`/`IClient`/`IResponse`.
-- Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).+- All PRs for this app must satisfy (and MUST be runnable locally):
-  - `composer run gate` (aggregates lint + style + static analysis + tests)
-  - No real network calls in tests; mock `IClientService`/`IClient`/`IResponse`.
-  - Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).
+- Any new config keys/endpoints must update app docs and root docs (see `CONTRIBUTING.md`).
 
 ### Gate command contract
 - `composer run gate` MUST exist and MUST fail the build on:

@@ -16,12 +16,66 @@ final class TokenSigner {
 		string $bodyHash,
 	): string {
 		return implode("\n", [
-			$method,
+			strtoupper($method),
 			$path,
-			$queryString,
+			$this->canonicalizeQuery($queryString),
 			$timestamp,
 			$nonce,
 			$bodyHash,
 		]);
+	}
+
+	public function bodySha256Hex(string $method, string $body): string {
+		if (strtoupper($method) === 'GET') {
+			$body = '';
+		}
+
+		return hash('sha256', $body);
+	}
+
+	public function canonicalizeQuery(string $queryString): string {
+		if ($queryString === '') {
+			return '';
+		}
+
+		$pairs = [];
+		foreach (explode('&', $queryString) as $chunk) {
+			if ($chunk === '') {
+				continue;
+			}
+
+			[$rawKey, $rawValue] = array_pad(explode('=', $chunk, 2), 2, '');
+			$key = $this->decodeQueryComponent($rawKey);
+			$value = $this->decodeQueryComponent($rawValue);
+			$pairs[] = [
+				$this->encodeQueryComponent($key),
+				$this->encodeQueryComponent($value),
+			];
+		}
+
+		usort($pairs, static function (array $left, array $right): int {
+			if ($left[0] === $right[0]) {
+				return $left[1] <=> $right[1];
+			}
+
+			return $left[0] <=> $right[0];
+		});
+
+		$encoded = [];
+		foreach ($pairs as [$key, $value]) {
+			$encoded[] = $key . '=' . $value;
+		}
+
+		return implode('&', $encoded);
+	}
+
+	private function decodeQueryComponent(string $value): string {
+		$value = str_replace('+', ' ', $value);
+		return rawurldecode($value);
+	}
+
+	private function encodeQueryComponent(string $value): string {
+		$encoded = rawurlencode($value);
+		return str_replace('%7E', '~', $encoded);
 	}
 }

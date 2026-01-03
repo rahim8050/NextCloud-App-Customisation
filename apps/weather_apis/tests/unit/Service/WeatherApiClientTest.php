@@ -20,7 +20,7 @@ use Psr\Log\LoggerInterface;
 
 final class WeatherApiClientTest extends TestCase {
 	public function testRequestOptionsEnforceTimeoutsAndRedirects(): void {
-		$tokenResponse = $this->createResponse(200, '{"access":"token"}');
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
 		$whoamiResponse = $this->createResponse(200, '{"user":"ok"}');
 
 		$tokenClient = $this->createMock(IClient::class);
@@ -52,7 +52,7 @@ final class WeatherApiClientTest extends TestCase {
 		$cache->method('get')->willReturn(null);
 		$cache->expects($this->once())
 			->method('set')
-			->with('integration_access_token', 'token', 240)
+			->with('integration_access_token', 'token', 295)
 			->willReturn(true);
 
 		$client = $this->createClient($clientService, $cache);
@@ -98,6 +98,52 @@ final class WeatherApiClientTest extends TestCase {
 			$client->whoami('rid');
 		} catch (WeatherApiException $exception) {
 			$this->assertSame('backend_error', $exception->getErrorCode());
+			throw $exception;
+		}
+	}
+
+	public function testUnauthorizedWhoamiRetriesOnceAndFails(): void {
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
+		$whoamiUnauthorized = $this->createResponse(401, '{"detail":"nope"}');
+
+		$firstWhoamiClient = $this->createMock(IClient::class);
+		$firstWhoamiClient->expects($this->once())
+			->method('get')
+			->willReturn($whoamiUnauthorized);
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient->expects($this->once())
+			->method('post')
+			->willReturn($tokenResponse);
+
+		$secondWhoamiClient = $this->createMock(IClient::class);
+		$secondWhoamiClient->expects($this->once())
+			->method('get')
+			->willReturn($whoamiUnauthorized);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->exactly(3))
+			->method('newClient')
+			->willReturnOnConsecutiveCalls($firstWhoamiClient, $tokenClient, $secondWhoamiClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+		$cache->expects($this->once())
+			->method('remove')
+			->with('integration_access_token')
+			->willReturn(true);
+		$cache->expects($this->once())
+			->method('set')
+			->with('integration_access_token', 'token', 295)
+			->willReturn(true);
+
+		$client = $this->createClient($clientService, $cache);
+
+		$this->expectException(WeatherApiException::class);
+		try {
+			$client->whoami('rid');
+		} catch (WeatherApiException $exception) {
+			$this->assertSame('unauthorized', $exception->getErrorCode());
 			throw $exception;
 		}
 	}

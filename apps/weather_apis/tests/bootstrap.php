@@ -11,6 +11,22 @@ namespace OC\AppFramework\DependencyInjection {
 	}
 }
 
+namespace OC {
+	if (!class_exists(AppScriptDependency::class)) {
+		final class AppScriptDependency {
+			public function __construct(
+				private readonly string $appId,
+				private array $deps = [],
+			) {
+			}
+
+			public function addDep(string $appId): void {
+				$this->deps[] = $appId;
+			}
+		}
+	}
+}
+
 namespace {
 	if (!class_exists(\OC::class)) {
 		final class OC {
@@ -21,14 +37,19 @@ namespace {
 	if (!class_exists(FakeServer::class)) {
 		final class FakeServer {
 			private readonly object $config;
+			private readonly object $l10nFactory;
 
 			public function __construct() {
 				$this->config = new FakeConfig();
+				$this->l10nFactory = new FakeL10nFactory();
 			}
 
 			public function get(string $serviceName): mixed {
 				if ($serviceName === \OCP\IConfig::class) {
 					return $this->config;
+				}
+				if ($serviceName === \OCP\L10N\IFactory::class) {
+					return $this->l10nFactory;
 				}
 
 				return null;
@@ -44,6 +65,14 @@ namespace {
 		final class FakeConfig {
 			public function getSystemValueBool(string $key): bool {
 				return false;
+			}
+		}
+	}
+
+	if (!class_exists(FakeL10nFactory::class)) {
+		final class FakeL10nFactory {
+			public function findLanguage(string $appId): string {
+				return 'en';
 			}
 		}
 	}

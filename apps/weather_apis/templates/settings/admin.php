@@ -1,6 +1,5 @@
 <?php
 style('weather_apis', 'admin-settings');
-script('weather_apis', 'admin-settings');
 ?>
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
@@ -33,16 +32,16 @@ script('weather_apis', 'admin-settings');
 		<div class="form-group">
 			<label><?php p($l->t('HMAC credentials')); ?></label>
 			<div class="weather-apis-credentials__actions">
-				<button id="weather-apis-generate-credentials" type="button" class="button"><?php p($l->t('Generate client + secret')); ?></button>
-				<button id="weather-apis-rotate-secret" type="button" class="button"><?php p($l->t('Rotate secret')); ?></button>
+				<button id="weather-apis-generate" type="button" class="button"><?php p($l->t('Generate client + secret')); ?></button>
+				<button id="weather-apis-rotate" type="button" class="button"><?php p($l->t('Rotate secret')); ?></button>
 			</div>
 			<p class="hint"><?php p($l->t('Shown once. Store securely.')); ?></p>
 		</div>
 
-		<div id="weather-apis-credentials-panel" class="weather-apis-credentials" hidden>
+		<div id="weather-apis-credentials-result" class="weather-apis-credentials" hidden>
 			<div class="weather-apis-credentials__header">
 				<strong><?php p($l->t('Generated credentials')); ?></strong>
-				<button id="weather-apis-credentials-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+				<button id="weather-apis-credentials-close" type="button" class="button"><?php p($l->t('Clear')); ?></button>
 			</div>
 			<p class="warning"><?php p($l->t('Shown once. Store securely.')); ?></p>
 			<div class="form-group">

@@ -13,7 +13,7 @@ These keys are stored in Nextcloud app config under app id `weather_apis` and ar
 | `baseUrl` | string | Django API base URL | **HTTPS-only**, no embedded credentials, SSRF-safe host/IP (see `AGENTS.md`) |
 | `clientId` | string | DRF integration client id (HMAC client id) | Required |
 | `apiKey` | string (encrypted) | Backend auth secret | Stored encrypted via `ICrypto`; never displayed back in UI |
-| `hmacSecret` | string (encrypted) | HMAC signing secret | Stored encrypted via `ICrypto`; never displayed back in UI |
+| `hmacSecret` | string (encrypted) | HMAC signing secret | Stored encrypted via `ICrypto`; returned once on generation/rotation (not displayed after save) |
 | `hmacSecretPrevious` | string (optional) | Previous HMAC secret for rotation | Used only inside the rotation grace window |
 | `hmacSecretPreviousExpiresAt` | int (optional) | Unix timestamp when the previous secret expires | Rotation grace window expiry |
 | `timeoutSeconds` | int | Outbound HTTP timeout | TODO define bounds (recommend 1–30) |
@@ -22,7 +22,7 @@ These keys are stored in Nextcloud app config under app id `weather_apis` and ar
 
 Legacy keys (`base_url`, `api_key`, `hmac_secret`, `hmac_client_id`, `timeout_seconds`, `dev_allow_insecure_local_http`, `dev_allowlist_hosts`) are still accepted on save and are migrated one-way into the canonical schema.
 
-Configure these values via Settings → Administration → Weather APIs. Secrets are write-only in the UI; leave those fields blank when saving to keep existing values.
+Configure these values via Settings → Administration → Weather APIs. Secrets are write-only in the form; generate/rotate returns a new HMAC secret once. Leave those fields blank when saving to keep existing values.
 
 > TODO: When integration starts, document defaults and any additional non-secret toggles. Production always enforces HTTPS and public IPs; use `devAllowHttp` + `allowlistHosts` only for tight development exception cases.
 
@@ -35,7 +35,7 @@ This app connects to the DRF backend through the admin-configured base URL, typi
 - Base URL (`baseUrl`): Scheme + host + optional path for the DRF reverse proxy (for example `https://example.local/api`). Production must use HTTPS; the dev override is limited to allowlisted hosts.
 - Client ID (`clientId`): HMAC client identifier used for the integration token handshake.
 - API key (`apiKey`): Backend auth secret stored encrypted at rest; never displayed back in the UI.
-- HMAC secret (`hmacSecret`): Secret used to sign token requests; stored encrypted at rest via `ICrypto` and never displayed back in the UI. When rotated, the previous secret is kept for a 24h grace window.
+- HMAC secret (`hmacSecret`): Secret used to sign token requests; stored encrypted at rest via `ICrypto`. Newly generated/rotated secrets are returned once; stored values are not displayed. When rotated, the previous secret is kept for a 24h grace window.
 - Timeout seconds (`timeoutSeconds`): Total timeout for outbound HTTP to the backend (bounded; see config table above).
 - Dev: allow insecure local HTTP (`devAllowHttp`): Enables `http` only when the host is explicitly allowlisted.
 - Dev: allowlist hosts (`allowlistHosts`): Comma- or newline-separated hostnames allowed when the dev override is enabled (exact match required).

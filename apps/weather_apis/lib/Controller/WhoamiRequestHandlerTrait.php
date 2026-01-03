@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\WeatherApis\Controller;
 
+use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
 use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http;
@@ -40,11 +41,14 @@ trait WhoamiRequestHandlerTrait {
 				'data' => $data,
 			]);
 		} catch (WeatherApiException $exception) {
-			$logger->error('Weather API call failed', [
-				'errorCode' => $exception->getErrorCode(),
-				'reason' => $exception->getReason(),
-				'requestId' => $requestId,
-			]);
+			$logger->error(
+				'Weather API call failed',
+				LogSanitizer::sanitizeContext([
+					'errorCode' => $exception->getErrorCode(),
+					'reason' => $exception->getReason(),
+					'requestId' => $requestId,
+				]),
+			);
 
 			return $this->buildErrorResponse(
 				$exception->getErrorCode(),
@@ -54,10 +58,13 @@ trait WhoamiRequestHandlerTrait {
 				$exception->getReason(),
 			);
 		} catch (\Throwable $throwable) {
-			$logger->error('Weather API call failed', [
-				'error' => $throwable->getMessage(),
-				'requestId' => $requestId,
-			]);
+			$logger->error(
+				'Weather API call failed',
+				LogSanitizer::sanitizeContext([
+					'error' => $throwable->getMessage(),
+					'requestId' => $requestId,
+				]),
+			);
 
 			return $this->buildErrorResponse('backend_error', 'Unable to reach backend.', $requestId, Http::STATUS_SERVICE_UNAVAILABLE);
 		}

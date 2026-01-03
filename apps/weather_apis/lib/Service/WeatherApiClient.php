@@ -15,7 +15,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	private const TOKEN_PATH = '/api/v1/integration/token/';
 	private const WHOAMI_PATH = '/api/v1/integration/whoami/';
 	private const TOKEN_CACHE_KEY = 'integration_access_token';
-	private const TOKEN_TTL_SECONDS = 240;
+	private const TOKEN_TTL_FALLBACK_SECONDS = 240;
+	private const TOKEN_TTL_SKEW_SECONDS = 5;
 
 	private readonly Closure $timeProvider;
 	private readonly Closure $nonceProvider;
@@ -45,6 +46,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			return $this->fetchWhoami($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
 		} catch (WeatherApiException $exception) {
 			if ($exception->getErrorCode() === 'unauthorized') {
+				$this->clearCachedToken();
 				$token = $this->mintToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
 
 				return $this->fetchWhoami($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
@@ -61,6 +63,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$client = $this->clientService->newClient();
 		$nonce = ($this->nonceProvider)();
 		$timestamp = (string)($this->timeProvider)();
+		$body = '';
+		$bodyHash = $this->tokenSigner->bodySha256Hex('POST', $body);
 
 		$canonical = $this->tokenSigner->buildCanonicalString(
 			'POST',
@@ -68,7 +72,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'',
 			$timestamp,
 			$nonce,
-			TokenSigner::EMPTY_BODY_HASH,
+			$bodyHash,
 		);
 
 		$signature = hash_hmac('sha256', $canonical, $this->appConfig->getHmacSecret());
@@ -82,7 +86,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'X-Nonce' => $nonce,
 			'X-Signature' => $signature,
 		]);
-		$options['body'] = '';
+		$options['body'] = $body;
 
 		$url = $this->buildEndpoint($baseUrl, self::TOKEN_PATH);
 
@@ -100,7 +104,11 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		$token = $payload['access'];
-		$this->cache->set($this->getTokenCacheKey(), $token, self::TOKEN_TTL_SECONDS);
+		$expiresIn = null;
+		if (isset($payload['expires_in']) && is_numeric($payload['expires_in'])) {
+			$expiresIn = (int)$payload['expires_in'];
+		}
+		$this->cache->set($this->getTokenCacheKey(), $token, $this->resolveTokenTtl($expiresIn));
 
 		return $token;
 	}
@@ -152,7 +160,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$localAccessSource = $devOverrideActive ? 'dev_allowlist'
 			: ($allowLocalRemoteServers ? 'system_config' : 'none');
 
-		$this->logger->debug('Weather API base URL validation context', [
+		$this->logger->debug('Weather API base URL validation context', LogSanitizer::sanitizeContext([
 			'baseUrlPresent' => $baseUrlPresent,
 			'baseUrlParsed' => $parsed,
 			'scheme' => $scheme,
@@ -165,7 +173,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'devOverrideActive' => $devOverrideActive,
 			'localAccessAllowed' => $localAccessAllowed,
 			'localAccessSource' => $localAccessSource,
-		]);
+		]));
 
 		if (!$baseUrlPresent) {
 			throw new WeatherApiException('invalid_argument', 'Base URL is not configured.');
@@ -321,5 +329,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
+	}
+
+	private function clearCachedToken(): void {
+		$this->cache->remove($this->getTokenCacheKey());
+	}
+
+	private function resolveTokenTtl(?int $expiresIn): int {
+		if ($expiresIn !== null && $expiresIn > 0) {
+			$ttl = $expiresIn - self::TOKEN_TTL_SKEW_SECONDS;
+			return $ttl > 0 ? $ttl : 1;
+		}
+
+		return self::TOKEN_TTL_FALLBACK_SECONDS;
 	}
 }

@@ -1,6 +1,12 @@
 (() => {
 	'use strict'
 
+	if (window.__weatherApisAdminSettingsLoaded) {
+		return
+	}
+	window.__weatherApisAdminSettingsLoaded = true
+	console.info('[weather_apis] admin-settings loaded')
+
 	const init = () => {
 		const form = document.getElementById('weather-apis-settings-form')
 		const status = document.getElementById('weather-apis-settings-status')
@@ -28,14 +34,17 @@
 		const allowlistInput = form.querySelector('[name="allowlistHosts"]')
 		const generateUrl = form.dataset.generateUrl || ''
 		const rotateUrl = form.dataset.rotateUrl || ''
-		const credentialsPanel = document.getElementById('weather-apis-credentials-panel')
+		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
 		const copyClientIdButton = document.getElementById('weather-apis-copy-client-id')
 		const copySecretButton = document.getElementById('weather-apis-copy-secret')
 		const closeCredentialsButton = document.getElementById('weather-apis-credentials-close')
-		const generateButton = document.getElementById('weather-apis-generate-credentials')
-		const rotateButton = document.getElementById('weather-apis-rotate-secret')
+		const generateButton = document.getElementById('weather-apis-generate')
+		const rotateButton = document.getElementById('weather-apis-rotate')
+		// TODO: confirm desired auto-hide timeout for generated secrets; 30s keeps the UI usable without lingering secrets.
+		const CREDENTIALS_CLEAR_DELAY_MS = 30000
+		let credentialsClearTimer = null
 
 		const toText = (value, fallback = '') => {
 			if (typeof value === 'string') return value
@@ -65,6 +74,42 @@
 			?? fallback,
 			fallback,
 		)
+
+		const requirePasswordConfirmationAsync = () => new Promise((resolve) => {
+			const confirmation = window.OC?.PasswordConfirmation
+			// TODO: If OC.PasswordConfirmation is unavailable in this build, wire @nextcloud/password-confirmation + CSS.
+			if (!confirmation) {
+				resolve()
+				return
+			}
+
+			// If Nextcloud says no confirmation needed, proceed immediately
+			if (typeof confirmation.requiresPasswordConfirmation === 'function') {
+				try {
+					if (!confirmation.requiresPasswordConfirmation()) {
+						resolve()
+						return
+					}
+				} catch {
+					// fall through to requirePasswordConfirmation if present
+				}
+			}
+
+			// Trigger the built-in password confirmation dialog if available
+			if (typeof confirmation.requirePasswordConfirmation === 'function') {
+				confirmation.requirePasswordConfirmation(() => resolve())
+				return
+			}
+
+			resolve()
+		})
+
+		const isPasswordConfirmationRequired = (response, data) => {
+			if (response.status === 412) return true
+			if (response.status !== 403) return false
+			const msg = pickMessage(data, '')
+			return /password confirmation/i.test(msg)
+		}
 
 		/**
 		 * Toast helper (Nextcloud-native).
@@ -109,7 +154,15 @@
 			toast(message)
 		}
 
+		const clearCredentialsTimer = () => {
+			if (credentialsClearTimer) {
+				window.clearTimeout(credentialsClearTimer)
+				credentialsClearTimer = null
+			}
+		}
+
 		const clearCredentialsPanel = () => {
+			clearCredentialsTimer()
 			if (generatedClientIdInput) {
 				generatedClientIdInput.value = ''
 			}
@@ -119,6 +172,13 @@
 			if (credentialsPanel) {
 				credentialsPanel.hidden = true
 			}
+		}
+
+		const scheduleCredentialsClear = () => {
+			clearCredentialsTimer()
+			credentialsClearTimer = window.setTimeout(() => {
+				clearCredentialsPanel()
+			}, CREDENTIALS_CLEAR_DELAY_MS)
 		}
 
 		const showCredentials = (clientId, hmacSecret) => {
@@ -131,6 +191,7 @@
 			if (credentialsPanel) {
 				credentialsPanel.hidden = false
 			}
+			scheduleCredentialsClear()
 		}
 
 		const copyToClipboard = async (value, inputEl) => {
@@ -167,18 +228,8 @@
 			return formData
 		}
 
-		const runAdminAction = async (url, onSuccess) => {
-			if (!url) {
-				const message = 'Admin action is not available.'
-				status.textContent = message
-				status.classList.add('error')
-				toast(message)
-				return
-			}
-
-			clearStatus()
-			clearCredentialsPanel()
-
+		const performAdminRequest = async (url) => {
+			console.info('[weather_apis] POST', url)
 			const response = await fetch(url, {
 				method: 'POST',
 				credentials: 'same-origin',
@@ -192,21 +243,55 @@
 			})
 
 			const { parsed, data, text } = await readJsonResponse(response)
-			if (!parsed) {
-				showParseError(text)
-				return
-			}
+			return { response, parsed, data, text }
+		}
 
-			const isOk = response.ok && data?.ok === true
-			if (!isOk) {
-				const message = pickMessage(data, 'Unable to perform admin action.')
+		const runAdminAction = async (url, onSuccess, allowPasswordRetry = true) => {
+			if (!url) {
+				const message = 'Admin action is not available.'
 				status.textContent = message
 				status.classList.add('error')
 				toast(message)
 				return
 			}
 
-			onSuccess(data)
+			clearStatus()
+			clearCredentialsPanel()
+
+			if (allowPasswordRetry) {
+				await requirePasswordConfirmationAsync()
+			}
+
+			let result = await performAdminRequest(url)
+			if (!result.parsed) {
+				showParseError(result.text)
+				return
+			}
+
+			if (allowPasswordRetry && isPasswordConfirmationRequired(result.response, result.data)) {
+				const message = pickMessage(result.data, 'Password confirmation required.')
+				status.textContent = message
+				status.classList.add('error')
+				toast(message)
+				await requirePasswordConfirmationAsync()
+				clearStatus()
+				result = await performAdminRequest(url)
+				if (!result.parsed) {
+					showParseError(result.text)
+					return
+				}
+			}
+
+			const isOk = result.response.ok && result.data?.ok === true
+			if (!isOk) {
+				const message = pickMessage(result.data, 'Unable to perform admin action.')
+				status.textContent = message
+				status.classList.add('error')
+				toast(message)
+				return
+			}
+
+			onSuccess(result.data)
 		}
 
 		const handleGenerate = async () => {
@@ -242,7 +327,7 @@
 					return
 				}
 
-				const clientId = clientIdInput?.value ?? ''
+				const clientId = typeof data?.clientId === 'string' ? data.clientId : (clientIdInput?.value ?? '')
 				showCredentials(clientId, hmacSecret)
 				toast('Rotated secret. Shown once.')
 			})
@@ -250,6 +335,7 @@
 
 		if (generateButton) {
 			generateButton.addEventListener('click', () => {
+				console.info('[weather_apis] generate clicked')
 				handleGenerate().catch((error) => {
 					const message = error instanceof Error ? error.message : 'Unable to generate credentials.'
 					status.textContent = message
@@ -261,6 +347,7 @@
 
 		if (rotateButton) {
 			rotateButton.addEventListener('click', () => {
+				console.info('[weather_apis] rotate clicked')
 				handleRotate().catch((error) => {
 					const message = error instanceof Error ? error.message : 'Unable to rotate secret.'
 					status.textContent = message
@@ -293,44 +380,10 @@
 					const message = ok ? 'Secret copied.' : 'Unable to copy secret.'
 					toast(message)
 					if (ok) {
-						generatedSecretInput.value = ''
+						clearCredentialsPanel()
 					}
 				})
 			})
-		}
-
-		const requirePasswordConfirmationAsync = () => new Promise((resolve) => {
-			const confirmation = window.OC?.PasswordConfirmation
-			if (!confirmation) {
-				resolve()
-				return
-			}
-
-			// If Nextcloud says no confirmation needed, proceed immediately
-			if (typeof confirmation.requiresPasswordConfirmation === 'function') {
-				try {
-					if (!confirmation.requiresPasswordConfirmation()) {
-						resolve()
-						return
-					}
-				} catch {
-					// fall through to requirePasswordConfirmation if present
-				}
-			}
-
-			// Trigger the built-in password confirmation dialog if available
-			if (typeof confirmation.requirePasswordConfirmation === 'function') {
-				confirmation.requirePasswordConfirmation(() => resolve())
-				return
-			}
-
-			resolve()
-		})
-
-		const isPasswordConfirmationRequired = (response, data) => {
-			if (response.status !== 403) return false
-			const msg = pickMessage(data, '')
-			return /password confirmation/i.test(msg)
 		}
 
 		const buildFormData = () => {
@@ -378,7 +431,12 @@
 
 				// Requirement: if password confirmation is required, prompt then retry once
 				if (allowPasswordRetry && isPasswordConfirmationRequired(response, data)) {
+					const message = pickMessage(data, 'Password confirmation required.')
+					status.textContent = message
+					status.classList.add('error')
+					toast(message)
 					await requirePasswordConfirmationAsync()
+					clearStatus()
 					return performSave(false)
 				}
 

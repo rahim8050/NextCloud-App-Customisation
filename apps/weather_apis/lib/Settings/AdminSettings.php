@@ -10,6 +10,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IDelegatedSettings;
+use OCP\Util;
 
 final class AdminSettings implements IDelegatedSettings {
 	public function __construct(
@@ -29,6 +30,8 @@ final class AdminSettings implements IDelegatedSettings {
 	}
 
 	public function getForm(): TemplateResponse {
+		Util::addScript('weather_apis', 'admin-settings');
+
 		$clientId = '';
 		try {
 			$clientId = $this->appConfig->getClientId();
