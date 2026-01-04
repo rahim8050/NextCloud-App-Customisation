@@ -1,53 +1,54 @@
-# Nextcloud Farm Management Customization
+# Nextcloud Server (local checkout) + custom app(s)
 
-This repository contains a collection of custom Nextcloud apps and enhancements designed to streamline farm management operations. These apps cover inventory tracking, crop and livestock management, workforce scheduling, financial tracking, and document storage — tailored for agricultural workflows.
+This directory is a **Nextcloud server checkout** used for local development and customization.
 
----
+Most of the code here is upstream Nextcloud (core + bundled apps). The custom work in this checkout lives under `apps/`.
 
-## Features
+## What’s customized in this checkout
 
-- Farm inventory & asset management  
-- Crop & field activity logging with media support  
-- Livestock health and vaccination tracking  
-- Task scheduling and workforce progress monitoring  
-- Farm financials and sales tracking  
-- Secure farm document hub with role-based access  
+Custom / local apps you currently have in `apps/`:
 
----
+- `apps/weather_apis` — custom Nextcloud app that integrates with an external Weather APIs backend (Django/DRF).
+  - Current state: integration foundations (admin settings + config/validation + signing/service layer). UI → backend calls are being finalized.
+  - App docs: `apps/weather_apis/README.md`
+  - Agent rules (for Codex/LLMs): `apps/weather_apis/AGENTS.md`
 
-## Getting Started
+- `apps/context_chat` — local app experiments (present in this tree).
 
-### Prerequisites
+> Note: This repository is **not** a standalone “farm management suite”. If you want farm workflows, they should be implemented as actual Nextcloud apps (and documented inside their own app folders).
 
-- Nextcloud server (version X.X or later)  
-- PHP 8.x with required extensions  
-- Database (MySQL, PostgreSQL, or SQLite)  
-- Composer for dependency management  
+## Repo layout (high level)
 
-### Installation
+- `core/`, `lib/`, `resources/` — Nextcloud server core
+- `apps/` — bundled apps + your custom apps (including `weather_apis`)
+- `occ` — Nextcloud CLI entrypoint
 
-1. Clone this repository into your Nextcloud apps directory:
-   ```bash
-   git clone https://github.com/yourusername/nextcloud-farm-management.git /path/to/nextcloud/apps/farm-management
-2. Enable the app from the Nextcloud admin panel or via command line:
-   ```bash
-   sudo -u www-data php /path/to/nextcloud/occ app:enable farm-management
-3. Configure the app settings as needed in the admin interface.
-### Development
-# This project follows production-grade best practices:
-- Code linted and type-checked using Pint, Larastan, and PHPStan (PHP), with frontend code reviewed using ESLint, Prettier, Stylelint, and TailwindCSS conventions.
-- Secure authentication via OAuth2 / Nextcloud tokens.
-- API endpoints validated and rate-limited.
-- Environment-based configuration and secrets management.
-- Continuous Integration with automated tests and pre-commit hooks.
+## Quickstart (local)
+
+From the Nextcloud root (this folder):
+
+### Check app status
+```bash
+sudo -u www-data php occ app:list
+```
+### Enable the custom app
+```bash
+sudo -u www-data php occ app:enable weather_apis
+```
+### Configure the app
+Use the Nextcloud Admin settings UI for weather_apis (and/or follow the app-level README):
+- apps/weather_apis/README.md
+
+### Development notes (local)
+This checkout is typically located at:
+- /var/www/html/nextcloud
+When developing apps, keep “core Nextcloud” changes minimal and put customization inside apps/<your_app> whenever possible.
+
 ### License
-This project is licensed under the GNU Affero General Public License v3.0 (AGPLv3).
-You can find the full license text here
-.
+Nextcloud server and bundled components in this repository are licensed under the GNU AGPL v3 (see COPYING and LICENSES/ in this repo). Custom app code under apps/ should remain compatible with AGPL requirements.
 
-By distributing or providing network access to modified versions of this app, you agree to make the source code available under the same license.
-# Disclaimer
-This software is provided "as is" without warranty of any kind. Use at your own risk.
-# Contact
-For questions, feature requests, or support, please open an issue or contact [rahimranxx8050@gmail.com
-].
+### Disclaimer
+This software is provided “as is”, without warranty of any kind. Use at your own risk.
+
+### Contact
+For questions or issues related to the custom app(s), open an issue in your project tracker or contact: rahimranxx8050@gmail.com
