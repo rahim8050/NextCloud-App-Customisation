@@ -46,7 +46,11 @@ final class SettingsControllerTest extends TestCase {
 		$response = $controller->saveAdmin();
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['ok' => true], $response->getData());
+		$this->assertSame([
+			'status' => 'ok',
+			'ok' => true,
+			'message' => 'Settings saved.',
+		], $response->getData());
 
 		$this->assertSame('https://example.com', $storage['baseUrl']);
 		$this->assertSame('client-id', $storage['clientId']);
@@ -55,6 +59,38 @@ final class SettingsControllerTest extends TestCase {
 		$this->assertSame('host1', $storage['allowlistHosts']);
 		$this->assertSame('encrypted:new-key', $storage['apiKey']);
 		$this->assertSame('encrypted:new-secret', $storage['hmacSecret']);
+	}
+
+	public function testSaveAdminReturnsOkContract(): void {
+		$request = $this->createRequest([
+			'baseUrl' => 'https://example.com',
+			'clientId' => 'client-id',
+			'timeoutSeconds' => '15',
+			'devAllowHttp' => false,
+			'allowlistHosts' => '',
+		]);
+
+		$storage = [
+			'timeoutSeconds' => '10',
+			'devAllowHttp' => '0',
+			'allowlistHosts' => '',
+		];
+		$config = $this->createAppConfig($storage);
+		$validator = new UrlValidator(fn (): array => ['93.184.216.34']);
+
+		$controller = $this->createController($request, $config, $validator, true);
+		$response = $controller->saveAdmin();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = json_decode(
+			json_encode($response->getData(), JSON_THROW_ON_ERROR),
+			true,
+			512,
+			JSON_THROW_ON_ERROR,
+		);
+		/** @var array<string, mixed> $data */
+		$this->assertSame('ok', $data['status'] ?? null);
+		$this->assertTrue($data['ok'] ?? false);
 	}
 
 	public function testEmptySecretsAreNotWritten(): void {
@@ -120,7 +156,11 @@ final class SettingsControllerTest extends TestCase {
 		$response = $controller->saveAdmin();
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['ok' => true], $response->getData());
+		$this->assertSame([
+			'status' => 'ok',
+			'ok' => true,
+			'message' => 'Settings saved.',
+		], $response->getData());
 
 		$this->assertSame('https://example.com', $storage['baseUrl']);
 		$this->assertSame('client-id', $storage['clientId']);

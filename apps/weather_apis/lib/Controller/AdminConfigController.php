@@ -46,7 +46,9 @@ final class AdminConfigController extends Controller {
 		$this->appConfig->migrateLegacyConfig();
 
 		return $this->withNoStore(new JSONResponse([
+			'status' => 'ok',
 			'ok' => true,
+			'message' => 'Generated credentials. Shown once.',
 			'clientId' => $clientId,
 			'hmacSecret' => $hmacSecret,
 		]));
@@ -64,7 +66,9 @@ final class AdminConfigController extends Controller {
 		$this->appConfig->migrateLegacyConfig();
 
 		return $this->withNoStore(new JSONResponse([
+			'status' => 'ok',
 			'ok' => true,
+			'message' => 'Rotated secret. Shown once.',
 			'hmacSecret' => $hmacSecret,
 		]));
 	}
@@ -182,6 +186,7 @@ final class AdminConfigController extends Controller {
 	private function buildStatusResponse(string $status, string $message, ?array $data = null, int $statusCode = Http::STATUS_OK): JSONResponse {
 		return new JSONResponse([
 			'status' => $status,
+			'ok' => $status === 'ok',
 			'message' => $message,
 			'data' => $data,
 		], $statusCode);

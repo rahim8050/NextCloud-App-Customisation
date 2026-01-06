@@ -193,6 +193,25 @@ Keep controller responses stable and simple:
 { "status": "ok", "data": {} }
 ```
 
+#### Admin JSON Contract v1
+
+All admin settings endpoints **must** return JSON shaped as:
+
+- Success:
+  - `status: "ok"`
+  - `ok: true`
+  - `message: string`
+- Error:
+  - `status: "error"`
+  - `error.code: string`
+  - `error.message: string`
+  - `error.requestId: string`
+  - `error.details: object`
+
+Frontend rules:
+- Treat success as `status === "ok"` **OR** `ok === true` (backward compatibility).
+- Any change to payload shape must update **PHP + JS + tests** in the same PR.
+
 ### 4.4 Observability / correlation ids
 
 - Use Nextcloud `ILogger` with structured context (never secrets).

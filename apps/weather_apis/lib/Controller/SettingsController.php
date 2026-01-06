@@ -44,6 +44,14 @@ final class SettingsController extends Controller {
 	public function saveAdmin(): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$user = $this->userSession->getUser();
+		$this->logger->debug(
+			'Weather APIs admin settings save requested',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+				'uid' => $user?->getUID() ?? '',
+				'contentType' => $this->request->getHeader('Content-Type'),
+			]),
+		);
 		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
 			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
 		}
@@ -119,7 +127,11 @@ final class SettingsController extends Controller {
 			return $this->buildErrorResponse('backend_error', 'Unable to save settings.', $requestId, Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
-		return new JSONResponse(['ok' => true]);
+		return new JSONResponse([
+			'status' => 'ok',
+			'ok' => true,
+			'message' => 'Settings saved.',
+		]);
 	}
 
 	/**

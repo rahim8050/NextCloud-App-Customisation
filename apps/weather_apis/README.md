@@ -46,13 +46,13 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 
 - Generate client + secret: `POST /apps/weather_apis/api/v1/admin/generate-credentials` (admin-only, CSRF required)
   - Generates a client id if missing and always rotates the HMAC secret.
-  - Returns `{ ok: true, clientId, hmacSecret }` once; the UI shows the secret only after the request.
+  - Returns `{ status: "ok", ok: true, message, clientId, hmacSecret }` once; the UI shows the secret only after the request.
 - Rotate secret: `POST /apps/weather_apis/api/v1/admin/rotate-hmac` (admin-only, CSRF required)
   - Always rotates the HMAC secret.
-  - Returns `{ ok: true, hmacSecret }` once; the UI shows the secret only after the request.
+  - Returns `{ status: "ok", ok: true, message, hmacSecret }` once; the UI shows the secret only after the request.
 - Test connection: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
   - Calls the backend ping endpoint with HMAC headers.
-  - Returns `{ status: "ok" | "error", message, data }` and never includes secrets.
+  - Returns `{ status: "ok", ok: true, message, data }` on success and never includes secrets.
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + `hmacSecret`.
 

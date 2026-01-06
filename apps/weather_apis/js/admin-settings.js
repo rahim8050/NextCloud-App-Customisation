@@ -386,7 +386,8 @@
 				}
 
 				showCredentials(clientId, hmacSecret)
-				toast('Generated credentials. Shown once.')
+				const message = pickMessage(data, 'Generated credentials. Shown once.')
+				toast(message)
 			})
 		}
 
@@ -403,7 +404,8 @@
 
 				const clientId = typeof data?.clientId === 'string' ? data.clientId : (clientIdInput?.value ?? '')
 				showCredentials(clientId, hmacSecret)
-				toast('Rotated secret. Shown once.')
+				const message = pickMessage(data, 'Rotated secret. Shown once.')
+				toast(message)
 			})
 		}
 
@@ -567,7 +569,7 @@
 					return performSave(false)
 				}
 
-				const isOk = response.ok && data?.status === 'ok'
+				const isOk = response.ok && (data?.status === 'ok' || data?.ok === true)
 				if (!isOk) {
 					const message = pickMessage(data, 'Unable to save settings.')
 					status.textContent = message

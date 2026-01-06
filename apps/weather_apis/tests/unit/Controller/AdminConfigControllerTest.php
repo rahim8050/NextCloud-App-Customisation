@@ -33,7 +33,9 @@ final class AdminConfigControllerTest extends TestCase {
 		$response = $controller->generateCredentials();
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$data = $this->decodeResponse($response);
+		$this->assertSame('ok', $data['status']);
 		$this->assertTrue($data['ok']);
+		$this->assertSame('Generated credentials. Shown once.', $data['message']);
 		$this->assertNotSame('', $data['clientId']);
 		$this->assertNotSame('', $data['hmacSecret']);
 		$this->assertNotSame('old-secret', $data['hmacSecret']);
@@ -57,6 +59,8 @@ final class AdminConfigControllerTest extends TestCase {
 		$response = $controller->generateCredentials();
 		$data = $this->decodeResponse($response);
 
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('Generated credentials. Shown once.', $data['message']);
 		$this->assertSame('existing-client', $data['clientId']);
 		$this->assertSame('existing-client', $storage['clientId']);
 		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
@@ -72,7 +76,9 @@ final class AdminConfigControllerTest extends TestCase {
 		$response = $controller->rotateHmac();
 		$data = $this->decodeResponse($response);
 
+		$this->assertSame('ok', $data['status']);
 		$this->assertTrue($data['ok']);
+		$this->assertSame('Rotated secret. Shown once.', $data['message']);
 		$this->assertNotSame('old-secret', $data['hmacSecret']);
 		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
 		$this->assertSame('encrypted:old-secret', $storage['hmacSecretPrevious']);
@@ -161,6 +167,7 @@ final class AdminConfigControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('ok', $data['status']);
+		$this->assertTrue($data['ok']);
 		$this->assertSame('Connection successful.', $data['message']);
 		$this->assertSame(['ok' => true], $data['data']);
 	}

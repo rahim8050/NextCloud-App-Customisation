@@ -32,21 +32,24 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 
 ## Admin endpoints (Nextcloud-side)
 
+- `POST /apps/weather_apis/settings/admin`
+  - Admin-only + CSRF + password confirmation required.
+  - Persists settings; response: `{ status: "ok", ok: true, message }` or the normalized error shape.
 - `POST /apps/weather_apis/api/v1/admin/generate-credentials`
   - Admin-only + CSRF required.
   - Generates a client id if missing and rotates the HMAC secret.
-  - Response: `{ ok: true, clientId, hmacSecret }` (secrets shown once in the UI).
+  - Response: `{ status: "ok", ok: true, message, clientId, hmacSecret }` (secrets shown once in the UI).
 - `POST /apps/weather_apis/api/v1/admin/rotate-hmac`
   - Admin-only + CSRF required.
   - Rotates the HMAC secret.
-  - Response: `{ ok: true, hmacSecret }` (secret shown once in the UI).
+  - Response: `{ status: "ok", ok: true, message, hmacSecret }` (secret shown once in the UI).
 - `GET /apps/weather_apis/api/v1/admin/config`
   - Admin-only.
   - Returns non-secret config only: baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, and rotation metadata.
 - `POST /apps/weather_apis/api/v1/admin/test-connection`
   - Admin-only + CSRF required.
   - Calls the backend ping endpoint with HMAC headers.
-  - Response: `{ status: "ok" | "error", message, data }` (no secrets).
+  - Response: `{ status: "ok", ok: true, message, data }` on success (no secrets).
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.
