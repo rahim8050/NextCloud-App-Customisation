@@ -92,7 +92,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 			// DRF ping expects the X-NC-* Nextcloud HMAC header names
 			'X-NC-CLIENT-ID' => $clientId,
-			'X-NC-TIMESTAMP' => (string)$timestamp,
+			'X-NC-TIMESTAMP' => $timestamp,
 			'X-NC-NONCE' => $nonce,
 			'X-NC-SIGNATURE' => $signature,
 
@@ -147,7 +147,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			// DRF token endpoint expects API key + integrations HMAC header names
 			'X-API-Key' => $this->appConfig->getApiKey(),
 			'X-Client-Id' => $this->appConfig->getClientId(),
-			'X-Timestamp' => (string)$timestamp,
+			'X-Timestamp' => $timestamp,
 			'X-Nonce' => $nonce,
 			'X-Signature' => $signature,
 		]);
