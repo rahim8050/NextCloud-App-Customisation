@@ -16,13 +16,8 @@
 
 		const action = form.getAttribute('action') || ''
 		const requestTokenInput = form.querySelector('input[name="requesttoken"]')
-		const requestToken = String(window.OC?.requestToken ?? requestTokenInput?.value ?? '').trim()
 		if (!action) {
 			return
-		}
-
-		if (requestTokenInput && requestToken && requestTokenInput.value !== requestToken) {
-			requestTokenInput.value = requestToken
 		}
 
 		const baseUrlInput = form.querySelector('[name="baseUrl"]')
@@ -34,6 +29,7 @@
 		const allowlistInput = form.querySelector('[name="allowlistHosts"]')
 		const generateUrl = form.dataset.generateUrl || ''
 		const rotateUrl = form.dataset.rotateUrl || ''
+		const testConnectionUrl = form.dataset.testConnectionUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -42,6 +38,8 @@
 		const closeCredentialsButton = document.getElementById('weather-apis-credentials-close')
 		const generateButton = document.getElementById('weather-apis-generate')
 		const rotateButton = document.getElementById('weather-apis-rotate')
+		const testConnectionButton = document.getElementById('weather-apis-test-connection')
+		const connectionStatus = document.getElementById('weather-apis-connection-status')
 		// TODO: confirm desired auto-hide timeout for generated secrets; 30s keeps the UI usable without lingering secrets.
 		const CREDENTIALS_CLEAR_DELAY_MS = 30000
 		let credentialsClearTimer = null
@@ -67,6 +65,32 @@
 			status.classList.remove('success', 'error')
 		}
 
+		const readRequestTokenFromMeta = () => {
+			const meta = document.querySelector('meta[name="requesttoken"]')
+			return String(meta?.getAttribute('content') ?? '').trim()
+		}
+
+		const resolveRequestToken = () => {
+			const token = String(
+				window.OC?.requestToken
+				?? readRequestTokenFromMeta()
+				?? requestTokenInput?.value
+				?? '',
+			).trim()
+			if (requestTokenInput && token && requestTokenInput.value !== token) {
+				requestTokenInput.value = token
+			}
+			return token
+		}
+
+		const clearConnectionStatus = () => {
+			if (!connectionStatus) {
+				return
+			}
+			connectionStatus.textContent = ''
+			connectionStatus.classList.remove('success', 'error')
+		}
+
 		const pickMessage = (data, fallback) => toText(
 			data?.message
 			?? data?.error?.message
@@ -74,6 +98,43 @@
 			?? fallback,
 			fallback,
 		)
+
+		const buildConnectionErrorMessage = (response, data) => {
+			const backendDetails = data?.error?.details && typeof data.error.details === 'object'
+				? data.error.details
+				: null
+			const httpStatus = Number.isFinite(backendDetails?.httpStatus)
+				? backendDetails.httpStatus
+				: response?.status
+			const backendMessage = toText(
+				backendDetails?.message
+				?? data?.message
+				?? data?.error?.message
+				?? '',
+				'',
+			)
+			const backendErrors = backendDetails?.errors && typeof backendDetails.errors === 'object'
+				? backendDetails.errors
+				: null
+			const errorCode = typeof backendErrors?.code === 'string' ? backendErrors.code : ''
+			const errorReason = typeof backendErrors?.reason === 'string' ? backendErrors.reason : ''
+
+			const parts = []
+			if (httpStatus) {
+				parts.push(`HTTP ${httpStatus}`)
+			}
+			if (backendMessage) {
+				parts.push(backendMessage)
+			}
+			if (errorCode || errorReason) {
+				const detailParts = []
+				if (errorCode) detailParts.push(`code=${errorCode}`)
+				if (errorReason) detailParts.push(`reason=${errorReason}`)
+				parts.push(detailParts.join(' '))
+			}
+
+			return parts.join(' | ') || 'Connection failed.'
+		}
 
 		const requirePasswordConfirmationAsync = () => new Promise((resolve) => {
 			const confirmation = window.OC?.PasswordConfirmation
@@ -154,6 +215,17 @@
 			toast(message)
 		}
 
+		const showConnectionParseError = (text) => {
+			if (!connectionStatus) {
+				return
+			}
+			const snippet = text.trim().slice(0, 200)
+			const message = snippet || 'Unable to parse response.'
+			connectionStatus.textContent = message
+			connectionStatus.classList.add('error')
+			toast(message)
+		}
+
 		const clearCredentialsTimer = () => {
 			if (credentialsClearTimer) {
 				window.clearTimeout(credentialsClearTimer)
@@ -222,20 +294,22 @@
 
 		const buildTokenFormData = () => {
 			const formData = new FormData()
-			if (requestToken) {
-				formData.set('requesttoken', requestToken)
+			const token = resolveRequestToken()
+			if (token) {
+				formData.set('requesttoken', token)
 			}
 			return formData
 		}
 
 		const performAdminRequest = async (url) => {
+			const token = resolveRequestToken()
 			console.info('[weather_apis] POST', url)
 			const response = await fetch(url, {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
 					'Accept': 'application/json',
-					requesttoken: requestToken,
+					requesttoken: token,
 					'OCS-APIRequest': 'true',
 					'X-Requested-With': 'XMLHttpRequest',
 				},
@@ -333,6 +407,36 @@
 			})
 		}
 
+		const handleTestConnection = async () => {
+			if (!testConnectionUrl) {
+				const message = 'Test connection is not available.'
+				if (connectionStatus) {
+					connectionStatus.textContent = message
+					connectionStatus.classList.add('error')
+				}
+				toast(message)
+				return
+			}
+
+			clearConnectionStatus()
+
+			const result = await performAdminRequest(testConnectionUrl)
+			if (!result.parsed) {
+				showConnectionParseError(result.text)
+				return
+			}
+
+			const isOk = result.response.ok && result.data?.status === 'ok'
+			const message = isOk
+				? pickMessage(result.data, 'Connection successful.')
+				: buildConnectionErrorMessage(result.response, result.data)
+			if (connectionStatus) {
+				connectionStatus.textContent = message
+				connectionStatus.classList.add(isOk ? 'success' : 'error')
+			}
+			toast(message)
+		}
+
 		if (generateButton) {
 			generateButton.addEventListener('click', () => {
 				console.info('[weather_apis] generate clicked')
@@ -353,6 +457,27 @@
 					status.textContent = message
 					status.classList.add('error')
 					toast(message)
+				})
+			})
+		}
+
+		if (testConnectionButton) {
+			testConnectionButton.addEventListener('click', () => {
+				console.info('[weather_apis] test connection clicked')
+				if (testConnectionButton) {
+					testConnectionButton.disabled = true
+				}
+				handleTestConnection().catch((error) => {
+					const message = error instanceof Error ? error.message : 'Unable to test connection.'
+					if (connectionStatus) {
+						connectionStatus.textContent = message
+						connectionStatus.classList.add('error')
+					}
+					toast(message)
+				}).finally(() => {
+					if (testConnectionButton) {
+						testConnectionButton.disabled = false
+					}
 				})
 			})
 		}
@@ -399,8 +524,9 @@
 			const timeout = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? String(parsedTimeout) : '10'
 			formData.set('timeoutSeconds', timeout)
 
-			if (requestToken) {
-				formData.set('requesttoken', requestToken)
+			const token = resolveRequestToken()
+			if (token) {
+				formData.set('requesttoken', token)
 			}
 
 			return formData
@@ -411,12 +537,13 @@
 			clearStatus()
 
 			const performSave = async (allowPasswordRetry = true) => {
+				const token = resolveRequestToken()
 				const response = await fetch(action, {
 					method: 'POST',
 					credentials: 'same-origin',
 					headers: {
 						'Accept': 'application/json',
-						requesttoken: requestToken,
+						requesttoken: token,
 						'OCS-APIRequest': 'true',
 						'X-Requested-With': 'XMLHttpRequest',
 					},

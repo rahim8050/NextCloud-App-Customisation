@@ -10,4 +10,9 @@ interface WeatherApiClientInterface {
 	 * @throws WeatherApiException
 	 */
 	public function whoami(string $correlationId): array;
+
+	/**
+	 * @throws WeatherApiException
+	 */
+	public function ping(string $correlationId): void;
 }

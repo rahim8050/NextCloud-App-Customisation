@@ -121,12 +121,15 @@ final class Application extends App implements IBootstrap {
 		});
 
 		$context->registerService(AdminConfigController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
 			return new AdminConfigController(
 				$c->get('AppName'),
 				$c->get(IRequest::class),
 				$c->get(AppConfig::class),
+				$c->get(WeatherApiClientInterface::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
+				$logger,
 			);
 		});
 

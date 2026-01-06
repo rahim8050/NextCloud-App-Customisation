@@ -35,19 +35,21 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(4))
+		$urlGenerator->expects($this->exactly(5))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
 				['weather_apis.adminConfig.generateCredentials'],
 				['weather_apis.adminConfig.rotateHmac'],
 				['weather_apis.adminConfig.getConfig'],
+				['weather_apis.adminConfig.testConnection'],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
 				'/apps/weather_apis/api/v1/admin/generate-credentials',
 				'/apps/weather_apis/api/v1/admin/rotate-hmac',
 				'/apps/weather_apis/api/v1/admin/config',
+				'/apps/weather_apis/api/v1/admin/test-connection',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $urlGenerator);
@@ -60,5 +62,6 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/weather_apis/api/v1/admin/generate-credentials', $response->getParams()['generateCredentialsUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/rotate-hmac', $response->getParams()['rotateHmacUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/config', $response->getParams()['configUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/test-connection', $response->getParams()['testConnectionUrl']);
 	}
 }

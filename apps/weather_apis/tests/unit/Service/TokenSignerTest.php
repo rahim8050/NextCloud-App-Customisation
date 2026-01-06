@@ -12,7 +12,7 @@ final class TokenSignerTest extends TestCase {
 		$signer = new TokenSigner();
 		$canonical = $signer->buildCanonicalString(
 			'POST',
-			'/api/v1/integration/token/',
+			'/api/v1/integrations/token/',
 			'',
 			'1700000000',
 			'fixed-nonce',
@@ -20,7 +20,7 @@ final class TokenSignerTest extends TestCase {
 		);
 
 		$this->assertSame(
-			"POST\n/api/v1/integration/token/\n\n1700000000\nfixed-nonce\n" . TokenSigner::EMPTY_BODY_HASH,
+			"POST\n/api/v1/integrations/token/\n\n1700000000\nfixed-nonce\n" . TokenSigner::EMPTY_BODY_HASH,
 			$canonical,
 		);
 	}

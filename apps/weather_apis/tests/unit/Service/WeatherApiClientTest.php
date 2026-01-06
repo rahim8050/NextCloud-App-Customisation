@@ -28,7 +28,7 @@ final class WeatherApiClientTest extends TestCase {
 			->expects($this->once())
 			->method('post')
 			->with(
-				$this->stringContains('/api/v1/integration/token/'),
+				$this->stringContains('/api/v1/integrations/token/'),
 				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'fixed-request')),
 			)
 			->willReturn($tokenResponse);
@@ -38,7 +38,7 @@ final class WeatherApiClientTest extends TestCase {
 			->expects($this->once())
 			->method('get')
 			->with(
-				$this->stringContains('/api/v1/integration/whoami/'),
+				$this->stringContains('/api/v1/integrations/whoami/'),
 				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'fixed-request', 'Bearer token')),
 			)
 			->willReturn($whoamiResponse);
@@ -57,6 +57,130 @@ final class WeatherApiClientTest extends TestCase {
 
 		$client = $this->createClient($clientService, $cache);
 		$client->whoami('fixed-request');
+	}
+
+	public function testPingUsesHmacHeadersAndParsesEnvelope(): void {
+		$pingResponse = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"ok":true,"client_id":"client-id"}}',
+		);
+
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('GET', '');
+		$canonical = $signer->buildCanonicalString(
+			'GET',
+			'/api/v1/integrations/nextcloud/ping/',
+			'',
+			'123',
+			'nonce',
+			$bodyHash,
+		);
+		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+
+		$pingClient = $this->createMock(IClient::class);
+		$pingClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/integrations/nextcloud/ping/'),
+				$this->callback(function (array $options) use ($expectedSignature): bool {
+					return $this->hasCorrectOptions($options, 'ping-request')
+						&& $options['headers']['X-NC-CLIENT-ID'] === 'client-id'
+						&& $options['headers']['X-NC-TIMESTAMP'] === '123'
+						&& $options['headers']['X-NC-NONCE'] === 'nonce'
+						&& $options['headers']['X-NC-SIGNATURE'] === $expectedSignature
+						&& $options['headers']['X-Client-Id'] === 'client-id'
+						&& !array_key_exists('X-API-Key', $options['headers']);
+				}),
+			)
+			->willReturn($pingResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($pingClient);
+
+		$cache = $this->createMock(ICache::class);
+
+		$client = $this->createClient($clientService, $cache);
+		$client->ping('ping-request');
+	}
+
+	public function testMintTokenUsesIntegrationHeaders(): void {
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
+		$whoamiResponse = $this->createResponse(200, '{"user":"ok"}');
+
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('POST', '');
+		$canonical = $signer->buildCanonicalString(
+			'POST',
+			'/api/v1/integrations/token/',
+			'',
+			'123',
+			'nonce',
+			$bodyHash,
+		);
+		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient
+			->expects($this->once())
+			->method('post')
+			->with(
+				$this->stringContains('/api/v1/integrations/token/'),
+				$this->callback(function (array $options) use ($expectedSignature): bool {
+					return $this->hasCorrectOptions($options, 'token-request')
+						&& $options['headers']['Content-Type'] === 'application/json'
+						&& $options['headers']['Accept'] === 'application/json'
+						&& $options['headers']['X-API-Key'] === 'plain-api'
+						&& $options['headers']['X-Client-Id'] === 'client-id'
+						&& $options['headers']['X-Timestamp'] === '123'
+						&& $options['headers']['X-Nonce'] === 'nonce'
+						&& $options['headers']['X-Signature'] === $expectedSignature
+						&& !array_key_exists('X-NC-CLIENT-ID', $options['headers']);
+				}),
+			)
+			->willReturn($tokenResponse);
+
+		$whoamiClient = $this->createMock(IClient::class);
+		$whoamiClient
+			->expects($this->once())
+			->method('get')
+			->willReturn($whoamiResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->exactly(2))
+			->method('newClient')
+			->willReturnOnConsecutiveCalls($tokenClient, $whoamiClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn(null);
+		$cache->method('set')->willReturn(true);
+
+		$client = $this->createClient($clientService, $cache);
+		$client->whoami('token-request');
+	}
+
+	public function testPingRejectsMalformedEnvelope(): void {
+		$pingResponse = $this->createResponse(200, '{"status":0,"data":{"ok":false}}');
+
+		$pingClient = $this->createMock(IClient::class);
+		$pingClient->method('get')->willReturn($pingResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->method('newClient')->willReturn($pingClient);
+
+		$cache = $this->createMock(ICache::class);
+
+		$client = $this->createClient($clientService, $cache);
+
+		$this->expectException(WeatherApiException::class);
+		try {
+			$client->ping('rid');
+		} catch (WeatherApiException $exception) {
+			$this->assertSame('backend_error', $exception->getErrorCode());
+			throw $exception;
+		}
 	}
 
 	public function testTimeoutsMapToBackendTimeout(): void {

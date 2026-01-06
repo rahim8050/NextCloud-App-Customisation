@@ -50,6 +50,9 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 - Rotate secret: `POST /apps/weather_apis/api/v1/admin/rotate-hmac` (admin-only, CSRF required)
   - Always rotates the HMAC secret.
   - Returns `{ ok: true, hmacSecret }` once; the UI shows the secret only after the request.
+- Test connection: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
+  - Calls the backend ping endpoint with HMAC headers.
+  - Returns `{ status: "ok" | "error", message, data }` and never includes secrets.
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + `hmacSecret`.
 
@@ -80,7 +83,7 @@ curl -u admin:APP_PASSWORD \
 ## Backend contract (confirmed for the integration proof-of-concept)
 
 ### Token handshake
-- Endpoint: `POST {baseUrl}/api/v1/integration/token/`
+- Endpoint: `POST {baseUrl}/api/v1/integrations/token/`
 - Headers:
   * `Content-Type: application/json`
   * `X-API-Key: <api key>`
@@ -91,17 +94,25 @@ curl -u admin:APP_PASSWORD \
 - Body: empty
 - Signature canonical string (lines separated by `\n`, blank line if query string is empty):
   1. HTTP method: `POST`
-  2. Path: `/api/v1/integration/token/`
+  2. Path: `/api/v1/integrations/token/`
   3. Query string (empty line when there is no query)
   4. Timestamp
   5. Nonce
   6. SHA256 hash of the request body (empty body hash is `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`)
 
 ### Whoami
-- Endpoint: `GET {baseUrl}/api/v1/integration/whoami/`
+- Endpoint: `GET {baseUrl}/api/v1/integrations/whoami/`
 - Headers:
   * `Authorization: Bearer <access token>`
   * `X-Request-Id: <correlation id>` (propagated from the caller or a generated UUID)
+
+### Ping (HMAC-only)
+- Endpoint: `GET {baseUrl}/api/v1/integrations/nextcloud/ping/`
+- Headers:
+  * `X-Client-Id: <IntegrationClient.client_id UUID>`
+  * `X-Timestamp: <unix seconds>`
+  * `X-Nonce: <random string>`
+  * `X-Signature: <hex hmac sha256>`
 
 ## Normalized API responses (Nextcloud-side)
 

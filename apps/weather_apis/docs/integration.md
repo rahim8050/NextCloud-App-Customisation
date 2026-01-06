@@ -10,7 +10,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 4. On an integration call (for example `whoami`), `WeatherApiClient` constructs the token request (see the backend contract for the exact path and headers).
 5. The request is sent to the configured reverse proxy URL, which forwards to DRF.
 6. DRF returns an access token; the app caches it briefly and uses it for backend calls.
-7. The app calls the integration `whoami` endpoint with the bearer token. A health/ping check may be added later (TODO path).
+7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a signed ping check against `/api/v1/integrations/nextcloud/ping/` from the settings UI.
 8. Responses are normalized into `{ "status": "ok" | "error", ... }` and include a `requestId` for correlation.
 
 ## Error mapping
@@ -43,6 +43,10 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 - `GET /apps/weather_apis/api/v1/admin/config`
   - Admin-only.
   - Returns non-secret config only: baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, and rotation metadata.
+- `POST /apps/weather_apis/api/v1/admin/test-connection`
+  - Admin-only + CSRF required.
+  - Calls the backend ping endpoint with HMAC headers.
+  - Response: `{ status: "ok" | "error", message, data }` (no secrets).
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.

@@ -6,6 +6,8 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\WeatherApiClientInterface;
+use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
@@ -18,6 +20,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 final class AdminConfigControllerTest extends TestCase {
 	public function testGenerateCredentialsSetsClientIdAndRotatesSecret(): void {
@@ -140,8 +143,72 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertMethodHasAttribute('getConfig', AuthorizedAdminSetting::class);
 	}
 
-	private function createController(AppConfig $appConfig, bool $isAdmin = true): AdminConfigController {
+	public function testTestConnectionReturnsOk(): void {
+		$storage = [];
+		$appConfig = $this->createAppConfig($storage);
+
 		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('ping')
+			->with('request-id');
+
+		$controller = $this->createController($appConfig, true, $weatherApiClient, $request);
+
+		$response = $controller->testConnection();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('Connection successful.', $data['message']);
+		$this->assertSame(['ok' => true], $data['data']);
+	}
+
+	public function testTestConnectionRejectsNonAdmin(): void {
+		$storage = [];
+		$appConfig = $this->createAppConfig($storage);
+		$controller = $this->createController($appConfig, false);
+
+		$response = $controller->testConnection();
+
+		$this->assertSame(403, $response->getStatus());
+		$data = $this->decodeResponse($response);
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('Admin access required.', $data['message']);
+	}
+
+	public function testTestConnectionRequiresAdmin(): void {
+		$this->assertMethodHasAttribute('testConnection', AuthorizedAdminSetting::class);
+		$this->assertMethodLacksAttribute('testConnection', PasswordConfirmationRequired::class);
+		$this->assertMethodLacksAttribute('testConnection', NoCSRFRequired::class);
+	}
+
+	public function testTestConnectionReturnsBackendError(): void {
+		$storage = [];
+		$appConfig = $this->createAppConfig($storage);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->method('ping')
+			->willThrowException(new WeatherApiException('backend_timeout', 'Backend request failed.'));
+
+		$controller = $this->createController($appConfig, true, $weatherApiClient);
+
+		$response = $controller->testConnection();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('Backend request failed.', $data['message']);
+	}
+
+	private function createController(
+		AppConfig $appConfig,
+		bool $isAdmin = true,
+		?WeatherApiClientInterface $weatherApiClient = null,
+		?IRequest $request = null,
+	): AdminConfigController {
+		$request = $request ?? $this->createMock(IRequest::class);
+		$request->method('getHeader')->willReturn('');
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('admin');
@@ -152,7 +219,18 @@ final class AdminConfigControllerTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
-		return new AdminConfigController('weather_apis', $request, $appConfig, $userSession, $groupManager);
+		$weatherApiClient = $weatherApiClient ?? $this->createMock(WeatherApiClientInterface::class);
+		$logger = $this->createMock(LoggerInterface::class);
+
+		return new AdminConfigController(
+			'weather_apis',
+			$request,
+			$appConfig,
+			$weatherApiClient,
+			$userSession,
+			$groupManager,
+			$logger,
+		);
 	}
 
 	private function createAppConfig(array &$storage): AppConfig {

@@ -12,8 +12,9 @@ use OCP\ICache;
 use Psr\Log\LoggerInterface;
 
 final class WeatherApiClient implements WeatherApiClientInterface {
-	private const TOKEN_PATH = '/api/v1/integration/token/';
-	private const WHOAMI_PATH = '/api/v1/integration/whoami/';
+	private const TOKEN_PATH = '/api/v1/integrations/token/';
+	private const WHOAMI_PATH = '/api/v1/integrations/whoami/';
+	private const PING_PATH = '/api/v1/integrations/nextcloud/ping/';
 	private const TOKEN_CACHE_KEY = 'integration_access_token';
 	private const TOKEN_TTL_FALLBACK_SECONDS = 240;
 	private const TOKEN_TTL_SKEW_SECONDS = 5;
@@ -59,9 +60,70 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @throws WeatherApiException
 	 */
+	public function ping(string $correlationId): void {
+		$context = $this->resolveValidatedBaseUrlContext();
+		$client = $this->clientService->newClient();
+		$nonce = (string)($this->nonceProvider)();
+		$timestamp = (string)($this->timeProvider)();
+		$body = '';
+		$bodyHash = $this->tokenSigner->bodySha256Hex('GET', $body);
+
+		try {
+			$clientId = $this->appConfig->getClientId();
+			$secret = $this->appConfig->getHmacSecret();
+		} catch (\InvalidArgumentException $exception) {
+			throw new WeatherApiException('invalid_argument', $exception->getMessage(), $exception);
+		}
+
+		$canonical = $this->tokenSigner->buildCanonicalString(
+			'GET',
+			self::PING_PATH,
+			'',
+			$timestamp,
+			$nonce,
+			$bodyHash,
+		);
+
+		$signature = hash_hmac('sha256', $canonical, $secret);
+
+		$options = $this->buildBaseOptions($correlationId, $context['allowLocalAddress']);
+		$options['headers'] = array_merge($options['headers'], [
+			'Accept' => 'application/json',
+
+			// DRF ping expects the X-NC-* Nextcloud HMAC header names
+			'X-NC-CLIENT-ID' => $clientId,
+			'X-NC-TIMESTAMP' => (string)$timestamp,
+			'X-NC-NONCE' => $nonce,
+			'X-NC-SIGNATURE' => $signature,
+
+			// Optional alias header (harmless; DRF may accept it)
+			'X-Client-Id' => $clientId,
+		]);
+
+		$url = $this->buildEndpoint($context['baseUrl'], self::PING_PATH);
+
+		try {
+			$response = $client->get($url, $options);
+		} catch (\Throwable $throwable) {
+			throw $this->mapException($throwable);
+		}
+
+		$this->ensureSuccessResponse($response);
+
+		$payload = $this->decodeJson($response->getBody());
+		$status = $payload['status'] ?? null;
+		$data = $payload['data'] ?? null;
+		if ((int)$status !== 0 || !is_array($data) || ($data['ok'] ?? null) !== true) {
+			throw new WeatherApiException('backend_error', 'Ping response is malformed.');
+		}
+	}
+
+	/**
+	 * @throws WeatherApiException
+	 */
 	private function mintToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
 		$client = $this->clientService->newClient();
-		$nonce = ($this->nonceProvider)();
+		$nonce = (string)($this->nonceProvider)();
 		$timestamp = (string)($this->timeProvider)();
 		$body = '';
 		$bodyHash = $this->tokenSigner->bodySha256Hex('POST', $body);
@@ -80,9 +142,12 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
 		$options['headers'] = array_merge($options['headers'], [
 			'Content-Type' => 'application/json',
+			'Accept' => 'application/json',
+
+			// DRF token endpoint expects API key + integrations HMAC header names
 			'X-API-Key' => $this->appConfig->getApiKey(),
 			'X-Client-Id' => $this->appConfig->getClientId(),
-			'X-Timestamp' => $timestamp,
+			'X-Timestamp' => (string)$timestamp,
 			'X-Nonce' => $nonce,
 			'X-Signature' => $signature,
 		]);
@@ -260,7 +325,13 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$reason = 'http_status_' . $status;
 		}
 
-		throw new WeatherApiException($code, 'Backend returned HTTP ' . $status . '.', null, $reason);
+		$details = $this->extractSafeErrorDetails($response, $status);
+		$message = $details['message'] ?? '';
+		$finalMessage = is_string($message) && $message !== ''
+			? $message
+			: 'Backend returned HTTP ' . $status . '.';
+
+		throw new WeatherApiException($code, $finalMessage, null, $reason, $details);
 	}
 
 	private function determineErrorCode(int $status): string {
@@ -271,6 +342,44 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$status >= 500 => 'backend_unavailable',
 			default => 'backend_error',
 		};
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function extractSafeErrorDetails(IResponse $response, int $status): array {
+		$details = [
+			'httpStatus' => $status,
+		];
+
+		$body = trim($this->bodyToString($response->getBody()));
+		if ($body === '') {
+			return $details;
+		}
+
+		$decoded = json_decode($body, true);
+		if (!is_array($decoded)) {
+			return $details;
+		}
+
+		if (isset($decoded['message']) && is_string($decoded['message'])) {
+			$details['message'] = $this->clampString($decoded['message'], 200);
+		}
+
+		if (isset($decoded['errors']) && is_array($decoded['errors'])) {
+			$errors = [];
+			if (isset($decoded['errors']['code']) && is_string($decoded['errors']['code'])) {
+				$errors['code'] = $this->clampString($decoded['errors']['code'], 64);
+			}
+			if (isset($decoded['errors']['reason']) && is_string($decoded['errors']['reason'])) {
+				$errors['reason'] = $this->clampString($decoded['errors']['reason'], 200);
+			}
+			if ($errors !== []) {
+				$details['errors'] = $errors;
+			}
+		}
+
+		return $details;
 	}
 
 	private function mapException(\Throwable $throwable): WeatherApiException {
@@ -320,6 +429,15 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return (string)$body;
+	}
+
+	private function clampString(string $value, int $limit): string {
+		$trimmed = trim($value);
+		if (strlen($trimmed) <= $limit) {
+			return $trimmed;
+		}
+
+		return substr($trimmed, 0, $limit);
 	}
 
 	private function getCachedToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {

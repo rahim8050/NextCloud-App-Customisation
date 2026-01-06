@@ -76,8 +76,8 @@ Applies to Nextcloud -> DRF HMAC signing for the integration token bootstrap and
 
 Manual (end-to-end)
 1) Configure Nextcloud Weather APIs settings with `baseUrl`, `clientId`, `apiKey`, `hmacSecret`, and `timeoutSeconds`.
-2) Call `POST {baseUrl}/api/v1/integration/token/` with HMAC headers and `X-API-Key`; verify a short-lived access token is returned.
-3) Call `GET {baseUrl}/api/v1/integration/whoami/` with `Authorization: Bearer <token>` and verify identity response.
+2) Call `POST {baseUrl}/api/v1/integrations/token/` with HMAC headers and `X-API-Key`; verify a short-lived access token is returned.
+3) Call `GET {baseUrl}/api/v1/integrations/whoami/` with `Authorization: Bearer <token>` and verify identity response.
 4) Repeat a signed request with the same nonce to confirm replay protection (expect 403 with `errors.code = "nonce_replay"`).
 5) Send two HMAC ping requests in quick succession with the same client id to confirm 429 and `Retry-After` header.
 

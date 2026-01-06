@@ -142,6 +142,35 @@
 	font-size: 12px;
 }
 
+.weather-apis-connection__actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.weather-apis-connection__status {
+	min-height: 18px;
+	font-size: 13px;
+	line-height: 1.25;
+	padding: 6px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	background: transparent;
+}
+
+.weather-apis-connection__status.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.weather-apis-connection__status.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
 /* --- FIX: checkbox/toggle rows stop floating and align nicely --- */
 .weather-apis-settings .form-group:has(input[type="checkbox"]) {
 	/* Two columns: label/text left, control right */
