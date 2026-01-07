@@ -33,8 +33,10 @@
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
+		const exportSnippetInput = document.getElementById('weather-apis-generated-export')
 		const copyClientIdButton = document.getElementById('weather-apis-copy-client-id')
 		const copySecretButton = document.getElementById('weather-apis-copy-secret')
+		const copyExportButton = document.getElementById('weather-apis-copy-export')
 		const closeCredentialsButton = document.getElementById('weather-apis-credentials-close')
 		const generateButton = document.getElementById('weather-apis-generate')
 		const rotateButton = document.getElementById('weather-apis-rotate')
@@ -118,6 +120,7 @@
 				: null
 			const errorCode = typeof backendErrors?.code === 'string' ? backendErrors.code : ''
 			const errorReason = typeof backendErrors?.reason === 'string' ? backendErrors.reason : ''
+			const topLevelCode = typeof data?.error?.code === 'string' ? data.error.code : ''
 
 			const parts = []
 			if (httpStatus) {
@@ -126,9 +129,10 @@
 			if (backendMessage) {
 				parts.push(backendMessage)
 			}
-			if (errorCode || errorReason) {
+			if (errorCode || errorReason || topLevelCode) {
 				const detailParts = []
-				if (errorCode) detailParts.push(`code=${errorCode}`)
+				const combinedCode = errorCode || topLevelCode
+				if (combinedCode) detailParts.push(`code=${combinedCode}`)
 				if (errorReason) detailParts.push(`reason=${errorReason}`)
 				parts.push(detailParts.join(' '))
 			}
@@ -241,6 +245,9 @@
 			if (generatedSecretInput) {
 				generatedSecretInput.value = ''
 			}
+			if (exportSnippetInput) {
+				exportSnippetInput.value = ''
+			}
 			if (credentialsPanel) {
 				credentialsPanel.hidden = true
 			}
@@ -253,12 +260,21 @@
 			}, CREDENTIALS_CLEAR_DELAY_MS)
 		}
 
+		const buildExportSnippet = (clientId, hmacSecret) => {
+			if (!clientId || !hmacSecret) return ''
+			const json = JSON.stringify({ [clientId]: hmacSecret })
+			return `INTEGRATION_HMAC_CLIENT_ID='${clientId}'\nINTEGRATION_HMAC_CLIENTS_JSON='${json}'`
+		}
+
 		const showCredentials = (clientId, hmacSecret) => {
 			if (generatedClientIdInput) {
 				generatedClientIdInput.value = clientId
 			}
 			if (generatedSecretInput) {
 				generatedSecretInput.value = hmacSecret
+			}
+			if (exportSnippetInput) {
+				exportSnippetInput.value = buildExportSnippet(clientId, hmacSecret)
 			}
 			if (credentialsPanel) {
 				credentialsPanel.hidden = false
@@ -513,6 +529,16 @@
 			})
 		}
 
+		if (copyExportButton && exportSnippetInput) {
+			copyExportButton.addEventListener('click', () => {
+				const value = exportSnippetInput.value.trim()
+				copyToClipboard(value, exportSnippetInput).then((ok) => {
+					const message = ok ? 'Export snippet copied.' : 'Unable to copy export snippet.'
+					toast(message)
+				})
+			})
+		}
+
 		const buildFormData = () => {
 			const formData = new FormData(form)
 			formData.set('baseUrl', (baseUrlInput?.value ?? '').trim())
@@ -578,7 +604,7 @@
 					return
 				}
 
-				const message = pickMessage(data, 'Saved and verified against DRF.')
+				const message = pickMessage(data, 'Settings saved.')
 				status.textContent = message
 				status.classList.add('success')
 				toast(message) // ✅ toast on success

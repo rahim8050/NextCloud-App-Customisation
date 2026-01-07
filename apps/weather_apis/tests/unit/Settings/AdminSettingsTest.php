@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Tests\Unit\Settings;
 
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
@@ -21,17 +22,20 @@ final class AdminSettingsTest extends TestCase {
 			'devAllowHttp' => '0',
 			'allowlistHosts' => '',
 			'apiKey' => '',
-			'hmacSecret' => '',
-			'clientId' => '',
+			'INTEGRATION_HMAC_CLIENT_ID' => '',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => '',
 		];
 
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
 			fn (string $appId, string $key, $default = '') => $storage[$key] ?? $default,
 		);
+		$config->method('getSystemValue')->willReturn(null);
+		$config->method('getSystemValueBool')->willReturn(false);
 
 		$crypto = $this->createMock(ICrypto::class);
 		$appConfig = new AppConfig($config, $crypto);
+		$integrationConfig = new IntegrationConfig($config, $crypto);
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
@@ -52,7 +56,7 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/test-connection',
 			);
 
-		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $urlGenerator);
+		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);
 		$response = $settings->getForm();
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);

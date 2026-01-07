@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Tests\Unit\AppInfo;
 
 use OCA\WeatherApis\AppInfo\Application;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\TokenSigner;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCA\WeatherApis\Service\WeatherApiClient;
@@ -44,6 +45,8 @@ final class ApplicationTest extends TestCase {
 
 		$appConfig = $factories[AppConfig::class]($container);
 		$container->addService(AppConfig::class, $appConfig);
+		$integrationConfig = $factories[IntegrationConfig::class]($container);
+		$container->addService(IntegrationConfig::class, $integrationConfig);
 
 		$client = $factories[WeatherApiClient::class]($container);
 		$container->addService(WeatherApiClient::class, $client);
@@ -59,9 +62,9 @@ final class ApplicationTest extends TestCase {
 			'timeoutSeconds' => '10',
 			'devAllowHttp' => '0',
 			'allowlistHosts' => '',
-			'clientId' => 'client',
 			'apiKey' => 'api-key',
-			'hmacSecret' => 'encrypted-secret',
+			'INTEGRATION_HMAC_CLIENT_ID' => 'client',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => 'encrypted:{"client":"cGxhaW4tc2VjcmV0"}',
 		];
 
 		$config = $this->createMock(IConfig::class);
@@ -70,6 +73,8 @@ final class ApplicationTest extends TestCase {
 				return $storage[$key] ?? $default;
 			},
 		);
+		$config->method('getSystemValue')->willReturn(null);
+		$config->method('getSystemValueBool')->willReturn(false);
 
 		return $config;
 	}
@@ -78,7 +83,7 @@ final class ApplicationTest extends TestCase {
 		$crypto = $this->createMock(ICrypto::class);
 		$crypto->method('decrypt')->willReturnCallback(static fn (string $value): string => match ($value) {
 			'api-key' => 'plain-api',
-			'encrypted-secret' => 'plain-secret',
+			'encrypted:{"client":"cGxhaW4tc2VjcmV0"}' => '{"client":"cGxhaW4tc2VjcmV0"}',
 			default => 'fallback',
 		});
 		$crypto->method('encrypt')->willReturnCallback(static fn (string $value, string $password = '') => $value);

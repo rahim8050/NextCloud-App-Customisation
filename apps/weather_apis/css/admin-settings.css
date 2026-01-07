@@ -136,6 +136,12 @@
 	max-width: 420px;
 }
 
+.weather-apis-credentials__row textarea.weather-apis-credentials__snippet {
+	flex: 1;
+	max-width: 420px;
+	min-height: 72px;
+}
+
 .weather-apis-credentials .warning {
 	margin: 0;
 	color: var(--color-text-maxcontrast);

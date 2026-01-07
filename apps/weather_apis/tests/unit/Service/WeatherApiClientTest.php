@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Tests\Unit\Service;
 
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\TokenSigner;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCA\WeatherApis\Service\WeatherApiClient;
@@ -314,6 +315,7 @@ final class WeatherApiClientTest extends TestCase {
 		return new WeatherApiClient(
 			$clientService,
 			$this->createAppConfig(),
+			$this->createIntegrationConfig(),
 			new UrlValidator(fn (string $host): array => ['93.184.216.34']),
 			new TokenSigner(),
 			$cache,
@@ -329,9 +331,7 @@ final class WeatherApiClientTest extends TestCase {
 			'timeoutSeconds' => '15',
 			'devAllowHttp' => '0',
 			'allowlistHosts' => '',
-			'clientId' => 'client-id',
 			'apiKey' => 'encrypted-api',
-			'hmacSecret' => 'encrypted-secret',
 		];
 
 		$config = $this->createMock(IConfig::class);
@@ -345,11 +345,36 @@ final class WeatherApiClientTest extends TestCase {
 		$crypto = $this->createMock(ICrypto::class);
 		$crypto->method('decrypt')->willReturnCallback(fn (string $value): string => match ($value) {
 			'encrypted-api' => 'plain-api',
-			'encrypted-secret' => 'plain-secret',
 			default => 'fallback',
 		});
 
 		return new AppConfig($config, $crypto);
+	}
+
+	private function createIntegrationConfig(): IntegrationConfig {
+		$storage = [
+			'INTEGRATION_HMAC_CLIENT_ID' => 'client-id',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => 'encrypted:{"client-id":"cGxhaW4tc2VjcmV0"}',
+		];
+
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(
+			function (string $appId, string $key, $default = '') use ($storage) {
+				return $storage[$key] ?? $default;
+			},
+		);
+		$config->method('getSystemValueBool')->willReturn(false);
+		$config->method('getSystemValue')->willReturn(null);
+
+		$crypto = $this->createMock(ICrypto::class);
+		$crypto->method('decrypt')->willReturnCallback(
+			fn (string $value): string => str_starts_with($value, 'encrypted:') ? substr($value, 10) : $value,
+		);
+		$crypto->method('encrypt')->willReturnCallback(
+			fn (string $value): string => 'encrypted:' . $value,
+		);
+
+		return new IntegrationConfig($config, $crypto);
 	}
 
 	private function createResponse(int $status, string $body): IResponse {

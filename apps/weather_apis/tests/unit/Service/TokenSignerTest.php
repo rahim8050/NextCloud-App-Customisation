@@ -57,4 +57,56 @@ final class TokenSignerTest extends TestCase {
 			$signature,
 		);
 	}
+
+	public function testSignatureChangesWhenMethodChanges(): void {
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('GET', '');
+		$canonicalGet = $signer->buildCanonicalString(
+			'GET',
+			'/api/v1/integrations/nextcloud/ping/',
+			'',
+			'1700000000',
+			'nonce',
+			$bodyHash,
+		);
+		$canonicalPost = $signer->buildCanonicalString(
+			'POST',
+			'/api/v1/integrations/nextcloud/ping/',
+			'',
+			'1700000000',
+			'nonce',
+			$bodyHash,
+		);
+
+		$this->assertNotSame(
+			hash_hmac('sha256', $canonicalGet, 'test-secret'),
+			hash_hmac('sha256', $canonicalPost, 'test-secret'),
+		);
+	}
+
+	public function testSignatureChangesWhenPathChanges(): void {
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('GET', '');
+		$canonicalPing = $signer->buildCanonicalString(
+			'GET',
+			'/api/v1/integrations/nextcloud/ping/',
+			'',
+			'1700000000',
+			'nonce',
+			$bodyHash,
+		);
+		$canonicalToken = $signer->buildCanonicalString(
+			'GET',
+			'/api/v1/integrations/token/',
+			'',
+			'1700000000',
+			'nonce',
+			$bodyHash,
+		);
+
+		$this->assertNotSame(
+			hash_hmac('sha256', $canonicalPing, 'test-secret'),
+			hash_hmac('sha256', $canonicalToken, 'test-secret'),
+		);
+	}
 }

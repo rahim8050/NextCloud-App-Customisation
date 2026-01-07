@@ -25,6 +25,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	public function __construct(
 		private readonly IClientService $clientService,
 		private readonly AppConfig $appConfig,
+		private readonly IntegrationConfig $integrationConfig,
 		private readonly UrlValidator $urlValidator,
 		private readonly TokenSigner $tokenSigner,
 		private readonly ICache $cache,
@@ -69,10 +70,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$bodyHash = $this->tokenSigner->bodySha256Hex('GET', $body);
 
 		try {
-			$clientId = $this->appConfig->getClientId();
-			$secret = $this->appConfig->getHmacSecret();
-		} catch (\InvalidArgumentException $exception) {
-			throw new WeatherApiException('invalid_argument', $exception->getMessage(), $exception);
+			$clientId = $this->integrationConfig->getClientId();
+			$secret = $this->integrationConfig->getSecretBytes();
+		} catch (IntegrationConfigException $exception) {
+			throw new WeatherApiException($exception->getErrorCode(), $exception->getMessage(), $exception);
 		}
 
 		$canonical = $this->tokenSigner->buildCanonicalString(
@@ -82,6 +83,16 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$timestamp,
 			$nonce,
 			$bodyHash,
+		);
+
+		$this->logSigningContext(
+			$correlationId,
+			'GET',
+			self::PING_PATH,
+			$timestamp,
+			$nonce,
+			$bodyHash,
+			$canonical,
 		);
 
 		$signature = hash_hmac('sha256', $canonical, $secret);
@@ -107,6 +118,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		} catch (\Throwable $throwable) {
 			throw $this->mapException($throwable);
 		}
+
+		$this->logSignedResponse($correlationId, 'GET', self::PING_PATH, $response);
 
 		$this->ensureSuccessResponse($response);
 
@@ -137,7 +150,24 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$bodyHash,
 		);
 
-		$signature = hash_hmac('sha256', $canonical, $this->appConfig->getHmacSecret());
+		try {
+			$clientId = $this->integrationConfig->getClientId();
+			$secret = $this->integrationConfig->getSecretBytes();
+		} catch (IntegrationConfigException $exception) {
+			throw new WeatherApiException($exception->getErrorCode(), $exception->getMessage(), $exception);
+		}
+
+		$this->logSigningContext(
+			$correlationId,
+			'POST',
+			self::TOKEN_PATH,
+			$timestamp,
+			$nonce,
+			$bodyHash,
+			$canonical,
+		);
+
+		$signature = hash_hmac('sha256', $canonical, $secret);
 
 		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
 		$options['headers'] = array_merge($options['headers'], [
@@ -146,7 +176,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 			// DRF token endpoint expects API key + integrations HMAC header names
 			'X-API-Key' => $this->appConfig->getApiKey(),
-			'X-Client-Id' => $this->appConfig->getClientId(),
+			'X-Client-Id' => $clientId,
 			'X-Timestamp' => $timestamp,
 			'X-Nonce' => $nonce,
 			'X-Signature' => $signature,
@@ -160,6 +190,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		} catch (\Throwable $throwable) {
 			throw $this->mapException($throwable);
 		}
+
+		$this->logSignedResponse($correlationId, 'POST', self::TOKEN_PATH, $response);
 
 		$this->ensureSuccessResponse($response);
 
@@ -447,6 +479,42 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
+	}
+
+	private function logSigningContext(
+		string $correlationId,
+		string $method,
+		string $path,
+		string $timestamp,
+		string $nonce,
+		string $bodyHash,
+		string $canonical,
+	): void {
+		$canonicalHash = substr(hash('sha256', $canonical), 0, 12);
+
+		$this->logger->debug('Weather API HMAC signing context', [
+			'requestId' => $correlationId,
+			'method' => strtoupper($method),
+			'path' => $path,
+			'timestamp' => $timestamp,
+			'nonce' => $nonce,
+			'body_sha256' => $bodyHash,
+			'canonical_sha256' => $canonicalHash,
+		]);
+	}
+
+	private function logSignedResponse(
+		string $correlationId,
+		string $method,
+		string $path,
+		IResponse $response,
+	): void {
+		$this->logger->debug('Weather API signed response received', [
+			'requestId' => $correlationId,
+			'method' => strtoupper($method),
+			'path' => $path,
+			'status' => $response->getStatusCode(),
+		]);
 	}
 
 	private function clearCachedToken(): void {

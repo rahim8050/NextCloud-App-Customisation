@@ -24,9 +24,9 @@ style('weather_apis', 'admin-settings');
 		</div>
 
 		<div class="form-group secret-field">
-			<label for="weather-apis-signing-secret"><?php p($l->t('Signing secret')); ?></label>
-			<input id="weather-apis-signing-secret" type="password" name="hmacSecret" placeholder="<?php p($_['hmacSecretSet'] ? $l->t('Already set') : $l->t('Enter signing secret')); ?>" autocomplete="new-password" />
-			<p class="hint"><?php p($l->t('Leave blank to keep the stored secret.')); ?></p>
+			<label for="weather-apis-signing-secret"><?php p($l->t('Signing secret (base64)')); ?></label>
+			<input id="weather-apis-signing-secret" type="password" name="hmacSecret" placeholder="<?php p($_['hmacSecretSet'] ? $l->t('Already set') : $l->t('Enter base64 secret')); ?>" autocomplete="new-password" />
+			<p class="hint"><?php p($l->t('Base64-encoded secret. Leave blank to keep the stored value.')); ?></p>
 		</div>
 
 		<div class="form-group">
@@ -52,21 +52,29 @@ style('weather_apis', 'admin-settings');
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="weather-apis-generated-secret"><?php p($l->t('HMAC secret')); ?></label>
+				<label for="weather-apis-generated-secret"><?php p($l->t('HMAC secret (base64)')); ?></label>
 				<div class="weather-apis-credentials__row">
 					<input id="weather-apis-generated-secret" type="text" readonly />
 					<button id="weather-apis-copy-secret" type="button" class="button"><?php p($l->t('Copy')); ?></button>
 				</div>
+			</div>
+			<div class="form-group">
+				<label for="weather-apis-generated-export"><?php p($l->t('DRF export snippet')); ?></label>
+				<div class="weather-apis-credentials__row">
+					<textarea id="weather-apis-generated-export" class="weather-apis-credentials__snippet" rows="3" readonly></textarea>
+					<button id="weather-apis-copy-export" type="button" class="button"><?php p($l->t('Copy')); ?></button>
+				</div>
+				<p class="hint"><?php p($l->t('Set these values in the DRF environment.')); ?></p>
 			</div>
 		</div>
 
 		<div class="form-group weather-apis-connection">
 			<label><?php p($l->t('Integration Status')); ?></label>
 			<div class="weather-apis-connection__actions">
-				<button id="weather-apis-test-connection" type="button" class="button"><?php p($l->t('Test connection')); ?></button>
+				<button id="weather-apis-test-connection" type="button" class="button"><?php p($l->t('Check configuration')); ?></button>
 				<div id="weather-apis-connection-status" class="weather-apis-connection__status" role="status" aria-live="polite"></div>
 			</div>
-			<p class="hint"><?php p($l->t('Uses the saved settings to sign and call the backend ping endpoint.')); ?></p>
+			<p class="hint"><?php p($l->t('Validates configuration only; no outbound HTTP calls are made.')); ?></p>
 		</div>
 
 		<div class="form-group">

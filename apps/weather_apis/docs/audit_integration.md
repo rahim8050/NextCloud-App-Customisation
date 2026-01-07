@@ -37,7 +37,13 @@ Applies to Nextcloud -> DRF HMAC signing for the integration token bootstrap and
   - Signature: `X-Signature` (preferred), `X-NC-SIGNATURE` (legacy alias).
   - API key (token bootstrap only): `X-API-Key`.
   - Request id (correlation): `X-Request-Id`.
-  - Body hash: not sent as a header; it is included only in the canonical string.
+- Body hash: not sent as a header; it is included only in the canonical string.
+
+## Config contract (current)
+
+- `INTEGRATION_HMAC_CLIENT_ID`: required; must exist as a key in `INTEGRATION_HMAC_CLIENTS_JSON`.
+- `INTEGRATION_HMAC_CLIENTS_JSON`: required; JSON map of `client_id -> secret_b64` (strict base64 decode).
+- Legacy appconfig keys are blocked by default. Remove them or temporarily set `INTEGRATION_LEGACY_CONFIG_ALLOWED=1` in system config while migrating.
 
 ## Findings
 
@@ -75,7 +81,7 @@ Applies to Nextcloud -> DRF HMAC signing for the integration token bootstrap and
 ## How to test
 
 Manual (end-to-end)
-1) Configure Nextcloud Weather APIs settings with `baseUrl`, `clientId`, `apiKey`, `hmacSecret`, and `timeoutSeconds`.
+1) Configure Nextcloud Weather APIs settings with `baseUrl`, `INTEGRATION_HMAC_CLIENT_ID`, `INTEGRATION_HMAC_CLIENTS_JSON`, `apiKey`, and `timeoutSeconds`.
 2) Call `POST {baseUrl}/api/v1/integrations/token/` with HMAC headers and `X-API-Key`; verify a short-lived access token is returned.
 3) Call `GET {baseUrl}/api/v1/integrations/whoami/` with `Authorization: Bearer <token>` and verify identity response.
 4) Repeat a signed request with the same nonce to confirm replay protection (expect 403 with `errors.code = "nonce_replay"`).

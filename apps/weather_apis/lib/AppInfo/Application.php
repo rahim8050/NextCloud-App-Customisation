@@ -10,6 +10,7 @@ use OCA\WeatherApis\Controller\OcsApiController;
 use OCA\WeatherApis\Controller\SettingsController;
 use OCA\WeatherApis\Sections\AdminSection;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\OpenApiRegistry;
 use OCA\WeatherApis\Service\TokenSigner;
 use OCA\WeatherApis\Service\UrlValidator;
@@ -51,6 +52,13 @@ final class Application extends App implements IBootstrap {
 			);
 		});
 
+		$context->registerService(IntegrationConfig::class, function (ContainerInterface $c) {
+			return new IntegrationConfig(
+				$c->get(IConfig::class),
+				$c->get(ICrypto::class),
+			);
+		});
+
 		$context->registerService(TokenSigner::class, function () {
 			return new TokenSigner();
 		});
@@ -67,6 +75,7 @@ final class Application extends App implements IBootstrap {
 			return new WeatherApiClient(
 				$c->get(IClientService::class),
 				$c->get(AppConfig::class),
+				$c->get(IntegrationConfig::class),
 				$c->get(UrlValidator::class),
 				$c->get(TokenSigner::class),
 				$cacheFactory->createDistributed(self::APP_ID),
@@ -103,6 +112,7 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IL10N::class),
 				$c->get(AppConfig::class),
+				$c->get(IntegrationConfig::class),
 				$c->get(IURLGenerator::class),
 			);
 		});
@@ -113,6 +123,7 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IRequest::class),
 				$c->get(AppConfig::class),
+				$c->get(IntegrationConfig::class),
 				$c->get(UrlValidator::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
@@ -126,7 +137,7 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IRequest::class),
 				$c->get(AppConfig::class),
-				$c->get(WeatherApiClientInterface::class),
+				$c->get(IntegrationConfig::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
 				$logger,

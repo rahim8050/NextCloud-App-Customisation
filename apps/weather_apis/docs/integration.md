@@ -4,13 +4,13 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 
 ## Flow (step list)
 
-1. An admin configures the settings fields in Nextcloud (`baseUrl`, `clientId`, `apiKey`, `hmacSecret`, `timeoutSeconds`, and dev allowlist fields).
-2. The app validates the base URL (SSRF rules). `apiKey` and `hmacSecret` are stored encrypted at rest; the settings form never renders stored secrets (new HMAC secrets are returned once on generate/rotate).
+1. An admin configures the settings fields in Nextcloud (`baseUrl`, `INTEGRATION_HMAC_CLIENT_ID`, `INTEGRATION_HMAC_CLIENTS_JSON`, `apiKey`, `timeoutSeconds`, and dev allowlist fields).
+2. The app validates the base URL (SSRF rules). `apiKey` and the base64 HMAC secret are stored encrypted at rest; the settings form never renders stored secrets (new HMAC secrets are returned once on generate/rotate).
 3. Admins can generate or rotate the HMAC credentials from the settings UI without using shell commands.
 4. On an integration call (for example `whoami`), `WeatherApiClient` constructs the token request (see the backend contract for the exact path and headers).
 5. The request is sent to the configured reverse proxy URL, which forwards to DRF.
 6. DRF returns an access token; the app caches it briefly and uses it for backend calls.
-7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a signed ping check against `/api/v1/integrations/nextcloud/ping/` from the settings UI.
+7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a configuration check from the settings UI (no outbound HTTP).
 8. Responses are normalized into `{ "status": "ok" | "error", ... }` and include a `requestId` for correlation.
 
 ## Error mapping
@@ -26,8 +26,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 
 ## Security notes
 
-- Secrets are stored encrypted at rest via `ICrypto`; the settings form never renders stored secrets (new HMAC secrets are returned once on generate/rotate).
-- When `hmacSecret` is rotated, the previous secret is kept in `hmacSecretPrevious` with an expiry timestamp (`hmacSecretPreviousExpiresAt`) for a 24h grace window.
+- Secrets are stored encrypted at rest via `ICrypto`; the settings form never renders stored secrets (new base64 HMAC secrets are returned once on generate/rotate).
 - Logs never include secrets or authorization headers; only request metadata is logged.
 
 ## Admin endpoints (Nextcloud-side)
@@ -37,21 +36,21 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
   - Persists settings; response: `{ status: "ok", ok: true, message }` or the normalized error shape.
 - `POST /apps/weather_apis/api/v1/admin/generate-credentials`
   - Admin-only + CSRF required.
-  - Generates a client id if missing and rotates the HMAC secret.
+  - Generates a client id if missing and rotates the base64 HMAC secret.
   - Response: `{ status: "ok", ok: true, message, clientId, hmacSecret }` (secrets shown once in the UI).
 - `POST /apps/weather_apis/api/v1/admin/rotate-hmac`
   - Admin-only + CSRF required.
-  - Rotates the HMAC secret.
-  - Response: `{ status: "ok", ok: true, message, hmacSecret }` (secret shown once in the UI).
+  - Rotates the base64 HMAC secret.
+  - Response: `{ status: "ok", ok: true, message, clientId, hmacSecret }` (secret shown once in the UI).
 - `GET /apps/weather_apis/api/v1/admin/config`
   - Admin-only.
-  - Returns non-secret config only: baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, and rotation metadata.
+  - Returns non-secret config only: baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, and integration status metadata.
 - `POST /apps/weather_apis/api/v1/admin/test-connection`
   - Admin-only + CSRF required.
-  - Calls the backend ping endpoint with HMAC headers.
+  - Validates configuration only (no outbound HTTP).
   - Response: `{ status: "ok", ok: true, message, data }` on success (no secrets).
 
-`apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + `hmacSecret`.
+`apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.
 - All outbound HTTP uses Nextcloud `IClientService`.
 - `X-Request-Id` is propagated to the backend for tracing.

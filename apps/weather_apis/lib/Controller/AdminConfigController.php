@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace OCA\WeatherApis\Controller;
 
-use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\LogSanitizer;
-use OCA\WeatherApis\Service\WeatherApiClientInterface;
-use OCA\WeatherApis\Service\WeatherApiException;
 use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -25,7 +23,7 @@ final class AdminConfigController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly AppConfig $appConfig,
-		private readonly WeatherApiClientInterface $weatherApiClient,
+		private readonly IntegrationConfig $integrationConfig,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
@@ -41,9 +39,8 @@ final class AdminConfigController extends Controller {
 		}
 
 		$clientId = $this->resolveClientId();
-		$hmacSecret = $this->generateHmacSecret();
-		$this->appConfig->rotateHmacSecret($hmacSecret);
-		$this->appConfig->migrateLegacyConfig();
+		$hmacSecret = $this->generateHmacSecretB64();
+		$this->integrationConfig->setCredentials($clientId, $hmacSecret);
 
 		return $this->withNoStore(new JSONResponse([
 			'status' => 'ok',
@@ -61,14 +58,15 @@ final class AdminConfigController extends Controller {
 			return $this->withNoStore($response);
 		}
 
-		$hmacSecret = $this->generateHmacSecret();
-		$this->appConfig->rotateHmacSecret($hmacSecret);
-		$this->appConfig->migrateLegacyConfig();
+		$clientId = $this->resolveClientId();
+		$hmacSecret = $this->generateHmacSecretB64();
+		$this->integrationConfig->setCredentials($clientId, $hmacSecret);
 
 		return $this->withNoStore(new JSONResponse([
 			'status' => 'ok',
 			'ok' => true,
 			'message' => 'Rotated secret. Shown once.',
+			'clientId' => $clientId,
 			'hmacSecret' => $hmacSecret,
 		]));
 	}
@@ -79,12 +77,8 @@ final class AdminConfigController extends Controller {
 			return $response;
 		}
 
-		$clientId = '';
-		try {
-			$clientId = $this->appConfig->getClientId();
-		} catch (InvalidArgumentException) {
-			// no configured client id yet
-		}
+		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
+		$hmacSecretSet = $this->integrationConfig->getSecretB64OrNull() !== null;
 
 		return new JSONResponse([
 			'baseUrl' => $this->appConfig->getBaseUrl(),
@@ -93,11 +87,12 @@ final class AdminConfigController extends Controller {
 			'devAllowHttp' => $this->appConfig->isDevAllowHttp(),
 			'allowlistHosts' => $this->appConfig->getAllowlistHosts(),
 			'hasApiKey' => $this->appConfig->hasApiKey(),
-			'hasHmacSecret' => $this->appConfig->hasHmacSecret(),
+			'hasHmacSecret' => $hmacSecretSet,
 			'hmacRotation' => [
-				'hasPrevious' => $this->appConfig->hasPreviousHmacSecret(),
-				'previousExpiresAt' => $this->appConfig->getHmacSecretPreviousExpiresAt(),
+				'hasPrevious' => false,
+				'previousExpiresAt' => null,
 			],
+			'integrationStatus' => $this->integrationConfig->getStatus(),
 		]);
 	}
 
@@ -109,58 +104,54 @@ final class AdminConfigController extends Controller {
 			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
 		}
 
-		try {
-			$this->weatherApiClient->ping($requestId);
-		} catch (WeatherApiException $exception) {
-			$this->logger->error(
-				'Weather API test connection failed',
+		$status = $this->integrationConfig->getStatus();
+		$message = $status['message'] ?? 'Configuration status unavailable.';
+
+		if (!($status['ok'] ?? false)) {
+			$this->logger->info(
+				'Weather API integration config is invalid',
 				LogSanitizer::sanitizeContext([
-					'errorCode' => $exception->getErrorCode(),
-					'reason' => $exception->getReason(),
+					'code' => $status['code'] ?? 'unknown',
 					'requestId' => $requestId,
+					'legacyPresent' => $status['legacyPresent'] ?? false,
 				]),
 			);
 
 			return $this->buildErrorResponse(
-				$exception->getErrorCode(),
-				$exception->getMessage(),
+				(string)($status['code'] ?? 'invalid_argument'),
+				$message,
 				$requestId,
-				$this->httpStatusForCode($exception->getErrorCode()),
-				$exception->getDetails(),
-			);
-		} catch (\Throwable $throwable) {
-			$this->logger->error(
-				'Weather API test connection failed',
-				LogSanitizer::sanitizeContext([
-					'error' => $throwable->getMessage(),
-					'requestId' => $requestId,
-				]),
-			);
-
-			return $this->buildErrorResponse(
-				'backend_error',
-				'Unable to reach backend.',
-				$requestId,
-				Http::STATUS_SERVICE_UNAVAILABLE,
+				Http::STATUS_BAD_REQUEST,
+				$status,
 			);
 		}
 
-		return $this->buildStatusResponse('ok', 'Connection successful.', ['ok' => true]);
+		$finalMessage = $message;
+		if (!empty($status['warning'])) {
+			$finalMessage = $message . ' Legacy keys detected; remove them after migration.';
+		}
+
+		return $this->buildStatusResponse('ok', $finalMessage, [
+			'ok' => true,
+			'legacyPresent' => $status['legacyPresent'] ?? false,
+			'warning' => $status['warning'] ?? null,
+		]);
 	}
 
 	private function resolveClientId(): string {
-		try {
-			return $this->appConfig->getClientId();
-		} catch (InvalidArgumentException) {
-			$clientId = $this->generateUuid();
-			$this->appConfig->setClientId($clientId);
-
+		$clientId = $this->integrationConfig->getClientIdOrNull();
+		if ($clientId !== null && $clientId !== '') {
 			return $clientId;
 		}
+
+		$clientId = $this->generateUuid();
+		$this->integrationConfig->setClientId($clientId);
+
+		return $clientId;
 	}
 
-	private function generateHmacSecret(): string {
-		return bin2hex(random_bytes(32));
+	private function generateHmacSecretB64(): string {
+		return base64_encode(random_bytes(32));
 	}
 
 	private function generateUuid(): string {

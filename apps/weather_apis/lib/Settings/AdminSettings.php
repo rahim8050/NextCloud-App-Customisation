@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OCA\WeatherApis\Settings;
 
-use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -17,6 +17,7 @@ final class AdminSettings implements IDelegatedSettings {
 		private readonly string $appName,
 		private readonly IL10N $l10n,
 		private readonly AppConfig $appConfig,
+		private readonly IntegrationConfig $integrationConfig,
 		private readonly IURLGenerator $urlGenerator,
 	) {
 	}
@@ -32,12 +33,8 @@ final class AdminSettings implements IDelegatedSettings {
 	public function getForm(): TemplateResponse {
 		Util::addScript('weather_apis', 'admin-settings');
 
-		$clientId = '';
-		try {
-			$clientId = $this->appConfig->getClientId();
-		} catch (InvalidArgumentException) {
-			// ignored – display empty field until value is saved
-		}
+		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
+		$hmacSecretSet = $this->integrationConfig->getSecretB64OrNull() !== null;
 
 		return new TemplateResponse('weather_apis', 'settings/admin', [
 			'appName' => $this->appName,
@@ -46,7 +43,7 @@ final class AdminSettings implements IDelegatedSettings {
 			'timeoutSeconds' => $this->appConfig->getTimeoutSeconds(),
 			'devAllowHttp' => $this->appConfig->isDevAllowHttp(),
 			'allowlistHosts' => $this->appConfig->getAllowlistHosts(),
-			'hmacSecretSet' => $this->appConfig->hasHmacSecret(),
+			'hmacSecretSet' => $hmacSecretSet,
 			'apiKeySet' => $this->appConfig->hasApiKey(),
 			'saveUrl' => $this->urlGenerator->linkToRoute('weather_apis.settings.saveAdmin'),
 			'generateCredentialsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.generateCredentials'),
@@ -64,9 +61,9 @@ final class AdminSettings implements IDelegatedSettings {
 		return [
 			AppConfig::APP_ID => [
 				'/^baseUrl$/',
-				'/^clientId$/',
+				'/^INTEGRATION_HMAC_CLIENT_ID$/',
+				'/^INTEGRATION_HMAC_CLIENTS_JSON$/',
 				'/^apiKey$/',
-				'/^hmacSecret$/',
 				'/^hmacSecretPrevious$/',
 				'/^hmacSecretPreviousExpiresAt$/',
 				'/^timeoutSeconds$/',
@@ -81,6 +78,8 @@ final class AdminSettings implements IDelegatedSettings {
 				'/^hmac_secret$/',
 				'/^signingSecret$/',
 				'/^devAllowlistHosts$/',
+				'/^clientId$/',
+				'/^hmacSecret$/',
 			],
 		];
 	}

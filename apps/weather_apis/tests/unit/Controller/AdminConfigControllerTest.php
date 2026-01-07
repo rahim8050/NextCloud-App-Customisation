@@ -6,8 +6,7 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Service\AppConfig;
-use OCA\WeatherApis\Service\WeatherApiClientInterface;
-use OCA\WeatherApis\Service\WeatherApiException;
+use OCA\WeatherApis\Service\IntegrationConfig;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
@@ -23,12 +22,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 final class AdminConfigControllerTest extends TestCase {
-	public function testGenerateCredentialsSetsClientIdAndRotatesSecret(): void {
-		$storage = [
-			'hmacSecret' => 'encrypted:old-secret',
-		];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig);
+	public function testGenerateCredentialsSetsClientIdAndSecret(): void {
+		$storage = [];
+		$controller = $this->createController($storage);
 
 		$response = $controller->generateCredentials();
 		$this->assertInstanceOf(JSONResponse::class, $response);
@@ -38,12 +34,13 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame('Generated credentials. Shown once.', $data['message']);
 		$this->assertNotSame('', $data['clientId']);
 		$this->assertNotSame('', $data['hmacSecret']);
-		$this->assertNotSame('old-secret', $data['hmacSecret']);
+		$this->assertNotFalse(base64_decode($data['hmacSecret'], true));
 
-		$this->assertSame($data['clientId'], $storage['clientId']);
-		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
-		$this->assertSame('encrypted:old-secret', $storage['hmacSecretPrevious']);
-		$this->assertNotSame('', $storage['hmacSecretPreviousExpiresAt']);
+		$this->assertSame($data['clientId'], $storage['INTEGRATION_HMAC_CLIENT_ID']);
+		$this->assertSame(
+			'encrypted:' . json_encode([$data['clientId'] => $data['hmacSecret']], JSON_THROW_ON_ERROR),
+			$storage['INTEGRATION_HMAC_CLIENTS_JSON'],
+		);
 
 		$headers = $this->getResponseHeaders($response);
 		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
@@ -51,10 +48,9 @@ final class AdminConfigControllerTest extends TestCase {
 
 	public function testGenerateCredentialsKeepsExistingClientId(): void {
 		$storage = [
-			'clientId' => 'existing-client',
+			'INTEGRATION_HMAC_CLIENT_ID' => 'existing-client',
 		];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig);
+		$controller = $this->createController($storage);
 
 		$response = $controller->generateCredentials();
 		$data = $this->decodeResponse($response);
@@ -62,16 +58,16 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame('ok', $data['status']);
 		$this->assertSame('Generated credentials. Shown once.', $data['message']);
 		$this->assertSame('existing-client', $data['clientId']);
-		$this->assertSame('existing-client', $storage['clientId']);
-		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
+		$this->assertSame('existing-client', $storage['INTEGRATION_HMAC_CLIENT_ID']);
+		$this->assertSame(
+			'encrypted:' . json_encode([$data['clientId'] => $data['hmacSecret']], JSON_THROW_ON_ERROR),
+			$storage['INTEGRATION_HMAC_CLIENTS_JSON'],
+		);
 	}
 
-	public function testRotateHmacSetsPreviousSecret(): void {
-		$storage = [
-			'hmacSecret' => 'encrypted:old-secret',
-		];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig);
+	public function testRotateHmacSetsSecret(): void {
+		$storage = [];
+		$controller = $this->createController($storage);
 
 		$response = $controller->rotateHmac();
 		$data = $this->decodeResponse($response);
@@ -79,10 +75,13 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame('ok', $data['status']);
 		$this->assertTrue($data['ok']);
 		$this->assertSame('Rotated secret. Shown once.', $data['message']);
-		$this->assertNotSame('old-secret', $data['hmacSecret']);
-		$this->assertSame('encrypted:' . $data['hmacSecret'], $storage['hmacSecret']);
-		$this->assertSame('encrypted:old-secret', $storage['hmacSecretPrevious']);
-		$this->assertNotSame('', $storage['hmacSecretPreviousExpiresAt']);
+		$this->assertNotSame('', $data['clientId']);
+		$this->assertNotFalse(base64_decode($data['hmacSecret'], true));
+		$this->assertSame($data['clientId'], $storage['INTEGRATION_HMAC_CLIENT_ID']);
+		$this->assertSame(
+			'encrypted:' . json_encode([$data['clientId'] => $data['hmacSecret']], JSON_THROW_ON_ERROR),
+			$storage['INTEGRATION_HMAC_CLIENTS_JSON'],
+		);
 
 		$headers = $this->getResponseHeaders($response);
 		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
@@ -91,17 +90,14 @@ final class AdminConfigControllerTest extends TestCase {
 	public function testConfigResponseOmitsSecrets(): void {
 		$storage = [
 			'baseUrl' => 'https://example.com',
-			'clientId' => 'client-id',
+			'INTEGRATION_HMAC_CLIENT_ID' => 'client-id',
 			'timeoutSeconds' => '12',
 			'devAllowHttp' => '1',
 			'allowlistHosts' => 'host1',
 			'apiKey' => 'encrypted:api',
-			'hmacSecret' => 'encrypted:secret',
-			'hmacSecretPrevious' => 'encrypted:previous',
-			'hmacSecretPreviousExpiresAt' => '1700000000',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => 'encrypted:{"client-id":"c2VjcmV0"}',
 		];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig);
+		$controller = $this->createController($storage);
 
 		$response = $controller->getConfig();
 		$data = $this->decodeResponse($response);
@@ -113,8 +109,9 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame('host1', $data['allowlistHosts']);
 		$this->assertTrue($data['hasApiKey']);
 		$this->assertTrue($data['hasHmacSecret']);
-		$this->assertTrue($data['hmacRotation']['hasPrevious']);
-		$this->assertSame(1700000000, $data['hmacRotation']['previousExpiresAt']);
+		$this->assertFalse($data['hmacRotation']['hasPrevious']);
+		$this->assertNull($data['hmacRotation']['previousExpiresAt']);
+		$this->assertTrue($data['integrationStatus']['ok']);
 
 		$this->assertArrayNotHasKey('apiKey', $data);
 		$this->assertArrayNotHasKey('hmacSecret', $data);
@@ -123,8 +120,7 @@ final class AdminConfigControllerTest extends TestCase {
 
 	public function testNonAdminIsForbidden(): void {
 		$storage = [];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig, false);
+		$controller = $this->createController($storage, false);
 
 		$response = $controller->generateCredentials();
 
@@ -150,32 +146,29 @@ final class AdminConfigControllerTest extends TestCase {
 	}
 
 	public function testTestConnectionReturnsOk(): void {
-		$storage = [];
-		$appConfig = $this->createAppConfig($storage);
+		$storage = [
+			'INTEGRATION_HMAC_CLIENT_ID' => 'client-id',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => 'encrypted:{"client-id":"c2VjcmV0"}',
+		];
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
 
-		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
-		$weatherApiClient->expects($this->once())
-			->method('ping')
-			->with('request-id');
-
-		$controller = $this->createController($appConfig, true, $weatherApiClient, $request);
+		$controller = $this->createController($storage, true, $request);
 
 		$response = $controller->testConnection();
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('ok', $data['status']);
 		$this->assertTrue($data['ok']);
-		$this->assertSame('Connection successful.', $data['message']);
-		$this->assertSame(['ok' => true], $data['data']);
+		$this->assertSame('Integration HMAC configuration is valid.', $data['message']);
+		$this->assertSame(true, $data['data']['ok']);
+		$this->assertSame(false, $data['data']['legacyPresent']);
 	}
 
 	public function testTestConnectionRejectsNonAdmin(): void {
 		$storage = [];
-		$appConfig = $this->createAppConfig($storage);
-		$controller = $this->createController($appConfig, false);
+		$controller = $this->createController($storage, false);
 
 		$response = $controller->testConnection();
 
@@ -191,27 +184,22 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertMethodLacksAttribute('testConnection', NoCSRFRequired::class);
 	}
 
-	public function testTestConnectionReturnsBackendError(): void {
-		$storage = [];
-		$appConfig = $this->createAppConfig($storage);
-
-		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
-		$weatherApiClient->method('ping')
-			->willThrowException(new WeatherApiException('backend_timeout', 'Backend request failed.'));
-
-		$controller = $this->createController($appConfig, true, $weatherApiClient);
+	public function testTestConnectionReturnsLegacyBlocked(): void {
+		$storage = [
+			'hmacSecret' => 'encrypted:legacy',
+		];
+		$controller = $this->createController($storage, true);
 
 		$response = $controller->testConnection();
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('error', $data['status']);
-		$this->assertSame('Backend request failed.', $data['message']);
+		$this->assertSame('blocked_legacy_present', $data['error']['code']);
 	}
 
 	private function createController(
-		AppConfig $appConfig,
+		array &$storage,
 		bool $isAdmin = true,
-		?WeatherApiClientInterface $weatherApiClient = null,
 		?IRequest $request = null,
 	): AdminConfigController {
 		$request = $request ?? $this->createMock(IRequest::class);
@@ -226,14 +214,15 @@ final class AdminConfigControllerTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
-		$weatherApiClient = $weatherApiClient ?? $this->createMock(WeatherApiClientInterface::class);
 		$logger = $this->createMock(LoggerInterface::class);
+		$appConfig = $this->createAppConfig($storage);
+		$integrationConfig = $this->createIntegrationConfig($storage);
 
 		return new AdminConfigController(
 			'weather_apis',
 			$request,
 			$appConfig,
-			$weatherApiClient,
+			$integrationConfig,
 			$userSession,
 			$groupManager,
 			$logger,
@@ -263,6 +252,32 @@ final class AdminConfigControllerTest extends TestCase {
 		);
 
 		return new AppConfig($config, $crypto);
+	}
+
+	private function createIntegrationConfig(array &$storage): IntegrationConfig {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(
+			function (string $appId, string $key, $default = '') use (&$storage) {
+				return $storage[$key] ?? $default;
+			},
+		);
+		$config->method('setAppValue')->willReturnCallback(
+			function (string $appId, string $key, $value) use (&$storage): void {
+				$storage[$key] = $value;
+			},
+		);
+		$config->method('getSystemValueBool')->willReturn(false);
+		$config->method('getSystemValue')->willReturn(null);
+
+		$crypto = $this->createMock(ICrypto::class);
+		$crypto->method('decrypt')->willReturnCallback(
+			fn (string $value): string => str_starts_with($value, 'encrypted:') ? substr($value, 10) : $value,
+		);
+		$crypto->method('encrypt')->willReturnCallback(
+			fn (string $value): string => 'encrypted:' . $value,
+		);
+
+		return new IntegrationConfig($config, $crypto);
 	}
 
 	/**

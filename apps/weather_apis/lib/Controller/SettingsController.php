@@ -6,6 +6,8 @@ namespace OCA\WeatherApis\Controller;
 
 use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\IntegrationConfig;
+use OCA\WeatherApis\Service\IntegrationConfigException;
 use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\UrlValidator;
 use OCA\WeatherApis\Settings\AdminSettings;
@@ -28,6 +30,7 @@ final class SettingsController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly AppConfig $appConfig,
+		private readonly IntegrationConfig $integrationConfig,
 		private readonly UrlValidator $urlValidator,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
@@ -69,6 +72,8 @@ final class SettingsController extends Controller {
 		$allowlistHosts = trim($this->pickParam($params, ['allowlistHosts', 'devAllowlistHosts', 'dev_allowlist_hosts'], ''));
 		$apiKey = trim($this->pickParam($params, ['apiKey', 'api_key'], ''));
 		$hmacSecret = trim($this->pickParam($params, ['hmacSecret', 'signingSecret', 'hmac_secret'], ''));
+		$existingClientId = $this->integrationConfig->getClientIdOrNull();
+		$existingSecretB64 = $this->integrationConfig->getSecretB64OrNull();
 
 		if ($baseUrl === '') {
 			return $this->buildErrorResponse('invalid_argument', 'Base URL is required.', $requestId, Http::STATUS_BAD_REQUEST);
@@ -88,6 +93,13 @@ final class SettingsController extends Controller {
 		if (strlen($allowlistHosts) > self::DEV_ALLOWLIST_MAX_LENGTH) {
 			return $this->buildErrorResponse('invalid_argument', 'Allowlist is too long.', $requestId, Http::STATUS_BAD_REQUEST);
 		}
+		if ($hmacSecret !== '') {
+			try {
+				$this->integrationConfig->validateSecretB64($hmacSecret);
+			} catch (IntegrationConfigException $exception) {
+				return $this->buildErrorResponse('invalid_argument', $exception->getMessage(), $requestId, Http::STATUS_BAD_REQUEST);
+			}
+		}
 
 		try {
 			$this->urlValidator->validate(
@@ -102,19 +114,22 @@ final class SettingsController extends Controller {
 
 		try {
 			$this->appConfig->setBaseUrl($baseUrl);
-			$this->appConfig->setClientId($clientId);
 			$this->appConfig->setTimeoutSeconds($timeout);
 			$this->appConfig->setDevAllowHttp($devAllowHttp);
 			$this->appConfig->setAllowlistHosts($allowlistHosts);
 
+			if ($hmacSecret !== '') {
+				$this->integrationConfig->setCredentials($clientId, $hmacSecret);
+			} else {
+				$this->integrationConfig->setClientId($clientId);
+				if ($existingSecretB64 !== null && $existingClientId !== null && $existingClientId !== $clientId) {
+					$this->integrationConfig->setCredentials($clientId, $existingSecretB64);
+				}
+			}
+
 			if ($apiKey !== '') {
 				$this->appConfig->setApiKey($apiKey);
 			}
-			if ($hmacSecret !== '') {
-				$this->appConfig->rotateHmacSecret($hmacSecret);
-			}
-
-			$this->appConfig->migrateLegacyConfig();
 		} catch (\Throwable $throwable) {
 			$this->logger->error(
 				'Failed to persist weather settings',
