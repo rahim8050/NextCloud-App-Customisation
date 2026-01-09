@@ -8,6 +8,16 @@ use OCA\WeatherApis\Service\TokenSigner;
 use PHPUnit\Framework\TestCase;
 
 final class TokenSignerTest extends TestCase {
+	private function loadHmacFixture(): array {
+		$path = dirname(__DIR__, 2) . '/fixtures/hmac_test_vector.json';
+		$raw = file_get_contents($path);
+		$this->assertNotFalse($raw);
+		$decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+		$this->assertIsArray($decoded);
+
+		return $decoded;
+	}
+
 	public function testCanonicalStringMatchesContract(): void {
 		$signer = new TokenSigner();
 		$canonical = $signer->buildCanonicalString(
@@ -56,6 +66,32 @@ final class TokenSignerTest extends TestCase {
 			'60a6b6568842ac371ba78655d6788e841d61b251dc75157d0dfe4a39f57cc362',
 			$signature,
 		);
+	}
+
+	public function testGoldenVectorFixtureMatchesTokenContract(): void {
+		$fixture = $this->loadHmacFixture();
+		$signer = new TokenSigner();
+		$body = base64_decode((string)$fixture['body_b64'], true) ?: '';
+		$bodyHash = $signer->bodySha256Hex(
+			(string)$fixture['method'],
+			$body,
+		);
+		$this->assertSame($fixture['expected_body_sha256'], $bodyHash);
+
+		$canonical = $signer->buildCanonicalString(
+			(string)$fixture['method'],
+			(string)$fixture['path'],
+			(string)$fixture['query_string'],
+			(string)$fixture['timestamp'],
+			(string)$fixture['nonce'],
+			$bodyHash,
+		);
+		$this->assertSame($fixture['expected_canonical'], $canonical);
+
+		$secret = base64_decode((string)$fixture['secret_b64'], true);
+		$this->assertNotFalse($secret);
+		$signature = hash_hmac('sha256', $canonical, $secret);
+		$this->assertSame($fixture['expected_signature'], $signature);
 	}
 
 	public function testSignatureChangesWhenMethodChanges(): void {

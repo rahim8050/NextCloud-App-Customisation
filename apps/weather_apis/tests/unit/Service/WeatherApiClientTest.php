@@ -162,6 +162,55 @@ final class WeatherApiClientTest extends TestCase {
 		$client->whoami('token-request');
 	}
 
+	public function testTestConnectionReturnsExpiresIn(): void {
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
+
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('POST', '');
+		$canonical = $signer->buildCanonicalString(
+			'POST',
+			'/api/v1/integrations/token/',
+			'',
+			'123',
+			'nonce',
+			$bodyHash,
+		);
+		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient
+			->expects($this->once())
+			->method('post')
+			->with(
+				$this->stringContains('/api/v1/integrations/token/'),
+				$this->callback(function (array $options) use ($expectedSignature): bool {
+					return $this->hasCorrectOptions($options, 'token-request')
+						&& $options['headers']['X-API-Key'] === 'plain-api'
+						&& $options['headers']['X-Client-Id'] === 'client-id'
+						&& $options['headers']['X-Timestamp'] === '123'
+						&& $options['headers']['X-Nonce'] === 'nonce'
+						&& $options['headers']['X-Signature'] === $expectedSignature;
+				}),
+			)
+			->willReturn($tokenResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($tokenClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn(null);
+		$cache->expects($this->once())
+			->method('set')
+			->with('integration_access_token', 'token', 295)
+			->willReturn(true);
+
+		$client = $this->createClient($clientService, $cache);
+		$expiresIn = $client->testConnection('token-request');
+		$this->assertSame(300, $expiresIn);
+	}
+
 	public function testPingRejectsMalformedEnvelope(): void {
 		$pingResponse = $this->createResponse(200, '{"status":0,"data":{"ok":false}}');
 

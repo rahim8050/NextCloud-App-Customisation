@@ -71,10 +71,10 @@ style('weather_apis', 'admin-settings');
 		<div class="form-group weather-apis-connection">
 			<label><?php p($l->t('Integration Status')); ?></label>
 			<div class="weather-apis-connection__actions">
-				<button id="weather-apis-test-connection" type="button" class="button"><?php p($l->t('Check configuration')); ?></button>
+				<button id="weather-apis-test-connection" type="button" class="button"><?php p($l->t('Test connection')); ?></button>
 				<div id="weather-apis-connection-status" class="weather-apis-connection__status" role="status" aria-live="polite"></div>
 			</div>
-			<p class="hint"><?php p($l->t('Validates configuration only; no outbound HTTP calls are made.')); ?></p>
+			<p class="hint"><?php p($l->t('Performs a backend token request to verify HMAC connectivity.')); ?></p>
 		</div>
 
 		<div class="form-group">

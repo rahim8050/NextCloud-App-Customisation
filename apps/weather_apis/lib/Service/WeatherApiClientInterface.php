@@ -15,4 +15,9 @@ interface WeatherApiClientInterface {
 	 * @throws WeatherApiException
 	 */
 	public function ping(string $correlationId): void;
+
+	/**
+	 * @throws WeatherApiException
+	 */
+	public function testConnection(string $correlationId): int;
 }

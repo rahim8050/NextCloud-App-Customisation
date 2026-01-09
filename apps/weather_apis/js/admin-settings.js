@@ -120,7 +120,9 @@
 				: null
 			const errorCode = typeof backendErrors?.code === 'string' ? backendErrors.code : ''
 			const errorReason = typeof backendErrors?.reason === 'string' ? backendErrors.reason : ''
-			const topLevelCode = typeof data?.error?.code === 'string' ? data.error.code : ''
+			const topLevelCode = typeof data?.code === 'string'
+				? data.code
+				: (typeof data?.error?.code === 'string' ? data.error.code : '')
 
 			const parts = []
 			if (httpStatus) {
@@ -444,10 +446,17 @@
 				return
 			}
 
-			const isOk = result.response.ok && result.data?.status === 'ok'
-			const message = isOk
+			const isOk = result.response.ok
+				&& (result.data?.ok === true || result.data?.status === 0)
+			const expiresIn = Number.isFinite(result.data?.data?.expires_in)
+				? Number(result.data.data.expires_in)
+				: null
+			let message = isOk
 				? pickMessage(result.data, 'Connection successful.')
 				: buildConnectionErrorMessage(result.response, result.data)
+			if (isOk && expiresIn !== null) {
+				message = `${message} (expires_in=${expiresIn}s)`
+			}
 			if (connectionStatus) {
 				connectionStatus.textContent = message
 				connectionStatus.classList.add(isOk ? 'success' : 'error')

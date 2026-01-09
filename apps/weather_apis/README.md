@@ -30,9 +30,10 @@ Configure these values via Settings → Administration → Weather APIs. Secrets
 2. Copy the export snippet into DRF:
    - `INTEGRATION_HMAC_CLIENT_ID`
    - `INTEGRATION_HMAC_CLIENTS_JSON`
-3. Use “Check configuration” in the admin UI to confirm the config is valid.
+3. Use “Test connection” in the admin UI to request a token and confirm the integration.
 
-See `docs/integration_auth.md` for the full signing contract and troubleshooting guide.
+See `docs/integration_auth.md` for the signing contract and troubleshooting guide,
+and `docs/hmac_audit.md` for the cross-repo HMAC audit notes.
 
 ## Integration: Backend connection
 
@@ -58,9 +59,9 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 - Rotate secret: `POST /apps/weather_apis/api/v1/admin/rotate-hmac` (admin-only, CSRF required)
   - Always rotates the base64 HMAC secret.
   - Returns `{ status: "ok", ok: true, message, clientId, hmacSecret }` once; the UI shows the secret only after the request.
-- Check configuration: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
-  - Validates configuration only (no outbound HTTP).
-  - Returns `{ status: "ok", ok: true, message, data }` on success and never includes secrets.
+- Test connection: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
+  - Performs a backend token request (HMAC + API key) and never returns the token.
+  - Returns `{ status: 0, ok: true, message, data: { expires_in } }` on success, or `{ status: 1, ok: false, message, code }` on error.
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + base64 `hmacSecret`.
 

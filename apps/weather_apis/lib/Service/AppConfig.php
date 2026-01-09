@@ -101,6 +101,16 @@ final class AppConfig {
 		return $this->config->getSystemValueBool('allow_local_remote_servers', false);
 	}
 
+	public function isHmacDebugLoggingEnabled(): bool {
+		$raw = getenv('WEATHER_APIS_HMAC_DEBUG');
+		if ($raw === false) {
+			return false;
+		}
+
+		$normalized = strtolower(trim($raw));
+		return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+	}
+
 	public function setBaseUrl(string $value): void {
 		$normalized = rtrim(trim($value), '/');
 		$this->config->setAppValue(self::APP_ID, self::KEY_BASE_URL, $normalized);

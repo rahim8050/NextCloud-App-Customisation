@@ -7,6 +7,8 @@ namespace OCA\WeatherApis\Controller;
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\LogSanitizer;
+use OCA\WeatherApis\Service\WeatherApiClientInterface;
+use OCA\WeatherApis\Service\WeatherApiException;
 use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -24,6 +26,7 @@ final class AdminConfigController extends Controller {
 		IRequest $request,
 		private readonly AppConfig $appConfig,
 		private readonly IntegrationConfig $integrationConfig,
+		private readonly WeatherApiClientInterface $weatherApiClient,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
@@ -101,7 +104,7 @@ final class AdminConfigController extends Controller {
 		$requestId = $this->resolveRequestId();
 		$user = $this->userSession->getUser();
 		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
-			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
+			return $this->buildTestConnectionError('forbidden', 'Admin access required.', Http::STATUS_FORBIDDEN);
 		}
 
 		$status = $this->integrationConfig->getStatus();
@@ -117,25 +120,51 @@ final class AdminConfigController extends Controller {
 				]),
 			);
 
-			return $this->buildErrorResponse(
+			return $this->buildTestConnectionError(
 				(string)($status['code'] ?? 'invalid_argument'),
 				$message,
-				$requestId,
 				Http::STATUS_BAD_REQUEST,
-				$status,
 			);
 		}
 
-		$finalMessage = $message;
-		if (!empty($status['warning'])) {
-			$finalMessage = $message . ' Legacy keys detected; remove them after migration.';
+		try {
+			$expiresIn = $this->weatherApiClient->testConnection($requestId);
+		} catch (WeatherApiException $exception) {
+			$code = $exception->getErrorCode();
+			$this->logger->warning(
+				'Weather API test connection failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'code' => $code,
+					'reason' => $exception->getReason() ?? '',
+				]),
+			);
+			return $this->buildTestConnectionError(
+				$code,
+				$exception->getMessage(),
+				$this->httpStatusForCode($code),
+			);
+		} catch (\Throwable $exception) {
+			$this->logger->warning(
+				'Weather API test connection failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'code' => 'backend_error',
+				]),
+			);
+			return $this->buildTestConnectionError(
+				'backend_error',
+				'Backend request failed.',
+				Http::STATUS_BAD_REQUEST,
+			);
 		}
 
-		return $this->buildStatusResponse('ok', $finalMessage, [
-			'ok' => true,
-			'legacyPresent' => $status['legacyPresent'] ?? false,
-			'warning' => $status['warning'] ?? null,
-		]);
+		$finalMessage = 'Connection successful.';
+		if (!empty($status['warning'])) {
+			$finalMessage .= ' Legacy keys detected; remove them after migration.';
+		}
+
+		return $this->buildTestConnectionSuccess($finalMessage, $expiresIn);
 	}
 
 	private function resolveClientId(): string {
@@ -199,6 +228,27 @@ final class AdminConfigController extends Controller {
 				'requestId' => $requestId,
 				'details' => $detailsPayload,
 			],
+		], $status);
+	}
+
+	private function buildTestConnectionSuccess(string $message, int $expiresIn): JSONResponse {
+		return new JSONResponse([
+			'status' => 0,
+			'ok' => true,
+			'message' => $message,
+			'data' => [
+				'expires_in' => $expiresIn,
+			],
+		]);
+	}
+
+	private function buildTestConnectionError(string $code, string $message, int $status): JSONResponse {
+		return new JSONResponse([
+			'status' => 1,
+			'ok' => false,
+			'message' => $message,
+			'code' => $code,
+			'data' => null,
 		], $status);
 	}
 

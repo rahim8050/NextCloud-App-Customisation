@@ -7,6 +7,8 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\IntegrationConfig;
+use OCA\WeatherApis\Service\WeatherApiClientInterface;
+use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
@@ -154,16 +156,17 @@ final class AdminConfigControllerTest extends TestCase {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
 
-		$controller = $this->createController($storage, true, $request);
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->method('testConnection')->willReturn(300);
+
+		$controller = $this->createController($storage, true, $request, $weatherApiClient);
 
 		$response = $controller->testConnection();
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame('ok', $data['status']);
+		$this->assertSame(0, $data['status']);
 		$this->assertTrue($data['ok']);
-		$this->assertSame('Integration HMAC configuration is valid.', $data['message']);
-		$this->assertSame(true, $data['data']['ok']);
-		$this->assertSame(false, $data['data']['legacyPresent']);
+		$this->assertSame(300, $data['data']['expires_in']);
 	}
 
 	public function testTestConnectionRejectsNonAdmin(): void {
@@ -174,8 +177,9 @@ final class AdminConfigControllerTest extends TestCase {
 
 		$this->assertSame(403, $response->getStatus());
 		$data = $this->decodeResponse($response);
-		$this->assertSame('error', $data['status']);
+		$this->assertSame(1, $data['status']);
 		$this->assertSame('Admin access required.', $data['message']);
+		$this->assertSame('forbidden', $data['code']);
 	}
 
 	public function testTestConnectionRequiresAdmin(): void {
@@ -193,14 +197,34 @@ final class AdminConfigControllerTest extends TestCase {
 		$response = $controller->testConnection();
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame('error', $data['status']);
-		$this->assertSame('blocked_legacy_present', $data['error']['code']);
+		$this->assertSame(1, $data['status']);
+		$this->assertSame('blocked_legacy_present', $data['code']);
+	}
+
+	public function testTestConnectionReturnsBackendError(): void {
+		$storage = [
+			'INTEGRATION_HMAC_CLIENT_ID' => 'client-id',
+			'INTEGRATION_HMAC_CLIENTS_JSON' => 'encrypted:{"client-id":"c2VjcmV0"}',
+		];
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->method('testConnection')
+			->willThrowException(new WeatherApiException('backend_timeout', 'Backend request failed.'));
+
+		$controller = $this->createController($storage, true, null, $weatherApiClient);
+
+		$response = $controller->testConnection();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame(1, $data['status']);
+		$this->assertSame('backend_timeout', $data['code']);
 	}
 
 	private function createController(
 		array &$storage,
 		bool $isAdmin = true,
 		?IRequest $request = null,
+		?WeatherApiClientInterface $weatherApiClient = null,
 	): AdminConfigController {
 		$request = $request ?? $this->createMock(IRequest::class);
 		$request->method('getHeader')->willReturn('');
@@ -217,12 +241,14 @@ final class AdminConfigControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig = $this->createAppConfig($storage);
 		$integrationConfig = $this->createIntegrationConfig($storage);
+		$weatherApiClient = $weatherApiClient ?? $this->createMock(WeatherApiClientInterface::class);
 
 		return new AdminConfigController(
 			'weather_apis',
 			$request,
 			$appConfig,
 			$integrationConfig,
+			$weatherApiClient,
 			$userSession,
 			$groupManager,
 			$logger,

@@ -11,6 +11,16 @@ use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 
 final class IntegrationConfigTest extends TestCase {
+	private function loadHmacFixture(): array {
+		$path = dirname(__DIR__, 2) . '/fixtures/hmac_test_vector.json';
+		$raw = file_get_contents($path);
+		$this->assertNotFalse($raw);
+		$decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+		$this->assertIsArray($decoded);
+
+		return $decoded;
+	}
+
 	public function testValidConfigLoadsSecretBytes(): void {
 		$storage = [
 			'INTEGRATION_HMAC_CLIENT_ID' => 'client-id',
@@ -96,6 +106,14 @@ final class IntegrationConfigTest extends TestCase {
 			$this->assertSame('blocked_legacy_present', $exception->getErrorCode());
 			throw $exception;
 		}
+	}
+
+	public function testFixtureSecretFingerprintMatches(): void {
+		$fixture = $this->loadHmacFixture();
+		$secret = base64_decode((string)$fixture['secret_b64'], true);
+		$this->assertNotFalse($secret);
+		$fingerprint = hash('sha256', $secret);
+		$this->assertSame($fixture['expected_secret_sha256'], $fingerprint);
 	}
 
 	private function createIntegrationConfig(array &$storage, array $system = [], bool $legacyAllowed = false): IntegrationConfig {

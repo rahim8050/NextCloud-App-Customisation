@@ -138,6 +138,7 @@ final class Application extends App implements IBootstrap {
 				$c->get(IRequest::class),
 				$c->get(AppConfig::class),
 				$c->get(IntegrationConfig::class),
+				$c->get(WeatherApiClientInterface::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
 				$logger,

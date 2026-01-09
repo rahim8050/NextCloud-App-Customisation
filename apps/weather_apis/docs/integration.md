@@ -10,8 +10,8 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 4. On an integration call (for example `whoami`), `WeatherApiClient` constructs the token request (see the backend contract for the exact path and headers).
 5. The request is sent to the configured reverse proxy URL, which forwards to DRF.
 6. DRF returns an access token; the app caches it briefly and uses it for backend calls.
-7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a configuration check from the settings UI (no outbound HTTP).
-8. Responses are normalized into `{ "status": "ok" | "error", ... }` and include a `requestId` for correlation.
+7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a test-connection flow from the settings UI, which performs the token request and reports `expires_in`.
+8. Responses are normalized into `{ "status": "ok" | "error", ... }` for most admin endpoints. The test-connection endpoint returns `{ status: 0|1, ok: bool, message, data?, code? }` for UI compatibility.
 
 ## Error mapping
 
@@ -47,8 +47,8 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
   - Returns non-secret config only: baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, and integration status metadata.
 - `POST /apps/weather_apis/api/v1/admin/test-connection`
   - Admin-only + CSRF required.
-  - Validates configuration only (no outbound HTTP).
-  - Response: `{ status: "ok", ok: true, message, data }` on success (no secrets).
+  - Performs the backend token request (HMAC + API key) and never returns the token.
+  - Response: `{ status: 0, ok: true, message, data: { expires_in } }` on success, or `{ status: 1, ok: false, message, code }` on error.
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.

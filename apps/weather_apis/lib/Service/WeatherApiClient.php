@@ -21,6 +21,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 	private readonly Closure $timeProvider;
 	private readonly Closure $nonceProvider;
+	private readonly bool $hmacDebugLogging;
 
 	public function __construct(
 		private readonly IClientService $clientService,
@@ -35,6 +36,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	) {
 		$this->timeProvider = Closure::fromCallable($timeProvider ?? fn (): int => time());
 		$this->nonceProvider = Closure::fromCallable($nonceProvider ?? fn (): string => bin2hex(random_bytes(16)));
+		$this->hmacDebugLogging = $this->appConfig->isHmacDebugLoggingEnabled();
 	}
 
 	/**
@@ -85,6 +87,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$bodyHash,
 		);
 
+		$signature = hash_hmac('sha256', $canonical, $secret);
 		$this->logSigningContext(
 			$correlationId,
 			'GET',
@@ -93,9 +96,9 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$nonce,
 			$bodyHash,
 			$canonical,
+			$signature,
+			$secret,
 		);
-
-		$signature = hash_hmac('sha256', $canonical, $secret);
 
 		$options = $this->buildBaseOptions($correlationId, $context['allowLocalAddress']);
 		$options['headers'] = array_merge($options['headers'], [
@@ -134,7 +137,33 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @throws WeatherApiException
 	 */
+	public function testConnection(string $correlationId): int {
+		$context = $this->resolveValidatedBaseUrlContext();
+		$payload = $this->mintTokenPayload($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
+		$this->cacheToken($payload['access'], $payload['expiresIn']);
+
+		if ($payload['expiresIn'] === null) {
+			throw new WeatherApiException('backend_error', 'Token response missing expires_in.');
+		}
+
+		return $payload['expiresIn'];
+	}
+
+	/**
+	 * @throws WeatherApiException
+	 */
 	private function mintToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
+		$payload = $this->mintTokenPayload($baseUrl, $allowLocalAddress, $correlationId);
+		$this->cacheToken($payload['access'], $payload['expiresIn']);
+
+		return $payload['access'];
+	}
+
+	/**
+	 * @return array{access: string, expiresIn: ?int}
+	 * @throws WeatherApiException
+	 */
+	private function mintTokenPayload(string $baseUrl, bool $allowLocalAddress, string $correlationId): array {
 		$client = $this->clientService->newClient();
 		$nonce = (string)($this->nonceProvider)();
 		$timestamp = (string)($this->timeProvider)();
@@ -157,6 +186,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			throw new WeatherApiException($exception->getErrorCode(), $exception->getMessage(), $exception);
 		}
 
+		$signature = hash_hmac('sha256', $canonical, $secret);
 		$this->logSigningContext(
 			$correlationId,
 			'POST',
@@ -165,9 +195,9 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$nonce,
 			$bodyHash,
 			$canonical,
+			$signature,
+			$secret,
 		);
-
-		$signature = hash_hmac('sha256', $canonical, $secret);
 
 		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
 		$options['headers'] = array_merge($options['headers'], [
@@ -205,9 +235,11 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		if (isset($payload['expires_in']) && is_numeric($payload['expires_in'])) {
 			$expiresIn = (int)$payload['expires_in'];
 		}
-		$this->cache->set($this->getTokenCacheKey(), $token, $this->resolveTokenTtl($expiresIn));
 
-		return $token;
+		return [
+			'access' => $token,
+			'expiresIn' => $expiresIn,
+		];
 	}
 
 	/**
@@ -489,8 +521,15 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		string $nonce,
 		string $bodyHash,
 		string $canonical,
+		string $signature,
+		string $secret,
 	): void {
-		$canonicalHash = substr(hash('sha256', $canonical), 0, 12);
+		if (!$this->hmacDebugLogging) {
+			return;
+		}
+
+		$canonicalHash = substr(hash('sha256', $canonical), 0, 16);
+		$secretFingerprint = substr(hash('sha256', $secret), 0, 16);
 
 		$this->logger->debug('Weather API HMAC signing context', [
 			'requestId' => $correlationId,
@@ -500,6 +539,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'nonce' => $nonce,
 			'body_sha256' => $bodyHash,
 			'canonical_sha256' => $canonicalHash,
+			'secret_sha256' => $secretFingerprint,
+			'signature' => $signature,
 		]);
 	}
 
@@ -509,6 +550,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		string $path,
 		IResponse $response,
 	): void {
+		if (!$this->hmacDebugLogging) {
+			return;
+		}
+
 		$this->logger->debug('Weather API signed response received', [
 			'requestId' => $correlationId,
 			'method' => strtoupper($method),
@@ -519,6 +564,14 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 	private function clearCachedToken(): void {
 		$this->cache->remove($this->getTokenCacheKey());
+	}
+
+	private function cacheToken(string $token, ?int $expiresIn): void {
+		$this->cache->set(
+			$this->getTokenCacheKey(),
+			$token,
+			$this->resolveTokenTtl($expiresIn),
+		);
 	}
 
 	private function resolveTokenTtl(?int $expiresIn): int {
