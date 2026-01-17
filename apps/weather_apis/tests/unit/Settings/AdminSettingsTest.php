@@ -39,7 +39,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(5))
+		$urlGenerator->expects($this->exactly(7))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -47,6 +47,8 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminConfig.rotateHmac'],
 				['weather_apis.adminConfig.getConfig'],
 				['weather_apis.adminConfig.testConnection'],
+				['weather_apis.adminConfig.diagnostics'],
+				['weather_apis.adminConfig.previewPng'],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
@@ -54,6 +56,8 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/rotate-hmac',
 				'/apps/weather_apis/api/v1/admin/config',
 				'/apps/weather_apis/api/v1/admin/test-connection',
+				'/apps/weather_apis/admin/diagnostics',
+				'/apps/weather_apis/admin/preview.png',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);
@@ -67,5 +71,7 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/weather_apis/api/v1/admin/rotate-hmac', $response->getParams()['rotateHmacUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/config', $response->getParams()['configUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/test-connection', $response->getParams()['testConnectionUrl']);
+		$this->assertSame('/apps/weather_apis/admin/diagnostics', $response->getParams()['diagnosticsUrl']);
+		$this->assertSame('/apps/weather_apis/admin/preview.png', $response->getParams()['previewUrl']);
 	}
 }

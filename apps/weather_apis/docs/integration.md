@@ -9,9 +9,19 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 3. Admins can generate or rotate the HMAC credentials from the settings UI without using shell commands.
 4. On an integration call (for example `whoami`), `WeatherApiClient` constructs the token request (see the backend contract for the exact path and headers).
 5. The request is sent to the configured reverse proxy URL, which forwards to DRF.
-6. DRF returns an access token; the app caches it briefly and uses it for backend calls.
+6. DRF returns an access token (raw or envelope-wrapped); the app unwraps `data` when present, caches the token briefly, and uses it for backend calls.
 7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a test-connection flow from the settings UI, which performs the token request and reports `expires_in`.
-8. Responses are normalized into `{ "status": "ok" | "error", ... }` for most admin endpoints. The test-connection endpoint returns `{ status: 0|1, ok: bool, message, data?, code? }` for UI compatibility.
+8. Admin diagnostics can run the status + PNG preview endpoints using the minted token, returning per-step pass/fail without exposing the token to the browser.
+9. Responses are normalized into `{ "status": "ok" | "error", ... }` for most admin endpoints. The test-connection endpoint returns `{ status: 0|1, ok: bool, message, data?, code? }` for UI compatibility.
+
+## Token response shapes
+
+WeatherApiClient accepts both token response formats:
+
+- Raw JSON: `{ "access": "...", "expires_in": 300 }`
+- Envelope: `{ "status": 0, "message": "...", "data": { "access": "...", "expires_in": 300 } }`
+
+If an envelope is returned with `status: 1`, the client maps `errors.code` and `errors.reason` (when present) into the Nextcloud error response.
 
 ## Error mapping
 
@@ -23,6 +33,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 | DRF returns 5xx | `backend_unavailable` | 503 |
 | Non-JSON payload or other non-2xx | `backend_error` | 400 |
 | Invalid signature (backend) | `unauthorized` or `forbidden` | 401 or 403 |
+| Token envelope `status: 1` | `errors.code` (fallback `backend_error`) | 400 |
 
 ## Security notes
 
@@ -49,6 +60,13 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
   - Admin-only + CSRF required.
   - Performs the backend token request (HMAC + API key) and never returns the token.
   - Response: `{ status: 0, ok: true, message, data: { expires_in } }` on success, or `{ status: 1, ok: false, message, code }` on error.
+- `GET /apps/weather_apis/admin/diagnostics`
+  - Admin-only.
+  - Mints a token, calls `/integrations/nextcloud/status/`, calls `/integrations/nextcloud/preview.png`.
+  - Response: `{ status: "ok", ok: true, message, data: { token, status, png } }` (no tokens returned).
+- `GET /apps/weather_apis/admin/preview.png`
+  - Admin-only.
+  - Streams the DRF PNG preview via Nextcloud; browser never sees the token.
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.

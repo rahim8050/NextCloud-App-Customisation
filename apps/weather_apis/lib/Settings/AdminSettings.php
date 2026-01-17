@@ -50,6 +50,8 @@ final class AdminSettings implements IDelegatedSettings {
 			'rotateHmacUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.rotateHmac'),
 			'configUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.getConfig'),
 			'testConnectionUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.testConnection'),
+			'diagnosticsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.diagnostics'),
+			'previewUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.previewPng'),
 		]);
 	}
 

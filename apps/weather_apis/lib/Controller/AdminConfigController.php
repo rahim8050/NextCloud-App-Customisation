@@ -14,7 +14,9 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -167,6 +169,148 @@ final class AdminConfigController extends Controller {
 		return $this->buildTestConnectionSuccess($finalMessage, $expiresIn);
 	}
 
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	public function diagnostics(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$user = $this->userSession->getUser();
+		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
+			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
+		}
+
+		$results = [
+			'token' => ['ok' => false],
+			'status' => ['ok' => false],
+			'png' => ['ok' => false],
+		];
+
+		$hasFailures = false;
+
+		try {
+			$expiresIn = $this->weatherApiClient->testConnection($requestId);
+			$results['token'] = [
+				'ok' => true,
+				'expires_in' => $expiresIn,
+			];
+		} catch (WeatherApiException $exception) {
+			$results['token'] = $this->diagnosticsErrorFromException('token', $exception, $requestId);
+			$hasFailures = true;
+		} catch (\Throwable $exception) {
+			$this->logger->warning(
+				'Weather API diagnostics token failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+				]),
+			);
+			$results['token'] = $this->buildDiagnosticsErrorResult('backend_error', 'Backend request failed.');
+			$hasFailures = true;
+		}
+
+		if (($results['token']['ok'] ?? false) === true) {
+			try {
+				$statusData = $this->weatherApiClient->nextcloudStatus($requestId);
+				$results['status'] = [
+					'ok' => true,
+					'http' => Http::STATUS_OK,
+					'server_time' => is_string($statusData['server_time'] ?? null) ? $statusData['server_time'] : null,
+					'version' => is_string($statusData['version'] ?? null) ? $statusData['version'] : null,
+					'capabilities' => is_array($statusData['capabilities'] ?? null) ? $statusData['capabilities'] : new \stdClass(),
+				];
+			} catch (WeatherApiException $exception) {
+				$results['status'] = $this->diagnosticsErrorFromException('status', $exception, $requestId);
+				$hasFailures = true;
+			} catch (\Throwable $exception) {
+				$this->logger->warning(
+					'Weather API diagnostics status failed',
+					LogSanitizer::sanitizeContext([
+						'requestId' => $requestId,
+					]),
+				);
+				$results['status'] = $this->buildDiagnosticsErrorResult('backend_error', 'Backend request failed.');
+				$hasFailures = true;
+			}
+
+			try {
+				$this->weatherApiClient->nextcloudPreviewPng($requestId);
+				$results['png'] = [
+					'ok' => true,
+					'http' => Http::STATUS_OK,
+				];
+			} catch (WeatherApiException $exception) {
+				$results['png'] = $this->diagnosticsErrorFromException('png', $exception, $requestId);
+				$hasFailures = true;
+			} catch (\Throwable $exception) {
+				$this->logger->warning(
+					'Weather API diagnostics preview failed',
+					LogSanitizer::sanitizeContext([
+						'requestId' => $requestId,
+					]),
+				);
+				$results['png'] = $this->buildDiagnosticsErrorResult('backend_error', 'Backend request failed.');
+				$hasFailures = true;
+			}
+		} else {
+			$results['status'] = $this->buildDiagnosticsErrorResult('skipped', 'Skipped: token step failed.');
+			$results['png'] = $this->buildDiagnosticsErrorResult('skipped', 'Skipped: token step failed.');
+			$hasFailures = true;
+		}
+
+		$message = $hasFailures ? 'Diagnostics completed with failures.' : 'Diagnostics passed.';
+
+		return new JSONResponse([
+			'status' => 'ok',
+			'ok' => true,
+			'message' => $message,
+			'data' => $results,
+		]);
+	}
+
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	public function previewPng(): Response {
+		$requestId = $this->resolveRequestId();
+		$user = $this->userSession->getUser();
+		if ($user === null || !$this->groupManager->isAdmin($user->getUID())) {
+			return $this->buildErrorResponse('forbidden', 'Admin access required.', $requestId, Http::STATUS_FORBIDDEN);
+		}
+
+		try {
+			$content = $this->weatherApiClient->nextcloudPreviewPng($requestId);
+		} catch (WeatherApiException $exception) {
+			$this->logger->warning(
+				'Weather API diagnostics preview failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'code' => $exception->getErrorCode(),
+					'reason' => $exception->getReason() ?? '',
+				]),
+			);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $exception) {
+			$this->logger->warning(
+				'Weather API diagnostics preview failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'code' => 'backend_error',
+				]),
+			);
+			return $this->buildErrorResponse(
+				'backend_error',
+				'Backend request failed.',
+				$requestId,
+				Http::STATUS_BAD_REQUEST,
+			);
+		}
+
+		$response = new DataDisplayResponse($content, Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
 	private function resolveClientId(): string {
 		$clientId = $this->integrationConfig->getClientIdOrNull();
 		if ($clientId !== null && $clientId !== '') {
@@ -250,6 +394,49 @@ final class AdminConfigController extends Controller {
 			'code' => $code,
 			'data' => null,
 		], $status);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function diagnosticsErrorFromException(string $step, WeatherApiException $exception, string $requestId): array {
+		$this->logger->warning(
+			'Weather API diagnostics step failed',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+				'step' => $step,
+				'code' => $exception->getErrorCode(),
+				'reason' => $exception->getReason() ?? '',
+			]),
+		);
+
+		$details = $exception->getDetails();
+		$httpStatus = null;
+		if (isset($details['httpStatus']) && is_int($details['httpStatus'])) {
+			$httpStatus = $details['httpStatus'];
+		}
+
+		return $this->buildDiagnosticsErrorResult(
+			$exception->getErrorCode(),
+			$exception->getMessage(),
+			$httpStatus,
+		);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function buildDiagnosticsErrorResult(string $code, string $message, ?int $httpStatus = null): array {
+		$result = [
+			'ok' => false,
+			'code' => $code,
+			'message' => $message,
+		];
+		if ($httpStatus !== null) {
+			$result['http'] = $httpStatus;
+		}
+
+		return $result;
 	}
 
 	private function httpStatusForCode(string $code): int {

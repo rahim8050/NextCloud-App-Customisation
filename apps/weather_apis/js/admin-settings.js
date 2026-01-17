@@ -30,6 +30,8 @@
 		const generateUrl = form.dataset.generateUrl || ''
 		const rotateUrl = form.dataset.rotateUrl || ''
 		const testConnectionUrl = form.dataset.testConnectionUrl || ''
+		const diagnosticsUrl = form.dataset.diagnosticsUrl || ''
+		const previewUrl = form.dataset.previewUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -42,6 +44,17 @@
 		const rotateButton = document.getElementById('weather-apis-rotate')
 		const testConnectionButton = document.getElementById('weather-apis-test-connection')
 		const connectionStatus = document.getElementById('weather-apis-connection-status')
+		const diagnosticsButton = document.getElementById('weather-apis-run-diagnostics')
+		const diagnosticsSummary = document.getElementById('weather-apis-diagnostics-summary')
+		const diagnosticsResults = document.getElementById('weather-apis-diagnostics-results')
+		const diagnosticsTokenRow = document.getElementById('weather-apis-diagnostics-token-row')
+		const diagnosticsStatusRow = document.getElementById('weather-apis-diagnostics-status-row')
+		const diagnosticsPngRow = document.getElementById('weather-apis-diagnostics-png-row')
+		const diagnosticsTokenValue = document.getElementById('weather-apis-diagnostics-token')
+		const diagnosticsStatusValue = document.getElementById('weather-apis-diagnostics-status')
+		const diagnosticsPngValue = document.getElementById('weather-apis-diagnostics-png')
+		const diagnosticsPreviewWrap = document.getElementById('weather-apis-diagnostics-preview-wrap')
+		const diagnosticsPreview = document.getElementById('weather-apis-diagnostics-preview')
 		// TODO: confirm desired auto-hide timeout for generated secrets; 30s keeps the UI usable without lingering secrets.
 		const CREDENTIALS_CLEAR_DELAY_MS = 30000
 		let credentialsClearTimer = null
@@ -92,6 +105,60 @@
 			connectionStatus.textContent = ''
 			connectionStatus.classList.remove('success', 'error')
 		}
+
+		const clearDiagnosticsSummary = () => {
+			if (!diagnosticsSummary) {
+				return
+			}
+			diagnosticsSummary.textContent = ''
+			diagnosticsSummary.classList.remove('success', 'error')
+		}
+
+		const clearDiagnosticsRows = () => {
+			const rows = [diagnosticsTokenRow, diagnosticsStatusRow, diagnosticsPngRow]
+			rows.forEach((row) => {
+				if (row) {
+					row.classList.remove('success', 'error')
+				}
+			})
+			const values = [diagnosticsTokenValue, diagnosticsStatusValue, diagnosticsPngValue]
+			values.forEach((el) => {
+				if (el) {
+					el.textContent = ''
+				}
+			})
+			if (diagnosticsResults) {
+				diagnosticsResults.hidden = true
+			}
+			if (diagnosticsPreviewWrap) {
+				diagnosticsPreviewWrap.hidden = true
+			}
+			if (diagnosticsPreview) {
+				diagnosticsPreview.removeAttribute('src')
+			}
+		}
+
+		const clearDiagnostics = () => {
+			clearDiagnosticsSummary()
+			clearDiagnosticsRows()
+		}
+
+		const setDiagnosticsRow = (row, valueEl, ok, text) => {
+			if (row) {
+				row.classList.toggle('success', ok)
+				row.classList.toggle('error', !ok)
+			}
+			if (valueEl) {
+				valueEl.textContent = text
+			}
+		}
+
+		const joinParts = (parts) => parts.filter((part) => {
+			if (part === null || part === undefined) return false
+			return String(part).trim() !== ''
+		}).join(' | ')
+
+		const formatHttp = (value) => Number.isFinite(value) ? `HTTP ${value}` : ''
 
 		const pickMessage = (data, fallback) => toText(
 			data?.message
@@ -181,6 +248,7 @@
 		/**
 		 * Toast helper (Nextcloud-native).
 		 * Keeps existing behavior intact: if toast API is missing, UI still works via inline status.
+		 * @param {unknown} message Toast content or error.
 		 */
 		const toast = (message) => {
 			const text = toText(message, '')
@@ -326,12 +394,30 @@
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
-					'Accept': 'application/json',
+					Accept: 'application/json',
 					requesttoken: token,
 					'OCS-APIRequest': 'true',
 					'X-Requested-With': 'XMLHttpRequest',
 				},
 				body: buildTokenFormData(),
+			})
+
+			const { parsed, data, text } = await readJsonResponse(response)
+			return { response, parsed, data, text }
+		}
+
+		const performAdminGet = async (url) => {
+			const token = resolveRequestToken()
+			console.info('[weather_apis] GET', url)
+			const response = await fetch(url, {
+				method: 'GET',
+				credentials: 'same-origin',
+				headers: {
+					Accept: 'application/json',
+					requesttoken: token,
+					'OCS-APIRequest': 'true',
+					'X-Requested-With': 'XMLHttpRequest',
+				},
 			})
 
 			const { parsed, data, text } = await readJsonResponse(response)
@@ -464,6 +550,120 @@
 			toast(message)
 		}
 
+		const handleDiagnostics = async () => {
+			if (!diagnosticsUrl) {
+				const message = 'Diagnostics are not available.'
+				if (diagnosticsSummary) {
+					diagnosticsSummary.textContent = message
+					diagnosticsSummary.classList.add('error')
+				}
+				toast(message)
+				return
+			}
+
+			clearDiagnostics()
+
+			const result = await performAdminGet(diagnosticsUrl)
+			if (!result.parsed) {
+				if (diagnosticsSummary) {
+					const snippet = result.text.trim().slice(0, 200)
+					const message = snippet || 'Unable to parse diagnostics response.'
+					diagnosticsSummary.textContent = message
+					diagnosticsSummary.classList.add('error')
+					toast(message)
+				}
+				return
+			}
+
+			const payload = result.data?.data && typeof result.data.data === 'object'
+				? result.data.data
+				: result.data
+
+			const tokenResult = payload?.token && typeof payload.token === 'object' ? payload.token : null
+			const statusResult = payload?.status && typeof payload.status === 'object' ? payload.status : null
+			const pngResult = payload?.png && typeof payload.png === 'object' ? payload.png : null
+
+			const hasResults = tokenResult || statusResult || pngResult
+			if (!hasResults) {
+				const message = pickMessage(result.data, 'Diagnostics response is malformed.')
+				if (diagnosticsSummary) {
+					diagnosticsSummary.textContent = message
+					diagnosticsSummary.classList.add('error')
+				}
+				toast(message)
+				return
+			}
+
+			if (diagnosticsResults) {
+				diagnosticsResults.hidden = false
+			}
+
+			const tokenOk = tokenResult?.ok === true
+			const tokenMessage = tokenOk
+				? joinParts([
+					'OK',
+					Number.isFinite(tokenResult?.expires_in)
+						? `expires_in=${Number(tokenResult.expires_in)}s`
+						: null,
+				])
+				: joinParts([
+					'FAILED',
+					formatHttp(tokenResult?.http),
+					tokenResult?.message,
+					tokenResult?.code ? `code=${tokenResult.code}` : null,
+				])
+			setDiagnosticsRow(diagnosticsTokenRow, diagnosticsTokenValue, tokenOk, tokenMessage || (tokenOk ? 'OK' : 'FAILED'))
+
+			const statusOk = statusResult?.ok === true
+			const statusMessage = statusOk
+				? joinParts([
+					'OK',
+					formatHttp(statusResult?.http),
+					statusResult?.version ? `version=${statusResult.version}` : null,
+					statusResult?.server_time ? `server_time=${statusResult.server_time}` : null,
+				])
+				: joinParts([
+					'FAILED',
+					formatHttp(statusResult?.http),
+					statusResult?.message,
+					statusResult?.code ? `code=${statusResult.code}` : null,
+				])
+			setDiagnosticsRow(diagnosticsStatusRow, diagnosticsStatusValue, statusOk, statusMessage || (statusOk ? 'OK' : 'FAILED'))
+
+			const pngOk = pngResult?.ok === true
+			const pngMessage = pngOk
+				? joinParts(['OK', formatHttp(pngResult?.http)])
+				: joinParts([
+					'FAILED',
+					formatHttp(pngResult?.http),
+					pngResult?.message,
+					pngResult?.code ? `code=${pngResult.code}` : null,
+				])
+			setDiagnosticsRow(diagnosticsPngRow, diagnosticsPngValue, pngOk, pngMessage || (pngOk ? 'OK' : 'FAILED'))
+
+			const overallOk = tokenOk && statusOk && pngOk
+			const summaryMessage = pickMessage(
+				result.data,
+				overallOk ? 'Diagnostics passed.' : 'Diagnostics completed with failures.',
+			)
+			if (diagnosticsSummary) {
+				diagnosticsSummary.textContent = summaryMessage
+				diagnosticsSummary.classList.add(overallOk ? 'success' : 'error')
+			}
+			toast(summaryMessage)
+
+			if (diagnosticsPreviewWrap && diagnosticsPreview) {
+				if (pngOk && previewUrl) {
+					const separator = previewUrl.includes('?') ? '&' : '?'
+					diagnosticsPreview.src = `${previewUrl}${separator}ts=${Date.now()}`
+					diagnosticsPreviewWrap.hidden = false
+				} else {
+					diagnosticsPreviewWrap.hidden = true
+					diagnosticsPreview.removeAttribute('src')
+				}
+			}
+		}
+
 		if (generateButton) {
 			generateButton.addEventListener('click', () => {
 				console.info('[weather_apis] generate clicked')
@@ -504,6 +704,27 @@
 				}).finally(() => {
 					if (testConnectionButton) {
 						testConnectionButton.disabled = false
+					}
+				})
+			})
+		}
+
+		if (diagnosticsButton) {
+			diagnosticsButton.addEventListener('click', () => {
+				console.info('[weather_apis] diagnostics clicked')
+				if (diagnosticsButton) {
+					diagnosticsButton.disabled = true
+				}
+				handleDiagnostics().catch((error) => {
+					const message = error instanceof Error ? error.message : 'Unable to run diagnostics.'
+					if (diagnosticsSummary) {
+						diagnosticsSummary.textContent = message
+						diagnosticsSummary.classList.add('error')
+					}
+					toast(message)
+				}).finally(() => {
+					if (diagnosticsButton) {
+						diagnosticsButton.disabled = false
 					}
 				})
 			})
@@ -579,7 +800,7 @@
 					method: 'POST',
 					credentials: 'same-origin',
 					headers: {
-						'Accept': 'application/json',
+						Accept: 'application/json',
 						requesttoken: token,
 						'OCS-APIRequest': 'true',
 						'X-Requested-With': 'XMLHttpRequest',

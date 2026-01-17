@@ -12,6 +12,17 @@ interface WeatherApiClientInterface {
 	public function whoami(string $correlationId): array;
 
 	/**
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	public function nextcloudStatus(string $correlationId): array;
+
+	/**
+	 * @throws WeatherApiException
+	 */
+	public function nextcloudPreviewPng(string $correlationId): string;
+
+	/**
 	 * @throws WeatherApiException
 	 */
 	public function ping(string $correlationId): void;

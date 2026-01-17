@@ -4,7 +4,7 @@ style('weather_apis', 'admin-settings');
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -75,6 +75,32 @@ style('weather_apis', 'admin-settings');
 				<div id="weather-apis-connection-status" class="weather-apis-connection__status" role="status" aria-live="polite"></div>
 			</div>
 			<p class="hint"><?php p($l->t('Performs a backend token request to verify HMAC connectivity.')); ?></p>
+		</div>
+
+		<div class="form-group weather-apis-diagnostics">
+			<label><?php p($l->t('Diagnostics')); ?></label>
+			<div class="weather-apis-diagnostics__actions">
+				<button id="weather-apis-run-diagnostics" type="button" class="button"><?php p($l->t('Run diagnostics')); ?></button>
+				<div id="weather-apis-diagnostics-summary" class="weather-apis-diagnostics__summary" role="status" aria-live="polite"></div>
+			</div>
+			<div id="weather-apis-diagnostics-results" class="weather-apis-diagnostics__results" hidden>
+				<div class="weather-apis-diagnostics__row" id="weather-apis-diagnostics-token-row">
+					<span class="weather-apis-diagnostics__label"><?php p($l->t('Token')); ?></span>
+					<span id="weather-apis-diagnostics-token" class="weather-apis-diagnostics__value"></span>
+				</div>
+				<div class="weather-apis-diagnostics__row" id="weather-apis-diagnostics-status-row">
+					<span class="weather-apis-diagnostics__label"><?php p($l->t('Status')); ?></span>
+					<span id="weather-apis-diagnostics-status" class="weather-apis-diagnostics__value"></span>
+				</div>
+				<div class="weather-apis-diagnostics__row" id="weather-apis-diagnostics-png-row">
+					<span class="weather-apis-diagnostics__label"><?php p($l->t('PNG preview')); ?></span>
+					<span id="weather-apis-diagnostics-png" class="weather-apis-diagnostics__value"></span>
+				</div>
+				<div class="weather-apis-diagnostics__preview" id="weather-apis-diagnostics-preview-wrap" hidden>
+					<img id="weather-apis-diagnostics-preview" alt="<?php p($l->t('DRF preview')); ?>" />
+				</div>
+			</div>
+			<p class="hint"><?php p($l->t('Runs token minting, status, and PNG preview through the proxy.')); ?></p>
 		</div>
 
 		<div class="form-group">

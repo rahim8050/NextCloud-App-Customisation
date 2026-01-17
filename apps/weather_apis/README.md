@@ -30,7 +30,7 @@ Configure these values via Settings → Administration → Weather APIs. Secrets
 2. Copy the export snippet into DRF:
    - `INTEGRATION_HMAC_CLIENT_ID`
    - `INTEGRATION_HMAC_CLIENTS_JSON`
-3. Use “Test connection” in the admin UI to request a token and confirm the integration.
+3. Use “Test connection” or “Run diagnostics” in the admin UI to verify token minting, status, and PNG preview.
 
 See `docs/integration_auth.md` for the signing contract and troubleshooting guide,
 and `docs/hmac_audit.md` for the cross-repo HMAC audit notes.
@@ -62,6 +62,11 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 - Test connection: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
   - Performs a backend token request (HMAC + API key) and never returns the token.
   - Returns `{ status: 0, ok: true, message, data: { expires_in } }` on success, or `{ status: 1, ok: false, message, code }` on error.
+- Diagnostics: `GET /apps/weather_apis/admin/diagnostics` (admin-only)
+  - Mints a token, calls `/integrations/nextcloud/status/`, calls `/integrations/nextcloud/preview.png`.
+  - Returns `{ status: "ok", ok: true, message, data: { token, status, png } }` (no tokens returned).
+- Preview proxy: `GET /apps/weather_apis/admin/preview.png` (admin-only)
+  - Streams the DRF PNG preview through Nextcloud; tokens never reach the browser.
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + base64 `hmacSecret`.
 
@@ -122,6 +127,18 @@ curl -u admin:APP_PASSWORD \
   * `X-Timestamp: <unix seconds>`
   * `X-Nonce: <random string>`
   * `X-Signature: <hex hmac sha256>`
+
+### Diagnostics status
+- Endpoint: `GET {baseUrl}/api/v1/integrations/nextcloud/status/`
+- Headers:
+  * `Authorization: Bearer <access token>`
+- Response `data`: `{ ok, server_time, version, capabilities: { png_preview } }`
+
+### Diagnostics preview
+- Endpoint: `GET {baseUrl}/api/v1/integrations/nextcloud/preview.png`
+- Headers:
+  * `Authorization: Bearer <access token>`
+- Response: `image/png` (binary), `Cache-Control: no-store`
 
 ## Normalized API responses (Nextcloud-side)
 

@@ -211,6 +211,196 @@ final class WeatherApiClientTest extends TestCase {
 		$this->assertSame(300, $expiresIn);
 	}
 
+	public function testTestConnectionAcceptsEnvelopeTokenResponse(): void {
+		$tokenResponse = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"access":"token","expires_in":300}}',
+		);
+
+		$signer = new TokenSigner();
+		$bodyHash = $signer->bodySha256Hex('POST', '');
+		$canonical = $signer->buildCanonicalString(
+			'POST',
+			'/api/v1/integrations/token/',
+			'',
+			'123',
+			'nonce',
+			$bodyHash,
+		);
+		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient
+			->expects($this->once())
+			->method('post')
+			->with(
+				$this->stringContains('/api/v1/integrations/token/'),
+				$this->callback(function (array $options) use ($expectedSignature): bool {
+					return $this->hasCorrectOptions($options, 'token-request')
+						&& $options['headers']['X-API-Key'] === 'plain-api'
+						&& $options['headers']['X-Client-Id'] === 'client-id'
+						&& $options['headers']['X-Timestamp'] === '123'
+						&& $options['headers']['X-Nonce'] === 'nonce'
+						&& $options['headers']['X-Signature'] === $expectedSignature;
+				}),
+			)
+			->willReturn($tokenResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($tokenClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn(null);
+		$cache->expects($this->once())
+			->method('set')
+			->with('integration_access_token', 'token', 295)
+			->willReturn(true);
+
+		$client = $this->createClient($clientService, $cache);
+		$expiresIn = $client->testConnection('token-request');
+		$this->assertSame(300, $expiresIn);
+	}
+
+	public function testTokenEnvelopeErrorMapsToException(): void {
+		$tokenResponse = $this->createResponse(
+			200,
+			'{"status":1,"message":"Invalid signature","errors":{"code":"sig_mismatch","reason":"Invalid Nextcloud signature"}}',
+		);
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient->expects($this->once())
+			->method('post')
+			->willReturn($tokenResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($tokenClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn(null);
+
+		$client = $this->createClient($clientService, $cache);
+
+		$this->expectException(WeatherApiException::class);
+		try {
+			$client->testConnection('token-request');
+		} catch (WeatherApiException $exception) {
+			$this->assertSame('sig_mismatch', $exception->getErrorCode());
+			$this->assertSame('Invalid signature', $exception->getMessage());
+			$this->assertSame('Invalid Nextcloud signature', $exception->getReason());
+			throw $exception;
+		}
+	}
+
+	public function testNextcloudStatusUsesBearerTokenAndParsesEnvelope(): void {
+		$statusResponse = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"ok":true,"server_time":"2025-01-01T00:00:00Z","version":"1.0.0","capabilities":{"png_preview":true}}}',
+		);
+
+		$statusClient = $this->createMock(IClient::class);
+		$statusClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/integrations/nextcloud/status/'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'status-request', 'Bearer cached-token')
+					&& $options['headers']['Accept'] === 'application/json'),
+			)
+			->willReturn($statusResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($statusClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->nextcloudStatus('status-request');
+		$this->assertTrue($result['ok']);
+	}
+
+	public function testNextcloudPreviewReturnsPng(): void {
+		$pngPayload = "\x89PNG\r\n\x1a\nfake-bytes";
+		$previewResponse = $this->createResponse(
+			200,
+			$pngPayload,
+			['Content-Type' => 'image/png'],
+		);
+
+		$previewClient = $this->createMock(IClient::class);
+		$previewClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/integrations/nextcloud/preview.png'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'preview-request', 'Bearer cached-token')
+					&& $options['headers']['Accept'] === 'image/png'),
+			)
+			->willReturn($previewResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($previewClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$content = $client->nextcloudPreviewPng('preview-request');
+		$this->assertSame($pngPayload, $content);
+	}
+
+	public function testNextcloudStatusUnauthorizedRetriesOnce(): void {
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
+		$statusUnauthorized = $this->createResponse(401, '{"detail":"nope"}');
+		$statusOk = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"ok":true,"server_time":"2025-01-01T00:00:00Z","version":"1.0.0","capabilities":{"png_preview":true}}}',
+		);
+
+		$firstStatusClient = $this->createMock(IClient::class);
+		$firstStatusClient->expects($this->once())
+			->method('get')
+			->willReturn($statusUnauthorized);
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient->expects($this->once())
+			->method('post')
+			->willReturn($tokenResponse);
+
+		$secondStatusClient = $this->createMock(IClient::class);
+		$secondStatusClient->expects($this->once())
+			->method('get')
+			->willReturn($statusOk);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->exactly(3))
+			->method('newClient')
+			->willReturnOnConsecutiveCalls($firstStatusClient, $tokenClient, $secondStatusClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+		$cache->expects($this->once())
+			->method('remove')
+			->with('integration_access_token')
+			->willReturn(true);
+		$cache->expects($this->once())
+			->method('set')
+			->with('integration_access_token', 'token', 295)
+			->willReturn(true);
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->nextcloudStatus('rid');
+		$this->assertTrue($result['ok']);
+	}
+
 	public function testPingRejectsMalformedEnvelope(): void {
 		$pingResponse = $this->createResponse(200, '{"status":0,"data":{"ok":false}}');
 
@@ -247,7 +437,7 @@ final class WeatherApiClientTest extends TestCase {
 	}
 
 	public function testNon2xxResponseMapsToBackendUnavailable(): void {
-		$tokenResponse = $this->createResponse(200, '{"access":"token"}');
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
 		$whoamiResponse = $this->createResponse(502, '{"error":"oops"}');
 
 		$client = $this->buildClientWithResponses($tokenResponse, $whoamiResponse);
@@ -262,7 +452,7 @@ final class WeatherApiClientTest extends TestCase {
 	}
 
 	public function testInvalidJsonResponsesMapToBackendError(): void {
-		$tokenResponse = $this->createResponse(200, '{"access":"token"}');
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
 		$whoamiResponse = $this->createResponse(200, 'not json');
 
 		$client = $this->buildClientWithResponses($tokenResponse, $whoamiResponse);
@@ -426,10 +616,14 @@ final class WeatherApiClientTest extends TestCase {
 		return new IntegrationConfig($config, $crypto);
 	}
 
-	private function createResponse(int $status, string $body): IResponse {
+	private function createResponse(int $status, string $body, array $headers = []): IResponse {
 		$response = $this->createMock(IResponse::class);
 		$response->method('getStatusCode')->willReturn($status);
 		$response->method('getBody')->willReturn($body);
+		$response->method('getHeader')->willReturnCallback(
+			fn (string $key): string => $headers[$key] ?? '',
+		);
+		$response->method('getHeaders')->willReturn($headers);
 
 		return $response;
 	}

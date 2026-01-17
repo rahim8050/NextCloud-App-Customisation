@@ -15,6 +15,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	private const TOKEN_PATH = '/api/v1/integrations/token/';
 	private const WHOAMI_PATH = '/api/v1/integrations/whoami/';
 	private const PING_PATH = '/api/v1/integrations/nextcloud/ping/';
+	private const STATUS_PATH = '/api/v1/integrations/nextcloud/status/';
+	private const PREVIEW_PATH = '/api/v1/integrations/nextcloud/preview.png';
 	private const TOKEN_CACHE_KEY = 'integration_access_token';
 	private const TOKEN_TTL_FALLBACK_SECONDS = 240;
 	private const TOKEN_TTL_SKEW_SECONDS = 5;
@@ -58,6 +60,29 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 			throw $exception;
 		}
+	}
+
+	/**
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	public function nextcloudStatus(string $correlationId): array {
+		return $this->withTokenRetry(
+			$correlationId,
+			fn (string $baseUrl, string $token, bool $allowLocalAddress, string $requestId): array
+				=> $this->fetchStatus($baseUrl, $token, $allowLocalAddress, $requestId),
+		);
+	}
+
+	/**
+	 * @throws WeatherApiException
+	 */
+	public function nextcloudPreviewPng(string $correlationId): string {
+		return $this->withTokenRetry(
+			$correlationId,
+			fn (string $baseUrl, string $token, bool $allowLocalAddress, string $requestId): string
+				=> $this->fetchPreviewPng($baseUrl, $token, $allowLocalAddress, $requestId),
+		);
 	}
 
 	/**
@@ -160,7 +185,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	}
 
 	/**
-	 * @return array{access: string, expiresIn: ?int}
+	 * @return array{access: string, expiresIn: int}
 	 * @throws WeatherApiException
 	 */
 	private function mintTokenPayload(string $baseUrl, bool $allowLocalAddress, string $correlationId): array {
@@ -226,20 +251,85 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$this->ensureSuccessResponse($response);
 
 		$payload = $this->decodeJson($response->getBody());
-		if (!isset($payload['access']) || !is_string($payload['access'])) {
+		$data = $this->unwrapTokenPayload($payload);
+
+		$access = $data['access'] ?? null;
+		if (!is_string($access) || trim($access) === '') {
 			throw new WeatherApiException('backend_error', 'Token response is malformed.');
 		}
 
-		$token = $payload['access'];
-		$expiresIn = null;
-		if (isset($payload['expires_in']) && is_numeric($payload['expires_in'])) {
-			$expiresIn = (int)$payload['expires_in'];
+		$expiresRaw = $data['expires_in'] ?? null;
+		if (!is_numeric($expiresRaw)) {
+			throw new WeatherApiException('backend_error', 'Token response missing expires_in.');
 		}
 
 		return [
-			'access' => $token,
-			'expiresIn' => $expiresIn,
+			'access' => $access,
+			'expiresIn' => (int)$expiresRaw,
 		];
+	}
+
+	/**
+	 * @param array<array-key, mixed> $payload
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	private function unwrapTokenPayload(array $payload): array {
+		if (!array_key_exists('status', $payload)) {
+			return $payload;
+		}
+
+		$status = $payload['status'];
+		if (is_numeric($status) && (int)$status !== 0) {
+			$message = is_string($payload['message'] ?? null)
+				? $this->clampString($payload['message'], 200)
+				: 'Token request failed.';
+			$errors = $payload['errors'] ?? null;
+			$code = 'backend_error';
+			$reason = null;
+			$details = [];
+
+			if (is_array($errors)) {
+				if (isset($errors['code']) && is_string($errors['code']) && $errors['code'] !== '') {
+					$code = $this->clampString($errors['code'], 64);
+				}
+				if (isset($errors['reason']) && is_string($errors['reason']) && $errors['reason'] !== '') {
+					$reason = $this->clampString($errors['reason'], 200);
+				}
+				$sanitized = $this->sanitizeTokenErrors($errors);
+				if ($sanitized !== []) {
+					$details['errors'] = $sanitized;
+				}
+			}
+
+			throw new WeatherApiException($code, $message, null, $reason, $details);
+		}
+
+		$data = $payload['data'] ?? null;
+		if (is_array($data)) {
+			return $data;
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * @param array<array-key, mixed> $errors
+	 * @return array<string, string>
+	 */
+	private function sanitizeTokenErrors(array $errors): array {
+		$sanitized = [];
+		if (isset($errors['code']) && is_string($errors['code'])) {
+			$sanitized['code'] = $this->clampString($errors['code'], 64);
+		}
+		if (isset($errors['reason']) && is_string($errors['reason'])) {
+			$sanitized['reason'] = $this->clampString($errors['reason'], 200);
+		}
+		if (isset($errors['detail']) && is_string($errors['detail'])) {
+			$sanitized['detail'] = $this->clampString($errors['detail'], 200);
+		}
+
+		return $sanitized;
 	}
 
 	/**
@@ -264,6 +354,97 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$this->ensureSuccessResponse($response);
 
 		return $this->decodeJson($response->getBody());
+	}
+
+	/**
+	 * @template T
+	 * @param callable(string, string, bool, string): T $callback
+	 * @return T
+	 * @throws WeatherApiException
+	 */
+	private function withTokenRetry(string $correlationId, callable $callback): mixed {
+		$context = $this->resolveValidatedBaseUrlContext();
+		$token = $this->getCachedToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
+
+		try {
+			return $callback($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
+		} catch (WeatherApiException $exception) {
+			if ($exception->getErrorCode() === 'unauthorized') {
+				$this->clearCachedToken();
+				$token = $this->mintToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
+
+				return $callback($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
+			}
+
+			throw $exception;
+		}
+	}
+
+	/**
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	private function fetchStatus(string $baseUrl, string $token, bool $allowLocalAddress, string $correlationId): array {
+		$client = $this->clientService->newClient();
+
+		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
+		$options['headers'] = array_merge($options['headers'], [
+			'Accept' => 'application/json',
+			'Authorization' => 'Bearer ' . $token,
+		]);
+
+		$url = $this->buildEndpoint($baseUrl, self::STATUS_PATH);
+
+		try {
+			$response = $client->get($url, $options);
+		} catch (\Throwable $throwable) {
+			throw $this->mapException($throwable);
+		}
+
+		$this->ensureSuccessResponse($response);
+
+		$payload = $this->decodeJson($response->getBody());
+		$data = $payload['data'] ?? $payload;
+		if (!is_array($data) || ($data['ok'] ?? null) !== true) {
+			throw new WeatherApiException('backend_error', 'Status response is malformed.');
+		}
+
+		return $data;
+	}
+
+	/**
+	 * @throws WeatherApiException
+	 */
+	private function fetchPreviewPng(string $baseUrl, string $token, bool $allowLocalAddress, string $correlationId): string {
+		$client = $this->clientService->newClient();
+
+		$options = $this->buildBaseOptions($correlationId, $allowLocalAddress);
+		$options['headers'] = array_merge($options['headers'], [
+			'Accept' => 'image/png',
+			'Authorization' => 'Bearer ' . $token,
+		]);
+
+		$url = $this->buildEndpoint($baseUrl, self::PREVIEW_PATH);
+
+		try {
+			$response = $client->get($url, $options);
+		} catch (\Throwable $throwable) {
+			throw $this->mapException($throwable);
+		}
+
+		$this->ensureSuccessResponse($response);
+
+		$contentType = strtolower($response->getHeader('Content-Type'));
+		if ($contentType !== '' && !str_contains($contentType, 'image/png')) {
+			throw new WeatherApiException('backend_error', 'Preview response is not PNG.');
+		}
+
+		$body = $this->bodyToString($response->getBody());
+		if ($body === '') {
+			throw new WeatherApiException('backend_error', 'Preview response is empty.');
+		}
+
+		return $body;
 	}
 
 	/**

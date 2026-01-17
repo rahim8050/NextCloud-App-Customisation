@@ -186,6 +186,11 @@ Document the Django API contract here and keep it updated. Until confirmed, keep
 - Forecast: `GET {baseUrl}/<TODO:forecast-path>?lat={lat}&lon={lon}&date={date?}` → 200 JSON
 - Auth header: `<TODO: header name + format>` (e.g., `Authorization: Bearer …` or `X-Api-Key: …`)
 
+#### Token response envelope (contract rule)
+
+- The integration token response may be raw JSON (`{ "access": "...", "expires_in": 300 }`) or a DRF envelope (`{ "status": 0, "message": "...", "data": { "access": "...", "expires_in": 300 } }`).
+- `WeatherApiClient` must unwrap `data` when present and map `status: 1` payloads into `WeatherApiException` using `errors.code`/`errors.reason` when available.
+
 ### 4.3 Normalized success shape (Nextcloud API responses)
 
 Keep controller responses stable and simple:

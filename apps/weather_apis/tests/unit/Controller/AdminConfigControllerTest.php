@@ -12,6 +12,7 @@ use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IConfig;
@@ -169,6 +170,51 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertSame(300, $data['data']['expires_in']);
 	}
 
+	public function testDiagnosticsReturnsResults(): void {
+		$storage = [];
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->method('testConnection')->willReturn(300);
+		$weatherApiClient->method('nextcloudStatus')->willReturn([
+			'ok' => true,
+			'server_time' => '2025-01-01T00:00:00Z',
+			'version' => '1.0.0',
+			'capabilities' => ['png_preview' => true],
+		]);
+		$weatherApiClient->method('nextcloudPreviewPng')->willReturn('png-bytes');
+
+		$controller = $this->createController($storage, true, $request, $weatherApiClient);
+
+		$response = $controller->diagnostics();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertTrue($data['ok']);
+		$this->assertSame(300, $data['data']['token']['expires_in']);
+		$this->assertTrue($data['data']['status']['ok']);
+		$this->assertSame('1.0.0', $data['data']['status']['version']);
+		$this->assertTrue($data['data']['png']['ok']);
+	}
+
+	public function testPreviewPngReturnsImage(): void {
+		$storage = [];
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->method('nextcloudPreviewPng')->willReturn('png-bytes');
+
+		$controller = $this->createController($storage, true, null, $weatherApiClient);
+
+		$response = $controller->previewPng();
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+		$this->assertSame('png-bytes', $response->getData());
+
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
+	}
+
 	public function testTestConnectionRejectsNonAdmin(): void {
 		$storage = [];
 		$controller = $this->createController($storage, false);
@@ -186,6 +232,18 @@ final class AdminConfigControllerTest extends TestCase {
 		$this->assertMethodHasAttribute('testConnection', AuthorizedAdminSetting::class);
 		$this->assertMethodLacksAttribute('testConnection', PasswordConfirmationRequired::class);
 		$this->assertMethodLacksAttribute('testConnection', NoCSRFRequired::class);
+	}
+
+	public function testDiagnosticsRequiresAdmin(): void {
+		$this->assertMethodHasAttribute('diagnostics', AuthorizedAdminSetting::class);
+		$this->assertMethodLacksAttribute('diagnostics', PasswordConfirmationRequired::class);
+		$this->assertMethodLacksAttribute('diagnostics', NoCSRFRequired::class);
+	}
+
+	public function testPreviewRequiresAdmin(): void {
+		$this->assertMethodHasAttribute('previewPng', AuthorizedAdminSetting::class);
+		$this->assertMethodLacksAttribute('previewPng', PasswordConfirmationRequired::class);
+		$this->assertMethodLacksAttribute('previewPng', NoCSRFRequired::class);
 	}
 
 	public function testTestConnectionReturnsLegacyBlocked(): void {
@@ -324,7 +382,7 @@ final class AdminConfigControllerTest extends TestCase {
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function getResponseHeaders(JSONResponse $response): array {
+	private function getResponseHeaders(Response $response): array {
 		$reflection = new \ReflectionProperty(Response::class, 'headers');
 		$reflection->setAccessible(true);
 		$headers = $reflection->getValue($response);
