@@ -21,6 +21,24 @@ This file is the operating contract for any automated agent (Codex/LLM) modifyin
 - Do not introduce new external services or background jobs unless explicitly requested.
 - Do not add large dependencies without justification and a summary in change notes.
 
+## 1.5) Nextcloud file permissions (www-data)
+
+- Nextcloud runs as www-data; all app PHP files must be readable by www-data.
+- After editing files as your user, ensure ownership/group is *:www-data and perms are 640/664, otherwise autoload will fail with Class ... does not exist and endpoints will 500.
+- Built JS/CSS assets must also be readable by www-data to avoid 500s.
+
+**Recommended defaults** (if the repo is shared, keep directories group-sticky, e.g., 2770)
+```bash
+sudo chown -R "$(id -u)":www-data .
+find . -type f -name "*.php" -exec chmod 640 {} \;
+find . -type f \( -name "*.js" -o -name "*.css" \) -exec chmod 664 {} \;
+find . -type d -exec chmod 2770 {} \;
+```
+- If ACLs are used, ensure www-data has read access.
+
+**Quick verification**
+- `sudo -u www-data test -r <file>` (or `sudo -u www-data head -n 1 <file>`); if buttons return HTML error pages, check `nextcloud.log` for include/class-not-found.
+
 ## 2) Architecture contract (must)
 
 ### Layering
