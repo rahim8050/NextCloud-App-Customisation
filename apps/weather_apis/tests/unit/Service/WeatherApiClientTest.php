@@ -357,6 +357,93 @@ final class WeatherApiClientTest extends TestCase {
 		$this->assertSame($pngPayload, $content);
 	}
 
+	public function testRequestJsonUsesBearerTokenAndQuery(): void {
+		$response = $this->createResponse(200, '{"ok":true}');
+
+		$jsonClient = $this->createMock(IClient::class);
+		$jsonClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/farms/'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'json-request', 'Bearer cached-token')
+					&& $options['headers']['Accept'] === 'application/json'
+					&& ($options['query']['page'] ?? null) === 2),
+			)
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($jsonClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$payload = $client->requestJson('GET', '/api/v1/farms/', ['page' => 2], null, 'json-request');
+
+		$this->assertTrue($payload['ok']);
+	}
+
+	public function testRequestBinaryReturnsBytes(): void {
+		$pngPayload = "\x89PNG\r\n\x1a\nbinary";
+		$response = $this->createResponse(200, $pngPayload, ['Content-Type' => 'image/png']);
+
+		$binaryClient = $this->createMock(IClient::class);
+		$binaryClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/farms/1/ndvi/raster.png'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'binary-request', 'Bearer cached-token')
+					&& $options['headers']['Accept'] === 'image/png'),
+			)
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($binaryClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->requestBinary('GET', '/api/v1/farms/1/ndvi/raster.png', [], 'binary-request');
+
+		$this->assertSame('image/png', $result['contentType']);
+		$this->assertSame($pngPayload, $result['body']);
+		$this->assertSame(200, $result['statusCode']);
+	}
+
+	public function testFetchSchemaUsesJsonFormat(): void {
+		$schemaResponse = $this->createResponse(200, '{"openapi":"3.0.0","paths":{}}');
+
+		$schemaClient = $this->createMock(IClient::class);
+		$schemaClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/schema/?format=json'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'schema-request')
+					&& $options['headers']['Accept'] === 'application/json'),
+			)
+			->willReturn($schemaResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($schemaClient);
+
+		$cache = $this->createMock(ICache::class);
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->fetchSchema('schema-request');
+
+		$this->assertSame('3.0.0', $result['openapi']);
+	}
+
 	public function testNextcloudStatusUnauthorizedRetriesOnce(): void {
 		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
 		$statusUnauthorized = $this->createResponse(401, '{"detail":"nope"}');

@@ -13,6 +13,7 @@ This document describes how the Nextcloud Weather APIs app connects to the Djang
 7. The app calls the integration `whoami` endpoint with the bearer token. Admins can also run a test-connection flow from the settings UI, which performs the token request and reports `expires_in`.
 8. Admin diagnostics can run the status + PNG preview endpoints using the minted token, returning per-step pass/fail without exposing the token to the browser.
 9. Responses are normalized into `{ "status": "ok" | "error", ... }` for most admin endpoints. The test-connection endpoint returns `{ status: 0|1, ok: bool, message, data?, code? }` for UI compatibility.
+10. The admin Farms dashboard pulls a cached DRF OpenAPI schema to drive fields and operations (schema fetches are cached for ~1 hour).
 
 ## Token response shapes
 
@@ -67,6 +68,44 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
 - `GET /apps/weather_apis/admin/preview.png`
   - Admin-only.
   - Streams the DRF PNG preview via Nextcloud; browser never sees the token.
+- `GET /apps/weather_apis/api/v1/admin/farms/schema`
+  - Admin-only.
+  - Returns `{ status: "ok", data: { schema, warning? } }` where `schema` includes farm fields + operations derived from the DRF OpenAPI schema.
+  - Schema source: `GET {baseUrl}/api/schema/?format=openapi-json` (cached ~1 hour).
+- `POST /apps/weather_apis/api/v1/admin/farms/list`
+  - Admin-only + CSRF required.
+  - Proxies DRF list endpoint; accepts pagination query params defined in schema.
+- `POST /apps/weather_apis/api/v1/admin/farms/create`
+  - Admin-only + CSRF required.
+  - Proxies DRF create endpoint; required fields = `required - readOnly`.
+- `GET /apps/weather_apis/api/v1/admin/farms/{id}`
+  - Admin-only.
+  - Proxies DRF retrieve endpoint.
+- `PUT /apps/weather_apis/api/v1/admin/farms/{id}`
+  - Admin-only + CSRF required.
+  - Proxies DRF update endpoint; required fields = `required - readOnly`.
+- `PATCH /apps/weather_apis/api/v1/admin/farms/{id}`
+  - Admin-only + CSRF required.
+  - Proxies DRF partial update endpoint; strips read-only fields.
+- `DELETE /apps/weather_apis/api/v1/admin/farms/{id}`
+  - Admin-only + CSRF required.
+  - Proxies DRF delete endpoint.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/latest`
+  - Admin-only.
+  - Proxies DRF NDVI latest endpoint; query params are schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/timeseries`
+  - Admin-only.
+  - Proxies DRF NDVI timeseries endpoint; query params are schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster.png`
+  - Admin-only.
+  - Streams raw `image/png` bytes via Nextcloud (no JSON wrapper, no token exposure).
+  - Response headers: `Content-Type: image/png`, `Cache-Control: no-store`.
+- `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster/queue`
+  - Admin-only + CSRF required.
+  - Proxies DRF NDVI raster queue endpoint; request body is schema-driven.
+- `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/refresh`
+  - Admin-only + CSRF required.
+  - Proxies DRF NDVI refresh endpoint; request body is schema-driven.
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.

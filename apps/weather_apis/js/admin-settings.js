@@ -32,6 +32,17 @@
 		const testConnectionUrl = form.dataset.testConnectionUrl || ''
 		const diagnosticsUrl = form.dataset.diagnosticsUrl || ''
 		const previewUrl = form.dataset.previewUrl || ''
+		const farmSchemaUrl = form.dataset.farmSchemaUrl || ''
+		const farmListUrl = form.dataset.farmListUrl || ''
+		const farmCreateUrl = form.dataset.farmCreateUrl || ''
+		const farmGetUrl = form.dataset.farmGetUrl || ''
+		const farmPatchUrl = form.dataset.farmPatchUrl || ''
+		const farmDeleteUrl = form.dataset.farmDeleteUrl || ''
+		const farmNdviLatestUrl = form.dataset.farmNdviLatestUrl || ''
+		const farmNdviTimeseriesUrl = form.dataset.farmNdviTimeseriesUrl || ''
+		const farmNdviRasterUrl = form.dataset.farmNdviRasterUrl || ''
+		const farmNdviRasterQueueUrl = form.dataset.farmNdviRasterQueueUrl || ''
+		const farmNdviRefreshUrl = form.dataset.farmNdviRefreshUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -55,6 +66,36 @@
 		const diagnosticsPngValue = document.getElementById('weather-apis-diagnostics-png')
 		const diagnosticsPreviewWrap = document.getElementById('weather-apis-diagnostics-preview-wrap')
 		const diagnosticsPreview = document.getElementById('weather-apis-diagnostics-preview')
+		const farmsRoot = document.getElementById('weather-apis-farms')
+		const farmsWarning = document.getElementById('weather-apis-farms-warning')
+		const farmsError = document.getElementById('weather-apis-farms-error')
+		const farmsColumns = document.getElementById('weather-apis-farms-columns')
+		const farmsBody = document.getElementById('weather-apis-farms-body')
+		const farmsRefresh = document.getElementById('weather-apis-farms-refresh')
+		const farmsCreate = document.getElementById('weather-apis-farms-create')
+		const farmsPagination = document.getElementById('weather-apis-farms-pagination')
+		const farmsPrev = document.getElementById('weather-apis-farms-prev')
+		const farmsNext = document.getElementById('weather-apis-farms-next')
+		const farmsPage = document.getElementById('weather-apis-farms-page')
+		const farmsNdvi = document.getElementById('weather-apis-farms-ndvi')
+		const farmsNdviTitle = document.getElementById('weather-apis-farms-ndvi-title')
+		const ndviLatestButton = document.getElementById('weather-apis-ndvi-latest')
+		const ndviTimeseriesButton = document.getElementById('weather-apis-ndvi-timeseries')
+		const ndviRasterButton = document.getElementById('weather-apis-ndvi-raster')
+		const ndviQueueButton = document.getElementById('weather-apis-ndvi-queue')
+		const ndviRefreshButton = document.getElementById('weather-apis-ndvi-refresh')
+		const ndviStartInput = document.getElementById('weather-apis-ndvi-start')
+		const ndviEndInput = document.getElementById('weather-apis-ndvi-end')
+		const ndviDateInput = document.getElementById('weather-apis-ndvi-date')
+		const ndviOutput = document.getElementById('weather-apis-ndvi-output')
+		const ndviTable = document.getElementById('weather-apis-ndvi-table')
+		const ndviRasterPreview = document.getElementById('weather-apis-ndvi-raster-preview')
+		const ndviRasterImg = document.getElementById('weather-apis-ndvi-raster-img')
+		const farmsModal = document.getElementById('weather-apis-farms-modal')
+		const farmsModalTitle = document.getElementById('weather-apis-farms-modal-title')
+		const farmsModalFields = document.getElementById('weather-apis-farms-modal-fields')
+		const farmsModalSave = document.getElementById('weather-apis-farms-modal-save')
+		const farmsModalClose = document.getElementById('weather-apis-farms-modal-close')
 		// TODO: confirm desired auto-hide timeout for generated secrets; 30s keeps the UI usable without lingering secrets.
 		const CREDENTIALS_CLEAR_DELAY_MS = 30000
 		let credentialsClearTimer = null
@@ -424,6 +465,795 @@
 			return { response, parsed, data, text }
 		}
 
+		const buildQueryString = (params) => {
+			if (!params || typeof params !== 'object') {
+				return ''
+			}
+			const search = new URLSearchParams()
+			Object.entries(params).forEach(([key, value]) => {
+				if (value === undefined || value === null || value === '') {
+					return
+				}
+				if (Array.isArray(value)) {
+					value.forEach((item) => {
+						if (item === undefined || item === null || item === '') {
+							return
+						}
+						search.append(key, String(item))
+					})
+					return
+				}
+				search.append(key, String(value))
+			})
+			return search.toString()
+		}
+
+		const performJsonRequest = async (method, url, options = {}) => {
+			const token = resolveRequestToken()
+			const headers = {
+				Accept: 'application/json',
+				'OCS-APIRequest': 'true',
+				'X-Requested-With': 'XMLHttpRequest',
+			}
+			if (token) {
+				headers.requesttoken = token
+			}
+
+			const queryString = buildQueryString(options.query)
+			const finalUrl = queryString
+				? `${url}${url.includes('?') ? '&' : '?'}${queryString}`
+				: url
+
+			const axiosClient = window.OC?.axios || window.axios
+			if (axiosClient) {
+				try {
+					const response = await axiosClient({
+						method,
+						url: finalUrl,
+						data: options.body,
+						headers,
+						withCredentials: true,
+					})
+
+					let parsed = true
+					let data = response.data
+					if (typeof data === 'string') {
+						try {
+							data = JSON.parse(data)
+						} catch {
+							parsed = false
+						}
+					}
+
+					return {
+						response: { ok: response.status >= 200 && response.status < 300, status: response.status },
+						parsed,
+						data: parsed ? data : {},
+						text: parsed ? '' : String(response.data ?? ''),
+					}
+				} catch (error) {
+					const response = error?.response
+					if (response) {
+						let parsed = true
+						let data = response.data
+						if (typeof data === 'string') {
+							try {
+								data = JSON.parse(data)
+							} catch {
+								parsed = false
+							}
+						}
+						return {
+							response: { ok: false, status: response.status },
+							parsed,
+							data: parsed ? data : {},
+							text: parsed ? '' : String(response.data ?? ''),
+						}
+					}
+					throw error
+				}
+			}
+
+			const fetchOptions = {
+				method,
+				credentials: 'same-origin',
+				headers,
+			}
+
+			if (options.body && method !== 'GET') {
+				fetchOptions.headers['Content-Type'] = 'application/json'
+				fetchOptions.body = JSON.stringify(options.body)
+			}
+
+			const response = await fetch(finalUrl, fetchOptions)
+			const { parsed, data, text } = await readJsonResponse(response)
+			return { response, parsed, data, text }
+		}
+
+		const setupFarms = () => {
+			if (!farmsRoot) {
+				return
+			}
+
+			const ncGenerateUrl = typeof window.OC?.generateUrl === 'function'
+				? window.OC.generateUrl
+				: (path) => path
+
+			const fieldOrder = [
+				'name',
+				'centroid_lat',
+				'centroid_lon',
+				'bbox_south',
+				'bbox_west',
+				'bbox_north',
+				'bbox_east',
+				'area_ha',
+				'is_active',
+				'created_at',
+			]
+
+			let farmSchema = null
+			let farmFields = {}
+			let farmOperations = {}
+			let activeColumns = []
+			let nextParams = null
+			let prevParams = null
+			let selectedFarm = null
+			let modalInitial = {}
+
+			const clearFarmsNotes = () => {
+				if (farmsWarning) {
+					farmsWarning.textContent = ''
+					farmsWarning.hidden = true
+				}
+				if (farmsError) {
+					farmsError.textContent = ''
+					farmsError.hidden = true
+				}
+			}
+
+			const showFarmsWarning = (message) => {
+				if (!farmsWarning) {
+					return
+				}
+				farmsWarning.textContent = message
+				farmsWarning.hidden = false
+			}
+
+			const showFarmsError = (message) => {
+				if (!farmsError) {
+					return
+				}
+				farmsError.textContent = message
+				farmsError.hidden = false
+				toast(message)
+			}
+
+			const unwrapResponseData = (data) => {
+				if (data && typeof data === 'object' && data.data !== undefined) {
+					return data.data
+				}
+				return data ?? {}
+			}
+
+			const resolveOperation = (key) => (farmOperations && farmOperations[key]) || null
+
+			const resolveFarmId = (farm) => {
+				if (!farm || typeof farm !== 'object') {
+					return null
+				}
+				if (farm.id !== undefined && farm.id !== null && farm.id !== '') {
+					return farm.id
+				}
+				if (farm.slug !== undefined && farm.slug !== null && farm.slug !== '') {
+					return farm.slug
+				}
+				return null
+			}
+
+			const renderColumns = () => {
+				if (!farmsColumns) {
+					return
+				}
+				activeColumns = fieldOrder.filter((name) => Object.prototype.hasOwnProperty.call(farmFields, name))
+				farmsColumns.innerHTML = ''
+				activeColumns.forEach((name) => {
+					const th = document.createElement('th')
+					th.textContent = name
+					farmsColumns.appendChild(th)
+				})
+				const actions = document.createElement('th')
+				actions.textContent = 'Actions'
+				farmsColumns.appendChild(actions)
+			}
+
+			const formatValue = (value, field) => {
+				if (value === null || value === undefined) {
+					return '—'
+				}
+				if (field?.type === 'boolean') {
+					return value ? 'true' : 'false'
+				}
+				return String(value)
+			}
+
+			const renderRows = (items) => {
+				if (!farmsBody) {
+					return
+				}
+				farmsBody.innerHTML = ''
+				if (!Array.isArray(items) || items.length === 0) {
+					const row = document.createElement('tr')
+					const cell = document.createElement('td')
+					cell.colSpan = activeColumns.length + 1
+					cell.textContent = 'No farms found.'
+					row.appendChild(cell)
+					farmsBody.appendChild(row)
+					return
+				}
+
+				items.forEach((farm) => {
+					const row = document.createElement('tr')
+					activeColumns.forEach((name) => {
+						const cell = document.createElement('td')
+						cell.textContent = formatValue(farm?.[name], farmFields?.[name])
+						row.appendChild(cell)
+					})
+
+					const actions = document.createElement('td')
+					const editButton = document.createElement('button')
+					editButton.type = 'button'
+					editButton.className = 'button'
+					editButton.textContent = 'Edit'
+					const deleteButton = document.createElement('button')
+					deleteButton.type = 'button'
+					deleteButton.className = 'button'
+					deleteButton.textContent = 'Delete'
+					const ndviButton = document.createElement('button')
+					ndviButton.type = 'button'
+					ndviButton.className = 'button'
+					ndviButton.textContent = 'NDVI'
+
+					const farmId = resolveFarmId(farm)
+					if (farmId === null) {
+						editButton.disabled = true
+						deleteButton.disabled = true
+						ndviButton.disabled = true
+					} else {
+						editButton.addEventListener('click', () => openFarmModal('edit', farmId))
+						deleteButton.addEventListener('click', () => deleteFarm(farmId))
+						ndviButton.addEventListener('click', () => openNdviPanel(farmId, farm))
+					}
+
+					actions.appendChild(editButton)
+					actions.appendChild(deleteButton)
+					actions.appendChild(ndviButton)
+					row.appendChild(actions)
+					farmsBody.appendChild(row)
+				})
+			}
+
+			const parseQueryParams = (url) => {
+				if (!url || typeof url !== 'string') {
+					return null
+				}
+				const queryIndex = url.indexOf('?')
+				if (queryIndex === -1) {
+					return null
+				}
+				const params = new URLSearchParams(url.slice(queryIndex + 1))
+				const result = {}
+				params.forEach((value, key) => {
+					if (Object.prototype.hasOwnProperty.call(result, key)) {
+						if (Array.isArray(result[key])) {
+							result[key].push(value)
+						} else {
+							result[key] = [result[key], value]
+						}
+					} else {
+						result[key] = value
+					}
+				})
+				return result
+			}
+
+			const renderPagination = (payload, itemCount) => {
+				if (!farmsPagination || !farmsPage || !farmsPrev || !farmsNext) {
+					return
+				}
+				const next = payload?.next ?? null
+				const previous = payload?.previous ?? null
+				const count = Number.isFinite(payload?.count) ? payload.count : null
+				nextParams = parseQueryParams(next)
+				prevParams = parseQueryParams(previous)
+
+				if (!nextParams && !prevParams && count === null) {
+					farmsPagination.hidden = true
+					return
+				}
+
+				farmsPagination.hidden = false
+				farmsPrev.disabled = !prevParams
+				farmsNext.disabled = !nextParams
+				farmsPage.textContent = count !== null
+					? `${itemCount} of ${count}`
+					: 'Pagination available'
+			}
+
+			const loadSchema = async () => {
+				clearFarmsNotes()
+				if (!farmSchemaUrl) {
+					showFarmsError('Farm schema endpoint is not available.')
+					return false
+				}
+
+				const result = await performJsonRequest('GET', farmSchemaUrl)
+				if (!result.parsed) {
+					showFarmsError('Unable to parse farm schema response.')
+					return false
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to load farm schema.')
+					showFarmsError(message)
+					return false
+				}
+
+				const payload = unwrapResponseData(result.data)
+				farmSchema = payload?.schema ?? {}
+				farmFields = farmSchema?.fields ?? {}
+				farmOperations = farmSchema?.operations ?? {}
+
+				if (payload?.warning) {
+					showFarmsWarning(payload.warning)
+				}
+
+				renderColumns()
+				return true
+			}
+
+			const refreshFarms = async (params = null) => {
+				clearFarmsNotes()
+				if (!farmListUrl) {
+					showFarmsError('Farm list endpoint is not available.')
+					return
+				}
+
+				const result = await performJsonRequest('POST', farmListUrl, {
+					body: params || {},
+				})
+				if (!result.parsed) {
+					showFarmsError('Unable to parse farm list response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to load farms.')
+					showFarmsError(message)
+					return
+				}
+
+				const payload = unwrapResponseData(result.data)
+				const items = Array.isArray(payload)
+					? payload
+					: Array.isArray(payload?.results)
+						? payload.results
+						: []
+				renderRows(items)
+				renderPagination(payload, items.length)
+			}
+
+			const openFarmModal = async (mode, farmId) => {
+				if (!farmsModal || !farmsModalFields || !farmsModalTitle || !farmsModalSave) {
+					return
+				}
+				clearFarmsNotes()
+				modalInitial = {}
+				let existing = {}
+
+				if (mode === 'edit') {
+					const url = farmGetUrl.replace('__ID__', encodeURIComponent(farmId))
+					const result = await performJsonRequest('GET', url)
+					if (!result.parsed) {
+						showFarmsError('Unable to parse farm response.')
+						return
+					}
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!ok) {
+						const message = pickMessage(result.data, 'Unable to load farm.')
+						showFarmsError(message)
+						return
+					}
+					existing = unwrapResponseData(result.data) ?? {}
+					modalInitial = existing
+				}
+
+				farmsModalTitle.textContent = mode === 'edit' ? 'Edit farm' : 'Create farm'
+				farmsModalFields.innerHTML = ''
+
+				const entries = Object.entries(farmFields).filter(([, def]) => !def?.readOnly)
+				entries.forEach(([name, def]) => {
+					const row = document.createElement('div')
+					const label = document.createElement('label')
+					label.textContent = `${name}${def?.required ? ' *' : ''}`
+					const input = document.createElement('input')
+					input.dataset.fieldName = name
+					if (def?.type === 'boolean') {
+						input.type = 'checkbox'
+						input.checked = Boolean(existing?.[name])
+					} else if (def?.type === 'integer' || def?.type === 'number') {
+						input.type = 'number'
+						input.step = def?.type === 'integer' ? '1' : 'any'
+						if (existing?.[name] !== undefined && existing?.[name] !== null) {
+							input.value = String(existing[name])
+						}
+					} else if (def?.format === 'date') {
+						input.type = 'date'
+						if (existing?.[name]) {
+							input.value = String(existing[name]).slice(0, 10)
+						}
+					} else {
+						input.type = 'text'
+						if (existing?.[name] !== undefined && existing?.[name] !== null) {
+							input.value = String(existing[name])
+						}
+					}
+					if (def?.required) {
+						input.required = true
+					}
+					row.appendChild(label)
+					row.appendChild(input)
+					farmsModalFields.appendChild(row)
+				})
+
+				farmsModal.hidden = false
+
+				farmsModalSave.onclick = async () => {
+					const payload = {}
+					const entries = Object.entries(farmFields).filter(([, def]) => !def?.readOnly)
+					for (const [name, def] of entries) {
+						const input = farmsModalFields.querySelector(`[data-field-name="${name}"]`)
+						if (!input) {
+							continue
+						}
+						let value = null
+						if (def?.type === 'boolean') {
+							value = Boolean(input.checked)
+						} else if (def?.type === 'integer' || def?.type === 'number') {
+							value = input.value === '' ? null : Number(input.value)
+						} else {
+							value = input.value !== undefined ? String(input.value).trim() : ''
+						}
+
+						if (mode === 'create') {
+							if (def?.required && (value === null || value === '')) {
+								showFarmsError(`Missing required field: ${name}`)
+								return
+							}
+							if (value !== null && value !== '') {
+								payload[name] = value
+							}
+						} else {
+							const initial = modalInitial?.[name]
+							const normalizedInitial = def?.type === 'boolean'
+								? Boolean(initial)
+								: (def?.type === 'integer' || def?.type === 'number')
+									? (initial === undefined || initial === null || initial === '' ? null : Number(initial))
+									: (initial === undefined || initial === null ? '' : String(initial))
+							const normalizedValue = def?.type === 'boolean'
+								? Boolean(value)
+								: (def?.type === 'integer' || def?.type === 'number')
+									? (value === null || value === '' ? null : Number(value))
+									: (value === null ? '' : String(value))
+							if (normalizedValue !== normalizedInitial) {
+								payload[name] = value
+							}
+						}
+					}
+
+					if (mode === 'edit' && Object.keys(payload).length === 0) {
+						showFarmsError('No changes to save.')
+						return
+					}
+
+					const url = mode === 'edit'
+						? farmPatchUrl.replace('__ID__', encodeURIComponent(farmId))
+						: farmCreateUrl
+					const method = mode === 'edit' ? 'PATCH' : 'POST'
+					const result = await performJsonRequest(method, url, { body: payload })
+					if (!result.parsed) {
+						showFarmsError('Unable to parse farm save response.')
+						return
+					}
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!ok) {
+						const message = pickMessage(result.data, 'Unable to save farm.')
+						showFarmsError(message)
+						return
+					}
+
+					farmsModal.hidden = true
+					await refreshFarms()
+				}
+			}
+
+			const closeFarmModal = () => {
+				if (farmsModal) {
+					farmsModal.hidden = true
+				}
+			}
+
+			const confirmDeleteAsync = () => new Promise((resolve) => {
+				const dialogs = window.OC?.dialogs
+				if (dialogs && typeof dialogs.confirm === 'function') {
+					dialogs.confirm('Delete this farm?', 'Confirm deletion', (result) => resolve(result))
+					return
+				}
+				resolve(false)
+			})
+
+			const deleteFarm = async (farmId) => {
+				clearFarmsNotes()
+				const confirmed = await confirmDeleteAsync()
+				if (!confirmed) {
+					return
+				}
+				const url = farmDeleteUrl.replace('__ID__', encodeURIComponent(farmId))
+				const result = await performJsonRequest('DELETE', url)
+				if (!result.parsed) {
+					showFarmsError('Unable to parse delete response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to delete farm.')
+					showFarmsError(message)
+					return
+				}
+				await refreshFarms()
+			}
+
+			const clearNdviOutput = () => {
+				if (ndviOutput) ndviOutput.textContent = ''
+				if (ndviTable) ndviTable.textContent = ''
+				if (ndviRasterPreview) ndviRasterPreview.hidden = true
+				if (ndviRasterImg) ndviRasterImg.removeAttribute('src')
+			}
+
+			const resolveParamName = (params, desired) => {
+				if (!Array.isArray(params)) {
+					return null
+				}
+				const exact = params.find((param) => param?.name === desired)
+				if (exact) {
+					return exact.name
+				}
+				const fuzzy = params.find((param) => typeof param?.name === 'string' && param.name.includes(desired))
+				return fuzzy?.name ?? null
+			}
+
+			const resolveBodyFieldName = (fields, desired) => {
+				if (!fields || typeof fields !== 'object') {
+					return null
+				}
+				if (fields[desired]) {
+					return desired
+				}
+				const match = Object.keys(fields).find((name) => name.includes(desired))
+				return match ?? null
+			}
+
+			const buildNdviQuery = (operationKey) => {
+				const operation = resolveOperation(operationKey)
+				const params = operation?.queryParams ?? []
+				const query = {}
+				const startName = resolveParamName(params, 'start')
+				const endName = resolveParamName(params, 'end')
+				const dateName = resolveParamName(params, 'date')
+				if (startName && ndviStartInput?.value) {
+					query[startName] = ndviStartInput.value
+				}
+				if (endName && ndviEndInput?.value) {
+					query[endName] = ndviEndInput.value
+				}
+				if (dateName && ndviDateInput?.value) {
+					query[dateName] = ndviDateInput.value
+				}
+				return query
+			}
+
+			const buildNdviBody = (operationKey) => {
+				const operation = resolveOperation(operationKey)
+				const fields = operation?.bodyFields ?? {}
+				const body = {}
+				const startName = resolveBodyFieldName(fields, 'start')
+				const endName = resolveBodyFieldName(fields, 'end')
+				const dateName = resolveBodyFieldName(fields, 'date')
+				if (startName && ndviStartInput?.value) {
+					body[startName] = ndviStartInput.value
+				}
+				if (endName && ndviEndInput?.value) {
+					body[endName] = ndviEndInput.value
+				}
+				if (dateName && ndviDateInput?.value) {
+					body[dateName] = ndviDateInput.value
+				}
+				return body
+			}
+
+			const renderNdviTable = (items) => {
+				if (!ndviTable) {
+					return
+				}
+				if (!Array.isArray(items) || items.length === 0) {
+					ndviTable.textContent = 'No observations.'
+					return
+				}
+				const columns = Object.keys(items[0] || {})
+				const table = document.createElement('table')
+				table.className = 'weather-apis-farms__table'
+				const thead = document.createElement('thead')
+				const headerRow = document.createElement('tr')
+				columns.forEach((name) => {
+					const th = document.createElement('th')
+					th.textContent = name
+					headerRow.appendChild(th)
+				})
+				thead.appendChild(headerRow)
+				table.appendChild(thead)
+				const tbody = document.createElement('tbody')
+				items.forEach((item) => {
+					const row = document.createElement('tr')
+					columns.forEach((name) => {
+						const cell = document.createElement('td')
+						cell.textContent = item?.[name] !== undefined ? String(item[name]) : ''
+						row.appendChild(cell)
+					})
+					tbody.appendChild(row)
+				})
+				table.appendChild(tbody)
+				ndviTable.innerHTML = ''
+				ndviTable.appendChild(table)
+			}
+
+			const openNdviPanel = (farmId, farm) => {
+				selectedFarm = { id: farmId, data: farm }
+				if (farmsNdvi) {
+					farmsNdvi.hidden = false
+				}
+				if (farmsNdviTitle) {
+					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
+					farmsNdviTitle.textContent = label
+				}
+				clearNdviOutput()
+			}
+
+			const runNdviRequest = async (operationKey, urlTemplate, options = {}) => {
+				clearFarmsNotes()
+				if (!selectedFarm) {
+					showFarmsError('Select a farm first.')
+					return
+				}
+				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const result = await performJsonRequest(options.method || 'GET', url, options)
+				if (!result.parsed) {
+					showFarmsError('Unable to parse NDVI response.')
+					return null
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, `Unable to load ${operationKey}.`)
+					showFarmsError(message)
+					return null
+				}
+				return unwrapResponseData(result.data)
+			}
+
+			if (farmsRefresh) {
+				farmsRefresh.addEventListener('click', () => refreshFarms())
+			}
+			if (farmsCreate) {
+				farmsCreate.addEventListener('click', () => openFarmModal('create'))
+			}
+			if (farmsPrev) {
+				farmsPrev.addEventListener('click', () => {
+					if (prevParams) refreshFarms(prevParams)
+				})
+			}
+			if (farmsNext) {
+				farmsNext.addEventListener('click', () => {
+					if (nextParams) refreshFarms(nextParams)
+				})
+			}
+			if (farmsModalClose) {
+				farmsModalClose.addEventListener('click', closeFarmModal)
+			}
+			if (ndviLatestButton) {
+				ndviLatestButton.addEventListener('click', async () => {
+					const data = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
+						method: 'GET',
+						query: buildNdviQuery('ndvi_latest'),
+					})
+					if (data && ndviOutput) {
+						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					}
+				})
+			}
+			if (ndviTimeseriesButton) {
+				ndviTimeseriesButton.addEventListener('click', async () => {
+					const data = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('ndvi_timeseries'),
+					})
+					if (data) {
+						const observations = Array.isArray(data?.observations)
+							? data.observations
+							: Array.isArray(data?.results)
+								? data.results
+								: Array.isArray(data)
+									? data
+									: []
+						renderNdviTable(observations)
+						if (ndviOutput) {
+							ndviOutput.textContent = observations.length === 0 ? JSON.stringify(data, null, 2) : ''
+						}
+					}
+				})
+			}
+			if (ndviRasterButton) {
+				ndviRasterButton.addEventListener('click', () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showFarmsError('Select a farm first.')
+						return
+					}
+					const url = farmNdviRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('ndvi_raster')
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					const resolvedUrl = ncGenerateUrl(finalUrl)
+					if (ndviRasterImg) {
+						ndviRasterImg.src = resolvedUrl
+					}
+					if (ndviRasterPreview) {
+						ndviRasterPreview.hidden = false
+					}
+				})
+			}
+			if (ndviQueueButton) {
+				ndviQueueButton.addEventListener('click', async () => {
+					const data = await runNdviRequest('queue raster', farmNdviRasterQueueUrl, {
+						method: 'POST',
+						body: buildNdviBody('ndvi_raster_queue'),
+					})
+					if (data && ndviOutput) {
+						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					}
+				})
+			}
+			if (ndviRefreshButton) {
+				ndviRefreshButton.addEventListener('click', async () => {
+					const data = await runNdviRequest('refresh NDVI', farmNdviRefreshUrl, {
+						method: 'POST',
+						body: buildNdviBody('ndvi_refresh'),
+					})
+					if (data && ndviOutput) {
+						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					}
+				})
+			}
+
+			(async () => {
+				const ok = await loadSchema()
+				if (ok) {
+					await refreshFarms()
+				}
+			})().catch((error) => {
+				const message = error instanceof Error ? error.message : 'Unable to load farms.'
+				showFarmsError(message)
+			})
+		}
+
 		const runAdminAction = async (url, onSuccess, allowPasswordRetry = true) => {
 			if (!url) {
 				const message = 'Admin action is not available.'
@@ -768,6 +1598,8 @@
 				})
 			})
 		}
+
+		setupFarms()
 
 		const buildFormData = () => {
 			const formData = new FormData(form)

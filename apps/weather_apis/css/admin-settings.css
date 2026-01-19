@@ -361,3 +361,183 @@
 .weather-apis-settings__status.error {
 	display: inline-block; /* keeps it compact */
 }
+
+.weather-apis-farms {
+	padding: 12px;
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+	display: grid;
+	gap: 12px;
+}
+
+.weather-apis-farms__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-farms__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-farms__note {
+	padding: 8px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	font-size: 12px;
+}
+
+.weather-apis-farms__note.warning {
+	color: var(--color-warning);
+	border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+	background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.weather-apis-farms__note.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.weather-apis-farms__table-wrap {
+	overflow-x: auto;
+}
+
+.weather-apis-farms__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+}
+
+.weather-apis-farms__table th,
+.weather-apis-farms__table td {
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--color-border);
+	vertical-align: top;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.weather-apis-farms__table th {
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-farms__pagination {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-farms__page {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-farms__ndvi {
+	display: grid;
+	gap: 10px;
+	padding: 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+}
+
+.weather-apis-farms__ndvi-header {
+	display: flex;
+	gap: 8px;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+
+.weather-apis-farms__ndvi-title {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-farms__ndvi-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-farms__ndvi-row {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.weather-apis-farms__ndvi-row input {
+	min-width: 140px;
+}
+
+.weather-apis-farms__ndvi-output {
+	font-size: 12px;
+	color: var(--color-main-text);
+	white-space: pre-wrap;
+}
+
+.weather-apis-farms__ndvi-table {
+	font-size: 12px;
+}
+
+.weather-apis-farms__ndvi-preview img {
+	max-width: 220px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background, #fff);
+}
+
+.weather-apis-farms__modal {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.35);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2000;
+}
+
+.weather-apis-farms__modal[hidden] {
+	display: none;
+}
+
+.weather-apis-farms__modal-card {
+	background: var(--color-main-background, #fff);
+	border-radius: var(--border-radius);
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	min-width: min(520px, 90vw);
+	display: grid;
+	gap: 12px;
+}
+
+.weather-apis-farms__modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+
+.weather-apis-farms__modal-fields {
+	display: grid;
+	gap: 10px;
+}
+
+.weather-apis-farms__modal-fields label {
+	font-weight: 600;
+	font-size: 12px;
+}
+
+.weather-apis-farms__modal-actions {
+	display: flex;
+	justify-content: flex-end;
+}

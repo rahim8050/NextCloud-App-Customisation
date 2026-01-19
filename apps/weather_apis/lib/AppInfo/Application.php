@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\AppInfo;
 
 use OCA\WeatherApis\Controller\AdminConfigController;
+use OCA\WeatherApis\Controller\AdminFarmsController;
 use OCA\WeatherApis\Controller\ApiController;
 use OCA\WeatherApis\Controller\OcsApiController;
 use OCA\WeatherApis\Controller\SettingsController;
 use OCA\WeatherApis\Sections\AdminSection;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\DrfSchemaService;
 use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\OpenApiRegistry;
 use OCA\WeatherApis\Service\TokenSigner;
@@ -141,6 +143,25 @@ final class Application extends App implements IBootstrap {
 				$c->get(WeatherApiClientInterface::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(DrfSchemaService::class, function (ContainerInterface $c) {
+			return new DrfSchemaService(
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(ICacheFactory::class),
+				$c->get(LoggerInterface::class),
+			);
+		});
+
+		$context->registerService(AdminFarmsController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new AdminFarmsController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(DrfSchemaService::class),
+				$c->get(WeatherApiClientInterface::class),
 				$logger,
 			);
 		});

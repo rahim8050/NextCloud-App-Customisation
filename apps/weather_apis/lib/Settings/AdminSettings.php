@@ -52,6 +52,18 @@ final class AdminSettings implements IDelegatedSettings {
 			'testConnectionUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.testConnection'),
 			'diagnosticsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.diagnostics'),
 			'previewUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminConfig.previewPng'),
+			'farmSchemaUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getSchema'),
+			'farmListUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.listFarms'),
+			'farmCreateUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.createFarm'),
+			'farmGetUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getFarm', ['id' => '__ID__']),
+			'farmUpdateUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.updateFarm', ['id' => '__ID__']),
+			'farmPatchUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.patchFarm', ['id' => '__ID__']),
+			'farmDeleteUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.deleteFarm', ['id' => '__ID__']),
+			'farmNdviLatestUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviLatest', ['farm_id' => '__FARM_ID__']),
+			'farmNdviTimeseriesUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviTimeseries', ['farm_id' => '__FARM_ID__']),
+			'farmNdviRasterUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviRasterPng', ['farm_id' => '__FARM_ID__']),
+			'farmNdviRasterQueueUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.queueNdviRaster', ['farm_id' => '__FARM_ID__']),
+			'farmNdviRefreshUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.refreshNdvi', ['farm_id' => '__FARM_ID__']),
 		]);
 	}
 

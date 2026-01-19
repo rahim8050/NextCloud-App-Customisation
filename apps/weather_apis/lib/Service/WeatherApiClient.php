@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Service;
 
 use Closure;
+use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\Http\Client\LocalServerException;
@@ -172,6 +173,146 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return $payload['expiresIn'];
+	}
+
+	/**
+	 * @param array<string, mixed> $queryParams
+	 * @param array<string, mixed>|null $body
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	public function requestJson(
+		string $method,
+		string $path,
+		array $queryParams = [],
+		?array $body = null,
+		?string $correlationId = null,
+	): array {
+		$requestId = $this->resolveCorrelationId($correlationId);
+		$httpMethod = $this->normalizeMethod($method);
+
+		return $this->withTokenRetry(
+			$requestId,
+			function (string $baseUrl, string $token, bool $allowLocalAddress, string $resolvedId) use ($httpMethod, $path, $queryParams, $body): array {
+				$client = $this->clientService->newClient();
+				$options = $this->buildBaseOptions($resolvedId, $allowLocalAddress);
+
+				$options['headers'] = array_merge($options['headers'], [
+					'Accept' => 'application/json',
+					'Authorization' => 'Bearer ' . $token,
+				]);
+
+				if ($body !== null) {
+					$options['headers']['Content-Type'] = 'application/json';
+					$options['body'] = $this->encodeJsonBody($body);
+				}
+
+				if ($queryParams !== []) {
+					$options['query'] = $queryParams;
+				}
+
+				$url = $this->buildEndpoint($baseUrl, $path);
+
+				try {
+					$response = $this->sendRequest($client, $httpMethod, $url, $options);
+				} catch (\Throwable $throwable) {
+					throw $this->mapException($throwable);
+				}
+
+				$this->ensureSuccessResponse($response);
+
+				$payload = trim($this->bodyToString($response->getBody()));
+				if ($payload === '') {
+					return [];
+				}
+
+				return $this->decodeJson($payload);
+			},
+		);
+	}
+
+	/**
+	 * @param array<string, mixed> $queryParams
+	 * @return array{body: string, contentType: string, statusCode: int}
+	 * @throws WeatherApiException
+	 */
+	public function requestBinary(
+		string $method,
+		string $path,
+		array $queryParams = [],
+		?string $correlationId = null,
+	): array {
+		$requestId = $this->resolveCorrelationId($correlationId);
+		$httpMethod = $this->normalizeMethod($method);
+
+		return $this->withTokenRetry(
+			$requestId,
+			function (string $baseUrl, string $token, bool $allowLocalAddress, string $resolvedId) use ($httpMethod, $path, $queryParams): array {
+				$client = $this->clientService->newClient();
+				$options = $this->buildBaseOptions($resolvedId, $allowLocalAddress);
+
+				$options['headers'] = array_merge($options['headers'], [
+					'Accept' => 'image/png',
+					'Authorization' => 'Bearer ' . $token,
+				]);
+
+				if ($queryParams !== []) {
+					$options['query'] = $queryParams;
+				}
+
+				$url = $this->buildEndpoint($baseUrl, $path);
+
+				try {
+					$response = $this->sendRequest($client, $httpMethod, $url, $options);
+				} catch (\Throwable $throwable) {
+					throw $this->mapException($throwable);
+				}
+
+				$this->ensureSuccessResponse($response);
+
+				$contentType = strtolower($response->getHeader('Content-Type'));
+				if ($contentType !== '' && !str_contains($contentType, 'image/png')) {
+					throw new WeatherApiException('backend_error', 'Binary response is not PNG.');
+				}
+
+				$body = $this->bodyToString($response->getBody());
+				if ($body === '') {
+					throw new WeatherApiException('backend_error', 'Binary response is empty.');
+				}
+
+				return [
+					'body' => $body,
+					'contentType' => $contentType !== '' ? $contentType : 'image/png',
+					'statusCode' => $response->getStatusCode(),
+				];
+			},
+		);
+	}
+
+	/**
+	 * @return array<array-key, mixed>
+	 * @throws WeatherApiException
+	 */
+	public function fetchSchema(string $correlationId): array {
+		$context = $this->resolveValidatedBaseUrlContext();
+		$client = $this->clientService->newClient();
+
+		$options = $this->buildBaseOptions($correlationId, $context['allowLocalAddress']);
+		$options['headers'] = array_merge($options['headers'], [
+			'Accept' => 'application/json',
+		]);
+
+		$url = $this->buildEndpoint($context['baseUrl'], '/api/schema/?format=json');
+
+		try {
+			$response = $client->get($url, $options);
+		} catch (\Throwable $throwable) {
+			throw $this->mapException($throwable);
+		}
+
+		$this->ensureSuccessResponse($response);
+
+		return $this->decodeJson($response->getBody());
 	}
 
 	/**
@@ -530,6 +671,49 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 	private function buildEndpoint(string $baseUrl, string $path): string {
 		return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+	}
+
+	private function resolveCorrelationId(?string $correlationId): string {
+		if ($correlationId !== null && $correlationId !== '') {
+			return $correlationId;
+		}
+
+		$bytes = random_bytes(16);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+
+		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+	}
+
+	/**
+	 * @param array<string, mixed> $body
+	 */
+	private function encodeJsonBody(array $body): string {
+		try {
+			return json_encode($body, JSON_THROW_ON_ERROR);
+		} catch (\JsonException $exception) {
+			throw new WeatherApiException('invalid_argument', 'Request body is not JSON serializable.', $exception);
+		}
+	}
+
+	private function normalizeMethod(string $method): string {
+		$normalized = strtoupper(trim($method));
+		if (in_array($normalized, ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+			return $normalized;
+		}
+
+		throw new WeatherApiException('invalid_argument', 'Unsupported HTTP method.');
+	}
+
+	private function sendRequest(IClient $client, string $method, string $url, array $options): IResponse {
+		return match ($method) {
+			'GET' => $client->get($url, $options),
+			'POST' => $client->post($url, $options),
+			'PUT' => $client->put($url, $options),
+			'PATCH' => $client->patch($url, $options),
+			'DELETE' => $client->delete($url, $options),
+			default => throw new WeatherApiException('invalid_argument', 'Unsupported HTTP method.'),
+		};
 	}
 
 	private function getTokenCacheKey(): string {
