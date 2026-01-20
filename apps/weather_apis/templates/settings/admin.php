@@ -161,7 +161,9 @@ style('weather_apis', 'admin-settings');
 						<strong id="weather-apis-farms-modal-title"></strong>
 						<button id="weather-apis-farms-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
 					</div>
-					<div id="weather-apis-farms-modal-fields" class="weather-apis-farms__modal-fields"></div>
+					<div class="weather-apis-farms__modal-body">
+						<div id="weather-apis-farms-modal-fields" class="weather-apis-farms__modal-fields"></div>
+					</div>
 					<div class="weather-apis-farms__modal-actions">
 						<button id="weather-apis-farms-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
 					</div>

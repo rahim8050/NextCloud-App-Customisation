@@ -504,6 +504,7 @@
 	align-items: center;
 	justify-content: center;
 	z-index: 2000;
+	padding: 24px;
 }
 
 .weather-apis-farms__modal[hidden] {
@@ -513,11 +514,12 @@
 .weather-apis-farms__modal-card {
 	background: var(--color-main-background, #fff);
 	border-radius: var(--border-radius);
-	padding: 16px;
 	border: 1px solid var(--color-border);
-	min-width: min(520px, 90vw);
-	display: grid;
-	gap: 12px;
+	width: min(720px, calc(100vw - 48px));
+	max-height: calc(100vh - 96px);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .weather-apis-farms__modal-header {
@@ -525,6 +527,13 @@
 	justify-content: space-between;
 	align-items: center;
 	gap: 12px;
+	padding: 16px;
+}
+
+.weather-apis-farms__modal-body {
+	overflow: auto;
+	max-height: calc(100vh - 180px);
+	padding: 16px;
 }
 
 .weather-apis-farms__modal-fields {
@@ -540,4 +549,12 @@
 .weather-apis-farms__modal-actions {
 	display: flex;
 	justify-content: flex-end;
+	padding: 16px;
+}
+
+.weather-apis-farms__modal-body input,
+.weather-apis-farms__modal-body select,
+.weather-apis-farms__modal-body textarea {
+	width: 100%;
+	box-sizing: border-box;
 }
