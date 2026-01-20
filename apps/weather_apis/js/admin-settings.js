@@ -629,6 +629,12 @@
 				toast(message)
 			}
 
+			const setFarmsCreateEnabled = (enabled) => {
+				if (farmsCreate) {
+					farmsCreate.disabled = !enabled
+				}
+			}
+
 			const unwrapResponseData = (data) => {
 				if (data && typeof data === 'object' && data.data !== undefined) {
 					return data.data
@@ -782,6 +788,7 @@
 
 			const loadSchema = async () => {
 				clearFarmsNotes()
+				setFarmsCreateEnabled(false)
 				if (!farmSchemaUrl) {
 					showFarmsError('Farm schema endpoint is not available.')
 					return false
@@ -800,15 +807,24 @@
 				}
 
 				const payload = unwrapResponseData(result.data)
-				farmSchema = payload?.schema ?? {}
+				const schemaContainer = payload?.schema ?? {}
+				const effectiveSchema = schemaContainer?.schema ?? schemaContainer
+				farmSchema = effectiveSchema ?? {}
 				farmFields = farmSchema?.fields ?? {}
 				farmOperations = farmSchema?.operations ?? {}
+
+				if (!farmFields || Object.keys(farmFields).length === 0) {
+					showFarmsError('Farm schema did not return any fields.')
+					setFarmsCreateEnabled(false)
+					return false
+				}
 
 				if (payload?.warning) {
 					showFarmsWarning(payload.warning)
 				}
 
 				renderColumns()
+				setFarmsCreateEnabled(true)
 				return true
 			}
 

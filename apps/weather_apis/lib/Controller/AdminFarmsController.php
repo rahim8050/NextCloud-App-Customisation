@@ -18,7 +18,7 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 final class AdminFarmsController extends Controller {
-private const RESERVED_PARAMS = [
+	private const RESERVED_PARAMS = [
 		'requesttoken',
 		'format',
 		'id',
@@ -81,12 +81,13 @@ private const RESERVED_PARAMS = [
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('list', $requestId);
-			$query = $this->filterQueryParams(
-				$this->request->getParams(),
-				$operation['queryParams'] ?? [],
-			);
+			$queryDefs = $operation['queryParams'] ?? [];
+			if (!is_array($queryDefs)) {
+				$queryDefs = [];
+			}
+			$query = $this->buildListQueryParams($this->request->getParams(), $queryDefs);
 			$payload = $this->weatherApiClient->requestJson(
-				(string)($operation['method'] ?? 'GET'),
+				'GET',
 				(string)($operation['path'] ?? ''),
 				$query,
 				null,
@@ -426,6 +427,52 @@ private const RESERVED_PARAMS = [
 		$filtered = [];
 		foreach ($params as $key => $value) {
 			if (!$this->isParamAllowed($key, $allowed)) {
+				continue;
+			}
+			if ($value === '' || $value === null) {
+				continue;
+			}
+			$filtered[$key] = $value;
+		}
+
+		return $filtered;
+	}
+
+	/**
+	 * @param array<string, mixed> $params
+	 * @param list<array{name: string, type: string, format: string|null, required: bool}> $definitions
+	 * @return array<string, mixed>
+	 */
+	private function buildListQueryParams(array $params, array $definitions): array {
+		if ($definitions === []) {
+			return $this->filterPassthroughQueryParams($params);
+		}
+
+		return $this->filterQueryParams($params, $definitions);
+	}
+
+	/**
+	 * @param array<string, mixed> $params
+	 * @return array<string, mixed>
+	 */
+	private function filterPassthroughQueryParams(array $params): array {
+		$filtered = [];
+		foreach ($params as $key => $value) {
+			if (!is_string($key)) {
+				continue;
+			}
+			if ($this->isReservedParam($key)) {
+				continue;
+			}
+			if (is_array($value)) {
+				$values = array_values(array_filter(
+					$value,
+					static fn ($entry) => $entry !== '' && $entry !== null,
+				));
+				if ($values === []) {
+					continue;
+				}
+				$filtered[$key] = $values;
 				continue;
 			}
 			if ($value === '' || $value === null) {

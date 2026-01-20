@@ -145,12 +145,20 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->get($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'GET', $url, $throwable);
 			throw $this->mapException($throwable);
+		}
+
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'GET', $url, $response, $body);
 		}
 
 		$this->logSignedResponse($correlationId, 'GET', self::PING_PATH, $response);
 
-		$this->ensureSuccessResponse($response);
+		$this->ensureSuccessResponse($response, $body);
 
 		$payload = $this->decodeJson($response->getBody());
 		$status = $payload['status'] ?? null;
@@ -216,10 +224,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				try {
 					$response = $this->sendRequest($client, $httpMethod, $url, $options);
 				} catch (\Throwable $throwable) {
+					$this->logTransportFailure($resolvedId, $httpMethod, $url, $throwable);
 					throw $this->mapException($throwable);
 				}
 
-				$this->ensureSuccessResponse($response);
+				$body = null;
+				$status = $response->getStatusCode();
+				if ($status < 200 || $status >= 300) {
+					$body = $this->bodyToString($response->getBody());
+					$this->logHttpFailure($resolvedId, $httpMethod, $url, $response, $body);
+				}
+
+				$this->ensureSuccessResponse($response, $body);
 
 				$payload = trim($this->bodyToString($response->getBody()));
 				if ($payload === '') {
@@ -265,10 +281,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				try {
 					$response = $this->sendRequest($client, $httpMethod, $url, $options);
 				} catch (\Throwable $throwable) {
+					$this->logTransportFailure($resolvedId, $httpMethod, $url, $throwable);
 					throw $this->mapException($throwable);
 				}
 
-				$this->ensureSuccessResponse($response);
+				$body = null;
+				$status = $response->getStatusCode();
+				if ($status < 200 || $status >= 300) {
+					$body = $this->bodyToString($response->getBody());
+					$this->logHttpFailure($resolvedId, $httpMethod, $url, $response, $body);
+				}
+
+				$this->ensureSuccessResponse($response, $body);
 
 				$contentType = strtolower($response->getHeader('Content-Type'));
 				if ($contentType !== '' && !str_contains($contentType, 'image/png')) {
@@ -307,10 +331,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->get($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'GET', $url, $throwable);
 			throw $this->mapException($throwable);
 		}
 
-		$this->ensureSuccessResponse($response);
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'GET', $url, $response, $body);
+		}
+
+		$this->ensureSuccessResponse($response, $body);
 
 		return $this->decodeJson($response->getBody());
 	}
@@ -384,12 +416,20 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->post($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'POST', $url, $throwable);
 			throw $this->mapException($throwable);
+		}
+
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'POST', $url, $response, $body);
 		}
 
 		$this->logSignedResponse($correlationId, 'POST', self::TOKEN_PATH, $response);
 
-		$this->ensureSuccessResponse($response);
+		$this->ensureSuccessResponse($response, $body);
 
 		$payload = $this->decodeJson($response->getBody());
 		$data = $this->unwrapTokenPayload($payload);
@@ -489,10 +529,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->get($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'GET', $url, $throwable);
 			throw $this->mapException($throwable);
 		}
 
-		$this->ensureSuccessResponse($response);
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'GET', $url, $response, $body);
+		}
+
+		$this->ensureSuccessResponse($response, $body);
 
 		return $this->decodeJson($response->getBody());
 	}
@@ -539,10 +587,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->get($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'GET', $url, $throwable);
 			throw $this->mapException($throwable);
 		}
 
-		$this->ensureSuccessResponse($response);
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'GET', $url, $response, $body);
+		}
+
+		$this->ensureSuccessResponse($response, $body);
 
 		$payload = $this->decodeJson($response->getBody());
 		$data = $payload['data'] ?? $payload;
@@ -570,10 +626,18 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			$response = $client->get($url, $options);
 		} catch (\Throwable $throwable) {
+			$this->logTransportFailure($correlationId, 'GET', $url, $throwable);
 			throw $this->mapException($throwable);
 		}
 
-		$this->ensureSuccessResponse($response);
+		$body = null;
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			$body = $this->bodyToString($response->getBody());
+			$this->logHttpFailure($correlationId, 'GET', $url, $response, $body);
+		}
+
+		$this->ensureSuccessResponse($response, $body);
 
 		$contentType = strtolower($response->getHeader('Content-Type'));
 		if ($contentType !== '' && !str_contains($contentType, 'image/png')) {
@@ -742,7 +806,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		return $decoded;
 	}
 
-	private function ensureSuccessResponse(IResponse $response): void {
+	private function ensureSuccessResponse(IResponse $response, ?string $body = null): void {
 		$status = $response->getStatusCode();
 		if ($status >= 200 && $status < 300) {
 			return;
@@ -754,7 +818,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$reason = 'http_status_' . $status;
 		}
 
-		$details = $this->extractSafeErrorDetails($response, $status);
+		$details = $this->extractSafeErrorDetails($response, $status, $body);
 		$message = $details['message'] ?? '';
 		$finalMessage = is_string($message) && $message !== ''
 			? $message
@@ -776,12 +840,12 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function extractSafeErrorDetails(IResponse $response, int $status): array {
+	private function extractSafeErrorDetails(IResponse $response, int $status, ?string $body = null): array {
 		$details = [
 			'httpStatus' => $status,
 		];
 
-		$body = trim($this->bodyToString($response->getBody()));
+		$body = $body !== null ? trim($body) : trim($this->bodyToString($response->getBody()));
 		if ($body === '') {
 			return $details;
 		}
@@ -848,6 +912,81 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return 'request_failed';
+	}
+
+	private function logHttpFailure(
+		string $requestId,
+		string $method,
+		string $url,
+		IResponse $response,
+		string $body,
+	): void {
+		$context = [
+			'requestId' => $requestId,
+			'method' => $method,
+			'url' => $url,
+			'httpStatus' => $response->getStatusCode(),
+		];
+
+		$snippet = $this->clampString($body, 200);
+		if ($snippet !== '') {
+			$context['responseSnippet'] = $snippet;
+		}
+
+		$this->logger->warning(
+			'Weather API HTTP request failed',
+			LogSanitizer::sanitizeContext($context),
+		);
+	}
+
+	private function logTransportFailure(string $requestId, string $method, string $url, \Throwable $throwable): void {
+		$context = [
+			'requestId' => $requestId,
+			'method' => $method,
+			'url' => $url,
+			'exception' => $throwable::class,
+			'message' => $this->clampString($throwable->getMessage(), 200),
+		];
+
+		$httpStatus = $this->extractThrowableStatus($throwable);
+		if ($httpStatus !== null) {
+			$context['httpStatus'] = $httpStatus;
+		}
+
+		$this->logger->warning(
+			'Weather API transport request failed',
+			LogSanitizer::sanitizeContext($context),
+		);
+	}
+
+	private function extractThrowableStatus(\Throwable $throwable): ?int {
+		if (method_exists($throwable, 'getResponse')) {
+			try {
+				$response = $throwable->getResponse();
+				if ($response instanceof IResponse) {
+					return $response->getStatusCode();
+				}
+			} catch (\Throwable) {
+				return null;
+			}
+		}
+
+		if (method_exists($throwable, 'getStatusCode')) {
+			try {
+				$status = $throwable->getStatusCode();
+			} catch (\Throwable) {
+				return null;
+			}
+
+			if (is_int($status)) {
+				return $status;
+			}
+			if (is_string($status) && is_numeric($status)) {
+				return (int)$status;
+			}
+		}
+
+		return null;
 	}
 
 	private function bodyToString(mixed $body): string {

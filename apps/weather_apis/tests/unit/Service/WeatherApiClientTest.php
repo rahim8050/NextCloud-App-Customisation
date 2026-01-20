@@ -368,7 +368,8 @@ final class WeatherApiClientTest extends TestCase {
 				$this->stringContains('/api/v1/farms/'),
 				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'json-request', 'Bearer cached-token')
 					&& $options['headers']['Accept'] === 'application/json'
-					&& ($options['query']['page'] ?? null) === 2),
+					&& ($options['query']['page'] ?? null) === 2
+					&& !array_key_exists('body', $options)),
 			)
 			->willReturn($response);
 
@@ -384,6 +385,80 @@ final class WeatherApiClientTest extends TestCase {
 		$payload = $client->requestJson('GET', '/api/v1/farms/', ['page' => 2], null, 'json-request');
 
 		$this->assertTrue($payload['ok']);
+	}
+
+	public function testRequestJsonLogsTransportFailure(): void {
+		$exception = new \RuntimeException('boom');
+
+		$jsonClient = $this->createMock(IClient::class);
+		$jsonClient
+			->expects($this->once())
+			->method('get')
+			->willThrowException($exception);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($jsonClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with(
+				'Weather API transport request failed',
+				$this->callback(function (array $context): bool {
+					return ($context['requestId'] ?? '') === 'log-request'
+						&& ($context['method'] ?? '') === 'GET'
+						&& str_contains((string)($context['url'] ?? ''), '/api/v1/farms/')
+						&& ($context['exception'] ?? '') === \RuntimeException::class
+						&& str_contains((string)($context['message'] ?? ''), 'boom');
+				}),
+			);
+
+		$client = $this->createClient($clientService, $cache, $logger);
+
+		$this->expectException(WeatherApiException::class);
+		$client->requestJson('GET', '/api/v1/farms/', ['page' => 1], null, 'log-request');
+	}
+
+	public function testRequestJsonLogsHttpFailure(): void {
+		$response = $this->createResponse(503, 'Bad Gateway');
+
+		$jsonClient = $this->createMock(IClient::class);
+		$jsonClient
+			->expects($this->once())
+			->method('get')
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($jsonClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with(
+				'Weather API HTTP request failed',
+				$this->callback(function (array $context): bool {
+					return ($context['requestId'] ?? '') === 'http-fail'
+						&& ($context['method'] ?? '') === 'GET'
+						&& str_contains((string)($context['url'] ?? ''), '/api/v1/farms/')
+						&& ($context['httpStatus'] ?? null) === 503
+						&& str_contains((string)($context['responseSnippet'] ?? ''), 'Bad Gateway');
+				}),
+			);
+
+		$client = $this->createClient($clientService, $cache, $logger);
+
+		$this->expectException(WeatherApiException::class);
+		$client->requestJson('GET', '/api/v1/farms/', ['page' => 1], null, 'http-fail');
 	}
 
 	public function testRequestBinaryReturnsBytes(): void {
@@ -637,7 +712,11 @@ final class WeatherApiClientTest extends TestCase {
 		return $this->createClient($clientService, $cache);
 	}
 
-	private function createClient(IClientService $clientService, ICache $cache): WeatherApiClient {
+	private function createClient(
+		IClientService $clientService,
+		ICache $cache,
+		?LoggerInterface $logger = null,
+	): WeatherApiClient {
 		return new WeatherApiClient(
 			$clientService,
 			$this->createAppConfig(),
@@ -645,7 +724,7 @@ final class WeatherApiClientTest extends TestCase {
 			new UrlValidator(fn (string $host): array => ['93.184.216.34']),
 			new TokenSigner(),
 			$cache,
-			$this->createMock(LoggerInterface::class),
+			$logger ?? $this->createMock(LoggerInterface::class),
 			fn (): int => 123,
 			fn (): string => 'nonce',
 		);

@@ -46,6 +46,36 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(['results' => []], $data['data']);
 	}
 
+	public function testListFarmsPassesThroughQueryParamsWhenSchemaMissing(): void {
+		$schema = $this->createSchema();
+		unset($schema['paths']['/api/v1/farms/']['get']['parameters']);
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'page' => 3,
+			'ordering' => 'name',
+			'_route' => 'weather_apis.adminFarms.listFarms',
+			'OCS-APIRequest' => 'true',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJson')
+			->with('GET', '/api/v1/farms/', ['page' => 3, 'ordering' => 'name'], null, 'request-id')
+			->willReturn(['results' => []]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->listFarms();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['results' => []], $data['data']);
+	}
+
 	public function testCreateFarmFiltersReadOnlyFields(): void {
 		$schema = $this->createSchema();
 

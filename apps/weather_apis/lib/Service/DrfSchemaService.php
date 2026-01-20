@@ -43,6 +43,7 @@ final class DrfSchemaService {
 	 */
 	public function getFarmSchemaSummary(string $correlationId): array {
 		[$schema, $warning] = $this->loadSchema($correlationId);
+		$schema = $this->normalizeSchema($schema);
 
 		return [
 			'schema' => $this->buildFarmSummary($schema),
@@ -120,18 +121,31 @@ final class DrfSchemaService {
 	 * @throws WeatherApiException
 	 */
 	private function extractFarmFields(array $schema): array {
-		$farm = $this->resolveSchema($schema, $this->getComponent($schema, 'Farm'));
+		$fields = [];
+		try {
+			$farm = $this->resolveSchema($schema, $this->getComponent($schema, 'Farm'));
 
-		if (($farm['type'] ?? null) !== 'object' || !isset($farm['properties']) || !is_array($farm['properties'])) {
+			if (($farm['type'] ?? null) === 'object' && isset($farm['properties']) && is_array($farm['properties'])) {
+				$required = [];
+				if (isset($farm['required']) && is_array($farm['required'])) {
+					$required = array_map('strval', $farm['required']);
+				}
+
+				$fields = $this->extractFieldsFromSchema($schema, $farm, $required);
+			}
+		} catch (WeatherApiException) {
+			$fields = [];
+		}
+
+		if ($fields === []) {
+			$fields = $this->extractFarmFieldsFromCreateOperation($schema);
+		}
+
+		if ($fields === []) {
 			throw new WeatherApiException('backend_error', 'Farm schema is missing properties.');
 		}
 
-		$required = [];
-		if (isset($farm['required']) && is_array($farm['required'])) {
-			$required = array_map('strval', $farm['required']);
-		}
-
-		return $this->extractFieldsFromSchema($schema, $farm, $required);
+		return $fields;
 	}
 
 	/**
@@ -286,6 +300,42 @@ final class DrfSchemaService {
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractFarmFieldsFromCreateOperation(array $schema): array {
+		try {
+			$operationId = self::FARM_OPERATION_IDS['create'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		return $this->extractBodyFields($schema, $operation['spec']);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, mixed>
+	 */
+	private function normalizeSchema(array $schema): array {
+		if (isset($schema['paths']) || isset($schema['components'])) {
+			return $schema;
+		}
+
+		$candidate = $schema['schema'] ?? null;
+		if (!is_array($candidate)) {
+			return $schema;
+		}
+
+		if (isset($candidate['paths']) || isset($candidate['components']) || isset($candidate['openapi'])) {
+			return $candidate;
+		}
+
+		return $schema;
 	}
 
 	/**

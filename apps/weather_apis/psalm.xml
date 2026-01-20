@@ -18,4 +18,7 @@
       <file name=".php-cs-fixer.dist.php"/>
     </ignoreFiles>
   </projectFiles>
+  <stubs>
+    <file name="tests/psalm-stubs.php"/>
+  </stubs>
 </psalm>
