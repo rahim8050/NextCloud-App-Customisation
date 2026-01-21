@@ -135,6 +135,25 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
 	}
 
+	public function testNdviLatestRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJson');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviLatest('invalid-id');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
 	public function testMethodsRequireAdmin(): void {
 		$reflection = new \ReflectionMethod(AdminFarmsController::class, 'listFarms');
 		$this->assertNotEmpty($reflection->getAttributes(AdminRequired::class));

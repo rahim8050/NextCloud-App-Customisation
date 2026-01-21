@@ -1152,13 +1152,27 @@
 				}
 				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 				const result = await performJsonRequest(options.method || 'GET', url, options)
-				if (!result.parsed) {
-					showFarmsError('Unable to parse NDVI response.')
+				const responseOk = Boolean(result.response?.ok)
+				const contentType = result.response?.headers?.get
+					? result.response.headers.get('content-type') || ''
+					: ''
+				const expectsJson = contentType === '' || contentType.includes('application/json')
+				const snippet = (result.text || '').trim().slice(0, 200)
+				const fallbackMessage = `Unable to load ${operationKey}.`
+
+				if (!responseOk || !expectsJson) {
+					const message = snippet || pickMessage(result.data, fallbackMessage)
+					showFarmsError(message)
 					return null
 				}
-				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!result.parsed) {
+					const message = snippet || 'Unable to parse NDVI response.'
+					showFarmsError(message)
+					return null
+				}
+				const ok = result.data?.status === 'ok' || result.data?.ok === true
 				if (!ok) {
-					const message = pickMessage(result.data, `Unable to load ${operationKey}.`)
+					const message = pickMessage(result.data, fallbackMessage)
 					showFarmsError(message)
 					return null
 				}

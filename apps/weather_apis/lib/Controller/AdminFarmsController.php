@@ -238,6 +238,10 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getNdviLatest(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_latest', $requestId);
@@ -265,6 +269,10 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getNdviTimeseries(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_timeseries', $requestId);
@@ -292,6 +300,10 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getNdviRasterPng(string $farmId): Response {
 		$requestId = $this->resolveRequestId();
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_raster', $requestId);
@@ -326,6 +338,10 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function queueNdviRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_raster_queue', $requestId);
@@ -354,6 +370,10 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function refreshNdvi(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_refresh', $requestId);
@@ -607,6 +627,21 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $path;
+	}
+
+	private function validateFarmId(string $farmId, string $requestId): ?JSONResponse {
+		$trimmed = trim($farmId);
+		if ($trimmed === '' || !ctype_digit($trimmed)) {
+			return $this->buildErrorResponse(
+				'invalid_argument',
+				'Invalid farmId.',
+				$requestId,
+				Http::STATUS_BAD_REQUEST,
+				['farmId' => $farmId],
+			);
+		}
+
+		return null;
 	}
 
 	/**

@@ -30,4 +30,27 @@ final class RoutesTest extends TestCase {
 			$this->assertNotSame('', $parts[1]);
 		}
 	}
+
+	public function testNdviRoutesUseFarmIdPlaceholder(): void {
+		$routes = require __DIR__ . '/../../../appinfo/routes.php';
+
+		$this->assertArrayHasKey('routes', $routes);
+		$definedRoutes = $routes['routes'];
+
+		$ndviNames = [
+			'adminFarms#getNdviLatest',
+			'adminFarms#getNdviTimeseries',
+			'adminFarms#getNdviRasterPng',
+			'adminFarms#queueNdviRaster',
+			'adminFarms#refreshNdvi',
+		];
+
+		foreach ($definedRoutes as $route) {
+			if (!in_array($route['name'], $ndviNames, true)) {
+				continue;
+			}
+			$this->assertStringContainsString('{farmId}', $route['url']);
+			$this->assertStringNotContainsString('{farm_id}', $route['url']);
+		}
+	}
 }

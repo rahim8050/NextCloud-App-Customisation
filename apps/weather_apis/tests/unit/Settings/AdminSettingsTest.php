@@ -56,11 +56,11 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminFarms.updateFarm', ['id' => '__ID__']],
 				['weather_apis.adminFarms.patchFarm', ['id' => '__ID__']],
 				['weather_apis.adminFarms.deleteFarm', ['id' => '__ID__']],
-				['weather_apis.adminFarms.getNdviLatest', ['farm_id' => '__FARM_ID__']],
-				['weather_apis.adminFarms.getNdviTimeseries', ['farm_id' => '__FARM_ID__']],
-				['weather_apis.adminFarms.getNdviRasterPng', ['farm_id' => '__FARM_ID__']],
-				['weather_apis.adminFarms.queueNdviRaster', ['farm_id' => '__FARM_ID__']],
-				['weather_apis.adminFarms.refreshNdvi', ['farm_id' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getNdviLatest', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getNdviTimeseries', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.queueNdviRaster', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.refreshNdvi', ['farmId' => '__FARM_ID__']],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
