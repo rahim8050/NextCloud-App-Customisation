@@ -69,10 +69,40 @@ final class AdminFarmsController extends Controller {
 			);
 		}
 
-		return $this->buildSuccessResponse([
-			'schema' => $result['schema'],
-			'warning' => $result['warning'],
-		], 'Schema loaded.');
+		$schema = is_array($result['schema'] ?? null) ? $result['schema'] : [];
+		$fields = is_array($schema['fields'] ?? null) ? $schema['fields'] : [];
+		$columns = $schema['columns'] ?? [];
+		if (!is_array($columns)) {
+			$columns = [];
+		}
+		$operationIds = [];
+		$operations = $schema['operations'] ?? [];
+		if (is_array($operations)) {
+			foreach ($operations as $operation) {
+				if (!is_array($operation)) {
+					continue;
+				}
+				$operationId = $operation['operationId'] ?? null;
+				if (is_string($operationId) && $operationId !== '') {
+					$operationIds[] = $operationId;
+				}
+			}
+		}
+		$this->logger->debug(
+			'Weather API farm schema summary',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+				'fieldsCount' => count($fields),
+				'columnsCount' => count($columns),
+				'operationIds' => $operationIds,
+			]),
+		);
+
+		$payload = $schema;
+		$payload['warning'] = $result['warning'];
+		$payload['schema'] = $schema;
+
+		return $this->buildSuccessResponse($payload, 'Schema loaded.');
 	}
 
 	#[AdminRequired]
@@ -85,7 +115,11 @@ final class AdminFarmsController extends Controller {
 			if (!is_array($queryDefs)) {
 				$queryDefs = [];
 			}
-			$query = $this->buildListQueryParams($this->request->getParams(), $queryDefs);
+			$params = $this->stripPathParams(
+				$this->request->getParams(),
+				(string)($operation['path'] ?? ''),
+			);
+			$query = $this->buildListQueryParams($params, $queryDefs);
 			$payload = $this->weatherApiClient->requestJson(
 				'GET',
 				(string)($operation['path'] ?? ''),
@@ -108,11 +142,11 @@ final class AdminFarmsController extends Controller {
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('create', $requestId);
-			$body = $this->filterBodyParams(
+			$params = $this->stripPathParams(
 				$this->request->getParams(),
-				$operation['bodyFields'] ?? [],
-				true,
+				(string)($operation['path'] ?? ''),
 			);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], true);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'POST'),
 				(string)($operation['path'] ?? ''),
@@ -136,8 +170,12 @@ final class AdminFarmsController extends Controller {
 		try {
 			$operation = $this->schemaService->getFarmOperation('retrieve', $requestId);
 			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['id' => $id]);
-			$query = $this->filterQueryParams(
+			$params = $this->stripPathParams(
 				$this->request->getParams(),
+				(string)($operation['path'] ?? ''),
+			);
+			$query = $this->filterQueryParams(
+				$params,
 				$operation['queryParams'] ?? [],
 			);
 			$payload = $this->weatherApiClient->requestJson(
@@ -163,11 +201,11 @@ final class AdminFarmsController extends Controller {
 		try {
 			$operation = $this->schemaService->getFarmOperation('update', $requestId);
 			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['id' => $id]);
-			$body = $this->filterBodyParams(
+			$params = $this->stripPathParams(
 				$this->request->getParams(),
-				$operation['bodyFields'] ?? [],
-				true,
+				(string)($operation['path'] ?? ''),
 			);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], true);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'PUT'),
 				$path,
@@ -191,11 +229,11 @@ final class AdminFarmsController extends Controller {
 		try {
 			$operation = $this->schemaService->getFarmOperation('partial_update', $requestId);
 			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['id' => $id]);
-			$body = $this->filterBodyParams(
+			$params = $this->stripPathParams(
 				$this->request->getParams(),
-				$operation['bodyFields'] ?? [],
-				false,
+				(string)($operation['path'] ?? ''),
 			);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'PATCH'),
 				$path,
@@ -243,13 +281,20 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
+		$operation = [];
+		$path = '';
+		$query = [];
+
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_latest', $requestId);
-			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['farm_id' => $farmId]);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
 			$query = $this->filterQueryParams(
-				$this->request->getParams(),
+				$params,
 				$operation['queryParams'] ?? [],
 			);
+			$this->logProxyRequest('ndvi latest', $operation, $path, $query, $requestId);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'GET'),
 				$path,
@@ -258,6 +303,7 @@ final class AdminFarmsController extends Controller {
 				$requestId,
 			);
 		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndvi latest', $operation, $path, $query, $requestId, $exception);
 			return $this->handleWeatherApiException($exception, $requestId, 'ndvi latest');
 		} catch (\Throwable $throwable) {
 			return $this->handleUnexpectedError($throwable, $requestId, 'ndvi latest');
@@ -274,13 +320,24 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
+		$operation = [];
+		$path = '';
+		$query = [];
+
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_timeseries', $requestId);
-			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['farm_id' => $farmId]);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
 			$query = $this->filterQueryParams(
-				$this->request->getParams(),
+				$params,
 				$operation['queryParams'] ?? [],
 			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$startName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'start');
+			$endName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'end');
+			$this->ensureDateOrder($query, $startName, $endName);
+			$this->logProxyRequest('ndvi timeseries', $operation, $path, $query, $requestId);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'GET'),
 				$path,
@@ -289,6 +346,7 @@ final class AdminFarmsController extends Controller {
 				$requestId,
 			);
 		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndvi timeseries', $operation, $path, $query, $requestId, $exception);
 			return $this->handleWeatherApiException($exception, $requestId, 'ndvi timeseries');
 		} catch (\Throwable $throwable) {
 			return $this->handleUnexpectedError($throwable, $requestId, 'ndvi timeseries');
@@ -305,13 +363,25 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
+		$operation = [];
+		$path = '';
+		$query = [];
+
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_raster', $requestId);
-			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['farm_id' => $farmId]);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
 			$query = $this->filterQueryParams(
-				$this->request->getParams(),
+				$params,
 				$operation['queryParams'] ?? [],
 			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$this->logProxyRequest('ndvi raster', $operation, $path, $query, $requestId);
 			$binary = $this->weatherApiClient->requestBinary(
 				(string)($operation['method'] ?? 'GET'),
 				$path,
@@ -319,6 +389,7 @@ final class AdminFarmsController extends Controller {
 				$requestId,
 			);
 		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndvi raster', $operation, $path, $query, $requestId, $exception);
 			return $this->buildErrorResponse(
 				$exception->getErrorCode(),
 				$exception->getMessage(),
@@ -343,22 +414,41 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
+		$operation = [];
+		$path = '';
+
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_raster_queue', $requestId);
-			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['farm_id' => $farmId]);
-			$body = $this->filterBodyParams(
-				$this->request->getParams(),
-				$operation['bodyFields'] ?? [],
-				false,
-			);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$query = [];
+			$body = null;
+			$bodyFields = $operation['bodyFields'] ?? [];
+			if ($bodyFields !== []) {
+				$body = $this->filterBodyParams($params, $bodyFields, true);
+				$dateField = $this->resolveBodyFieldName($bodyFields, 'date');
+				if ($dateField !== null && array_key_exists($dateField, $body)) {
+					$this->parseIsoDateValue($body[$dateField], $dateField);
+				}
+			} else {
+				$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+				$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+				$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+				if ($dateField !== null && array_key_exists($dateField, $query)) {
+					$this->parseIsoDateValue($query[$dateField], $dateField);
+				}
+			}
+			$this->logProxyRequest('ndvi raster queue', $operation, $path, $query, $requestId);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'POST'),
 				$path,
-				[],
+				$query,
 				$body === [] ? null : $body,
 				$requestId,
 			);
 		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndvi raster queue', $operation, $path, [], $requestId, $exception);
 			return $this->handleWeatherApiException($exception, $requestId, 'ndvi raster queue');
 		} catch (\Throwable $throwable) {
 			return $this->handleUnexpectedError($throwable, $requestId, 'ndvi raster queue');
@@ -375,14 +465,16 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
+		$operation = [];
+		$path = '';
+
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndvi_refresh', $requestId);
-			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['farm_id' => $farmId]);
-			$body = $this->filterBodyParams(
-				$this->request->getParams(),
-				$operation['bodyFields'] ?? [],
-				false,
-			);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('ndvi refresh', $operation, $path, [], $requestId);
 			$payload = $this->weatherApiClient->requestJson(
 				(string)($operation['method'] ?? 'POST'),
 				$path,
@@ -391,6 +483,7 @@ final class AdminFarmsController extends Controller {
 				$requestId,
 			);
 		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndvi refresh', $operation, $path, [], $requestId, $exception);
 			return $this->handleWeatherApiException($exception, $requestId, 'ndvi refresh');
 		} catch (\Throwable $throwable) {
 			return $this->handleUnexpectedError($throwable, $requestId, 'ndvi refresh');
@@ -505,6 +598,117 @@ final class AdminFarmsController extends Controller {
 	}
 
 	/**
+	 * @param array<string, mixed> $query
+	 * @param list<array{name: string, type: string, format: string|null, required: bool}> $definitions
+	 */
+	private function requireQueryParams(array $query, array $definitions): void {
+		if ($definitions === []) {
+			return;
+		}
+
+		foreach ($definitions as $definition) {
+			if (($definition['required'] ?? false) !== true) {
+				continue;
+			}
+			$name = $definition['name'] ?? null;
+			if (!is_string($name) || $name === '') {
+				continue;
+			}
+			if (!array_key_exists($name, $query)) {
+				throw new WeatherApiException('invalid_argument', 'Missing required query parameter: ' . $name);
+			}
+			$value = $query[$name];
+			if ($value === null || (is_string($value) && trim($value) === '')) {
+				throw new WeatherApiException('invalid_argument', 'Missing required query parameter: ' . $name);
+			}
+		}
+	}
+
+	/**
+	 * @param list<array{name: string, type: string, format: string|null, required: bool}> $definitions
+	 */
+	private function resolveQueryParamName(array $definitions, string $desired): ?string {
+		foreach ($definitions as $definition) {
+			$name = $definition['name'] ?? null;
+			if (is_string($name) && $name === $desired) {
+				return $name;
+			}
+		}
+
+		foreach ($definitions as $definition) {
+			$name = $definition['name'] ?? null;
+			if (is_string($name) && str_contains($name, $desired)) {
+				return $name;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param array<string, array<string, mixed>> $definitions
+	 */
+	private function resolveBodyFieldName(array $definitions, string $desired): ?string {
+		if (isset($definitions[$desired])) {
+			return $desired;
+		}
+
+		foreach (array_keys($definitions) as $name) {
+			if (is_string($name) && str_contains($name, $desired)) {
+				return $name;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param array<string, mixed> $query
+	 */
+	private function ensureDateOrder(array $query, ?string $startKey, ?string $endKey): void {
+		if ($startKey === null || $endKey === null) {
+			return;
+		}
+		if (!array_key_exists($startKey, $query) || !array_key_exists($endKey, $query)) {
+			return;
+		}
+
+		$startValue = $query[$startKey];
+		$endValue = $query[$endKey];
+		$startDate = $this->parseIsoDateValue($startValue, $startKey);
+		$endDate = $this->parseIsoDateValue($endValue, $endKey);
+
+		if ($startDate > $endDate) {
+			throw new WeatherApiException('invalid_argument', 'Start date must be on or before end date.');
+		}
+	}
+
+	private function parseIsoDateValue(mixed $value, string $field): \DateTimeImmutable {
+		if (!is_string($value)) {
+			throw new WeatherApiException('invalid_argument', 'Invalid date for ' . $field . '.');
+		}
+		$trimmed = trim($value);
+		if ($trimmed === '') {
+			throw new WeatherApiException('invalid_argument', 'Invalid date for ' . $field . '.');
+		}
+
+		$date = \DateTimeImmutable::createFromFormat('Y-m-d', $trimmed);
+		$errors = \DateTimeImmutable::getLastErrors();
+		if ($date === false) {
+			throw new WeatherApiException('invalid_argument', 'Invalid date for ' . $field . '.');
+		}
+		if ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+			throw new WeatherApiException('invalid_argument', 'Invalid date for ' . $field . '.');
+		}
+
+		if ($date->format('Y-m-d') !== $trimmed) {
+			throw new WeatherApiException('invalid_argument', 'Invalid date for ' . $field . '.');
+		}
+
+		return $date;
+	}
+
+	/**
 	 * @param array<string, mixed> $params
 	 * @param array<string, array<string, mixed>> $definitions
 	 * @return array<string, mixed>
@@ -610,12 +814,12 @@ final class AdminFarmsController extends Controller {
 	}
 
 	private function applyPathParams(string $path, array $params): string {
-		preg_match_all('/{([^}]+)}/', $path, $matches);
-		if (!isset($matches[1])) {
+		$names = $this->extractPathParamNames($path);
+		if ($names === []) {
 			return $path;
 		}
 
-		foreach ($matches[1] as $name) {
+		foreach ($names as $name) {
 			if (!array_key_exists($name, $params)) {
 				throw new WeatherApiException('invalid_argument', 'Missing path parameter: ' . $name);
 			}
@@ -627,6 +831,55 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $path;
+	}
+
+	/**
+	 * @param array<string, mixed> $params
+	 * @return array<string, mixed>
+	 */
+	private function stripPathParams(array $params, string $pathTemplate): array {
+		$names = $this->extractPathParamNames($pathTemplate);
+		if ($names === []) {
+			return $params;
+		}
+
+		foreach ($names as $name) {
+			unset($params[$name]);
+			$camel = $this->snakeToCamel($name);
+			if ($camel !== $name) {
+				unset($params[$camel]);
+			}
+		}
+
+		return $params;
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function extractPathParamNames(string $path): array {
+		preg_match_all('/{([^}]+)}/', $path, $matches);
+		if (!isset($matches[1])) {
+			return [];
+		}
+
+		return array_map('strval', $matches[1]);
+	}
+
+	private function snakeToCamel(string $value): string {
+		if (!str_contains($value, '_')) {
+			return $value;
+		}
+
+		$parts = array_filter(explode('_', $value), static fn ($part) => $part !== '');
+		if ($parts === []) {
+			return $value;
+		}
+
+		$first = array_shift($parts);
+		$parts = array_map(static fn ($part) => ucfirst(strtolower($part)), $parts);
+
+		return $first . implode('', $parts);
 	}
 
 	private function validateFarmId(string $farmId, string $requestId): ?JSONResponse {
@@ -698,6 +951,65 @@ final class AdminFarmsController extends Controller {
 			$requestId,
 			$this->httpStatusForCode($exception->getErrorCode()),
 			$exception->getDetails(),
+		);
+	}
+
+	/**
+	 * @param array<string, mixed> $operation
+	 * @param array<string, mixed> $query
+	 */
+	private function logProxyRequest(
+		string $action,
+		array $operation,
+		string $path,
+		array $query,
+		string $requestId,
+	): void {
+		$this->logger->debug(
+			'Weather API admin proxy request',
+			LogSanitizer::sanitizeContext([
+				'action' => $action,
+				'requestId' => $requestId,
+				'method' => (string)($operation['method'] ?? ''),
+				'pathTemplate' => (string)($operation['path'] ?? ''),
+				'path' => $path,
+				'queryKeys' => array_values(array_keys($query)),
+			]),
+		);
+	}
+
+	/**
+	 * @param array<string, mixed> $operation
+	 * @param array<string, mixed> $query
+	 */
+	private function logProxyError(
+		string $action,
+		array $operation,
+		string $path,
+		array $query,
+		string $requestId,
+		WeatherApiException $exception,
+	): void {
+		$details = $exception->getDetails();
+		$context = [
+			'action' => $action,
+			'requestId' => $requestId,
+			'method' => (string)($operation['method'] ?? ''),
+			'pathTemplate' => (string)($operation['path'] ?? ''),
+			'path' => $path,
+			'queryKeys' => array_values(array_keys($query)),
+		];
+
+		if (isset($details['httpStatus'])) {
+			$context['httpStatus'] = $details['httpStatus'];
+		}
+		if (isset($details['responseContentType'])) {
+			$context['responseContentType'] = $details['responseContentType'];
+		}
+
+		$this->logger->debug(
+			'Weather API admin proxy error',
+			LogSanitizer::sanitizeContext($context),
 		);
 	}
 

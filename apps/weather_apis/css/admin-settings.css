@@ -479,6 +479,10 @@
 	min-width: 140px;
 }
 
+.weather-apis-farms__ndvi-error {
+	margin-top: 4px;
+}
+
 .weather-apis-farms__ndvi-output {
 	font-size: 12px;
 	color: var(--color-main-text);

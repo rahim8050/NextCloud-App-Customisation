@@ -103,6 +103,18 @@ final class DrfSchemaService {
 	 */
 	private function buildFarmSummary(array $schema): array {
 		$farmFields = $this->extractFarmFields($schema);
+		$createFields = $this->extractFarmWriteFields($schema, self::FARM_OPERATION_IDS['create']);
+		$updateFields = $this->extractFarmWriteFields($schema, self::FARM_OPERATION_IDS['partial_update']);
+		if ($updateFields === []) {
+			$updateFields = $this->extractFarmWriteFields($schema, self::FARM_OPERATION_IDS['update']);
+		}
+		if ($updateFields === []) {
+			$updateFields = $createFields;
+		}
+		$columns = $this->extractFarmColumns($schema);
+		if ($columns === []) {
+			$columns = array_keys($farmFields);
+		}
 		$operations = [];
 
 		foreach (self::FARM_OPERATION_IDS as $key => $operationId) {
@@ -111,6 +123,9 @@ final class DrfSchemaService {
 
 		return [
 			'fields' => $farmFields,
+			'fieldsCreate' => $createFields,
+			'fieldsUpdate' => $updateFields,
+			'columns' => array_values($columns),
 			'operations' => $operations,
 		];
 	}
@@ -138,6 +153,10 @@ final class DrfSchemaService {
 		}
 
 		if ($fields === []) {
+			$fields = $this->extractFarmFieldsFromListResponse($schema);
+		}
+
+		if ($fields === []) {
 			$fields = $this->extractFarmFieldsFromCreateOperation($schema);
 		}
 
@@ -156,6 +175,7 @@ final class DrfSchemaService {
 		$operation = $this->findOperation($schema, $operationId);
 
 		$meta = [
+			'operationId' => $operationId,
 			'method' => $operation['method'],
 			'path' => $operation['path'],
 			'queryParams' => $this->extractQueryParams($schema, $operation['spec']),
@@ -291,11 +311,14 @@ final class DrfSchemaService {
 				continue;
 			}
 			$property = $this->resolveSchema($schema, $property);
+			$enum = $property['enum'] ?? null;
+			$enumValues = is_array($enum) ? array_values($enum) : null;
 			$fields[(string)$name] = [
 				'type' => (string)($property['type'] ?? 'string'),
 				'format' => isset($property['format']) ? (string)$property['format'] : null,
 				'required' => in_array((string)$name, $required, true),
 				'readOnly' => (bool)($property['readOnly'] ?? false),
+				'enum' => $enumValues,
 			];
 		}
 
@@ -315,6 +338,182 @@ final class DrfSchemaService {
 		}
 
 		return $this->extractBodyFields($schema, $operation['spec']);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractFarmFieldsFromListResponse(array $schema): array {
+		try {
+			$operationId = self::FARM_OPERATION_IDS['list'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$itemSchema = $this->extractListItemSchema($schema, $operation['spec']);
+		if ($itemSchema === null) {
+			return [];
+		}
+
+		if (($itemSchema['type'] ?? null) !== 'object' || !isset($itemSchema['properties']) || !is_array($itemSchema['properties'])) {
+			return [];
+		}
+
+		$required = [];
+		if (isset($itemSchema['required']) && is_array($itemSchema['required'])) {
+			$required = array_map('strval', $itemSchema['required']);
+		}
+
+		return $this->extractFieldsFromSchema($schema, $itemSchema, $required);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return list<string>
+	 */
+	private function extractFarmColumns(array $schema): array {
+		try {
+			$operationId = self::FARM_OPERATION_IDS['list'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$itemSchema = $this->extractListItemSchema($schema, $operation['spec']);
+		if ($itemSchema === null) {
+			return [];
+		}
+
+		$properties = $itemSchema['properties'] ?? null;
+		if (!is_array($properties)) {
+			return [];
+		}
+
+		return array_map('strval', array_keys($properties));
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractFarmWriteFields(array $schema, string $operationId): array {
+		try {
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$fields = $this->extractBodyFields($schema, $operation['spec']);
+		if ($fields === []) {
+			return [];
+		}
+
+		return $this->filterWritableFields($fields);
+	}
+
+	/**
+	 * @param array<string, array<string, mixed>> $fields
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function filterWritableFields(array $fields): array {
+		$filtered = [];
+		foreach ($fields as $name => $definition) {
+			if (!is_string($name)) {
+				continue;
+			}
+			if (($definition['readOnly'] ?? false) === true) {
+				continue;
+			}
+			$filtered[$name] = $definition;
+		}
+
+		return $filtered;
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @param array<string, mixed> $spec
+	 * @return array<string, mixed>|null
+	 */
+	private function extractListItemSchema(array $schema, array $spec): ?array {
+		$responseSchema = $this->extractSuccessResponseSchema($schema, $spec);
+		if ($responseSchema === null) {
+			return null;
+		}
+
+		if (($responseSchema['type'] ?? null) === 'array' && isset($responseSchema['items']) && is_array($responseSchema['items'])) {
+			return $this->resolveSchema($schema, $responseSchema['items']);
+		}
+
+		if (($responseSchema['type'] ?? null) !== 'object' || !isset($responseSchema['properties']) || !is_array($responseSchema['properties'])) {
+			return null;
+		}
+
+		$properties = $responseSchema['properties'];
+		$results = $properties['results'] ?? null;
+		if (!is_array($results)) {
+			return null;
+		}
+
+		$resultsSchema = $this->resolveSchema($schema, $results);
+		if (($resultsSchema['type'] ?? null) === 'array' && isset($resultsSchema['items']) && is_array($resultsSchema['items'])) {
+			return $this->resolveSchema($schema, $resultsSchema['items']);
+		}
+
+		if (($resultsSchema['type'] ?? null) === 'object' && isset($resultsSchema['properties']) && is_array($resultsSchema['properties'])) {
+			$items = $resultsSchema['properties']['items'] ?? null;
+			if (is_array($items)) {
+				$itemsSchema = $this->resolveSchema($schema, $items);
+				if (($itemsSchema['type'] ?? null) === 'array' && isset($itemsSchema['items']) && is_array($itemsSchema['items'])) {
+					return $this->resolveSchema($schema, $itemsSchema['items']);
+				}
+				if (($itemsSchema['type'] ?? null) === 'object') {
+					return $itemsSchema;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @param array<string, mixed> $spec
+	 * @return array<string, mixed>|null
+	 */
+	private function extractSuccessResponseSchema(array $schema, array $spec): ?array {
+		$responses = $spec['responses'] ?? null;
+		if (!is_array($responses)) {
+			return null;
+		}
+
+		$success = $responses['200'] ?? null;
+		if (!is_array($success)) {
+			$first = reset($responses);
+			$success = is_array($first) ? $first : null;
+		}
+		if (!is_array($success)) {
+			return null;
+		}
+
+		$content = $success['content'] ?? null;
+		if (!is_array($content) || $content === []) {
+			return null;
+		}
+
+		$jsonContent = $content['application/json'] ?? reset($content);
+		if (!is_array($jsonContent)) {
+			return null;
+		}
+
+		$schemaDef = $jsonContent['schema'] ?? null;
+		if (!is_array($schemaDef)) {
+			return null;
+		}
+
+		return $this->resolveSchema($schema, $schemaDef);
 	}
 
 	/**

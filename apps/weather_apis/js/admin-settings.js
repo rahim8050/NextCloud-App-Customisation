@@ -87,6 +87,7 @@
 		const ndviStartInput = document.getElementById('weather-apis-ndvi-start')
 		const ndviEndInput = document.getElementById('weather-apis-ndvi-end')
 		const ndviDateInput = document.getElementById('weather-apis-ndvi-date')
+		const ndviError = document.getElementById('weather-apis-ndvi-error')
 		const ndviOutput = document.getElementById('weather-apis-ndvi-output')
 		const ndviTable = document.getElementById('weather-apis-ndvi-table')
 		const ndviRasterPreview = document.getElementById('weather-apis-ndvi-raster-preview')
@@ -204,6 +205,8 @@
 		const pickMessage = (data, fallback) => toText(
 			data?.message
 			?? data?.error?.message
+			?? data?.error?.details?.drfMessage
+			?? data?.error?.details?.message
 			?? data?.errors?.detail
 			?? fallback,
 			fallback,
@@ -594,12 +597,17 @@
 
 			let farmSchema = null
 			let farmFields = {}
+			let farmFieldsCreate = {}
+			let farmFieldsUpdate = {}
+			let farmColumns = []
 			let farmOperations = {}
 			let activeColumns = []
 			let nextParams = null
 			let prevParams = null
 			let selectedFarm = null
 			let modalInitial = {}
+			let ndviTouched = { start: false, end: false, raster: false }
+			let ndviRasterObjectUrl = null
 
 			const clearFarmsNotes = () => {
 				if (farmsWarning) {
@@ -642,6 +650,26 @@
 				return data ?? {}
 			}
 
+			const pickObject = (...candidates) => {
+				for (const candidate of candidates) {
+					if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+						if (Object.keys(candidate).length > 0) {
+							return candidate
+						}
+					}
+				}
+				return {}
+			}
+
+			const pickArray = (...candidates) => {
+				for (const candidate of candidates) {
+					if (Array.isArray(candidate) && candidate.length > 0) {
+						return candidate
+					}
+				}
+				return []
+			}
+
 			const resolveOperation = (key) => (farmOperations && farmOperations[key]) || null
 
 			const resolveFarmId = (farm) => {
@@ -661,7 +689,14 @@
 				if (!farmsColumns) {
 					return
 				}
-				activeColumns = fieldOrder.filter((name) => Object.prototype.hasOwnProperty.call(farmFields, name))
+				let derived = pickArray(farmColumns)
+				if (derived.length === 0) {
+					const fallback = Object.keys(farmFields || {})
+					derived = fallback.length > 0
+						? fallback
+						: fieldOrder.filter((name) => Object.prototype.hasOwnProperty.call(farmFields, name))
+				}
+				activeColumns = derived
 				farmsColumns.innerHTML = ''
 				activeColumns.forEach((name) => {
 					const th = document.createElement('th')
@@ -807,14 +842,36 @@
 				}
 
 				const payload = unwrapResponseData(result.data)
-				const schemaContainer = payload?.schema ?? {}
+				const schemaContainer = payload?.schema ?? payload ?? {}
 				const effectiveSchema = schemaContainer?.schema ?? schemaContainer
 				farmSchema = effectiveSchema ?? {}
-				farmFields = farmSchema?.fields ?? {}
-				farmOperations = farmSchema?.operations ?? {}
+				farmFields = pickObject(payload?.fields, farmSchema?.fields, schemaContainer?.fields)
+				farmFieldsCreate = pickObject(
+					payload?.fieldsCreate,
+					farmSchema?.fieldsCreate,
+					schemaContainer?.fieldsCreate,
+					farmFields,
+				)
+				farmFieldsUpdate = pickObject(
+					payload?.fieldsUpdate,
+					farmSchema?.fieldsUpdate,
+					schemaContainer?.fieldsUpdate,
+					farmFieldsCreate,
+					farmFields,
+				)
+				farmColumns = pickArray(payload?.columns, farmSchema?.columns, schemaContainer?.columns)
+				farmOperations = pickObject(payload?.operations, farmSchema?.operations, schemaContainer?.operations)
 
 				if (!farmFields || Object.keys(farmFields).length === 0) {
 					showFarmsError('Farm schema did not return any fields.')
+					setFarmsCreateEnabled(false)
+					return false
+				}
+				if (!farmColumns || farmColumns.length === 0) {
+					farmColumns = Object.keys(farmFields)
+				}
+				if (!farmColumns || farmColumns.length === 0) {
+					showFarmsError('Farm schema did not return any columns.')
 					setFarmsCreateEnabled(false)
 					return false
 				}
@@ -859,6 +916,14 @@
 				renderPagination(payload, items.length)
 			}
 
+			const resolveModalFields = (mode) => {
+				const preferred = mode === 'edit' ? farmFieldsUpdate : farmFieldsCreate
+				if (preferred && typeof preferred === 'object' && Object.keys(preferred).length > 0) {
+					return preferred
+				}
+				return farmFields || {}
+			}
+
 			const openFarmModal = async (mode, farmId) => {
 				if (!farmsModal || !farmsModalFields || !farmsModalTitle || !farmsModalSave) {
 					return
@@ -887,7 +952,12 @@
 				farmsModalTitle.textContent = mode === 'edit' ? 'Edit farm' : 'Create farm'
 				farmsModalFields.innerHTML = ''
 
-				const entries = Object.entries(farmFields).filter(([, def]) => !def?.readOnly)
+				const fieldSet = resolveModalFields(mode)
+				const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
+				if (entries.length === 0) {
+					showFarmsError('Farm schema did not return any writable fields.')
+					return
+				}
 				entries.forEach(([name, def]) => {
 					const row = document.createElement('div')
 					const label = document.createElement('label')
@@ -926,7 +996,7 @@
 
 				farmsModalSave.onclick = async () => {
 					const payload = {}
-					const entries = Object.entries(farmFields).filter(([, def]) => !def?.readOnly)
+					const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
 					for (const [name, def] of entries) {
 						const input = farmsModalFields.querySelector(`[data-field-name="${name}"]`)
 						if (!input) {
@@ -1030,10 +1100,122 @@
 			}
 
 			const clearNdviOutput = () => {
+				clearNdviError()
 				if (ndviOutput) ndviOutput.textContent = ''
 				if (ndviTable) ndviTable.textContent = ''
 				if (ndviRasterPreview) ndviRasterPreview.hidden = true
 				if (ndviRasterImg) ndviRasterImg.removeAttribute('src')
+				if (ndviRasterObjectUrl) {
+					URL.revokeObjectURL(ndviRasterObjectUrl)
+					ndviRasterObjectUrl = null
+				}
+			}
+
+			const clearNdviError = () => {
+				if (!ndviError) {
+					return
+				}
+				ndviError.textContent = ''
+				ndviError.hidden = true
+			}
+
+			const showNdviError = (message) => {
+				if (!ndviError) {
+					return
+				}
+				ndviError.textContent = message
+				ndviError.hidden = false
+			}
+
+			const ISO_DATE_PATTERN = /^\\d{4}-\\d{2}-\\d{2}$/
+
+			const parseIsoDate = (value) => {
+				const raw = String(value ?? '').trim()
+				if (raw === '') {
+					return { raw: '', iso: null, date: null, invalid: false }
+				}
+				if (!ISO_DATE_PATTERN.test(raw)) {
+					return { raw, iso: null, date: null, invalid: true }
+				}
+				const [year, month, day] = raw.split('-').map((part) => Number(part))
+				const date = new Date(Date.UTC(year, month - 1, day))
+				if (Number.isNaN(date.getTime())) {
+					return { raw, iso: null, date: null, invalid: true }
+				}
+				if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+					return { raw, iso: null, date: null, invalid: true }
+				}
+				return { raw, iso: raw, date, invalid: false }
+			}
+
+			const readNdviDateState = () => ({
+				start: parseIsoDate(ndviStartInput?.value),
+				end: parseIsoDate(ndviEndInput?.value),
+				raster: parseIsoDate(ndviDateInput?.value),
+			})
+
+			const resolveIsoDateValue = (input) => {
+				const parsed = parseIsoDate(input?.value)
+				return parsed.iso ?? null
+			}
+
+			const validateTimeseriesInputs = (state) => {
+				if (!state.start.raw || !state.end.raw) {
+					return { ok: false, message: 'Start and end dates are required.' }
+				}
+				if (state.start.invalid || state.end.invalid) {
+					return { ok: false, message: 'Use valid dates in YYYY-MM-DD format.' }
+				}
+				if (state.start.date && state.end.date && state.start.date > state.end.date) {
+					return { ok: false, message: 'Start date must be on or before end date.' }
+				}
+				return { ok: true, start: state.start.iso, end: state.end.iso }
+			}
+
+			const validateRasterInput = (state) => {
+				if (!state.raster.raw) {
+					return { ok: false, message: 'Raster date is required.' }
+				}
+				if (state.raster.invalid) {
+					return { ok: false, message: 'Use a valid raster date (YYYY-MM-DD).' }
+				}
+				return { ok: true, date: state.raster.iso }
+			}
+
+			const updateNdviActionState = () => {
+				const state = readNdviDateState()
+				const timeseriesValidation = validateTimeseriesInputs(state)
+				const rasterValidation = validateRasterInput(state)
+
+				if (ndviTimeseriesButton) {
+					ndviTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (ndviQueueButton) {
+					ndviQueueButton.disabled = !rasterValidation.ok
+				}
+				if (ndviRasterButton) {
+					ndviRasterButton.disabled = !rasterValidation.ok
+				}
+
+				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
+				const showRasterError = (ndviTouched.raster || state.raster.raw)
+				let message = ''
+				if (!timeseriesValidation.ok && showTimeseriesError) {
+					message = timeseriesValidation.message
+				} else if (!rasterValidation.ok && showRasterError) {
+					message = rasterValidation.message
+				}
+
+				if (message) {
+					showNdviError(message)
+				} else {
+					clearNdviError()
+				}
+			}
+
+			const resetNdviState = () => {
+				ndviTouched = { start: false, end: false, raster: false }
+				updateNdviActionState()
 			}
 
 			const resolveParamName = (params, desired) => {
@@ -1059,40 +1241,46 @@
 				return match ?? null
 			}
 
-			const buildNdviQuery = (operationKey) => {
+			const buildNdviQuery = (operationKey, overrides = {}) => {
 				const operation = resolveOperation(operationKey)
 				const params = operation?.queryParams ?? []
 				const query = {}
 				const startName = resolveParamName(params, 'start')
 				const endName = resolveParamName(params, 'end')
 				const dateName = resolveParamName(params, 'date')
-				if (startName && ndviStartInput?.value) {
-					query[startName] = ndviStartInput.value
+				const startValue = overrides.start ?? resolveIsoDateValue(ndviStartInput)
+				const endValue = overrides.end ?? resolveIsoDateValue(ndviEndInput)
+				const dateValue = overrides.date ?? resolveIsoDateValue(ndviDateInput)
+				if (startName && startValue) {
+					query[startName] = startValue
 				}
-				if (endName && ndviEndInput?.value) {
-					query[endName] = ndviEndInput.value
+				if (endName && endValue) {
+					query[endName] = endValue
 				}
-				if (dateName && ndviDateInput?.value) {
-					query[dateName] = ndviDateInput.value
+				if (dateName && dateValue) {
+					query[dateName] = dateValue
 				}
 				return query
 			}
 
-			const buildNdviBody = (operationKey) => {
+			const buildNdviBody = (operationKey, overrides = {}) => {
 				const operation = resolveOperation(operationKey)
 				const fields = operation?.bodyFields ?? {}
 				const body = {}
 				const startName = resolveBodyFieldName(fields, 'start')
 				const endName = resolveBodyFieldName(fields, 'end')
 				const dateName = resolveBodyFieldName(fields, 'date')
-				if (startName && ndviStartInput?.value) {
-					body[startName] = ndviStartInput.value
+				const startValue = overrides.start ?? resolveIsoDateValue(ndviStartInput)
+				const endValue = overrides.end ?? resolveIsoDateValue(ndviEndInput)
+				const dateValue = overrides.date ?? resolveIsoDateValue(ndviDateInput)
+				if (startName && startValue) {
+					body[startName] = startValue
 				}
-				if (endName && ndviEndInput?.value) {
-					body[endName] = ndviEndInput.value
+				if (endName && endValue) {
+					body[endName] = endValue
 				}
-				if (dateName && ndviDateInput?.value) {
-					body[dateName] = ndviDateInput.value
+				if (dateName && dateValue) {
+					body[dateName] = dateValue
 				}
 				return body
 			}
@@ -1142,12 +1330,14 @@
 					farmsNdviTitle.textContent = label
 				}
 				clearNdviOutput()
+				resetNdviState()
 			}
 
 			const runNdviRequest = async (operationKey, urlTemplate, options = {}) => {
 				clearFarmsNotes()
+				clearNdviError()
 				if (!selectedFarm) {
-					showFarmsError('Select a farm first.')
+					showNdviError('Select a farm first.')
 					return
 				}
 				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
@@ -1162,18 +1352,18 @@
 
 				if (!responseOk || !expectsJson) {
 					const message = snippet || pickMessage(result.data, fallbackMessage)
-					showFarmsError(message)
+					showNdviError(message)
 					return null
 				}
 				if (!result.parsed) {
 					const message = snippet || 'Unable to parse NDVI response.'
-					showFarmsError(message)
+					showNdviError(message)
 					return null
 				}
 				const ok = result.data?.status === 'ok' || result.data?.ok === true
 				if (!ok) {
 					const message = pickMessage(result.data, fallbackMessage)
-					showFarmsError(message)
+					showNdviError(message)
 					return null
 				}
 				return unwrapResponseData(result.data)
@@ -1211,9 +1401,18 @@
 			}
 			if (ndviTimeseriesButton) {
 				ndviTimeseriesButton.addEventListener('click', async () => {
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
 					const data = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
 						method: 'GET',
-						query: buildNdviQuery('ndvi_timeseries'),
+						query: buildNdviQuery('ndvi_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
 					})
 					if (data) {
 						const observations = Array.isArray(data?.observations)
@@ -1231,30 +1430,91 @@
 				})
 			}
 			if (ndviRasterButton) {
-				ndviRasterButton.addEventListener('click', () => {
+				ndviRasterButton.addEventListener('click', async () => {
 					clearFarmsNotes()
+					clearNdviError()
 					if (!selectedFarm) {
-						showFarmsError('Select a farm first.')
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
 						return
 					}
 					const url = farmNdviRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-					const query = buildNdviQuery('ndvi_raster')
+					const query = buildNdviQuery('ndvi_raster', { date: validation.date })
 					const queryString = buildQueryString(query)
 					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 					const resolvedUrl = ncGenerateUrl(finalUrl)
-					if (ndviRasterImg) {
-						ndviRasterImg.src = resolvedUrl
+					const token = resolveRequestToken()
+					const headers = {
+						Accept: 'image/png',
+						'OCS-APIRequest': 'true',
+						'X-Requested-With': 'XMLHttpRequest',
 					}
-					if (ndviRasterPreview) {
-						ndviRasterPreview.hidden = false
+					if (token) {
+						headers.requesttoken = token
+					}
+
+					try {
+						const response = await fetch(resolvedUrl, {
+							method: 'GET',
+							credentials: 'same-origin',
+							headers,
+						})
+						const contentType = response.headers.get('content-type') || ''
+						if (!response.ok) {
+							const text = await response.text()
+							const snippet = text.trim().slice(0, 200)
+							showNdviError(snippet || `Unable to load raster preview (HTTP ${response.status}).`)
+							return
+						}
+						if (contentType && !contentType.includes('image/png')) {
+							const text = await response.text()
+							const snippet = text.trim().slice(0, 200)
+							showNdviError(snippet || 'Raster preview did not return an image.')
+							return
+						}
+						const blob = await response.blob()
+						if (blob.size === 0) {
+							showNdviError('Raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						if (ndviRasterImg) {
+							ndviRasterImg.src = ndviRasterObjectUrl
+						}
+						if (ndviRasterPreview) {
+							ndviRasterPreview.hidden = false
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load raster preview.'
+						showNdviError(message)
 					}
 				})
 			}
 			if (ndviQueueButton) {
 				ndviQueueButton.addEventListener('click', async () => {
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('ndvi_raster_queue')
+					const bodyDateField = resolveBodyFieldName(queueOperation?.bodyFields ?? {}, 'date')
+					const queryDateField = resolveParamName(queueOperation?.queryParams ?? [], 'date')
 					const data = await runNdviRequest('queue raster', farmNdviRasterQueueUrl, {
 						method: 'POST',
-						body: buildNdviBody('ndvi_raster_queue'),
+						body: bodyDateField ? buildNdviBody('ndvi_raster_queue', { date: validation.date }) : null,
+						query: !bodyDateField && queryDateField
+							? buildNdviQuery('ndvi_raster_queue', { date: validation.date })
+							: undefined,
 					})
 					if (data && ndviOutput) {
 						ndviOutput.textContent = JSON.stringify(data, null, 2)
@@ -1272,6 +1532,22 @@
 					}
 				})
 			}
+
+			const bindNdviInput = (input, key) => {
+				if (!input) {
+					return
+				}
+				const markTouched = () => {
+					ndviTouched[key] = true
+					updateNdviActionState()
+				}
+				input.addEventListener('change', markTouched)
+				input.addEventListener('input', markTouched)
+			}
+
+			bindNdviInput(ndviStartInput, 'start')
+			bindNdviInput(ndviEndInput, 'end')
+			bindNdviInput(ndviDateInput, 'raster')
 
 			(async () => {
 				const ok = await loadSchema()

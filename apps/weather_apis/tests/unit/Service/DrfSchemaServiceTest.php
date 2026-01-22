@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Tests\Unit\Service;
 
 use OCA\WeatherApis\Service\DrfSchemaService;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
+use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,13 @@ final class DrfSchemaServiceTest extends TestCase {
 		$this->assertArrayHasKey('fields', $result['schema']);
 		$this->assertArrayHasKey('name', $result['schema']['fields']);
 		$this->assertTrue($result['schema']['fields']['name']['required']);
+		$this->assertArrayHasKey('columns', $result['schema']);
+		$this->assertContains('name', $result['schema']['columns']);
+		$this->assertArrayHasKey('fieldsCreate', $result['schema']);
+		$this->assertArrayHasKey('name', $result['schema']['fieldsCreate']);
+		$this->assertArrayNotHasKey('id', $result['schema']['fieldsCreate']);
+		$this->assertArrayHasKey('fieldsUpdate', $result['schema']);
+		$this->assertArrayHasKey('name', $result['schema']['fieldsUpdate']);
 		$this->assertSame('/api/v1/farms/', $result['schema']['operations']['list']['path']);
 		$this->assertSame('GET', $result['schema']['operations']['list']['method']);
 	}
@@ -49,6 +57,45 @@ final class DrfSchemaServiceTest extends TestCase {
 		$this->assertArrayHasKey('fields', $result['schema']);
 		$this->assertArrayHasKey('name', $result['schema']['fields']);
 		$this->assertTrue($result['schema']['fields']['name']['required']);
+		$this->assertArrayHasKey('fieldsCreate', $result['schema']);
+		$this->assertArrayHasKey('name', $result['schema']['fieldsCreate']);
+	}
+
+	public function testGetFarmSchemaSummaryUsesPaginatedListResponse(): void {
+		$schema = $this->createSchemaWithPaginatedList();
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$service = $this->createService($client);
+		$result = $service->getFarmSchemaSummary('request-id');
+
+		$this->assertArrayHasKey('fields', $result['schema']);
+		$this->assertArrayHasKey('name', $result['schema']['fields']);
+		$this->assertArrayHasKey('columns', $result['schema']);
+		$this->assertContains('name', $result['schema']['columns']);
+	}
+
+	public function testGetFarmSchemaSummaryThrowsOnMissingFields(): void {
+		$schema = [
+			'openapi' => '3.0.0',
+			'paths' => [],
+			'components' => ['schemas' => []],
+		];
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$service = $this->createService($client);
+
+		$this->expectException(WeatherApiException::class);
+		$service->getFarmSchemaSummary('request-id');
 	}
 
 	private function createService(WeatherApiClientInterface $client): DrfSchemaService {
@@ -68,6 +115,15 @@ final class DrfSchemaServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function createSchema(): array {
+		$farmWrite = [
+			'type' => 'object',
+			'properties' => [
+				'id' => ['type' => 'integer', 'readOnly' => true],
+				'name' => ['type' => 'string'],
+			],
+			'required' => ['name'],
+		];
+
 		return [
 			'openapi' => '3.0.0',
 			'components' => [
@@ -80,17 +136,73 @@ final class DrfSchemaServiceTest extends TestCase {
 						],
 						'required' => ['id', 'name'],
 					],
+					'FarmWrite' => $farmWrite,
 				],
 			],
 			'paths' => [
 				'/api/v1/farms/' => [
-					'get' => ['operationId' => 'v1_farms_list'],
-					'post' => ['operationId' => 'v1_farms_create'],
+					'get' => [
+						'operationId' => 'v1_farms_list',
+						'responses' => [
+							'200' => [
+								'content' => [
+									'application/json' => [
+										'schema' => [
+											'type' => 'object',
+											'properties' => [
+												'count' => ['type' => 'integer'],
+												'results' => [
+													'type' => 'array',
+													'items' => [
+														'$ref' => '#/components/schemas/Farm',
+													],
+												],
+											],
+										],
+									],
+								],
+							],
+						],
+					],
+					'post' => [
+						'operationId' => 'v1_farms_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'$ref' => '#/components/schemas/FarmWrite',
+									],
+								],
+							],
+						],
+					],
 				],
 				'/api/v1/farms/{id}/' => [
 					'get' => ['operationId' => 'v1_farms_retrieve'],
-					'put' => ['operationId' => 'v1_farms_update'],
-					'patch' => ['operationId' => 'v1_farms_partial_update'],
+					'put' => [
+						'operationId' => 'v1_farms_update',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'$ref' => '#/components/schemas/FarmWrite',
+									],
+								],
+							],
+						],
+					],
+					'patch' => [
+						'operationId' => 'v1_farms_partial_update',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'$ref' => '#/components/schemas/FarmWrite',
+									],
+								],
+							],
+						],
+					],
 					'delete' => ['operationId' => 'v1_farms_destroy'],
 				],
 				'/api/v1/farms/{farm_id}/ndvi/latest' => [
@@ -138,5 +250,75 @@ final class DrfSchemaServiceTest extends TestCase {
 		];
 
 		return $schema;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function createSchemaWithPaginatedList(): array {
+		return [
+			'openapi' => '3.0.0',
+			'components' => [
+				'schemas' => [],
+			],
+			'paths' => [
+				'/api/v1/farms/' => [
+					'get' => [
+						'operationId' => 'v1_farms_list',
+						'responses' => [
+							'200' => [
+								'content' => [
+									'application/json' => [
+										'schema' => [
+											'type' => 'object',
+											'properties' => [
+												'results' => [
+													'type' => 'object',
+													'properties' => [
+														'items' => [
+															'type' => 'array',
+															'items' => [
+																'type' => 'object',
+																'properties' => [
+																	'id' => ['type' => 'integer'],
+																	'name' => ['type' => 'string'],
+																],
+																'required' => ['id', 'name'],
+															],
+														],
+													],
+												],
+											],
+										],
+									],
+								],
+							],
+						],
+					],
+					'post' => ['operationId' => 'v1_farms_create'],
+				],
+				'/api/v1/farms/{id}/' => [
+					'get' => ['operationId' => 'v1_farms_retrieve'],
+					'put' => ['operationId' => 'v1_farms_update'],
+					'patch' => ['operationId' => 'v1_farms_partial_update'],
+					'delete' => ['operationId' => 'v1_farms_destroy'],
+				],
+				'/api/v1/farms/{farm_id}/ndvi/latest' => [
+					'get' => ['operationId' => 'v1_farms_ndvi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndvi/timeseries' => [
+					'get' => ['operationId' => 'v1_farms_ndvi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndvi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndvi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndvi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndvi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
+					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
+				],
+			],
+		];
 	}
 }

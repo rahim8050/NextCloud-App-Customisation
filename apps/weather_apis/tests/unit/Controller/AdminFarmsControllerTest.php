@@ -76,6 +76,53 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(['results' => []], $data['data']);
 	}
 
+	public function testGetSchemaReturnsFieldsAndColumns(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getSchema();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertArrayHasKey('fields', $data['data']);
+		$this->assertArrayHasKey('columns', $data['data']);
+		$this->assertContains('name', $data['data']['columns']);
+	}
+
+	public function testGetSchemaReturnsErrorWhenFieldsMissing(): void {
+		$schema = [
+			'openapi' => '3.0.0',
+			'paths' => [],
+			'components' => ['schemas' => []],
+		];
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getSchema();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertNotEmpty($data['error']['message']);
+	}
+
 	public function testCreateFarmFiltersReadOnlyFields(): void {
 		$schema = $this->createSchema();
 
@@ -111,7 +158,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
-		$request->method('getParams')->willReturn([]);
+		$request->method('getParams')->willReturn([
+			'date' => '2024-02-01',
+		]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
@@ -119,7 +168,7 @@ final class AdminFarmsControllerTest extends TestCase {
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
 			->method('requestBinary')
-			->with('GET', '/api/v1/farms/55/ndvi/raster.png', [], 'request-id')
+			->with('GET', '/api/v1/farms/55/ndvi/raster.png', ['date' => '2024-02-01'], 'request-id')
 			->willReturn([
 				'body' => 'png-bytes',
 				'contentType' => 'image/png',
@@ -133,6 +182,33 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('png-bytes', $response->getData());
 		$headers = $this->getResponseHeaders($response);
 		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testNdviLatestStripsFarmIdFromQuery(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'farmId' => '19',
+			'date' => '2024-02-01',
+			'_route' => 'weather_apis.adminFarms.getNdviLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJson')
+			->with('GET', '/api/v1/farms/19/ndvi/latest', ['date' => '2024-02-01'], null, 'request-id')
+			->willReturn(['data' => []]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviLatest('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
 	}
 
 	public function testNdviLatestRejectsInvalidFarmId(): void {
@@ -154,14 +230,152 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('invalid_argument', $data['error']['code']);
 	}
 
+	public function testNdviTimeseriesRequiresStartEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'_route' => 'weather_apis.adminFarms.getNdviTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJson');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviTimeseries('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdviTimeseriesRejectsStartAfterEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'start' => '2024-02-10',
+			'end' => '2024-02-01',
+			'_route' => 'weather_apis.adminFarms.getNdviTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJson');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviTimeseries('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdviRasterQueueRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'_route' => 'weather_apis.adminFarms.queueNdviRaster',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJson');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueNdviRaster('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdviRasterPngRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'_route' => 'weather_apis.adminFarms.getNdviRasterPng',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestBinary');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviRasterPng('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdviLatestLogsQueryKeysWithoutFarmId(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'farmId' => '19',
+			'date' => '2024-02-01',
+			'_route' => 'weather_apis.adminFarms.getNdviLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJson')
+			->with('GET', '/api/v1/farms/19/ndvi/latest', ['date' => '2024-02-01'], null, 'request-id')
+			->willReturn(['data' => []]);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('debug')
+			->with(
+				'Weather API admin proxy request',
+				$this->callback(function (array $context): bool {
+					$queryKeys = $context['queryKeys'] ?? [];
+					return is_array($queryKeys)
+						&& in_array('date', $queryKeys, true)
+						&& !in_array('farmId', $queryKeys, true);
+				}),
+			);
+
+		$controller = $this->createController($request, $weatherApiClient, $logger);
+		$response = $controller->getNdviLatest('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
 	public function testMethodsRequireAdmin(): void {
 		$reflection = new \ReflectionMethod(AdminFarmsController::class, 'listFarms');
 		$this->assertNotEmpty($reflection->getAttributes(AdminRequired::class));
 	}
 
-	private function createController(IRequest $request, WeatherApiClientInterface $client): AdminFarmsController {
+	private function createController(
+		IRequest $request,
+		WeatherApiClientInterface $client,
+		?LoggerInterface $logger = null,
+	): AdminFarmsController {
 		$schemaService = $this->createSchemaService($client);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $logger ?? $this->createMock(LoggerInterface::class);
 
 		return new AdminFarmsController(
 			'weather_apis',
@@ -277,11 +491,13 @@ final class AdminFarmsControllerTest extends TestCase {
 								'name' => 'start',
 								'in' => 'query',
 								'schema' => ['type' => 'string'],
+								'required' => true,
 							],
 							[
 								'name' => 'end',
 								'in' => 'query',
 								'schema' => ['type' => 'string'],
+								'required' => true,
 							],
 						],
 					],
@@ -294,6 +510,7 @@ final class AdminFarmsControllerTest extends TestCase {
 								'name' => 'date',
 								'in' => 'query',
 								'schema' => ['type' => 'string'],
+								'required' => true,
 							],
 						],
 					],
@@ -306,6 +523,7 @@ final class AdminFarmsControllerTest extends TestCase {
 								'application/json' => [
 									'schema' => [
 										'type' => 'object',
+										'required' => ['date'],
 										'properties' => [
 											'date' => ['type' => 'string'],
 										],

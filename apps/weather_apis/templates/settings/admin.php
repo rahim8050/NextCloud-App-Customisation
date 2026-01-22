@@ -149,6 +149,7 @@ style('weather_apis', 'admin-settings');
 					<input id="weather-apis-ndvi-date" type="date" />
 					<button id="weather-apis-ndvi-raster" type="button" class="button"><?php p($l->t('Raster PNG')); ?></button>
 				</div>
+				<div id="weather-apis-ndvi-error" class="weather-apis-farms__note error weather-apis-farms__ndvi-error" hidden></div>
 				<div id="weather-apis-ndvi-output" class="weather-apis-farms__ndvi-output"></div>
 				<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
 				<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>

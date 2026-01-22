@@ -820,9 +820,12 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 		$details = $this->extractSafeErrorDetails($response, $status, $body);
 		$message = $details['message'] ?? '';
+		$drfMessage = $details['drfMessage'] ?? '';
 		$finalMessage = is_string($message) && $message !== ''
 			? $message
-			: 'Backend returned HTTP ' . $status . '.';
+			: (is_string($drfMessage) && $drfMessage !== ''
+				? $this->clampString($drfMessage, 200)
+				: 'Backend returned HTTP ' . $status . '.');
 
 		throw new WeatherApiException($code, $finalMessage, null, $reason, $details);
 	}
@@ -833,6 +836,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$status === 403 => 'forbidden',
 			$status === 408 => 'backend_timeout',
 			$status >= 500 => 'backend_unavailable',
+			$status >= 400 => 'invalid_argument',
 			default => 'backend_error',
 		};
 	}
@@ -845,9 +849,19 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'httpStatus' => $status,
 		];
 
+		$contentType = strtolower($response->getHeader('Content-Type'));
+		if ($contentType !== '') {
+			$details['responseContentType'] = $this->clampString($contentType, 120);
+		}
+
 		$body = $body !== null ? trim($body) : trim($this->bodyToString($response->getBody()));
 		if ($body === '') {
 			return $details;
+		}
+
+		$snippet = $this->sanitizeSnippet($this->clampString($body, 2000));
+		if ($snippet !== '') {
+			$details['drfMessage'] = $snippet;
 		}
 
 		$decoded = json_decode($body, true);
@@ -881,9 +895,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		$message = strtolower($throwable->getMessage());
+		$details = $this->buildTransportDetails($throwable);
 
 		if (str_contains($message, 'timeout')) {
-			return new WeatherApiException('backend_timeout', 'Backend request failed.', $throwable, 'timeout');
+			return new WeatherApiException('backend_timeout', 'Backend request failed.', $throwable, 'timeout', $details);
 		}
 
 		return new WeatherApiException(
@@ -891,6 +906,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'Backend request failed.',
 			$throwable,
 			$this->mapUnavailableReason($throwable, $message),
+			$details,
 		);
 	}
 
@@ -959,6 +975,27 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		);
 	}
 
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function buildTransportDetails(\Throwable $throwable): array {
+		$message = $this->sanitizeSnippet($this->clampString($throwable->getMessage(), 200));
+		$details = [
+			'exception' => $throwable::class,
+		];
+
+		if ($message !== '') {
+			$details['exceptionMessage'] = $message;
+		}
+
+		$httpStatus = $this->extractThrowableStatus($throwable);
+		if ($httpStatus !== null) {
+			$details['httpStatus'] = $httpStatus;
+		}
+
+		return $details;
+	}
+
 	private function extractThrowableStatus(\Throwable $throwable): ?int {
 		if (method_exists($throwable, 'getResponse')) {
 			try {
@@ -1006,6 +1043,17 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		}
 
 		return substr($trimmed, 0, $limit);
+	}
+
+	private function sanitizeSnippet(string $value): string {
+		if ($value === '') {
+			return '';
+		}
+
+		$sanitized = LogSanitizer::sanitizeContext(['snippet' => $value]);
+		$candidate = $sanitized['snippet'] ?? $value;
+
+		return is_string($candidate) ? $candidate : $value;
 	}
 
 	private function getCachedToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {

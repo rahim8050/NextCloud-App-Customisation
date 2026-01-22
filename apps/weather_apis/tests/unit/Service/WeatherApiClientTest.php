@@ -594,6 +594,9 @@ final class WeatherApiClientTest extends TestCase {
 			$client->whoami('rid');
 		} catch (WeatherApiException $exception) {
 			$this->assertSame('backend_timeout', $exception->getErrorCode());
+			$details = $exception->getDetails();
+			$this->assertSame(\RuntimeException::class, $details['exception'] ?? '');
+			$this->assertIsString($details['exceptionMessage'] ?? null);
 			throw $exception;
 		}
 	}
@@ -609,6 +612,69 @@ final class WeatherApiClientTest extends TestCase {
 			$client->whoami('rid');
 		} catch (WeatherApiException $exception) {
 			$this->assertSame('backend_unavailable', $exception->getErrorCode());
+			throw $exception;
+		}
+	}
+
+	public function testClientErrorMapsToInvalidArgumentWithDetails(): void {
+		$response = $this->createResponse(400, '{"message":"start required"}', ['Content-Type' => 'application/json']);
+
+		$jsonClient = $this->createMock(IClient::class);
+		$jsonClient
+			->expects($this->once())
+			->method('get')
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($jsonClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+
+		$this->expectException(WeatherApiException::class);
+		try {
+			$client->requestJson('GET', '/api/v1/farms/', [], null, 'rid');
+		} catch (WeatherApiException $exception) {
+			$this->assertSame('invalid_argument', $exception->getErrorCode());
+			$details = $exception->getDetails();
+			$this->assertSame(400, $details['httpStatus'] ?? null);
+			$this->assertSame('application/json', $details['responseContentType'] ?? '');
+			$this->assertIsString($details['drfMessage'] ?? null);
+			throw $exception;
+		}
+	}
+
+	public function testTransportErrorMapsToBackendUnavailableWithDetails(): void {
+		$exception = new \RuntimeException('connection refused');
+
+		$jsonClient = $this->createMock(IClient::class);
+		$jsonClient
+			->expects($this->once())
+			->method('get')
+			->willThrowException($exception);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($jsonClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+
+		$this->expectException(WeatherApiException::class);
+		try {
+			$client->requestJson('GET', '/api/v1/farms/', [], null, 'rid');
+		} catch (WeatherApiException $exception) {
+			$this->assertSame('backend_unavailable', $exception->getErrorCode());
+			$details = $exception->getDetails();
+			$this->assertSame(\RuntimeException::class, $details['exception'] ?? '');
+			$this->assertIsString($details['exceptionMessage'] ?? null);
 			throw $exception;
 		}
 	}
