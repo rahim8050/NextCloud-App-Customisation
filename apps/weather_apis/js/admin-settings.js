@@ -112,7 +112,7 @@
 				} catch {
 					return fallback
 				}
-			}
+				}
 
 			return String(value ?? fallback)
 		}
@@ -414,9 +414,9 @@
 				inputEl.focus()
 				inputEl.select()
 				inputEl.setSelectionRange(0, inputEl.value.length)
-				const ok = document.execCommand('copy')
+				const copyOk = document.execCommand('copy')
 				inputEl.blur()
-				return ok
+				return copyOk
 			} catch {
 				return false
 			}
@@ -663,6 +663,11 @@
 				}
 				if (ndviLatestButton) ndviLatestButton.disabled = !enabled
 				if (ndviRefreshButton) ndviRefreshButton.disabled = !enabled
+				if (!enabled) {
+					if (ndviTimeseriesButton) ndviTimeseriesButton.disabled = true
+					if (ndviQueueButton) ndviQueueButton.disabled = true
+					if (ndviRasterButton) ndviRasterButton.disabled = true
+				}
 			}
 
 			const unwrapResponseData = (data) => {
@@ -692,6 +697,76 @@
 				return []
 			}
 
+			const unwrapSchemaContainer = (value) => {
+				let current = value
+				for (let depth = 0; depth < 4; depth++) {
+					if (current && typeof current === 'object' && current.schema && typeof current.schema === 'object') {
+						current = current.schema
+						continue
+					}
+					break
+				}
+				return current ?? {}
+			}
+
+			const normalizeFieldDefinition = (def = {}) => {
+				const normalized = { ...def }
+				if (normalized.type === 'string' && normalized.format === 'decimal') {
+					normalized.type = 'number'
+				}
+				return normalized
+			}
+
+			const normalizeFields = (fields) => {
+				if (!fields || typeof fields !== 'object') {
+					return {}
+				}
+				const out = {}
+				Object.entries(fields).forEach(([name, def]) => {
+					if (!def || typeof def !== 'object') {
+						return
+					}
+					out[name] = normalizeFieldDefinition(def)
+				})
+				return out
+			}
+
+			const filterWritableFields = (fields) => {
+				const out = {}
+				Object.entries(fields || {}).forEach(([name, def]) => {
+					if (def?.readOnly) {
+						return
+					}
+					out[name] = def
+				})
+				return out
+			}
+
+			const extractOpenApiFarmFields = (schema) => {
+				const farm = schema?.components?.schemas?.Farm
+				const properties = farm?.properties
+				if (!properties || typeof properties !== 'object') {
+					return {}
+				}
+				const required = Array.isArray(farm?.required) ? farm.required.map(String) : []
+				const fields = {}
+				Object.entries(properties).forEach(([name, prop]) => {
+					if (!prop || typeof prop !== 'object') {
+						return
+					}
+					const enumValues = Array.isArray(prop.enum) ? prop.enum : null
+					fields[name] = normalizeFieldDefinition({
+						type: prop.type || 'string',
+						format: prop.format || null,
+						required: required.includes(name),
+						readOnly: Boolean(prop.readOnly),
+						enum: enumValues,
+					})
+				})
+				return fields
+			}
+
+
 			const getSchemaReady = async (source = 'unknown') => {
 				if (schemaReady) {
 					return true
@@ -700,12 +775,12 @@
 					logFarms('schema load started', { source })
 					setFarmsActionsEnabled(false)
 					schemaLoadPromise = (async () => {
-						const ok = await loadSchema()
-						schemaReady = ok
-						logFarms(ok ? 'schema load ok' : 'schema load failed', { source })
-						setFarmsActionsEnabled(ok)
+						const schemaOk = await loadSchema()
+						schemaReady = schemaOk
+						logFarms(schemaOk ? 'schema load ok' : 'schema load failed', { source })
+						setFarmsActionsEnabled(schemaOk)
 						updateNdviActionState()
-						return ok
+						return schemaOk
 					})().catch((error) => {
 						schemaReady = false
 						logFarms('schema load failed', { source, error: toText(error) })
@@ -715,10 +790,10 @@
 					})
 				}
 
-				const ok = await schemaLoadPromise
-				setFarmsActionsEnabled(ok)
+				const schemaOk = await schemaLoadPromise
+				setFarmsActionsEnabled(schemaOk)
 				updateNdviActionState()
-				return ok
+				return schemaOk
 			}
 
 			const resolveOperation = (key) => (farmOperations && farmOperations[key]) || null
@@ -884,8 +959,8 @@
 					showFarmsError('Unable to parse farm schema response.')
 					return false
 				}
-				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
-				if (!ok) {
+				const respOk = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!respOk) {
 					const message = pickMessage(result.data, 'Unable to load farm schema.')
 					showFarmsError(message)
 					return false
@@ -893,23 +968,38 @@
 
 				const payload = unwrapResponseData(result.data)
 				const schemaContainer = payload?.schema ?? payload ?? {}
-				const effectiveSchema = schemaContainer?.schema ?? schemaContainer
-				farmSchema = effectiveSchema ?? {}
-				farmFields = pickObject(payload?.fields, farmSchema?.fields, schemaContainer?.fields)
-				farmFieldsCreate = pickObject(
+				const unwrappedSchema = unwrapSchemaContainer(schemaContainer)
+				const openApiFields = extractOpenApiFarmFields(unwrappedSchema)
+				const openApiWritable = filterWritableFields(openApiFields)
+
+				farmSchema = unwrappedSchema ?? {}
+				farmFields = normalizeFields(pickObject(
+					payload?.fields,
+					farmSchema?.fields,
+					schemaContainer?.fields,
+					openApiFields,
+				))
+				farmFieldsCreate = normalizeFields(pickObject(
 					payload?.fieldsCreate,
 					farmSchema?.fieldsCreate,
 					schemaContainer?.fieldsCreate,
+					openApiWritable,
 					farmFields,
-				)
-				farmFieldsUpdate = pickObject(
+				))
+				farmFieldsUpdate = normalizeFields(pickObject(
 					payload?.fieldsUpdate,
 					farmSchema?.fieldsUpdate,
 					schemaContainer?.fieldsUpdate,
+					openApiWritable,
 					farmFieldsCreate,
 					farmFields,
+				))
+				farmColumns = pickArray(
+					payload?.columns,
+					farmSchema?.columns,
+					schemaContainer?.columns,
+					Object.keys(openApiFields),
 				)
-				farmColumns = pickArray(payload?.columns, farmSchema?.columns, schemaContainer?.columns)
 				farmOperations = pickObject(payload?.operations, farmSchema?.operations, schemaContainer?.operations)
 
 				if (!farmFields || Object.keys(farmFields).length === 0) {
@@ -933,9 +1023,9 @@
 			}
 
 			const refreshFarms = async (params = null) => {
-				const ok = await getSchemaReady('refresh farms')
-				logFarms('refresh schema gate', { ok })
-				if (!ok) {
+				const schemaOk = await getSchemaReady('refresh farms')
+				logFarms('refresh schema gate', { ok: schemaOk })
+				if (!schemaOk) {
 					return
 				}
 				clearFarmsNotes()
@@ -951,8 +1041,8 @@
 					showFarmsError('Unable to parse farm list response.')
 					return
 				}
-				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
-				if (!ok) {
+				const okList = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!okList) {
 					const message = pickMessage(result.data, 'Unable to load farms.')
 					showFarmsError(message)
 					return
@@ -977,9 +1067,9 @@
 			}
 
 			const openFarmModal = async (mode, farmId) => {
-				const ok = await getSchemaReady(`${mode} farm`)
-				logFarms(`${mode} farm schema gate`, { ok })
-				if (!ok) {
+				const schemaOk = await getSchemaReady(`${mode} farm`)
+				logFarms(`${mode} farm schema gate`, { ok: schemaOk })
+				if (!schemaOk) {
 					return
 				}
 				if (!farmsModal || !farmsModalFields || !farmsModalTitle || !farmsModalSave) {
@@ -996,8 +1086,8 @@
 						showFarmsError('Unable to parse farm response.')
 						return
 					}
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
-					if (!ok) {
+					const respOk = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!respOk) {
 						const message = pickMessage(result.data, 'Unable to load farm.')
 						showFarmsError(message)
 						return
@@ -1108,8 +1198,8 @@
 						showFarmsError('Unable to parse farm save response.')
 						return
 					}
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
-					if (!ok) {
+					const okSave = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!okSave) {
 						const message = pickMessage(result.data, 'Unable to save farm.')
 						showFarmsError(message)
 						return
@@ -1136,9 +1226,9 @@
 			})
 
 			const deleteFarm = async (farmId) => {
-				const ok = await getSchemaReady('delete farm')
-				logFarms('delete farm schema gate', { ok })
-				if (!ok) {
+				const schemaOk = await getSchemaReady('delete farm')
+				logFarms('delete farm schema gate', { ok: schemaOk })
+				if (!schemaOk) {
 					return
 				}
 				clearFarmsNotes()
@@ -1152,8 +1242,8 @@
 					showFarmsError('Unable to parse delete response.')
 					return
 				}
-				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
-				if (!ok) {
+				const okDelete = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!okDelete) {
 					const message = pickMessage(result.data, 'Unable to delete farm.')
 					showFarmsError(message)
 					return
@@ -1189,17 +1279,31 @@
 				ndviError.hidden = false
 			}
 
-			const ISO_DATE_PATTERN = /^\\d{4}-\\d{2}-\\d{2}$/
+			const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+			const SLASH_DATE_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
 
 			const parseIsoDate = (value) => {
 				const raw = String(value ?? '').trim()
 				if (raw === '') {
 					return { raw: '', iso: null, date: null, invalid: false }
 				}
-				if (!ISO_DATE_PATTERN.test(raw)) {
-					return { raw, iso: null, date: null, invalid: true }
+				let year
+				let month
+				let day
+				let iso = null
+				if (ISO_DATE_PATTERN.test(raw)) {
+					[year, month, day] = raw.split('-').map((part) => Number(part))
+					iso = raw
+				} else {
+					const match = raw.match(SLASH_DATE_PATTERN)
+					if (!match) {
+						return { raw, iso: null, date: null, invalid: true }
+					}
+					month = Number(match[1])
+					day = Number(match[2])
+					year = Number(match[3])
+					iso = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 				}
-				const [year, month, day] = raw.split('-').map((part) => Number(part))
 				const date = new Date(Date.UTC(year, month - 1, day))
 				if (Number.isNaN(date.getTime())) {
 					return { raw, iso: null, date: null, invalid: true }
@@ -1207,7 +1311,7 @@
 				if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
 					return { raw, iso: null, date: null, invalid: true }
 				}
-				return { raw, iso: raw, date, invalid: false }
+				return { raw, iso, date, invalid: false }
 			}
 
 			const readNdviDateState = () => ({
@@ -1226,7 +1330,7 @@
 					return { ok: false, message: 'Start and end dates are required.' }
 				}
 				if (state.start.invalid || state.end.invalid) {
-					return { ok: false, message: 'Use valid dates in YYYY-MM-DD format.' }
+					return { ok: false, message: 'Use valid dates in YYYY-MM-DD format (e.g., 2026-01-20).' }
 				}
 				if (state.start.date && state.end.date && state.start.date > state.end.date) {
 					return { ok: false, message: 'Start date must be on or before end date.' }
@@ -1239,7 +1343,7 @@
 					return { ok: false, message: 'Raster date is required.' }
 				}
 				if (state.raster.invalid) {
-					return { ok: false, message: 'Use a valid raster date (YYYY-MM-DD).' }
+					return { ok: false, message: 'Use a valid raster date (YYYY-MM-DD, e.g., 2026-01-20).' }
 				}
 				return { ok: true, date: state.raster.iso }
 			}
@@ -1258,13 +1362,13 @@
 				const timeseriesValidation = validateTimeseriesInputs(state)
 				const rasterValidation = validateRasterInput(state)
 
-				if (ndviTimeseriesButton) {
+					if (ndviTimeseriesButton) {
 					ndviTimeseriesButton.disabled = !timeseriesValidation.ok
 				}
-				if (ndviQueueButton) {
+					if (ndviQueueButton) {
 					ndviQueueButton.disabled = !rasterValidation.ok
 				}
-				if (ndviRasterButton) {
+					if (ndviRasterButton) {
 					ndviRasterButton.disabled = !rasterValidation.ok
 				}
 
@@ -1405,9 +1509,9 @@
 			}
 
 			const runNdviRequest = async (operationKey, urlTemplate, options = {}) => {
-				const ok = await getSchemaReady(`ndvi ${operationKey}`)
-				logFarms(`ndvi ${operationKey} schema gate`, { ok })
-				if (!ok) {
+				const schemaOk = await getSchemaReady(`ndvi ${operationKey}`)
+				logFarms(`ndvi ${operationKey} schema gate`, { ok: schemaOk })
+				if (!schemaOk) {
 					return null
 				}
 				clearFarmsNotes()
@@ -1436,8 +1540,8 @@
 					showNdviError(message)
 					return null
 				}
-				const ok = result.data?.status === 'ok' || result.data?.ok === true
-				if (!ok) {
+				const okNdvi = result.data?.status === 'ok' || result.data?.ok === true
+				if (!okNdvi) {
 					const message = pickMessage(result.data, fallbackMessage)
 					showNdviError(message)
 					return null
@@ -1623,7 +1727,14 @@
 					ndviTouched[key] = true
 					updateNdviActionState()
 				}
-				input.addEventListener('change', markTouched)
+				const normalizeOnChange = () => {
+					const parsed = parseIsoDate(input.value)
+					if (!parsed.invalid && parsed.iso && parsed.iso !== parsed.raw) {
+						input.value = parsed.iso
+					}
+					markTouched()
+				}
+				input.addEventListener('change', normalizeOnChange)
 				input.addEventListener('input', markTouched)
 			}
 
@@ -1635,8 +1746,8 @@
 			updateNdviActionState()
 
 			;(async () => {
-				const ok = await getSchemaReady('init')
-				if (ok) {
+				const schemaOk = await getSchemaReady('init')
+				if (schemaOk) {
 					await refreshFarms()
 				}
 			})().catch((error) => {

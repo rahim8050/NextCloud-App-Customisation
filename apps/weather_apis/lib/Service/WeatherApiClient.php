@@ -196,6 +196,24 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		?array $body = null,
 		?string $correlationId = null,
 	): array {
+		$result = $this->requestJsonWithStatus($method, $path, $queryParams, $body, $correlationId);
+
+		return $result['payload'];
+	}
+
+	/**
+	 * @param array<string, mixed> $queryParams
+	 * @param array<string, mixed>|null $body
+	 * @return array{payload: array<array-key, mixed>, statusCode: int}
+	 * @throws WeatherApiException
+	 */
+	public function requestJsonWithStatus(
+		string $method,
+		string $path,
+		array $queryParams = [],
+		?array $body = null,
+		?string $correlationId = null,
+	): array {
 		$requestId = $this->resolveCorrelationId($correlationId);
 		$httpMethod = $this->normalizeMethod($method);
 
@@ -239,13 +257,17 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 				$payload = trim($this->bodyToString($response->getBody()));
 				if ($payload === '') {
-					return [];
+					return ['payload' => [], 'statusCode' => $status];
 				}
 
-				return $this->decodeJson($payload);
+				return [
+					'payload' => $this->decodeJson($payload),
+					'statusCode' => $status,
+				];
 			},
 		);
 	}
+
 
 	/**
 	 * @param array<string, mixed> $queryParams
@@ -962,6 +984,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			'url' => $url,
 			'exception' => $throwable::class,
 			'message' => $this->clampString($throwable->getMessage(), 200),
+			'trace' => $this->clampString($throwable->getTraceAsString(), 1000),
 		];
 
 		$httpStatus = $this->extractThrowableStatus($throwable);

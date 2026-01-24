@@ -21,6 +21,20 @@ interface WeatherApiClientInterface {
 
 	/**
 	 * @param array<string, mixed> $queryParams
+	 * @param array<string, mixed>|null $body
+	 * @return array{payload: array<array-key, mixed>, statusCode: int}
+	 * @throws WeatherApiException
+	 */
+	public function requestJsonWithStatus(
+		string $method,
+		string $path,
+		array $queryParams = [],
+		?array $body = null,
+		?string $correlationId = null,
+	): array;
+
+	/**
+	 * @param array<string, mixed> $queryParams
 	 * @return array{body: string, contentType: string, statusCode: int}
 	 * @throws WeatherApiException
 	 */

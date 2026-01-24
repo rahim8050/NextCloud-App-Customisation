@@ -34,9 +34,9 @@ final class AdminFarmsControllerTest extends TestCase {
 			->method('fetchSchema')
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
-			->method('requestJson')
+			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/', ['page' => 2], null, 'request-id')
-			->willReturn(['results' => []]);
+			->willReturn(['payload' => ['results' => []], 'statusCode' => 200]);
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->listFarms();
@@ -64,9 +64,9 @@ final class AdminFarmsControllerTest extends TestCase {
 			->method('fetchSchema')
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
-			->method('requestJson')
+			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/', ['page' => 3, 'ordering' => 'name'], null, 'request-id')
-			->willReturn(['results' => []]);
+			->willReturn(['payload' => ['results' => []], 'statusCode' => 200]);
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->listFarms();
@@ -141,9 +141,9 @@ final class AdminFarmsControllerTest extends TestCase {
 			->method('fetchSchema')
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
-			->method('requestJson')
+			->method('requestJsonWithStatus')
 			->with('POST', '/api/v1/farms/', [], ['name' => 'Test Farm'], 'request-id')
-			->willReturn(['id' => 1, 'name' => 'Test Farm']);
+			->willReturn(['payload' => ['id' => 1, 'name' => 'Test Farm'], 'statusCode' => 201]);
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->createFarm();
@@ -200,9 +200,9 @@ final class AdminFarmsControllerTest extends TestCase {
 			->method('fetchSchema')
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
-			->method('requestJson')
+			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/19/ndvi/latest', ['date' => '2024-02-01'], null, 'request-id')
-			->willReturn(['data' => []]);
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->getNdviLatest('19');
@@ -218,7 +218,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->never())->method('fetchSchema');
-		$weatherApiClient->expects($this->never())->method('requestJson');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->getNdviLatest('invalid-id');
@@ -243,7 +243,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$weatherApiClient->expects($this->once())
 			->method('fetchSchema')
 			->willReturn($schema);
-		$weatherApiClient->expects($this->never())->method('requestJson');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->getNdviTimeseries('19');
@@ -268,7 +268,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$weatherApiClient->expects($this->once())
 			->method('fetchSchema')
 			->willReturn($schema);
-		$weatherApiClient->expects($this->never())->method('requestJson');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->getNdviTimeseries('19');
@@ -291,7 +291,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$weatherApiClient->expects($this->once())
 			->method('fetchSchema')
 			->willReturn($schema);
-		$weatherApiClient->expects($this->never())->method('requestJson');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
 
 		$controller = $this->createController($request, $weatherApiClient);
 		$response = $controller->queueNdviRaster('19');
@@ -340,21 +340,31 @@ final class AdminFarmsControllerTest extends TestCase {
 			->method('fetchSchema')
 			->willReturn($schema);
 		$weatherApiClient->expects($this->once())
-			->method('requestJson')
+			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/19/ndvi/latest', ['date' => '2024-02-01'], null, 'request-id')
-			->willReturn(['data' => []]);
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
 
 		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())
+		$logger->expects($this->exactly(3))
 			->method('debug')
-			->with(
-				'Weather API admin proxy request',
-				$this->callback(function (array $context): bool {
-					$queryKeys = $context['queryKeys'] ?? [];
-					return is_array($queryKeys)
-						&& in_array('date', $queryKeys, true)
-						&& !in_array('farmId', $queryKeys, true);
-				}),
+			->withConsecutive(
+				[
+					'Weather API admin endpoint hit',
+					$this->isType('array'),
+				],
+				[
+					'Weather API admin proxy request',
+					$this->callback(function (array $context): bool {
+						$queryKeys = $context['queryKeys'] ?? [];
+						return is_array($queryKeys)
+							&& in_array('date', $queryKeys, true)
+							&& !in_array('farmId', $queryKeys, true);
+					}),
+				],
+				[
+					'Weather API admin proxy response',
+					$this->isType('array'),
+				],
 			);
 
 		$controller = $this->createController($request, $weatherApiClient, $logger);
