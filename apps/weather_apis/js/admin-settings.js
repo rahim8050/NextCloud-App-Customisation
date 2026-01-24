@@ -608,6 +608,8 @@
 			let modalInitial = {}
 			let ndviTouched = { start: false, end: false, raster: false }
 			let ndviRasterObjectUrl = null
+			let schemaReady = false
+			let schemaLoadPromise = null
 
 			const clearFarmsNotes = () => {
 				if (farmsWarning) {
@@ -637,10 +639,30 @@
 				toast(message)
 			}
 
+			const logFarms = (message, context = {}) => {
+				if (typeof console === 'undefined' || typeof console.info !== 'function') {
+					return
+				}
+				console.info('[weather_apis] farms', message, context)
+			}
+
 			const setFarmsCreateEnabled = (enabled) => {
 				if (farmsCreate) {
 					farmsCreate.disabled = !enabled
 				}
+			}
+
+			const setFarmsActionsEnabled = (enabled) => {
+				if (farmsRefresh) {
+					farmsRefresh.disabled = !enabled
+				}
+				setFarmsCreateEnabled(enabled)
+				if (!enabled) {
+					if (farmsPrev) farmsPrev.disabled = true
+					if (farmsNext) farmsNext.disabled = true
+				}
+				if (ndviLatestButton) ndviLatestButton.disabled = !enabled
+				if (ndviRefreshButton) ndviRefreshButton.disabled = !enabled
 			}
 
 			const unwrapResponseData = (data) => {
@@ -668,6 +690,35 @@
 					}
 				}
 				return []
+			}
+
+			const getSchemaReady = async (source = 'unknown') => {
+				if (schemaReady) {
+					return true
+				}
+				if (!schemaLoadPromise) {
+					logFarms('schema load started', { source })
+					setFarmsActionsEnabled(false)
+					schemaLoadPromise = (async () => {
+						const ok = await loadSchema()
+						schemaReady = ok
+						logFarms(ok ? 'schema load ok' : 'schema load failed', { source })
+						setFarmsActionsEnabled(ok)
+						updateNdviActionState()
+						return ok
+					})().catch((error) => {
+						schemaReady = false
+						logFarms('schema load failed', { source, error: toText(error) })
+						setFarmsActionsEnabled(false)
+						updateNdviActionState()
+						return false
+					})
+				}
+
+				const ok = await schemaLoadPromise
+				setFarmsActionsEnabled(ok)
+				updateNdviActionState()
+				return ok
 			}
 
 			const resolveOperation = (key) => (farmOperations && farmOperations[key]) || null
@@ -814,8 +865,8 @@
 				}
 
 				farmsPagination.hidden = false
-				farmsPrev.disabled = !prevParams
-				farmsNext.disabled = !nextParams
+				farmsPrev.disabled = !prevParams || !schemaReady
+				farmsNext.disabled = !nextParams || !schemaReady
 				farmsPage.textContent = count !== null
 					? `${itemCount} of ${count}`
 					: 'Pagination available'
@@ -823,7 +874,6 @@
 
 			const loadSchema = async () => {
 				clearFarmsNotes()
-				setFarmsCreateEnabled(false)
 				if (!farmSchemaUrl) {
 					showFarmsError('Farm schema endpoint is not available.')
 					return false
@@ -864,7 +914,6 @@
 
 				if (!farmFields || Object.keys(farmFields).length === 0) {
 					showFarmsError('Farm schema did not return any fields.')
-					setFarmsCreateEnabled(false)
 					return false
 				}
 				if (!farmColumns || farmColumns.length === 0) {
@@ -872,7 +921,6 @@
 				}
 				if (!farmColumns || farmColumns.length === 0) {
 					showFarmsError('Farm schema did not return any columns.')
-					setFarmsCreateEnabled(false)
 					return false
 				}
 
@@ -881,11 +929,15 @@
 				}
 
 				renderColumns()
-				setFarmsCreateEnabled(true)
 				return true
 			}
 
 			const refreshFarms = async (params = null) => {
+				const ok = await getSchemaReady('refresh farms')
+				logFarms('refresh schema gate', { ok })
+				if (!ok) {
+					return
+				}
 				clearFarmsNotes()
 				if (!farmListUrl) {
 					showFarmsError('Farm list endpoint is not available.')
@@ -925,6 +977,11 @@
 			}
 
 			const openFarmModal = async (mode, farmId) => {
+				const ok = await getSchemaReady(`${mode} farm`)
+				logFarms(`${mode} farm schema gate`, { ok })
+				if (!ok) {
+					return
+				}
 				if (!farmsModal || !farmsModalFields || !farmsModalTitle || !farmsModalSave) {
 					return
 				}
@@ -1079,6 +1136,11 @@
 			})
 
 			const deleteFarm = async (farmId) => {
+				const ok = await getSchemaReady('delete farm')
+				logFarms('delete farm schema gate', { ok })
+				if (!ok) {
+					return
+				}
 				clearFarmsNotes()
 				const confirmed = await confirmDeleteAsync()
 				if (!confirmed) {
@@ -1183,6 +1245,15 @@
 			}
 
 			const updateNdviActionState = () => {
+				if (!schemaReady) {
+					if (ndviLatestButton) ndviLatestButton.disabled = true
+					if (ndviTimeseriesButton) ndviTimeseriesButton.disabled = true
+					if (ndviQueueButton) ndviQueueButton.disabled = true
+					if (ndviRasterButton) ndviRasterButton.disabled = true
+					if (ndviRefreshButton) ndviRefreshButton.disabled = true
+					clearNdviError()
+					return
+				}
 				const state = readNdviDateState()
 				const timeseriesValidation = validateTimeseriesInputs(state)
 				const rasterValidation = validateRasterInput(state)
@@ -1334,6 +1405,11 @@
 			}
 
 			const runNdviRequest = async (operationKey, urlTemplate, options = {}) => {
+				const ok = await getSchemaReady(`ndvi ${operationKey}`)
+				logFarms(`ndvi ${operationKey} schema gate`, { ok })
+				if (!ok) {
+					return null
+				}
 				clearFarmsNotes()
 				clearNdviError()
 				if (!selectedFarm) {
@@ -1370,10 +1446,16 @@
 			}
 
 			if (farmsRefresh) {
-				farmsRefresh.addEventListener('click', () => refreshFarms())
+				farmsRefresh.addEventListener('click', async () => {
+					logFarms('refresh clicked', { schemaReady })
+					await refreshFarms()
+				})
 			}
 			if (farmsCreate) {
-				farmsCreate.addEventListener('click', () => openFarmModal('create'))
+				farmsCreate.addEventListener('click', async () => {
+					logFarms('new farm clicked', { schemaReady })
+					await openFarmModal('create')
+				})
 			}
 			if (farmsPrev) {
 				farmsPrev.addEventListener('click', () => {
@@ -1549,8 +1631,11 @@
 			bindNdviInput(ndviEndInput, 'end')
 			bindNdviInput(ndviDateInput, 'raster')
 
-			(async () => {
-				const ok = await loadSchema()
+			setFarmsActionsEnabled(false)
+			updateNdviActionState()
+
+			;(async () => {
+				const ok = await getSchemaReady('init')
 				if (ok) {
 					await refreshFarms()
 				}

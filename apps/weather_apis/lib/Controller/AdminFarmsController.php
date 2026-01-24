@@ -42,6 +42,12 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getSchema(): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$this->logger->debug(
+			'Weather API farm schema endpoint hit',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+			]),
+		);
 
 		try {
 			$result = $this->schemaService->getFarmSchemaSummary($requestId);
@@ -108,6 +114,12 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function listFarms(): JSONResponse {
 		$requestId = $this->resolveRequestId();
+		$this->logger->debug(
+			'Weather API farms list endpoint hit',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+			]),
+		);
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('list', $requestId);
@@ -120,6 +132,14 @@ final class AdminFarmsController extends Controller {
 				(string)($operation['path'] ?? ''),
 			);
 			$query = $this->buildListQueryParams($params, $queryDefs);
+			$this->logger->debug(
+				'Weather API farms list outbound',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'method' => 'GET',
+					'path' => (string)($operation['path'] ?? ''),
+				]),
+			);
 			$payload = $this->weatherApiClient->requestJson(
 				'GET',
 				(string)($operation['path'] ?? ''),
