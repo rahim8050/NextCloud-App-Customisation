@@ -1,5 +1,6 @@
 .weather-apis-settings {
-	max-width: 720px;
+	/* Allow the settings panel to use the full right pane width. */
+	width: 100%;
 	/* Make the settings area feel like a “panel” without fighting Nextcloud */
 	padding: 16px;
 	border: 1px solid var(--color-border);
@@ -29,10 +30,10 @@
 }
 
 /* Inputs */
-.weather-apis-settings .form-group input,
+.weather-apis-settings .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
 .weather-apis-settings .form-group textarea {
 	width: 100%;
-	max-width: 560px;
+	max-width: 100%;
 
 	padding: 10px 12px;
 	border: 1px solid var(--color-border);
@@ -51,6 +52,14 @@
 	min-height: 96px;
 	resize: vertical;
 	line-height: 1.35;
+}
+
+.weather-apis-settings input[type="checkbox"] {
+	width: auto;
+	max-width: none;
+	padding: 0;
+	border: 0;
+	box-shadow: none;
 }
 
 /* Hover helps discoverability */
@@ -133,12 +142,12 @@
 
 .weather-apis-credentials__row input {
 	flex: 1;
-	max-width: 420px;
+	max-width: 100%;
 }
 
 .weather-apis-credentials__row textarea.weather-apis-credentials__snippet {
 	flex: 1;
-	max-width: 420px;
+	max-width: 100%;
 	min-height: 72px;
 }
 
@@ -326,6 +335,21 @@
 	background: color-mix(in srgb, var(--color-error) 10%, transparent);
 }
 
+@media (min-width: 1024px) {
+	.weather-apis-settings__form {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	#weather-apis-farms,
+	#weather-apis-credentials-result,
+	.weather-apis-diagnostics,
+	.weather-apis-connection,
+	.weather-apis-settings__form > input[type="submit"],
+	#weather-apis-settings-status {
+		grid-column: 1 / -1;
+	}
+}
+
 /* Responsive: keep it comfy on small screens */
 @media (max-width: 720px) {
 	.weather-apis-settings {
@@ -439,6 +463,49 @@
 .weather-apis-farms__page {
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
+}
+
+@media (min-width: 1100px) {
+	.weather-apis-farms {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+		grid-template-areas:
+			"header header"
+			"warning warning"
+			"error error"
+			"table ndvi"
+			"table weather"
+			"pagination pagination";
+		align-items: start;
+	}
+
+	.weather-apis-farms__header {
+		grid-area: header;
+	}
+
+	#weather-apis-farms-warning {
+		grid-area: warning;
+	}
+
+	#weather-apis-farms-error {
+		grid-area: error;
+	}
+
+	.weather-apis-farms__table-wrap {
+		grid-area: table;
+	}
+
+	.weather-apis-farms__ndvi {
+		grid-area: ndvi;
+	}
+
+	.weather-apis-farms__weather {
+		grid-area: weather;
+	}
+
+	.weather-apis-farms__pagination {
+		grid-area: pagination;
+		grid-column: 1 / -1;
+	}
 }
 
 .weather-apis-farms__ndvi {
