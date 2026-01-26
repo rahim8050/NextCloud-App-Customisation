@@ -551,8 +551,90 @@
 }
 
 .weather-apis-farms__ndvi-output {
+	display: grid;
+	gap: 10px;
 	font-size: 12px;
 	color: var(--color-main-text);
+}
+
+.weather-apis-settings .weather-apis-result {
+	display: grid;
+	gap: 6px;
+	padding: 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background, #fff);
+	white-space: normal;
+}
+
+.weather-apis-settings .weather-apis-result--success {
+	border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-success) 12%, var(--color-main-background, #fff));
+}
+
+.weather-apis-settings .weather-apis-result--warning {
+	border-color: color-mix(in srgb, var(--color-warning) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-warning) 12%, var(--color-main-background, #fff));
+}
+
+.weather-apis-settings .weather-apis-result--error {
+	border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background, #fff));
+}
+
+.weather-apis-settings .weather-apis-result__title {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.weather-apis-settings .weather-apis-result__summary {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-settings .weather-apis-result__badges {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.weather-apis-settings .weather-apis-result__badge {
+	padding: 2px 8px;
+	border-radius: 999px;
+	border: 1px solid var(--color-border);
+	background: var(--color-background-hover);
+	font-size: 11px;
+}
+
+.weather-apis-settings .weather-apis-result__facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 4px 12px;
+	margin: 0;
+}
+
+.weather-apis-settings .weather-apis-result__facts dt {
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-settings .weather-apis-result__facts dd {
+	margin: 0;
+}
+
+.weather-apis-settings .weather-apis-result__debug summary {
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-settings .weather-apis-result__debug pre {
+	margin: 6px 0 0;
+	padding: 8px;
+	border-radius: var(--border-radius);
+	border: 1px dashed var(--color-border);
+	background: var(--color-background-hover);
+	font-size: 11px;
 	white-space: pre-wrap;
 }
 

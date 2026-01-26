@@ -1490,6 +1490,191 @@
 				return body
 			}
 
+			const formatFactLabel = (label) => {
+				const raw = String(label ?? '').trim()
+				if (!raw) {
+					return ''
+				}
+				return raw
+					.replace(/_/g, ' ')
+					.replace(/([a-z])([A-Z])/g, '$1 $2')
+					.replace(/\s+/g, ' ')
+					.replace(/^./, (char) => char.toUpperCase())
+			}
+
+			const normalizeFactValue = (value) => {
+				if (value === null || value === undefined) {
+					return ''
+				}
+				if (typeof value === 'string') {
+					const trimmed = value.trim()
+					return trimmed ? trimmed : ''
+				}
+				if (typeof value === 'number' || typeof value === 'boolean') {
+					return String(value)
+				}
+				if (Array.isArray(value)) {
+					const parts = value
+						.map((item) => normalizeFactValue(item))
+						.filter((part) => part !== '')
+					return parts.length ? parts.join(', ') : ''
+				}
+				return ''
+			}
+
+			const renderKeyValueFacts = (facts) => {
+				const entries = []
+				if (Array.isArray(facts)) {
+					facts.forEach((fact) => {
+						if (fact && typeof fact === 'object') {
+							entries.push({ label: fact.label, value: fact.value })
+						}
+					})
+				} else if (facts && typeof facts === 'object') {
+					Object.entries(facts).forEach(([label, value]) => {
+						entries.push({ label, value })
+					})
+				}
+				const normalized = entries
+					.map(({ label, value }) => {
+						const formattedLabel = formatFactLabel(label)
+						const formattedValue = normalizeFactValue(value)
+						if (!formattedLabel || formattedValue === '') {
+							return null
+						}
+						return { label: formattedLabel, value: formattedValue }
+					})
+					.filter(Boolean)
+				if (normalized.length === 0) {
+					return null
+				}
+				const list = document.createElement('dl')
+				list.className = 'weather-apis-result__facts'
+				normalized.forEach(({ label, value }) => {
+					const term = document.createElement('dt')
+					term.textContent = label
+					const detail = document.createElement('dd')
+					detail.textContent = value
+					list.appendChild(term)
+					list.appendChild(detail)
+				})
+				return list
+			}
+
+			const renderDebugDetails = (debug) => {
+				if (debug === undefined || debug === null) {
+					return null
+				}
+				const details = document.createElement('details')
+				details.className = 'weather-apis-result__debug'
+				const summary = document.createElement('summary')
+				summary.textContent = 'Debug'
+				const pre = document.createElement('pre')
+				const debugText = typeof debug === 'string'
+					? debug
+					: JSON.stringify(debug, null, 2)
+				pre.textContent = debugText || ''
+				details.appendChild(summary)
+				details.appendChild(pre)
+				return details
+			}
+
+			const renderResultCard = ({
+				title,
+				level = 'info',
+				summary,
+				badges = [],
+				facts,
+				debug,
+			} = {}) => {
+				const levels = new Set(['success', 'warning', 'error', 'info'])
+				const resolvedLevel = levels.has(level) ? level : 'info'
+				const card = document.createElement('div')
+				card.className = `weather-apis-result weather-apis-result--${resolvedLevel}`
+				if (title) {
+					const heading = document.createElement('strong')
+					heading.className = 'weather-apis-result__title'
+					heading.textContent = toText(title, '')
+					card.appendChild(heading)
+				}
+				if (summary) {
+					const summaryEl = document.createElement('p')
+					summaryEl.className = 'weather-apis-result__summary'
+					summaryEl.textContent = toText(summary, '')
+					card.appendChild(summaryEl)
+				}
+				if (Array.isArray(badges) && badges.length > 0) {
+					const badgeWrap = document.createElement('div')
+					badgeWrap.className = 'weather-apis-result__badges'
+					badges.forEach((badge) => {
+						const badgeEl = document.createElement('span')
+						badgeEl.className = 'weather-apis-result__badge'
+						badgeEl.textContent = toText(badge, '')
+						badgeWrap.appendChild(badgeEl)
+					})
+					card.appendChild(badgeWrap)
+				}
+				const factsEl = renderKeyValueFacts(facts)
+				if (factsEl) {
+					card.appendChild(factsEl)
+				}
+				const debugEl = renderDebugDetails(debug)
+				if (debugEl) {
+					card.appendChild(debugEl)
+				}
+				return card
+			}
+
+			const replaceNdviOutput = (...nodes) => {
+				if (!ndviOutput) {
+					return
+				}
+				const filtered = nodes.filter(Boolean)
+				ndviOutput.replaceChildren(...filtered)
+			}
+
+			const pushFact = (facts, label, value) => {
+				const normalized = normalizeFactValue(value)
+				if (!label || normalized === '') {
+					return
+				}
+				facts.push({ label, value: normalized })
+			}
+
+			const collectObjectFacts = (source, limit = 8) => {
+				const facts = []
+				if (!source || typeof source !== 'object' || Array.isArray(source)) {
+					return facts
+				}
+				for (const [key, value] of Object.entries(source)) {
+					const normalized = normalizeFactValue(value)
+					if (!normalized) {
+						continue
+					}
+					facts.push({ label: key, value: normalized })
+					if (facts.length >= limit) {
+						break
+					}
+				}
+				return facts
+			}
+
+			const buildLatestSummary = (observation) => {
+				if (!observation || typeof observation !== 'object') {
+					return 'Latest observation received.'
+				}
+				const parts = []
+				const observedAt = observation.observed_at ?? observation.date ?? observation.timestamp ?? observation.observedAt
+				if (observedAt) {
+					parts.push(`Observed ${observedAt}`)
+				}
+				const ndviValue = observation.ndvi ?? observation.value ?? observation.mean_ndvi ?? observation.mean
+				if (ndviValue !== undefined && ndviValue !== null && ndviValue !== '') {
+					parts.push(`NDVI ${ndviValue}`)
+				}
+				return parts.length ? parts.join(' • ') : 'Latest observation received.'
+			}
+
 			const renderNdviTable = (items) => {
 				if (!ndviTable) {
 					return
@@ -1521,7 +1706,7 @@
 					tbody.appendChild(row)
 				})
 				table.appendChild(tbody)
-				ndviTable.innerHTML = ''
+				ndviTable.replaceChildren()
 				ndviTable.appendChild(table)
 			}
 
@@ -1573,7 +1758,8 @@
 					showNdviError(message)
 					return null
 				}
-				const okNdvi = result.data?.status === 'ok' || result.data?.ok === true
+				const statusValue = result.data?.status
+				const okNdvi = result.data?.ok === true || statusValue === 'ok' || statusValue === 0
 				if (!okNdvi) {
 					const message = pickMessage(result.data, fallbackMessage)
 					showNdviError(message)
@@ -1895,8 +2081,42 @@
 						method: 'GET',
 						query: buildNdviQuery('ndvi_latest'),
 					})
-					if (data && ndviOutput) {
-						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					if (data) {
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						const observation = data?.observation ?? null
+						const facts = []
+						pushFact(facts, 'Engine', data?.engine)
+						pushFact(facts, 'Lookback (days)', data?.lookback_days ?? data?.lookbackDays ?? data?.lookback)
+						pushFact(facts, 'Max cloud (%)', data?.max_cloud ?? data?.maxCloud ?? data?.max_cloud_pct)
+						const badges = []
+						const isStale = Boolean(data?.stale ?? observation?.stale)
+						if (isStale) {
+							badges.push('Stale')
+						}
+						if (!observation) {
+							const card = renderResultCard({
+								title: 'Latest NDVI',
+								level: 'warning',
+								summary: 'No recent observation.',
+								badges,
+								facts,
+								debug: data,
+							})
+							replaceNdviOutput(card)
+							return
+						}
+						const observationFacts = collectObjectFacts(observation)
+						const card = renderResultCard({
+							title: 'Latest NDVI',
+							level: 'success',
+							summary: buildLatestSummary(observation),
+							badges,
+							facts: [...facts, ...observationFacts],
+							debug: data,
+						})
+						replaceNdviOutput(card)
 					}
 				})
 			}
@@ -1923,10 +2143,46 @@
 								: Array.isArray(data)
 									? data
 									: []
-						renderNdviTable(observations)
-						if (ndviOutput) {
-							ndviOutput.textContent = observations.length === 0 ? JSON.stringify(data, null, 2) : ''
+						const facts = []
+						const startValue = data?.start ?? validation.start
+						const endValue = data?.end ?? validation.end
+						pushFact(facts, 'Start', startValue)
+						pushFact(facts, 'End', endValue)
+						pushFact(facts, 'Max cloud (%)', data?.max_cloud ?? data?.maxCloud ?? data?.max_cloud_pct)
+						pushFact(facts, 'Engine', data?.engine)
+						if (data?.partial !== undefined) {
+							pushFact(facts, 'Partial', data?.partial)
 						}
+						if (data?.missing_buckets_count !== undefined || data?.missingBucketsCount !== undefined) {
+							pushFact(
+								facts,
+								'Missing buckets',
+								data?.missing_buckets_count ?? data?.missingBucketsCount,
+							)
+						}
+						const badges = []
+						if (data?.partial === true) {
+							badges.push('Partial')
+						}
+						const missingCount = Number(data?.missing_buckets_count ?? data?.missingBucketsCount)
+						if (Number.isFinite(missingCount) && missingCount > 0) {
+							badges.push('Missing buckets')
+						}
+						const observationCount = observations.length
+						const summary = observationCount > 0
+							? `${observationCount} observation${observationCount === 1 ? '' : 's'}`
+								+ (startValue && endValue ? ` from ${startValue} to ${endValue}` : '')
+							: 'No observations for the selected range.'
+						const card = renderResultCard({
+							title: 'NDVI timeseries',
+							level: observationCount > 0 ? 'success' : 'warning',
+							summary,
+							badges,
+							facts,
+							debug: data,
+						})
+						replaceNdviOutput(card)
+						renderNdviTable(observations)
 					}
 				})
 			}
@@ -2017,8 +2273,23 @@
 							? buildNdviQuery('ndvi_raster_queue', { date: validation.date })
 							: undefined,
 					})
-					if (data && ndviOutput) {
-						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					if (data) {
+						const jobId = data?.job_id ?? data?.jobId ?? data?.id ?? null
+						const toastMessage = jobId
+							? `Queued raster job #${jobId}`
+							: 'Queued raster job'
+						toast(toastMessage)
+						const facts = []
+						pushFact(facts, 'Raster date', validation.date)
+						pushFact(facts, 'Job ID', jobId)
+						const card = renderResultCard({
+							title: 'NDVI raster queue',
+							level: 'success',
+							summary: `${toastMessage}.`,
+							facts,
+							debug: data,
+						})
+						replaceNdviOutput(card)
 					}
 				})
 			}
@@ -2028,8 +2299,22 @@
 						method: 'POST',
 						body: buildNdviBody('ndvi_refresh'),
 					})
-					if (data && ndviOutput) {
-						ndviOutput.textContent = JSON.stringify(data, null, 2)
+					if (data) {
+						const jobId = data?.job_id ?? data?.jobId ?? data?.id ?? null
+						const toastMessage = jobId
+							? `Queued NDVI refresh job #${jobId}`
+							: 'Queued NDVI refresh job'
+						toast(toastMessage)
+						const facts = []
+						pushFact(facts, 'Job ID', jobId)
+						const card = renderResultCard({
+							title: 'NDVI refresh',
+							level: 'success',
+							summary: `${toastMessage}.`,
+							facts,
+							debug: data,
+						})
+						replaceNdviOutput(card)
 					}
 				})
 			}
