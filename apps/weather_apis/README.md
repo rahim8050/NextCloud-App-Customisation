@@ -70,6 +70,18 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + base64 `hmacSecret`.
 
+### Admin farm proxy endpoints
+
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/current`
+  - Admin-only.
+  - Proxies DRF farm weather current endpoint; returns DRF payload as-is.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/hourly`
+  - Admin-only.
+  - Proxies DRF farm weather hourly endpoint; query param `hours` (default 48).
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/daily`
+  - Admin-only.
+  - Proxies DRF farm weather daily endpoint; query param `days` (default 7).
+
 ### Connectivity test
 
 Direct app route:

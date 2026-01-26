@@ -545,6 +545,157 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[AdminRequired]
+	public function getWeatherCurrent(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('weather current', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [
+			'method' => 'GET',
+			'path' => '/api/v1/farms/{farm_id}/weather/current/',
+		];
+		$pathTemplate = $operation['path'];
+		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$query = $this->filterQueryParams($params, []);
+
+		try {
+			$this->logProxyRequest('weather current', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('weather current', $operation, $path, $requestId, $result['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('weather current', $operation, $path, $query, $requestId, $exception);
+			if ($exception->getErrorCode() === 'invalid_argument') {
+				return $this->handleWeatherApiException($exception, $requestId, 'weather current');
+			}
+			return $this->buildUpstreamErrorResponse();
+		} catch (\Throwable $throwable) {
+			$this->logger->warning(
+				'Weather API farm weather current failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
+			return $this->buildUpstreamErrorResponse();
+		}
+
+		return new JSONResponse($result['payload'], $result['statusCode']);
+	}
+
+
+	#[AdminRequired]
+	public function getWeatherHourly(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('weather hourly', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [
+			'method' => 'GET',
+			'path' => '/api/v1/farms/{farm_id}/weather/hourly/',
+		];
+		$pathTemplate = $operation['path'];
+		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$query = $this->filterQueryParams($params, [
+			['name' => 'hours', 'type' => 'integer', 'format' => null, 'required' => false],
+		]);
+
+		try {
+			$this->logProxyRequest('weather hourly', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('weather hourly', $operation, $path, $requestId, $result['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('weather hourly', $operation, $path, $query, $requestId, $exception);
+			if ($exception->getErrorCode() === 'invalid_argument') {
+				return $this->handleWeatherApiException($exception, $requestId, 'weather hourly');
+			}
+			return $this->buildUpstreamErrorResponse();
+		} catch (\Throwable $throwable) {
+			$this->logger->warning(
+				'Weather API farm weather hourly failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
+			return $this->buildUpstreamErrorResponse();
+		}
+
+		return new JSONResponse($result['payload'], $result['statusCode']);
+	}
+
+
+	#[AdminRequired]
+	public function getWeatherDaily(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('weather daily', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [
+			'method' => 'GET',
+			'path' => '/api/v1/farms/{farm_id}/weather/daily/',
+		];
+		$pathTemplate = $operation['path'];
+		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$query = $this->filterQueryParams($params, [
+			['name' => 'days', 'type' => 'integer', 'format' => null, 'required' => false],
+		]);
+
+		try {
+			$this->logProxyRequest('weather daily', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('weather daily', $operation, $path, $requestId, $result['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('weather daily', $operation, $path, $query, $requestId, $exception);
+			if ($exception->getErrorCode() === 'invalid_argument') {
+				return $this->handleWeatherApiException($exception, $requestId, 'weather daily');
+			}
+			return $this->buildUpstreamErrorResponse();
+		} catch (\Throwable $throwable) {
+			$this->logger->warning(
+				'Weather API farm weather daily failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
+			return $this->buildUpstreamErrorResponse();
+		}
+
+		return new JSONResponse($result['payload'], $result['statusCode']);
+	}
+
+
 	private function logEndpointEntry(string $action, string $requestId): void {
 		$path = $this->request->getPathInfo();
 		if ($path === '') {
@@ -1002,6 +1153,13 @@ final class AdminFarmsController extends Controller {
 			'message' => $message,
 			'data' => $data,
 		], $status);
+	}
+
+	private function buildUpstreamErrorResponse(): JSONResponse {
+		return new JSONResponse([
+			'status' => 'error',
+			'code' => 'upstream_error',
+		], Http::STATUS_BAD_GATEWAY);
 	}
 
 	private function handleWeatherApiException(WeatherApiException $exception, string $requestId, string $action): JSONResponse {

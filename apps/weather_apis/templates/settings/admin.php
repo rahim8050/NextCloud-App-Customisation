@@ -4,7 +4,7 @@ style('weather_apis', 'admin-settings');
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -107,7 +107,7 @@ style('weather_apis', 'admin-settings');
 			<div class="weather-apis-farms__header">
 				<div>
 					<strong><?php p($l->t('Farms')); ?></strong>
-					<p class="hint"><?php p($l->t('Manage farms and NDVI from the DRF backend via the admin proxy.')); ?></p>
+					<p class="hint"><?php p($l->t('Manage farms, NDVI, and weather from the DRF backend via the admin proxy.')); ?></p>
 				</div>
 				<div class="weather-apis-farms__actions">
 					<button id="weather-apis-farms-refresh" type="button" class="button"><?php p($l->t('Refresh farms')); ?></button>
@@ -154,6 +154,28 @@ style('weather_apis', 'admin-settings');
 				<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
 				<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>
 					<img id="weather-apis-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />
+				</div>
+			</div>
+			<div class="weather-apis-farms__weather" id="weather-apis-farms-weather" hidden>
+				<div class="weather-apis-farms__weather-header">
+					<strong><?php p($l->t('Weather')); ?></strong>
+					<span id="weather-apis-farms-weather-title" class="weather-apis-farms__weather-title"></span>
+				</div>
+				<div class="weather-apis-farms__weather-tabs">
+					<button id="weather-apis-weather-current-tab" type="button" class="button"><?php p($l->t('Current')); ?></button>
+					<button id="weather-apis-weather-hourly-tab" type="button" class="button"><?php p($l->t('Hourly')); ?></button>
+					<button id="weather-apis-weather-daily-tab" type="button" class="button"><?php p($l->t('Daily')); ?></button>
+				</div>
+				<div id="weather-apis-weather-loading" class="weather-apis-farms__note" hidden><?php p($l->t('Loading weather...')); ?></div>
+				<div id="weather-apis-weather-error" class="weather-apis-farms__note error" hidden></div>
+				<div id="weather-apis-weather-current" class="weather-apis-farms__weather-panel" hidden>
+					<div id="weather-apis-weather-current-grid" class="weather-apis-farms__weather-grid"></div>
+				</div>
+				<div id="weather-apis-weather-hourly" class="weather-apis-farms__weather-panel" hidden>
+					<div id="weather-apis-weather-hourly-table" class="weather-apis-farms__weather-table"></div>
+				</div>
+				<div id="weather-apis-weather-daily" class="weather-apis-farms__weather-panel" hidden>
+					<div id="weather-apis-weather-daily-table" class="weather-apis-farms__weather-table"></div>
 				</div>
 			</div>
 			<div class="weather-apis-farms__modal" id="weather-apis-farms-modal" hidden>

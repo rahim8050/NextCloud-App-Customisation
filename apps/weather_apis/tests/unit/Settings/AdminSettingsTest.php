@@ -39,7 +39,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(19))
+		$urlGenerator->expects($this->exactly(22))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -61,6 +61,9 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.queueNdviRaster', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.refreshNdvi', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
@@ -82,6 +85,9 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster/queue',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/refresh',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);
@@ -109,5 +115,8 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png', $response->getParams()['farmNdviRasterUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster/queue', $response->getParams()['farmNdviRasterQueueUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/refresh', $response->getParams()['farmNdviRefreshUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
 	}
 }

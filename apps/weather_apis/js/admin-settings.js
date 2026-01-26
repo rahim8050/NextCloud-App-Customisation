@@ -43,6 +43,9 @@
 		const farmNdviRasterUrl = form.dataset.farmNdviRasterUrl || ''
 		const farmNdviRasterQueueUrl = form.dataset.farmNdviRasterQueueUrl || ''
 		const farmNdviRefreshUrl = form.dataset.farmNdviRefreshUrl || ''
+		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
+		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
+		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -92,6 +95,19 @@
 		const ndviTable = document.getElementById('weather-apis-ndvi-table')
 		const ndviRasterPreview = document.getElementById('weather-apis-ndvi-raster-preview')
 		const ndviRasterImg = document.getElementById('weather-apis-ndvi-raster-img')
+		const farmsWeather = document.getElementById('weather-apis-farms-weather')
+		const farmsWeatherTitle = document.getElementById('weather-apis-farms-weather-title')
+		const weatherCurrentTab = document.getElementById('weather-apis-weather-current-tab')
+		const weatherHourlyTab = document.getElementById('weather-apis-weather-hourly-tab')
+		const weatherDailyTab = document.getElementById('weather-apis-weather-daily-tab')
+		const weatherLoading = document.getElementById('weather-apis-weather-loading')
+		const weatherError = document.getElementById('weather-apis-weather-error')
+		const weatherCurrentPanel = document.getElementById('weather-apis-weather-current')
+		const weatherHourlyPanel = document.getElementById('weather-apis-weather-hourly')
+		const weatherDailyPanel = document.getElementById('weather-apis-weather-daily')
+		const weatherCurrentGrid = document.getElementById('weather-apis-weather-current-grid')
+		const weatherHourlyTable = document.getElementById('weather-apis-weather-hourly-table')
+		const weatherDailyTable = document.getElementById('weather-apis-weather-daily-table')
 		const farmsModal = document.getElementById('weather-apis-farms-modal')
 		const farmsModalTitle = document.getElementById('weather-apis-farms-modal-title')
 		const farmsModalFields = document.getElementById('weather-apis-farms-modal-fields')
@@ -594,6 +610,8 @@
 				'is_active',
 				'created_at',
 			]
+			const DEFAULT_WEATHER_HOURS = 48
+			const DEFAULT_WEATHER_DAYS = 7
 
 			let farmSchema = null
 			let farmFields = {}
@@ -608,6 +626,8 @@
 			let modalInitial = {}
 			let ndviTouched = { start: false, end: false, raster: false }
 			let ndviRasterObjectUrl = null
+			let weatherActiveTab = 'current'
+			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
 
@@ -663,6 +683,9 @@
 				}
 				if (ndviLatestButton) ndviLatestButton.disabled = !enabled
 				if (ndviRefreshButton) ndviRefreshButton.disabled = !enabled
+				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
+				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
+				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
 				if (!enabled) {
 					if (ndviTimeseriesButton) ndviTimeseriesButton.disabled = true
 					if (ndviQueueButton) ndviQueueButton.disabled = true
@@ -880,21 +903,28 @@
 					ndviButton.type = 'button'
 					ndviButton.className = 'button'
 					ndviButton.textContent = 'NDVI'
+					const weatherButton = document.createElement('button')
+					weatherButton.type = 'button'
+					weatherButton.className = 'button'
+					weatherButton.textContent = 'Weather'
 
 					const farmId = resolveFarmId(farm)
 					if (farmId === null) {
 						editButton.disabled = true
 						deleteButton.disabled = true
 						ndviButton.disabled = true
+						weatherButton.disabled = true
 					} else {
 						editButton.addEventListener('click', () => openFarmModal('edit', farmId))
 						deleteButton.addEventListener('click', () => deleteFarm(farmId))
 						ndviButton.addEventListener('click', () => openNdviPanel(farmId, farm))
+						weatherButton.addEventListener('click', () => openWeatherPanel(farmId, farm))
 					}
 
 					actions.appendChild(editButton)
 					actions.appendChild(deleteButton)
 					actions.appendChild(ndviButton)
+					actions.appendChild(weatherButton)
 					row.appendChild(actions)
 					farmsBody.appendChild(row)
 				})
@@ -1500,6 +1530,9 @@
 				if (farmsNdvi) {
 					farmsNdvi.hidden = false
 				}
+				if (farmsWeather) {
+					farmsWeather.hidden = true
+				}
 				if (farmsNdviTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
 					farmsNdviTitle.textContent = label
@@ -1547,6 +1580,288 @@
 					return null
 				}
 				return unwrapResponseData(result.data)
+			}
+
+			const clearWeatherError = () => {
+				if (!weatherError) {
+					return
+				}
+				weatherError.textContent = ''
+				weatherError.hidden = true
+			}
+
+			const showWeatherError = (message) => {
+				if (!weatherError) {
+					return
+				}
+				weatherError.textContent = message
+				weatherError.hidden = false
+			}
+
+			const setWeatherLoading = (loading) => {
+				if (weatherLoading) {
+					weatherLoading.hidden = !loading
+				}
+				if (weatherCurrentTab) weatherCurrentTab.disabled = loading || !schemaReady
+				if (weatherHourlyTab) weatherHourlyTab.disabled = loading || !schemaReady
+				if (weatherDailyTab) weatherDailyTab.disabled = loading || !schemaReady
+			}
+
+			const setWeatherActiveTab = (tab) => {
+				weatherActiveTab = tab
+				const tabs = [
+					{ key: 'current', button: weatherCurrentTab, panel: weatherCurrentPanel },
+					{ key: 'hourly', button: weatherHourlyTab, panel: weatherHourlyPanel },
+					{ key: 'daily', button: weatherDailyTab, panel: weatherDailyPanel },
+				]
+				tabs.forEach(({ key, button, panel }) => {
+					if (panel) {
+						panel.hidden = key !== tab
+					}
+					if (button) {
+						button.classList.toggle('active', key === tab)
+					}
+				})
+			}
+
+			const formatWeatherNumber = (value, digits = 1) => {
+				if (value === null || value === undefined || value === '') {
+					return '-'
+				}
+				const num = Number(value)
+				if (!Number.isFinite(num)) {
+					return '-'
+				}
+				return num.toFixed(digits)
+			}
+
+			const formatWeatherDateTime = (value) => {
+				const raw = value ? String(value) : ''
+				if (!raw) {
+					return '-'
+				}
+				const date = new Date(raw)
+				if (Number.isNaN(date.getTime())) {
+					return raw
+				}
+				return date.toLocaleString()
+			}
+
+			const formatWeatherDate = (value) => {
+				const raw = value ? String(value) : ''
+				if (!raw) {
+					return '-'
+				}
+				const date = new Date(raw)
+				if (Number.isNaN(date.getTime())) {
+					return raw
+				}
+				return date.toLocaleDateString()
+			}
+
+			const renderWeatherCurrent = (payload) => {
+				if (!weatherCurrentGrid) {
+					return
+				}
+				const metrics = [
+					{ label: 'Observed', value: formatWeatherDateTime(payload?.observed_at) },
+					{ label: 'Temperature (C)', value: formatWeatherNumber(payload?.temperature_c) },
+					{ label: 'Wind (m/s)', value: formatWeatherNumber(payload?.wind_speed_mps) },
+					{ label: 'Source', value: payload?.source ? String(payload.source) : '-' },
+				]
+				weatherCurrentGrid.innerHTML = ''
+				metrics.forEach((metric) => {
+					const card = document.createElement('div')
+					card.className = 'weather-apis-farms__weather-card'
+					const label = document.createElement('span')
+					label.className = 'weather-apis-farms__weather-card-label'
+					label.textContent = metric.label
+					const value = document.createElement('strong')
+					value.className = 'weather-apis-farms__weather-card-value'
+					value.textContent = metric.value
+					card.appendChild(label)
+					card.appendChild(value)
+					weatherCurrentGrid.appendChild(card)
+				})
+			}
+
+			const renderWeatherTable = (target, rows, columns, emptyMessage) => {
+				if (!target) {
+					return
+				}
+				if (!Array.isArray(rows) || rows.length === 0) {
+					target.textContent = emptyMessage
+					return
+				}
+				const table = document.createElement('table')
+				table.className = 'weather-apis-farms__table'
+				const thead = document.createElement('thead')
+				const headerRow = document.createElement('tr')
+				columns.forEach((column) => {
+					const th = document.createElement('th')
+					th.textContent = column.label
+					headerRow.appendChild(th)
+				})
+				thead.appendChild(headerRow)
+				table.appendChild(thead)
+				const tbody = document.createElement('tbody')
+				rows.forEach((row) => {
+					const tr = document.createElement('tr')
+					columns.forEach((column) => {
+						const td = document.createElement('td')
+						const raw = row?.[column.key]
+						td.textContent = column.format ? column.format(raw) : String(raw ?? '-')
+						tr.appendChild(td)
+					})
+					tbody.appendChild(tr)
+				})
+				table.appendChild(tbody)
+				target.innerHTML = ''
+				target.appendChild(table)
+			}
+
+			const renderWeatherHourly = (payload) => {
+				const rows = Array.isArray(payload?.hours) ? payload.hours : []
+				renderWeatherTable(
+					weatherHourlyTable,
+					rows,
+					[
+						{ key: 'timestamp', label: 'Timestamp', format: formatWeatherDateTime },
+						{ key: 'temperature_c', label: 'Temp (C)', format: formatWeatherNumber },
+						{ key: 'precipitation_mm', label: 'Rain (mm)', format: formatWeatherNumber },
+						{ key: 'wind_speed_mps', label: 'Wind (m/s)', format: formatWeatherNumber },
+						{ key: 'cloud_cover_pct', label: 'Clouds (%)', format: formatWeatherNumber },
+					],
+					'No hourly data.'
+				)
+			}
+
+			const renderWeatherDaily = (payload) => {
+				const rows = Array.isArray(payload?.forecasts) ? payload.forecasts : []
+				renderWeatherTable(
+					weatherDailyTable,
+					rows,
+					[
+						{ key: 'day', label: 'Date', format: formatWeatherDate },
+						{ key: 't_min_c', label: 'Min (C)', format: formatWeatherNumber },
+						{ key: 't_max_c', label: 'Max (C)', format: formatWeatherNumber },
+						{ key: 'precipitation_mm', label: 'Rain (mm)', format: formatWeatherNumber },
+						{ key: 'wind_speed_max_mps', label: 'Wind max (m/s)', format: formatWeatherNumber },
+					],
+					'No daily data.'
+				)
+			}
+
+			const runWeatherRequest = async (label, urlTemplate, options = {}) => {
+				const schemaOk = await getSchemaReady(`weather ${label}`)
+				logFarms(`weather ${label} schema gate`, { ok: schemaOk })
+				if (!schemaOk) {
+					showWeatherError('Weather schema is not available.')
+					return null
+				}
+				clearFarmsNotes()
+				clearWeatherError()
+				if (!selectedFarm) {
+					showWeatherError('Select a farm first.')
+					return null
+				}
+				if (!urlTemplate) {
+					showWeatherError('Weather endpoint is not available.')
+					return null
+				}
+				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				setWeatherLoading(true)
+				const result = await performJsonRequest('GET', url, options)
+				setWeatherLoading(false)
+
+				const responseOk = Boolean(result.response?.ok)
+				const snippet = (result.text || '').trim().slice(0, 200)
+				const fallbackMessage = `Unable to load ${label}.`
+
+				if (!responseOk) {
+					const code = result.data?.code
+					const message = code === 'upstream_error'
+						? 'Upstream weather service error.'
+						: snippet || pickMessage(result.data, fallbackMessage)
+					showWeatherError(message)
+					return null
+				}
+				if (!result.parsed) {
+					showWeatherError(snippet || 'Unable to parse weather response.')
+					return null
+				}
+				if (result.data?.status !== 0) {
+					showWeatherError(pickMessage(result.data, fallbackMessage))
+					return null
+				}
+				return result.data?.data ?? result.data
+			}
+
+			const openWeatherPanel = (farmId, farm) => {
+				selectedFarm = { id: farmId, data: farm }
+				weatherCache = { current: null, hourly: null, daily: null }
+				if (farmsWeather) {
+					farmsWeather.hidden = false
+				}
+				if (farmsNdvi) {
+					farmsNdvi.hidden = true
+				}
+				if (farmsWeatherTitle) {
+					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
+					farmsWeatherTitle.textContent = label
+				}
+				if (weatherHourlyTable) {
+					weatherHourlyTable.textContent = ''
+				}
+				if (weatherDailyTable) {
+					weatherDailyTable.textContent = ''
+				}
+				clearWeatherError()
+				setWeatherActiveTab('current')
+				loadWeatherTab('current')
+			}
+
+			const loadWeatherTab = async (tab) => {
+				setWeatherActiveTab(tab)
+				if (weatherCache[tab]) {
+					if (tab === 'current') {
+						renderWeatherCurrent(weatherCache.current)
+					}
+					if (tab === 'hourly') {
+						renderWeatherHourly(weatherCache.hourly)
+					}
+					if (tab === 'daily') {
+						renderWeatherDaily(weatherCache.daily)
+					}
+					return
+				}
+				if (tab === 'current') {
+					const data = await runWeatherRequest('current weather', farmWeatherCurrentUrl)
+					if (data) {
+						weatherCache.current = data
+						renderWeatherCurrent(data)
+					}
+					return
+				}
+				if (tab === 'hourly') {
+					const data = await runWeatherRequest('hourly weather', farmWeatherHourlyUrl, {
+						query: { hours: DEFAULT_WEATHER_HOURS },
+					})
+					if (data) {
+						weatherCache.hourly = data
+						renderWeatherHourly(data)
+					}
+					return
+				}
+				if (tab === 'daily') {
+					const data = await runWeatherRequest('daily weather', farmWeatherDailyUrl, {
+						query: { days: DEFAULT_WEATHER_DAYS },
+					})
+					if (data) {
+						weatherCache.daily = data
+						renderWeatherDaily(data)
+					}
+				}
 			}
 
 			if (farmsRefresh) {
@@ -1716,6 +2031,21 @@
 					if (data && ndviOutput) {
 						ndviOutput.textContent = JSON.stringify(data, null, 2)
 					}
+				})
+			}
+			if (weatherCurrentTab) {
+				weatherCurrentTab.addEventListener('click', () => {
+					loadWeatherTab('current')
+				})
+			}
+			if (weatherHourlyTab) {
+				weatherHourlyTab.addEventListener('click', () => {
+					loadWeatherTab('hourly')
+				})
+			}
+			if (weatherDailyTab) {
+				weatherDailyTab.addEventListener('click', () => {
+					loadWeatherTab('daily')
 				})
 			}
 

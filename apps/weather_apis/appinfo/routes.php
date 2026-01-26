@@ -108,6 +108,21 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/refresh',
 			'verb' => 'POST',
 		],
+		[
+			'name' => 'adminFarms#getWeatherCurrent',
+			'url' => '/api/v1/admin/farms/{farmId}/weather/current',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getWeatherHourly',
+			'url' => '/api/v1/admin/farms/{farmId}/weather/hourly',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getWeatherDaily',
+			'url' => '/api/v1/admin/farms/{farmId}/weather/daily',
+			'verb' => 'GET',
+		],
 	],
 	'ocs' => [
 		[

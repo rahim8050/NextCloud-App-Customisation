@@ -7,6 +7,7 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 use OCA\WeatherApis\Controller\AdminFarmsController;
 use OCA\WeatherApis\Service\DrfSchemaService;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
+use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http\Attribute\AdminRequired;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -372,6 +373,137 @@ final class AdminFarmsControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testWeatherCurrentReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/42/weather/current/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['status' => 0, 'message' => 'OK', 'data' => ['temperature_c' => 22.0]],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherCurrent('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame(0, $data['status']);
+		$this->assertEquals(22.0, $data['data']['temperature_c']);
+	}
+
+	public function testWeatherCurrentMapsUpstreamFailure(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherCurrent('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('upstream_error', $data['code']);
+		$this->assertSame(502, $response->getStatus());
+	}
+
+	public function testWeatherHourlyReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'hours' => 24,
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/7/weather/hourly/', ['hours' => 24], null, 'request-id')
+			->willReturn([
+				'payload' => ['status' => 0, 'message' => 'OK', 'data' => ['hours' => []]],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherHourly('7');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame(0, $data['status']);
+		$this->assertSame([], $data['data']['hours']);
+	}
+
+	public function testWeatherHourlyMapsUpstreamFailure(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'hours' => 24,
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_timeout', 'Timeout'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherHourly('7');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('upstream_error', $data['code']);
+		$this->assertSame(502, $response->getStatus());
+	}
+
+	public function testWeatherDailyReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'days' => 5,
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/8/weather/daily/', ['days' => 5], null, 'request-id')
+			->willReturn([
+				'payload' => ['status' => 0, 'message' => 'OK', 'data' => ['forecasts' => []]],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherDaily('8');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame(0, $data['status']);
+		$this->assertSame([], $data['data']['forecasts']);
+	}
+
+	public function testWeatherDailyMapsUpstreamFailure(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'days' => 5,
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getWeatherDaily('8');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('upstream_error', $data['code']);
+		$this->assertSame(502, $response->getStatus());
 	}
 
 	public function testMethodsRequireAdmin(): void {

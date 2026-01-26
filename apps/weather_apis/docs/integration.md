@@ -106,6 +106,15 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
 - `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/refresh`
   - Admin-only + CSRF required.
   - Proxies DRF NDVI refresh endpoint; request body is schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/current`
+  - Admin-only.
+  - Proxies DRF farm weather current endpoint; returns DRF payload as-is.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/hourly`
+  - Admin-only.
+  - Proxies DRF farm weather hourly endpoint; query param `hours` (default 48).
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/daily`
+  - Admin-only.
+  - Proxies DRF farm weather daily endpoint; query param `days` (default 7).
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.
