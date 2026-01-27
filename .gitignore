@@ -59,3 +59,7 @@ themes/
 # (Usually recommended to keep for Nextcloud apps)
 /.htaccess
 
+
+# local artifacts
+netstat
+wg
