@@ -72,6 +72,25 @@ final class DrfSchemaService {
 	 */
 	private function loadSchema(string $correlationId): array {
 		$warning = null;
+		$schema = $this->loadCachedSchema();
+		if ($schema !== null) {
+			$this->logger->debug(
+				'Weather API schema cache hit.',
+				LogSanitizer::sanitizeContext([
+					'schema_cache' => 'hit',
+					'requestId' => $correlationId,
+				]),
+			);
+			return [$schema, $warning];
+		}
+
+		$this->logger->debug(
+			'Weather API schema cache miss.',
+			LogSanitizer::sanitizeContext([
+				'schema_cache' => 'miss',
+				'requestId' => $correlationId,
+			]),
+		);
 
 		try {
 			$schema = $this->weatherApiClient->fetchSchema($correlationId);

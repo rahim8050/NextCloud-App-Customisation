@@ -98,15 +98,71 @@ final class DrfSchemaServiceTest extends TestCase {
 		$service->getFarmSchemaSummary('request-id');
 	}
 
+	public function testGetFarmSchemaSummaryUsesCachedSchemaWithoutFetching(): void {
+		$schema = $this->createSchema();
+		$cached = json_encode($schema, JSON_THROW_ON_ERROR);
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->never())
+			->method('fetchSchema');
+
+		$cache = $this->createMock(ICache::class);
+		$cache->expects($this->once())
+			->method('get')
+			->with('drf_openapi_schema_json')
+			->willReturn($cached);
+
+		$service = $this->createServiceWithCache($client, $cache);
+		$result = $service->getFarmSchemaSummary('request-id');
+
+		$this->assertArrayHasKey('schema', $result);
+		$this->assertArrayHasKey('fields', $result['schema']);
+	}
+
+	public function testGetFarmSchemaSummaryFetchesAndCachesOnMiss(): void {
+		$schema = $this->createSchema();
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->expects($this->once())
+			->method('get')
+			->with('drf_openapi_schema_json')
+			->willReturn(null);
+		$cache->expects($this->once())
+			->method('set')
+			->with(
+				'drf_openapi_schema_json',
+				$this->isType('string'),
+				3600,
+			)
+			->willReturn(true);
+
+		$service = $this->createServiceWithCache($client, $cache);
+		$service->getFarmSchemaSummary('request-id');
+	}
+
 	private function createService(WeatherApiClientInterface $client): DrfSchemaService {
 		$cache = $this->createMock(ICache::class);
 		$cache->method('get')->willReturn(null);
 		$cache->method('set')->willReturn(true);
 
+		return $this->createServiceWithCache($client, $cache);
+	}
+
+	private function createServiceWithCache(
+		WeatherApiClientInterface $client,
+		ICache $cache,
+		?LoggerInterface $logger = null,
+	): DrfSchemaService {
 		$cacheFactory = $this->createMock(ICacheFactory::class);
 		$cacheFactory->method('createDistributed')->willReturn($cache);
 
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger ??= $this->createMock(LoggerInterface::class);
 
 		return new DrfSchemaService($client, $cacheFactory, $logger);
 	}
