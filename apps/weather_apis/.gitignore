@@ -6,3 +6,7 @@
 
 # Root .gitignore ignores *.lock; keep this app's lockfile tracked
 !composer.lock
+
+# local tooling artifacts (not part of repo)
+../../netstat
+../../wg
