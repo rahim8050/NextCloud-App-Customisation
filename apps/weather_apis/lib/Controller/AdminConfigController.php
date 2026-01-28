@@ -13,6 +13,7 @@ use OCA\WeatherApis\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -265,6 +266,7 @@ final class AdminConfigController extends Controller {
 	}
 
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	#[NoCSRFRequired]
 	public function previewPng(): Response {
 		$requestId = $this->resolveRequestId();
 		$user = $this->userSession->getUser();
@@ -308,6 +310,7 @@ final class AdminConfigController extends Controller {
 
 		$response = new DataDisplayResponse($content, Http::STATUS_OK, ['Content-Type' => 'image/png']);
 		$response->addHeader('Cache-Control', 'no-store');
+		$response->addHeader('Content-Disposition', 'inline; filename="preview.png"');
 		return $response;
 	}
 

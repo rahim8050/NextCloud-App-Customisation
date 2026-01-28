@@ -16,6 +16,50 @@ use PHPUnit\Framework\TestCase;
 
 final class AdminSettingsTest extends TestCase {
 	public function testFormProvidesSaveUrl(): void {
+		$response = $this->buildSettingsResponse();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertArrayHasKey('saveUrl', $response->getParams());
+		$this->assertNotSame('', $response->getParams()['saveUrl']);
+		$this->assertSame('/apps/weather_apis/settings/admin', $response->getParams()['saveUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/generate-credentials', $response->getParams()['generateCredentialsUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/rotate-hmac', $response->getParams()['rotateHmacUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/config', $response->getParams()['configUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/test-connection', $response->getParams()['testConnectionUrl']);
+		$this->assertSame('/apps/weather_apis/admin/diagnostics', $response->getParams()['diagnosticsUrl']);
+		$this->assertSame('/apps/weather_apis/admin/preview.png', $response->getParams()['previewUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/schema', $response->getParams()['farmSchemaUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/list', $response->getParams()['farmListUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/create', $response->getParams()['farmCreateUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmGetUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmUpdateUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmPatchUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmDeleteUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/latest', $response->getParams()['farmNdviLatestUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/timeseries', $response->getParams()['farmNdviTimeseriesUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png', $response->getParams()['farmNdviRasterUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster/queue', $response->getParams()['farmNdviRasterQueueUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/refresh', $response->getParams()['farmNdviRefreshUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
+	}
+
+	public function testAdminUrlsRemainRoutePaths(): void {
+		$response = $this->buildSettingsResponse();
+		$params = $response->getParams();
+
+		$this->assertStringStartsWith('/apps/weather_apis/', $params['diagnosticsUrl']);
+		$this->assertStringNotContainsString('/index.php', $params['diagnosticsUrl']);
+		$this->assertStringNotContainsString('/api/v1/admin', $params['diagnosticsUrl']);
+		$this->assertStringStartsWith('/apps/weather_apis/', $params['previewUrl']);
+		$this->assertStringNotContainsString('/index.php', $params['previewUrl']);
+		$this->assertStringNotContainsString('/api/v1/admin', $params['previewUrl']);
+		$this->assertStringNotContainsString('/index.php/index.php', $params['farmSchemaUrl']);
+		$this->assertStringNotContainsString('/index.php/index.php', $params['testConnectionUrl']);
+	}
+
+	private function buildSettingsResponse(): TemplateResponse {
 		$storage = [
 			'baseUrl' => 'https://example.com',
 			'timeoutSeconds' => '10',
@@ -91,32 +135,6 @@ final class AdminSettingsTest extends TestCase {
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);
-		$response = $settings->getForm();
-
-		$this->assertInstanceOf(TemplateResponse::class, $response);
-		$this->assertArrayHasKey('saveUrl', $response->getParams());
-		$this->assertNotSame('', $response->getParams()['saveUrl']);
-		$this->assertSame('/apps/weather_apis/settings/admin', $response->getParams()['saveUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/generate-credentials', $response->getParams()['generateCredentialsUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/rotate-hmac', $response->getParams()['rotateHmacUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/config', $response->getParams()['configUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/test-connection', $response->getParams()['testConnectionUrl']);
-		$this->assertSame('/apps/weather_apis/admin/diagnostics', $response->getParams()['diagnosticsUrl']);
-		$this->assertSame('/apps/weather_apis/admin/preview.png', $response->getParams()['previewUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/schema', $response->getParams()['farmSchemaUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/list', $response->getParams()['farmListUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/create', $response->getParams()['farmCreateUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmGetUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmUpdateUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmPatchUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmDeleteUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/latest', $response->getParams()['farmNdviLatestUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/timeseries', $response->getParams()['farmNdviTimeseriesUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png', $response->getParams()['farmNdviRasterUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster/queue', $response->getParams()['farmNdviRasterQueueUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/refresh', $response->getParams()['farmNdviRefreshUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
-		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
+		return $settings->getForm();
 	}
 }

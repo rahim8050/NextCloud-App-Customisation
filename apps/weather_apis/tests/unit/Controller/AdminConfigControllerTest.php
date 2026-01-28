@@ -213,6 +213,7 @@ final class AdminConfigControllerTest extends TestCase {
 		$headers = $this->getResponseHeaders($response);
 		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
 		$this->assertSame('no-store', $headers['Cache-Control'] ?? '');
+		$this->assertSame('inline; filename="preview.png"', $headers['Content-Disposition'] ?? '');
 	}
 
 	public function testTestConnectionRejectsNonAdmin(): void {
@@ -243,7 +244,7 @@ final class AdminConfigControllerTest extends TestCase {
 	public function testPreviewRequiresAdmin(): void {
 		$this->assertMethodHasAttribute('previewPng', AuthorizedAdminSetting::class);
 		$this->assertMethodLacksAttribute('previewPng', PasswordConfirmationRequired::class);
-		$this->assertMethodLacksAttribute('previewPng', NoCSRFRequired::class);
+		$this->assertMethodHasAttribute('previewPng', NoCSRFRequired::class);
 	}
 
 	public function testTestConnectionReturnsLegacyBlocked(): void {

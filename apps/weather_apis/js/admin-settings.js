@@ -447,10 +447,49 @@
 			return formData
 		}
 
+		const isAbsoluteUrl = (value) => /^https?:\/\//i.test(String(value ?? ''))
+
+		const resolveRequestUrl = (url) => {
+			const raw = String(url ?? '').trim()
+			if (!raw) {
+				return ''
+			}
+			if (isAbsoluteUrl(raw)) {
+				return raw
+			}
+			if (raw.includes('/index.php/')) {
+				return raw
+			}
+			const webroot = String(window.OC?.webroot ?? '')
+			let normalized = raw
+			if (webroot && normalized.startsWith(`${webroot}/`)) {
+				normalized = normalized.slice(webroot.length)
+			}
+			const generator = window.OC?.generateUrl
+			if (typeof generator === 'function') {
+				return generator(normalized)
+			}
+			return normalized
+		}
+
+		const normalizeAxiosUrl = (url, axiosClient) => {
+			const baseUrl = axiosClient?.defaults?.baseURL
+			if (typeof baseUrl !== 'string' || baseUrl === '') {
+				return url
+			}
+			const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+			if (url.startsWith(`${normalizedBase}/`)) {
+				const trimmed = url.slice(normalizedBase.length)
+				return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+			}
+			return url
+		}
+
 		const performAdminRequest = async (url) => {
+			const resolvedUrl = resolveRequestUrl(url)
 			const token = resolveRequestToken()
-			console.info('[weather_apis] POST', url)
-			const response = await fetch(url, {
+			console.info('[weather_apis] POST', resolvedUrl)
+			const response = await fetch(resolvedUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
@@ -467,9 +506,10 @@
 		}
 
 		const performAdminGet = async (url) => {
+			const resolvedUrl = resolveRequestUrl(url)
 			const token = resolveRequestToken()
-			console.info('[weather_apis] GET', url)
-			const response = await fetch(url, {
+			console.info('[weather_apis] GET', resolvedUrl)
+			const response = await fetch(resolvedUrl, {
 				method: 'GET',
 				credentials: 'same-origin',
 				headers: {
@@ -518,17 +558,19 @@
 				headers.requesttoken = token
 			}
 
+			const resolvedUrl = resolveRequestUrl(url)
 			const queryString = buildQueryString(options.query)
 			const finalUrl = queryString
-				? `${url}${url.includes('?') ? '&' : '?'}${queryString}`
-				: url
+				? `${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}${queryString}`
+				: resolvedUrl
 
 			const axiosClient = window.OC?.axios || window.axios
 			if (axiosClient) {
 				try {
+					const axiosUrl = normalizeAxiosUrl(finalUrl, axiosClient)
 					const response = await axiosClient({
 						method,
-						url: finalUrl,
+						url: axiosUrl,
 						data: options.body,
 						headers,
 						withCredentials: true,
@@ -589,14 +631,76 @@
 			return { response, parsed, data, text }
 		}
 
+		const PNG_SIGNATURE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+		const hasPngSignature = (buffer) => {
+			if (!buffer || buffer.byteLength < PNG_SIGNATURE.length) {
+				return false
+			}
+			const bytes = new Uint8Array(buffer.slice(0, PNG_SIGNATURE.length))
+			for (let i = 0; i < PNG_SIGNATURE.length; i += 1) {
+				if (bytes[i] !== PNG_SIGNATURE[i]) {
+					return false
+				}
+			}
+			return true
+		}
+
+		const buildPreviewUrl = (url) => {
+			const resolved = resolveRequestUrl(url)
+			if (!resolved) {
+				return ''
+			}
+			const separator = resolved.includes('?') ? '&' : '?'
+			return `${resolved}${separator}ts=${Date.now()}`
+		}
+
+		const fetchPreviewDiagnostics = async (url) => {
+			const requestUrl = buildPreviewUrl(url)
+			if (!requestUrl) {
+				return null
+			}
+			const token = resolveRequestToken()
+			const headers = {
+				Accept: 'image/png',
+				'OCS-APIRequest': 'true',
+				'X-Requested-With': 'XMLHttpRequest',
+			}
+			if (token) {
+				headers.requesttoken = token
+			}
+			try {
+				const response = await fetch(requestUrl, {
+					method: 'GET',
+					credentials: 'same-origin',
+					cache: 'no-store',
+					headers,
+				})
+				const contentType = response.headers.get('content-type') || ''
+				const buffer = await response.arrayBuffer()
+				const size = buffer.byteLength
+				const signatureOk = hasPngSignature(buffer)
+				const ok = response.ok && contentType.includes('image/png') && signatureOk
+				return {
+					ok,
+					http: response.status,
+					contentType,
+					size,
+					signatureOk,
+					url: requestUrl,
+				}
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Preview request failed.'
+				return { ok: false, error: message, url: requestUrl }
+			}
+		}
+
 		const setupFarms = () => {
 			if (!farmsRoot) {
 				return
 			}
 
-			const ncGenerateUrl = typeof window.OC?.generateUrl === 'function'
-				? window.OC.generateUrl
-				: (path) => path
+			const ncGenerateUrl = resolveRequestUrl
 
 			const fieldOrder = [
 				'name',
@@ -2577,15 +2681,27 @@
 				])
 			setDiagnosticsRow(diagnosticsStatusRow, diagnosticsStatusValue, statusOk, statusMessage || (statusOk ? 'OK' : 'FAILED'))
 
-			const pngOk = pngResult?.ok === true
-			const pngMessage = pngOk
-				? joinParts(['OK', formatHttp(pngResult?.http)])
-				: joinParts([
+			const previewDetails = previewUrl ? await fetchPreviewDiagnostics(previewUrl) : null
+			const pngOkBase = pngResult?.ok === true
+			const pngOk = pngOkBase && (previewDetails?.ok ?? true)
+			const pngParts = pngOkBase
+				? ['OK', formatHttp(pngResult?.http)]
+				: [
 					'FAILED',
 					formatHttp(pngResult?.http),
 					pngResult?.message,
 					pngResult?.code ? `code=${pngResult.code}` : null,
-				])
+				]
+			if (previewDetails) {
+				pngParts.push(
+					previewDetails.http ? `preview_http=${previewDetails.http}` : null,
+					previewDetails.contentType ? `content_type=${previewDetails.contentType}` : null,
+					Number.isFinite(previewDetails.size) ? `bytes=${previewDetails.size}` : null,
+					previewDetails.signatureOk === true ? 'signature=ok' : previewDetails.signatureOk === false ? 'signature=bad' : null,
+					previewDetails.error ?? null,
+				)
+			}
+			const pngMessage = joinParts(pngParts)
 			setDiagnosticsRow(diagnosticsPngRow, diagnosticsPngValue, pngOk, pngMessage || (pngOk ? 'OK' : 'FAILED'))
 
 			const overallOk = tokenOk && statusOk && pngOk
@@ -2600,9 +2716,9 @@
 			toast(summaryMessage)
 
 			if (diagnosticsPreviewWrap && diagnosticsPreview) {
-				if (pngOk && previewUrl) {
-					const separator = previewUrl.includes('?') ? '&' : '?'
-					diagnosticsPreview.src = `${previewUrl}${separator}ts=${Date.now()}`
+				const previewOk = previewDetails?.ok ?? pngOk
+				if (previewOk && previewUrl) {
+					diagnosticsPreview.src = previewDetails?.url ?? buildPreviewUrl(previewUrl)
 					diagnosticsPreviewWrap.hidden = false
 				} else {
 					diagnosticsPreviewWrap.hidden = true
