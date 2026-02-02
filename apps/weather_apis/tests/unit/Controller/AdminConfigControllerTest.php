@@ -317,12 +317,12 @@ final class AdminConfigControllerTest extends TestCase {
 	private function createAppConfig(array &$storage): AppConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use (&$storage) {
+			function (string $appId, string $key, mixed $default = '') use (&$storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
 		$config->method('setAppValue')->willReturnCallback(
-			function (string $appId, string $key, $value) use (&$storage): void {
+			function (string $appId, string $key, mixed $value) use (&$storage): void {
 				$storage[$key] = $value;
 			},
 		);
@@ -342,12 +342,12 @@ final class AdminConfigControllerTest extends TestCase {
 	private function createIntegrationConfig(array &$storage): IntegrationConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use (&$storage) {
+			function (string $appId, string $key, mixed $default = '') use (&$storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
 		$config->method('setAppValue')->willReturnCallback(
-			function (string $appId, string $key, $value) use (&$storage): void {
+			function (string $appId, string $key, mixed $value) use (&$storage): void {
 				$storage[$key] = $value;
 			},
 		);

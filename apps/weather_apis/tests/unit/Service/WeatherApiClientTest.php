@@ -807,7 +807,7 @@ final class WeatherApiClientTest extends TestCase {
 
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use ($storage) {
+			function (string $appId, string $key, mixed $default = '') use ($storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
@@ -830,7 +830,7 @@ final class WeatherApiClientTest extends TestCase {
 
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use ($storage) {
+			function (string $appId, string $key, mixed $default = '') use ($storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);

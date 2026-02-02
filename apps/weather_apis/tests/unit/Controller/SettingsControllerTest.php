@@ -138,7 +138,7 @@ final class SettingsControllerTest extends TestCase {
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
-			static fn (string $name, $default = null) => $default,
+			static fn (string $name, mixed $default = null): mixed => $default,
 		);
 		$request->method('getParams')->willReturn($params);
 		$request->method('getHeader')->willReturn('');
@@ -295,7 +295,7 @@ final class SettingsControllerTest extends TestCase {
 	private function createAppConfig(array &$storage): AppConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use (&$storage) {
+			function (string $appId, string $key, mixed $default = '') use (&$storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
@@ -303,7 +303,7 @@ final class SettingsControllerTest extends TestCase {
 		$config->method('getSystemValue')->willReturn(null);
 
 		$config->method('setAppValue')->willReturnCallback(
-			function (string $appId, string $key, $value) use (&$storage): void {
+			function (string $appId, string $key, mixed $value) use (&$storage): void {
 				$storage[$key] = $value;
 			},
 		);
@@ -322,12 +322,12 @@ final class SettingsControllerTest extends TestCase {
 	private function createIntegrationConfig(array &$storage): IntegrationConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use (&$storage) {
+			function (string $appId, string $key, mixed $default = '') use (&$storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
 		$config->method('setAppValue')->willReturnCallback(
-			function (string $appId, string $key, $value) use (&$storage): void {
+			function (string $appId, string $key, mixed $value) use (&$storage): void {
 				$storage[$key] = $value;
 			},
 		);
@@ -378,7 +378,7 @@ final class SettingsControllerTest extends TestCase {
 	private function createRequest(array $params): IRequest {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
-			fn (string $name, $default = null) => $params[$name] ?? $default,
+			fn (string $name, mixed $default = null): mixed => $params[$name] ?? $default,
 		);
 		$request->method('getParams')->willReturn($params);
 		$request->method('getHeader')->willReturn('');

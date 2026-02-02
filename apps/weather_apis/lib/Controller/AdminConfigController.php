@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Controller;
 
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\HttpStatus;
 use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
@@ -113,7 +114,7 @@ final class AdminConfigController extends Controller {
 		$status = $this->integrationConfig->getStatus();
 		$message = $status['message'] ?? 'Configuration status unavailable.';
 
-		if (!($status['ok'] ?? false)) {
+		if (($status['ok'] ?? false) !== true) {
 			$this->logger->info(
 				'Weather API integration config is invalid',
 				LogSanitizer::sanitizeContext([
@@ -356,7 +357,7 @@ final class AdminConfigController extends Controller {
 			'ok' => $status === 'ok',
 			'message' => $message,
 			'data' => $data,
-		], $statusCode);
+		], HttpStatus::normalize($statusCode));
 	}
 
 	/**
@@ -375,7 +376,7 @@ final class AdminConfigController extends Controller {
 				'requestId' => $requestId,
 				'details' => $detailsPayload,
 			],
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	private function buildTestConnectionSuccess(string $message, int $expiresIn): JSONResponse {
@@ -396,7 +397,7 @@ final class AdminConfigController extends Controller {
 			'message' => $message,
 			'code' => $code,
 			'data' => null,
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	/**

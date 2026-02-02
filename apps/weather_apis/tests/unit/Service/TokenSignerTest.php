@@ -71,7 +71,8 @@ final class TokenSignerTest extends TestCase {
 	public function testGoldenVectorFixtureMatchesTokenContract(): void {
 		$fixture = $this->loadHmacFixture();
 		$signer = new TokenSigner();
-		$body = base64_decode((string)$fixture['body_b64'], true) ?: '';
+		$decodedBody = base64_decode((string)$fixture['body_b64'], true);
+		$body = $decodedBody === false ? '' : $decodedBody;
 		$bodyHash = $signer->bodySha256Hex(
 			(string)$fixture['method'],
 			$body,

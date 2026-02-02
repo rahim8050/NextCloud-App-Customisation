@@ -69,7 +69,7 @@ final class ApplicationTest extends TestCase {
 
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use ($storage) {
+			function (string $appId, string $key, mixed $default = '') use ($storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
@@ -94,7 +94,7 @@ final class ApplicationTest extends TestCase {
 }
 
 final class FakeLogger extends AbstractLogger implements LoggerInterface {
-	public function log($level, $message, array $context = []): void {
+	public function log($level, mixed $message, array $context = []): void {
 		// noop
 	}
 }

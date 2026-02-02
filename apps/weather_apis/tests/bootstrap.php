@@ -85,5 +85,10 @@ namespace {
 		exit(1);
 	}
 
+	$httpStatus = __DIR__ . '/../lib/Service/HttpStatus.php';
+	if (is_file($httpStatus)) {
+		require_once $httpStatus;
+	}
+
 	require_once $autoload;
 }

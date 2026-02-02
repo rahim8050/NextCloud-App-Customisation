@@ -119,17 +119,17 @@ final class IntegrationConfigTest extends TestCase {
 	private function createIntegrationConfig(array &$storage, array $system = [], bool $legacyAllowed = false): IntegrationConfig {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			function (string $appId, string $key, $default = '') use (&$storage) {
+			function (string $appId, string $key, mixed $default = '') use (&$storage): mixed {
 				return $storage[$key] ?? $default;
 			},
 		);
 		$config->method('setAppValue')->willReturnCallback(
-			function (string $appId, string $key, $value) use (&$storage): void {
+			function (string $appId, string $key, mixed $value) use (&$storage): void {
 				$storage[$key] = $value;
 			},
 		);
 		$config->method('getSystemValue')->willReturnCallback(
-			function (string $key, $default = null) use ($system) {
+			function (string $key, mixed $default = null) use ($system): mixed {
 				return $system[$key] ?? $default;
 			},
 		);

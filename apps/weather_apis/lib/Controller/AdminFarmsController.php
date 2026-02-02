@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Controller;
 
 use OCA\WeatherApis\Service\DrfSchemaService;
+use OCA\WeatherApis\Service\HttpStatus;
 use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
 use OCA\WeatherApis\Service\WeatherApiException;
@@ -590,7 +591,7 @@ final class AdminFarmsController extends Controller {
 			return $this->buildUpstreamErrorResponse();
 		}
 
-		return new JSONResponse($result['payload'], $result['statusCode']);
+		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
 	}
 
 
@@ -641,7 +642,7 @@ final class AdminFarmsController extends Controller {
 			return $this->buildUpstreamErrorResponse();
 		}
 
-		return new JSONResponse($result['payload'], $result['statusCode']);
+		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
 	}
 
 
@@ -692,7 +693,7 @@ final class AdminFarmsController extends Controller {
 			return $this->buildUpstreamErrorResponse();
 		}
 
-		return new JSONResponse($result['payload'], $result['statusCode']);
+		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
 	}
 
 
@@ -1140,7 +1141,7 @@ final class AdminFarmsController extends Controller {
 				'requestId' => $requestId,
 				'details' => $detailsPayload,
 			],
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	/**
@@ -1152,7 +1153,7 @@ final class AdminFarmsController extends Controller {
 			'ok' => true,
 			'message' => $message,
 			'data' => $data,
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	private function buildUpstreamErrorResponse(): JSONResponse {

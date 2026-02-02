@@ -72,7 +72,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(
-			fn (string $appId, string $key, $default = '') => $storage[$key] ?? $default,
+			fn (string $appId, string $key, mixed $default = ''): mixed => $storage[$key] ?? $default,
 		);
 		$config->method('getSystemValue')->willReturn(null);
 		$config->method('getSystemValueBool')->willReturn(false);

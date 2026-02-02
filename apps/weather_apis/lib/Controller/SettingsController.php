@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Controller;
 
 use InvalidArgumentException;
 use OCA\WeatherApis\Service\AppConfig;
+use OCA\WeatherApis\Service\HttpStatus;
 use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\IntegrationConfigException;
 use OCA\WeatherApis\Service\LogSanitizer;
@@ -39,7 +40,7 @@ final class SettingsController extends Controller {
 		parent::__construct($appName, $request);
 
 		// Ensure form submissions with browser Accept headers still receive JSON.
-		$this->registerResponder('xhtml+xml', fn ($data) => $this->buildResponse($data, 'json'));
+		$this->registerResponder('xhtml+xml', fn (mixed $data) => $this->buildResponse($data, 'json'));
 	}
 
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
@@ -172,7 +173,7 @@ final class SettingsController extends Controller {
 				'requestId' => $requestId,
 				'details' => new \stdClass(),
 			],
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	private function resolveRequestId(): string {

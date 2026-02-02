@@ -484,8 +484,9 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 
 		$status = $payload['status'];
 		if (is_numeric($status) && (int)$status !== 0) {
-			$message = is_string($payload['message'] ?? null)
-				? $this->clampString($payload['message'], 200)
+			$messageValue = $payload['message'] ?? null;
+			$message = is_string($messageValue)
+				? $this->clampString($messageValue, 200)
 				: 'Token request failed.';
 			$errors = $payload['errors'] ?? null;
 			$code = 'backend_error';

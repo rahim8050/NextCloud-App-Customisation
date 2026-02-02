@@ -85,7 +85,7 @@ final class Application extends App implements IBootstrap {
 			);
 		});
 
-		$context->registerService(WeatherApiClientInterface::class, function (ContainerInterface $c) {
+		$context->registerService(WeatherApiClientInterface::class, function (ContainerInterface $c): WeatherApiClientInterface {
 			return $c->get(WeatherApiClient::class);
 		});
 

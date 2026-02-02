@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\WeatherApis\Controller;
 
+use OCA\WeatherApis\Service\HttpStatus;
 use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
 use OCA\WeatherApis\Service\WeatherApiException;
@@ -90,7 +91,7 @@ trait WhoamiRequestHandlerTrait {
 				'requestId' => $requestId,
 				'details' => $details,
 			],
-		], $status);
+		], HttpStatus::normalize($status));
 	}
 
 	private function resolveRequestId(IRequest $request): string {
