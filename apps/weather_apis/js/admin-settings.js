@@ -1745,21 +1745,77 @@
 				facts.push({ label, value: normalized })
 			}
 
-			const collectObjectFacts = (source, limit = 8) => {
+			/**
+			 * @typedef {object} NdviLatestObservation
+			 * @property {string=} bucket_date UTC bucket date (YYYY-MM-DD).
+			 * @property {string=} bucketDate CamelCase fallback for bucket date.
+			 * @property {number|string=} mean Mean NDVI value for the bucket.
+			 * @property {number|string=} mean_ndvi Mean NDVI value in snake_case.
+			 * @property {number|string=} ndvi NDVI value from alternate payloads.
+			 * @property {number|string=} value Generic value fallback from legacy payloads.
+			 * @property {number|string=} min Minimum NDVI value for the bucket.
+			 * @property {number|string=} max Maximum NDVI value for the bucket.
+			 * @property {number|string=} sample_count Number of samples in snake_case.
+			 * @property {number|string=} sampleCount Number of samples in camelCase.
+			 * @property {number|string=} cloud_fraction Cloud fraction in snake_case.
+			 * @property {number|string=} cloudFraction Cloud fraction in camelCase.
+			 */
+
+			/**
+			 * @typedef {object} NdviLatestPayloadData
+			 * @property {NdviLatestObservation=} observation Latest NDVI observation object.
+			 * @property {boolean=} stale Whether the observation is considered stale.
+			 * @property {string=} engine Source engine identifier.
+			 * @property {number|string=} lookback_days Lookback window (days), snake_case.
+			 * @property {number|string=} lookbackDays Lookback window (days), camelCase.
+			 * @property {number|string=} lookback Legacy lookback value.
+			 * @property {number|string=} max_cloud Max cloud threshold, snake_case.
+			 * @property {number|string=} maxCloud Max cloud threshold, camelCase.
+			 * @property {number|string=} max_cloud_pct Legacy max-cloud percentage field.
+			 */
+
+			/**
+			 * @typedef {object} NdviLatestPayload
+			 * @property {number|string=} status Top-level status from API envelope.
+			 * @property {string=} message Top-level message from API envelope.
+			 * @property {NdviLatestPayloadData=} data Nested payload data object.
+			 */
+
+			// Latest NDVI responses are shaped as payload.data.{observation,stale,...}.
+			const getLatestNdviData = (payload) => {
+				if (!payload || typeof payload !== 'object') {
+					return {}
+				}
+				const data = payload?.data
+				if (data && typeof data === 'object' && !Array.isArray(data)) {
+					return data
+				}
+				return {}
+			}
+
+			const formatUtcBucketDate = (value) => {
+				const raw = value ? String(value).trim() : ''
+				if (!raw) {
+					return ''
+				}
+				const date = new Date(`${raw}T00:00:00Z`)
+				if (Number.isNaN(date.getTime())) {
+					return raw
+				}
+				return date.toLocaleDateString(undefined, { timeZone: 'UTC' })
+			}
+
+			const buildLatestObservationFacts = (observation) => {
 				const facts = []
-				if (!source || typeof source !== 'object' || Array.isArray(source)) {
+				if (!observation || typeof observation !== 'object') {
 					return facts
 				}
-				for (const [key, value] of Object.entries(source)) {
-					const normalized = normalizeFactValue(value)
-					if (!normalized) {
-						continue
-					}
-					facts.push({ label: key, value: normalized })
-					if (facts.length >= limit) {
-						break
-					}
-				}
+				pushFact(facts, 'Date', formatUtcBucketDate(observation.bucket_date ?? observation.bucketDate))
+				pushFact(facts, 'Mean', observation.mean ?? observation.mean_ndvi ?? observation.ndvi ?? observation.value)
+				pushFact(facts, 'Min', observation.min)
+				pushFact(facts, 'Max', observation.max)
+				pushFact(facts, 'Samples', observation.sample_count ?? observation.sampleCount)
+				pushFact(facts, 'Cloud fraction', observation.cloud_fraction ?? observation.cloudFraction)
 				return facts
 			}
 
@@ -1768,13 +1824,13 @@
 					return 'Latest observation received.'
 				}
 				const parts = []
-				const observedAt = observation.observed_at ?? observation.date ?? observation.timestamp ?? observation.observedAt
-				if (observedAt) {
-					parts.push(`Observed ${observedAt}`)
+				const bucketDate = formatUtcBucketDate(observation.bucket_date ?? observation.bucketDate)
+				if (bucketDate) {
+					parts.push(`Date ${bucketDate}`)
 				}
-				const ndviValue = observation.ndvi ?? observation.value ?? observation.mean_ndvi ?? observation.mean
-				if (ndviValue !== undefined && ndviValue !== null && ndviValue !== '') {
-					parts.push(`NDVI ${ndviValue}`)
+				const meanValue = observation.mean ?? observation.mean_ndvi ?? observation.ndvi ?? observation.value
+				if (meanValue !== undefined && meanValue !== null && meanValue !== '') {
+					parts.push(`Mean ${meanValue}`)
 				}
 				return parts.length ? parts.join(' • ') : 'Latest observation received.'
 			}
@@ -2181,44 +2237,45 @@
 			}
 			if (ndviLatestButton) {
 				ndviLatestButton.addEventListener('click', async () => {
-					const data = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
+					const payload = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
 						method: 'GET',
 						query: buildNdviQuery('ndvi_latest'),
 					})
-					if (data) {
+					if (payload) {
 						if (ndviTable) {
 							ndviTable.textContent = ''
 						}
+						const data = getLatestNdviData(payload)
 						const observation = data?.observation ?? null
 						const facts = []
 						pushFact(facts, 'Engine', data?.engine)
 						pushFact(facts, 'Lookback (days)', data?.lookback_days ?? data?.lookbackDays ?? data?.lookback)
 						pushFact(facts, 'Max cloud (%)', data?.max_cloud ?? data?.maxCloud ?? data?.max_cloud_pct)
 						const badges = []
-						const isStale = Boolean(data?.stale ?? observation?.stale)
+						const isStale = Boolean(data?.stale)
 						if (isStale) {
 							badges.push('Stale')
 						}
-						if (!observation) {
+						if (!observation || isStale) {
 							const card = renderResultCard({
 								title: 'Latest NDVI',
 								level: 'warning',
 								summary: 'No recent observation.',
 								badges,
 								facts,
-								debug: data,
+								debug: payload,
 							})
 							replaceNdviOutput(card)
 							return
 						}
-						const observationFacts = collectObjectFacts(observation)
+						const observationFacts = buildLatestObservationFacts(observation)
 						const card = renderResultCard({
 							title: 'Latest NDVI',
 							level: 'success',
 							summary: buildLatestSummary(observation),
 							badges,
 							facts: [...facts, ...observationFacts],
-							debug: data,
+							debug: payload,
 						})
 						replaceNdviOutput(card)
 					}
