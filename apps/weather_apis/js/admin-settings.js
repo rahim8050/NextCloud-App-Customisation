@@ -128,7 +128,7 @@
 				} catch {
 					return fallback
 				}
-				}
+			}
 
 			return String(value ?? fallback)
 		}
@@ -730,10 +730,26 @@
 			let modalInitial = {}
 			let ndviTouched = { start: false, end: false, raster: false }
 			let ndviRasterObjectUrl = null
-			let weatherActiveTab = 'current'
+			let latestNdviState = null
+			let timeseriesNdviState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
+			let reduceLatestState = () => ({ status: 'no_data', vm: null, payload: null, message: '' })
+			let reduceTimeseriesState = () => ({
+				status: 'no_data',
+				vm: {
+					rangeStart: null,
+					rangeEnd: null,
+					receivedCount: 0,
+					shownCount: 0,
+					points: [],
+					filterWarning: false,
+					raw: null,
+				},
+				payload: null,
+				message: '',
+			})
 
 			const clearFarmsNotes = () => {
 				if (farmsWarning) {
@@ -892,7 +908,6 @@
 				})
 				return fields
 			}
-
 
 			const getSchemaReady = async (source = 'unknown') => {
 				if (schemaReady) {
@@ -1496,13 +1511,13 @@
 				const timeseriesValidation = validateTimeseriesInputs(state)
 				const rasterValidation = validateRasterInput(state)
 
-					if (ndviTimeseriesButton) {
+				if (ndviTimeseriesButton) {
 					ndviTimeseriesButton.disabled = !timeseriesValidation.ok
 				}
-					if (ndviQueueButton) {
+				if (ndviQueueButton) {
 					ndviQueueButton.disabled = !rasterValidation.ok
 				}
-					if (ndviRasterButton) {
+				if (ndviRasterButton) {
 					ndviRasterButton.disabled = !rasterValidation.ok
 				}
 
@@ -1524,6 +1539,8 @@
 
 			const resetNdviState = () => {
 				ndviTouched = { start: false, end: false, raster: false }
+				latestNdviState = reduceLatestState(null, { type: 'reset' })
+				timeseriesNdviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -1612,7 +1629,7 @@
 				}
 				if (typeof value === 'string') {
 					const trimmed = value.trim()
-					return trimmed ? trimmed : ''
+					return trimmed || ''
 				}
 				if (typeof value === 'number' || typeof value === 'boolean') {
 					return String(value)
@@ -1745,95 +1762,114 @@
 				facts.push({ label, value: normalized })
 			}
 
-			/**
-			 * @typedef {object} NdviLatestObservation
-			 * @property {string=} bucket_date UTC bucket date (YYYY-MM-DD).
-			 * @property {string=} bucketDate CamelCase fallback for bucket date.
-			 * @property {number|string=} mean Mean NDVI value for the bucket.
-			 * @property {number|string=} mean_ndvi Mean NDVI value in snake_case.
-			 * @property {number|string=} ndvi NDVI value from alternate payloads.
-			 * @property {number|string=} value Generic value fallback from legacy payloads.
-			 * @property {number|string=} min Minimum NDVI value for the bucket.
-			 * @property {number|string=} max Maximum NDVI value for the bucket.
-			 * @property {number|string=} sample_count Number of samples in snake_case.
-			 * @property {number|string=} sampleCount Number of samples in camelCase.
-			 * @property {number|string=} cloud_fraction Cloud fraction in snake_case.
-			 * @property {number|string=} cloudFraction Cloud fraction in camelCase.
-			 */
+			const ndviUi = window.WeatherApisNdviUi ?? window.WeatherApisNdviLatest ?? {}
+			const normalizeNdviTimeseries = ndviUi.normalizeNdviTimeseries ?? ((raw, rangeStart, rangeEnd) => ({
+				rangeStart,
+				rangeEnd,
+				receivedCount: 0,
+				shownCount: 0,
+				points: [],
+				filterWarning: false,
+				raw,
+			}))
+			const NDVI_LATEST_STATE = ndviUi.NDVI_LATEST_STATE ?? {
+				loading: 'loading',
+				error: 'error',
+				no_data: 'no_data',
+				fresh: 'fresh',
+				stale: 'stale',
+			}
+			const NDVI_SERIES_STATE = ndviUi.NDVI_SERIES_STATE ?? {
+				loading: 'loading',
+				error: 'error',
+				no_data: 'no_data',
+				has_data: 'has_data',
+			}
+			reduceLatestState = ndviUi.reduceLatestState ?? ((state, action) => ({
+				status: NDVI_LATEST_STATE.no_data,
+				vm: null,
+				payload: action?.payload ?? null,
+				message: action?.message ?? '',
+			}))
+			reduceTimeseriesState = ndviUi.reduceTimeseriesState ?? ((state, action, rangeStart, rangeEnd) => ({
+				status: NDVI_SERIES_STATE.no_data,
+				vm: normalizeNdviTimeseries(null, rangeStart, rangeEnd),
+				payload: action?.payload ?? null,
+				message: action?.message ?? '',
+			}))
+			const buildLatestCardModel = ndviUi.buildLatestCardModel ?? ((state) => ({
+				title: 'Latest NDVI',
+				level: 'info',
+				summary: '',
+				badges: [],
+				facts: [],
+				showRetry: false,
+			}))
+			const buildTimeseriesCardModel = ndviUi.buildTimeseriesCardModel ?? ((state) => ({
+				title: 'NDVI timeseries',
+				level: 'info',
+				summary: '',
+				badges: [],
+				facts: [],
+				showRetry: false,
+				emptyMessage: '',
+			}))
 
-			/**
-			 * @typedef {object} NdviLatestPayloadData
-			 * @property {NdviLatestObservation=} observation Latest NDVI observation object.
-			 * @property {boolean=} stale Whether the observation is considered stale.
-			 * @property {string=} engine Source engine identifier.
-			 * @property {number|string=} lookback_days Lookback window (days), snake_case.
-			 * @property {number|string=} lookbackDays Lookback window (days), camelCase.
-			 * @property {number|string=} lookback Legacy lookback value.
-			 * @property {number|string=} max_cloud Max cloud threshold, snake_case.
-			 * @property {number|string=} maxCloud Max cloud threshold, camelCase.
-			 * @property {number|string=} max_cloud_pct Legacy max-cloud percentage field.
-			 */
-
-			/**
-			 * @typedef {object} NdviLatestPayload
-			 * @property {number|string=} status Top-level status from API envelope.
-			 * @property {string=} message Top-level message from API envelope.
-			 * @property {NdviLatestPayloadData=} data Nested payload data object.
-			 */
-
-			// Latest NDVI responses are shaped as payload.data.{observation,stale,...}.
-			const getLatestNdviData = (payload) => {
-				if (!payload || typeof payload !== 'object') {
-					return {}
+			const appendRetryButton = (card, label, handler) => {
+				if (!card || typeof handler !== 'function') {
+					return
 				}
-				const data = payload?.data
-				if (data && typeof data === 'object' && !Array.isArray(data)) {
-					return data
-				}
-				return {}
+				const actions = document.createElement('div')
+				actions.className = 'weather-apis-result__actions'
+				const button = document.createElement('button')
+				button.type = 'button'
+				button.className = 'button'
+				button.textContent = label || 'Retry'
+				button.addEventListener('click', handler)
+				actions.appendChild(button)
+				card.appendChild(actions)
 			}
 
-			const formatUtcBucketDate = (value) => {
-				const raw = value ? String(value).trim() : ''
-				if (!raw) {
-					return ''
+			const renderLatestCard = (state, retryHandler) => {
+				const model = buildLatestCardModel(state)
+				const card = renderResultCard({
+					title: model.title,
+					level: model.level,
+					summary: model.summary,
+					badges: model.badges,
+					facts: model.facts,
+					debug: state?.payload,
+				})
+				if (model.showRetry) {
+					appendRetryButton(card, 'Retry', retryHandler)
 				}
-				const date = new Date(`${raw}T00:00:00Z`)
-				if (Number.isNaN(date.getTime())) {
-					return raw
-				}
-				return date.toLocaleDateString(undefined, { timeZone: 'UTC' })
+				replaceNdviOutput(card)
 			}
 
-			const buildLatestObservationFacts = (observation) => {
-				const facts = []
-				if (!observation || typeof observation !== 'object') {
-					return facts
+			const renderTimeseriesCard = (state, retryHandler) => {
+				const model = buildTimeseriesCardModel(state)
+				const card = renderResultCard({
+					title: model.title,
+					level: model.level,
+					summary: model.summary,
+					badges: model.badges,
+					facts: model.facts,
+					debug: state?.payload,
+				})
+				if (model.emptyMessage) {
+					const emptyLine = document.createElement('p')
+					emptyLine.className = 'weather-apis-result__summary'
+					emptyLine.textContent = model.emptyMessage
+					card.appendChild(emptyLine)
 				}
-				pushFact(facts, 'Date', formatUtcBucketDate(observation.bucket_date ?? observation.bucketDate))
-				pushFact(facts, 'Mean', observation.mean ?? observation.mean_ndvi ?? observation.ndvi ?? observation.value)
-				pushFact(facts, 'Min', observation.min)
-				pushFact(facts, 'Max', observation.max)
-				pushFact(facts, 'Samples', observation.sample_count ?? observation.sampleCount)
-				pushFact(facts, 'Cloud fraction', observation.cloud_fraction ?? observation.cloudFraction)
-				return facts
+				if (model.showRetry) {
+					appendRetryButton(card, 'Retry', retryHandler)
+				}
+				replaceNdviOutput(card)
 			}
 
-			const buildLatestSummary = (observation) => {
-				if (!observation || typeof observation !== 'object') {
-					return 'Latest observation received.'
-				}
-				const parts = []
-				const bucketDate = formatUtcBucketDate(observation.bucket_date ?? observation.bucketDate)
-				if (bucketDate) {
-					parts.push(`Date ${bucketDate}`)
-				}
-				const meanValue = observation.mean ?? observation.mean_ndvi ?? observation.ndvi ?? observation.value
-				if (meanValue !== undefined && meanValue !== null && meanValue !== '') {
-					parts.push(`Mean ${meanValue}`)
-				}
-				return parts.length ? parts.join(' • ') : 'Latest observation received.'
-			}
+			latestNdviState = reduceLatestState(null, { type: 'reset' })
+			timeseriesNdviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 
 			const renderNdviTable = (items) => {
 				if (!ndviTable) {
@@ -1860,7 +1896,8 @@
 					const row = document.createElement('tr')
 					columns.forEach((name) => {
 						const cell = document.createElement('td')
-						cell.textContent = item?.[name] !== undefined ? String(item[name]) : ''
+						const value = item?.[name]
+						cell.textContent = value !== undefined && value !== null ? String(value) : ''
 						row.appendChild(cell)
 					})
 					tbody.appendChild(row)
@@ -1887,6 +1924,7 @@
 			}
 
 			const runNdviRequest = async (operationKey, urlTemplate, options = {}) => {
+				const { returnRaw = false, ...requestOptions } = options
 				const schemaOk = await getSchemaReady(`ndvi ${operationKey}`)
 				logFarms(`ndvi ${operationKey} schema gate`, { ok: schemaOk })
 				if (!schemaOk) {
@@ -1899,7 +1937,7 @@
 					return
 				}
 				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-				const result = await performJsonRequest(options.method || 'GET', url, options)
+				const result = await performJsonRequest(requestOptions.method || 'GET', url, requestOptions)
 				const responseOk = Boolean(result.response?.ok)
 				const contentType = result.response?.headers?.get
 					? result.response.headers.get('content-type') || ''
@@ -1925,7 +1963,7 @@
 					showNdviError(message)
 					return null
 				}
-				return unwrapResponseData(result.data)
+				return returnRaw ? result.data : unwrapResponseData(result.data)
 			}
 
 			const clearWeatherError = () => {
@@ -1954,7 +1992,6 @@
 			}
 
 			const setWeatherActiveTab = (tab) => {
-				weatherActiveTab = tab
 				const tabs = [
 					{ key: 'current', button: weatherCurrentTab, panel: weatherCurrentPanel },
 					{ key: 'hourly', button: weatherHourlyTab, panel: weatherHourlyPanel },
@@ -2078,7 +2115,7 @@
 						{ key: 'wind_speed_mps', label: 'Wind (m/s)', format: formatWeatherNumber },
 						{ key: 'cloud_cover_pct', label: 'Clouds (%)', format: formatWeatherNumber },
 					],
-					'No hourly data.'
+					'No hourly data.',
 				)
 			}
 
@@ -2094,7 +2131,7 @@
 						{ key: 'precipitation_mm', label: 'Rain (mm)', format: formatWeatherNumber },
 						{ key: 'wind_speed_max_mps', label: 'Wind max (m/s)', format: formatWeatherNumber },
 					],
-					'No daily data.'
+					'No daily data.',
 				)
 			}
 
@@ -2235,117 +2272,81 @@
 			if (farmsModalClose) {
 				farmsModalClose.addEventListener('click', closeFarmModal)
 			}
-			if (ndviLatestButton) {
-				ndviLatestButton.addEventListener('click', async () => {
-					const payload = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
-						method: 'GET',
-						query: buildNdviQuery('ndvi_latest'),
-					})
-					if (payload) {
-						if (ndviTable) {
-							ndviTable.textContent = ''
-						}
-						const data = getLatestNdviData(payload)
-						const observation = data?.observation ?? null
-						const facts = []
-						pushFact(facts, 'Engine', data?.engine)
-						pushFact(facts, 'Lookback (days)', data?.lookback_days ?? data?.lookbackDays ?? data?.lookback)
-						pushFact(facts, 'Max cloud (%)', data?.max_cloud ?? data?.maxCloud ?? data?.max_cloud_pct)
-						const badges = []
-						const isStale = Boolean(data?.stale)
-						if (isStale) {
-							badges.push('Stale')
-						}
-						if (!observation || isStale) {
-							const card = renderResultCard({
-								title: 'Latest NDVI',
-								level: 'warning',
-								summary: 'No recent observation.',
-								badges,
-								facts,
-								debug: payload,
-							})
-							replaceNdviOutput(card)
-							return
-						}
-						const observationFacts = buildLatestObservationFacts(observation)
-						const card = renderResultCard({
-							title: 'Latest NDVI',
-							level: 'success',
-							summary: buildLatestSummary(observation),
-							badges,
-							facts: [...facts, ...observationFacts],
-							debug: payload,
-						})
-						replaceNdviOutput(card)
-					}
+			const loadLatestNdvi = async () => {
+				latestNdviState = reduceLatestState(latestNdviState, { type: 'request' })
+				renderLatestCard(latestNdviState, loadLatestNdvi)
+				const payload = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
+					method: 'GET',
+					query: buildNdviQuery('ndvi_latest'),
+					returnRaw: true,
 				})
+				if (!payload) {
+					latestNdviState = reduceLatestState(latestNdviState, {
+						type: 'failure',
+						message: 'Unable to load latest NDVI.',
+					})
+					renderLatestCard(latestNdviState, loadLatestNdvi)
+					return
+				}
+				latestNdviState = reduceLatestState(latestNdviState, { type: 'success', payload }, new Date())
+				if (ndviTable) {
+					ndviTable.textContent = ''
+				}
+				renderLatestCard(latestNdviState, loadLatestNdvi)
+			}
+			if (ndviLatestButton) {
+				ndviLatestButton.addEventListener('click', loadLatestNdvi)
+			}
+			const loadNdviTimeseries = async () => {
+				const state = readNdviDateState()
+				const validation = validateTimeseriesInputs(state)
+				if (!validation.ok) {
+					showNdviError(validation.message)
+					return
+				}
+				timeseriesNdviState = reduceTimeseriesState(
+					timeseriesNdviState,
+					{ type: 'request' },
+					validation.start,
+					validation.end,
+				)
+				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				const payload = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
+					method: 'GET',
+					query: buildNdviQuery('ndvi_timeseries', {
+						start: validation.start,
+						end: validation.end,
+					}),
+					returnRaw: true,
+				})
+				if (!payload) {
+					timeseriesNdviState = reduceTimeseriesState(
+						timeseriesNdviState,
+						{ type: 'failure', message: 'Unable to load NDVI timeseries.' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+					if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+					return
+				}
+				timeseriesNdviState = reduceTimeseriesState(
+					timeseriesNdviState,
+					{ type: 'success', payload },
+					validation.start,
+					validation.end,
+				)
+				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				if (timeseriesNdviState.status === NDVI_SERIES_STATE.has_data) {
+					renderNdviTable(timeseriesNdviState.vm?.points ?? [])
+				} else if (ndviTable) {
+					ndviTable.textContent = ''
+				}
 			}
 			if (ndviTimeseriesButton) {
-				ndviTimeseriesButton.addEventListener('click', async () => {
-					const state = readNdviDateState()
-					const validation = validateTimeseriesInputs(state)
-					if (!validation.ok) {
-						showNdviError(validation.message)
-						return
-					}
-					const data = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
-						method: 'GET',
-						query: buildNdviQuery('ndvi_timeseries', {
-							start: validation.start,
-							end: validation.end,
-						}),
-					})
-					if (data) {
-						const observations = Array.isArray(data?.observations)
-							? data.observations
-							: Array.isArray(data?.results)
-								? data.results
-								: Array.isArray(data)
-									? data
-									: []
-						const facts = []
-						const startValue = data?.start ?? validation.start
-						const endValue = data?.end ?? validation.end
-						pushFact(facts, 'Start', startValue)
-						pushFact(facts, 'End', endValue)
-						pushFact(facts, 'Max cloud (%)', data?.max_cloud ?? data?.maxCloud ?? data?.max_cloud_pct)
-						pushFact(facts, 'Engine', data?.engine)
-						if (data?.partial !== undefined) {
-							pushFact(facts, 'Partial', data?.partial)
-						}
-						if (data?.missing_buckets_count !== undefined || data?.missingBucketsCount !== undefined) {
-							pushFact(
-								facts,
-								'Missing buckets',
-								data?.missing_buckets_count ?? data?.missingBucketsCount,
-							)
-						}
-						const badges = []
-						if (data?.partial === true) {
-							badges.push('Partial')
-						}
-						const missingCount = Number(data?.missing_buckets_count ?? data?.missingBucketsCount)
-						if (Number.isFinite(missingCount) && missingCount > 0) {
-							badges.push('Missing buckets')
-						}
-						const observationCount = observations.length
-						const summary = observationCount > 0
-							? `${observationCount} observation${observationCount === 1 ? '' : 's'}`
-								+ (startValue && endValue ? ` from ${startValue} to ${endValue}` : '')
-							: 'No observations for the selected range.'
-						const card = renderResultCard({
-							title: 'NDVI timeseries',
-							level: observationCount > 0 ? 'success' : 'warning',
-							summary,
-							badges,
-							facts,
-							debug: data,
-						})
-						replaceNdviOutput(card)
-						renderNdviTable(observations)
-					}
-				})
+				ndviTimeseriesButton.addEventListener('click', loadNdviTimeseries)
 			}
 			if (ndviRasterButton) {
 				ndviRasterButton.addEventListener('click', async () => {

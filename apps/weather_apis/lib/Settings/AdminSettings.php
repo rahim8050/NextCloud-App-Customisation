@@ -31,6 +31,7 @@ final class AdminSettings implements IDelegatedSettings {
 	}
 
 	public function getForm(): TemplateResponse {
+		Util::addScript('weather_apis', 'ndvi-latest');
 		Util::addScript('weather_apis', 'admin-settings');
 
 		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
