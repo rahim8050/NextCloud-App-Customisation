@@ -69,7 +69,7 @@ assert.ok(seriesState.vm.receivedCount >= 2)
 assert.ok(seriesState.vm.shownCount >= 2)
 const seriesModel = ndvi.buildTimeseriesCardModel(seriesState)
 assert.ok(!JSON.stringify(seriesModel).includes('No observations for the selected range.'))
-assert.ok(seriesModel.summary.includes('Received'))
+assert.ok(seriesModel.summary.includes('observations'))
 
 const filteredState = ndvi.reduceTimeseriesState(
 	undefined,
@@ -80,8 +80,8 @@ const filteredState = ndvi.reduceTimeseriesState(
 assert.strictEqual(filteredState.status, ndvi.NDVI_SERIES_STATE.no_data)
 assert.strictEqual(filteredState.vm.filterWarning, true)
 const filteredModel = ndvi.buildTimeseriesCardModel(filteredState)
-assert.ok(filteredModel.summary.includes('Received'))
-assert.ok(filteredModel.facts.some((fact) => String(fact.value).includes('Received')))
+assert.ok(filteredModel.summary.includes('observations'))
+assert.ok(filteredModel.facts.some((fact) => String(fact.value).includes('total')))
 assert.ok(
 	filteredModel.facts.some(
 		(fact) => String(fact.value)
@@ -108,3 +108,7 @@ const seriesErrorModel = ndvi.buildTimeseriesCardModel(seriesErrorState)
 assert.strictEqual(seriesErrorModel.showRetry, true)
 
 assert.strictEqual(ndvi.parseDateOnly('not-a-date'), null)
+assert.strictEqual(ndvi.formatNumber(0.123456), '0.123')
+assert.strictEqual(ndvi.formatNumber(12345.6, 1), '12,345.6')
+assert.strictEqual(ndvi.formatPercent(0.15), '15%')
+assert.strictEqual(ndvi.formatCount(16384), '16,384')

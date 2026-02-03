@@ -237,6 +237,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 					$options['query'] = $queryParams;
 				}
 
+				$this->logOutboundRequest($resolvedId, $httpMethod, $baseUrl, $path, 'Bearer');
 				$url = $this->buildEndpoint($baseUrl, $path);
 
 				try {
@@ -298,6 +299,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 					$options['query'] = $queryParams;
 				}
 
+				$this->logOutboundRequest($resolvedId, $httpMethod, $baseUrl, $path, 'Bearer');
 				$url = $this->buildEndpoint($baseUrl, $path);
 
 				try {
@@ -996,6 +998,25 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$this->logger->warning(
 			'Weather API transport request failed',
 			LogSanitizer::sanitizeContext($context),
+		);
+	}
+
+	private function logOutboundRequest(
+		string $requestId,
+		string $method,
+		string $baseUrl,
+		string $path,
+		string $authType,
+	): void {
+		$this->logger->info(
+			'Weather API outbound request',
+			LogSanitizer::sanitizeContext([
+				'requestId' => $requestId,
+				'method' => $method,
+				'baseUrl' => $baseUrl,
+				'path' => $path,
+				'authType' => $authType,
+			]),
 		);
 	}
 

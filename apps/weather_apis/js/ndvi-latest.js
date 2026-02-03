@@ -351,11 +351,30 @@
 		if (!Number.isFinite(num)) {
 			return '-'
 		}
-		if (Number.isInteger(num)) {
-			return String(num)
-		}
-		return num.toFixed(digits)
+		const safeDigits = Number.isFinite(digits)
+			? Math.max(0, Math.min(6, Math.trunc(digits)))
+			: 3
+		const fixed = safeDigits > 0 ? num.toFixed(safeDigits) : String(Math.round(num))
+		const trimmed = safeDigits > 0
+			? fixed.replace(/(?:\.0+|(\.\d*?)0+)$/, '$1')
+			: fixed
+		const [whole, fraction] = trimmed.split('.')
+		const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+		return fraction ? `${grouped}.${fraction}` : grouped
 	}
+
+	const formatPercent = (value, digits = 1) => {
+		if (value === null || value === undefined) {
+			return '-'
+		}
+		const num = Number(value)
+		if (!Number.isFinite(num)) {
+			return '-'
+		}
+		return `${formatNumber(num * 100, digits)}%`
+	}
+
+	const formatCount = (value) => formatNumber(value, 0)
 
 	const formatDateWithAge = (dateValue, daysAgo) => {
 		if (!dateValue) {
@@ -408,11 +427,11 @@
 			}
 			facts.push({ label: 'Min', value: formatNumber(vm.min) })
 			facts.push({ label: 'Max', value: formatNumber(vm.max) })
-			facts.push({ label: 'Cloud %', value: formatNumber(vm.cloudFraction) })
-			facts.push({ label: 'Samples', value: formatNumber(vm.sampleCount, 0) })
+			facts.push({ label: 'Cloud %', value: formatPercent(vm.cloudFraction, 1) })
+			facts.push({ label: 'Samples', value: formatCount(vm.sampleCount) })
 			facts.push({ label: 'Engine', value: vm.engine ?? '-' })
-			facts.push({ label: 'Lookback (days)', value: formatNumber(vm.lookbackDays, 0) })
-			facts.push({ label: 'Max cloud (%)', value: formatNumber(vm.maxCloud, 0) })
+			facts.push({ label: 'Lookback (days)', value: formatCount(vm.lookbackDays) })
+			facts.push({ label: 'Max cloud (%)', value: formatCount(vm.maxCloud) })
 			if (state.status === NDVI_LATEST_STATE.stale) {
 				facts.push({ label: 'Warning', value: 'Observation is stale.' })
 			}
@@ -443,11 +462,15 @@
 			return model
 		}
 		const vm = state.vm || createEmptyTimeseriesVm(null, null)
-		const summary = `Received ${vm.receivedCount} • Showing ${vm.shownCount}`
+		const rangeStart = vm.rangeStart ?? '-'
+		const rangeEnd = vm.rangeEnd ?? '-'
+		const shown = Number.isFinite(vm.shownCount) ? vm.shownCount : vm.receivedCount
+		const observationLabel = shown === 1 ? 'observation' : 'observations'
+		const summary = `${shown} ${observationLabel} (${rangeStart} → ${rangeEnd})`
 		const facts = [
-			{ label: 'Range start', value: vm.rangeStart ?? '-' },
-			{ label: 'Range end', value: vm.rangeEnd ?? '-' },
-			{ label: 'Counts', value: summary },
+			{ label: 'Range start', value: rangeStart },
+			{ label: 'Range end', value: rangeEnd },
+			{ label: 'Counts', value: `${vm.receivedCount} total, ${vm.shownCount} shown` },
 		]
 		if (state.status === NDVI_SERIES_STATE.loading) {
 			return { ...model, summary, facts }
@@ -495,6 +518,8 @@
 		buildTimeseriesCardModel,
 		parseDateOnly,
 		formatNumber,
+		formatPercent,
+		formatCount,
 	}
 
 	if (typeof window !== 'undefined') {

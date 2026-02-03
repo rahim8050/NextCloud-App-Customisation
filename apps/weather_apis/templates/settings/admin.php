@@ -129,53 +129,55 @@ style('weather_apis', 'admin-settings');
 				<div id="weather-apis-farms-page" class="weather-apis-farms__page"></div>
 				<button id="weather-apis-farms-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
 			</div>
-			<div class="weather-apis-farms__ndvi" id="weather-apis-farms-ndvi" hidden>
-				<div class="weather-apis-farms__ndvi-header">
-					<strong><?php p($l->t('NDVI')); ?></strong>
-					<span id="weather-apis-farms-ndvi-title" class="weather-apis-farms__ndvi-title"></span>
+			<div class="weather-apis-farms__panels">
+				<div class="weather-apis-farms__ndvi" id="weather-apis-farms-ndvi" hidden>
+					<div class="weather-apis-farms__ndvi-header">
+						<strong><?php p($l->t('NDVI')); ?></strong>
+						<span id="weather-apis-farms-ndvi-title" class="weather-apis-farms__ndvi-title"></span>
+					</div>
+					<div class="weather-apis-farms__ndvi-actions">
+						<button id="weather-apis-ndvi-latest" type="button" class="button"><?php p($l->t('Latest NDVI')); ?></button>
+						<button id="weather-apis-ndvi-timeseries" type="button" class="button"><?php p($l->t('Timeseries')); ?></button>
+						<button id="weather-apis-ndvi-queue" type="button" class="button"><?php p($l->t('Queue raster')); ?></button>
+						<button id="weather-apis-ndvi-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+					</div>
+					<div class="weather-apis-farms__ndvi-row">
+						<label for="weather-apis-ndvi-start"><?php p($l->t('Start')); ?></label>
+						<input id="weather-apis-ndvi-start" type="date" />
+						<label for="weather-apis-ndvi-end"><?php p($l->t('End')); ?></label>
+						<input id="weather-apis-ndvi-end" type="date" />
+						<label for="weather-apis-ndvi-date"><?php p($l->t('Raster date')); ?></label>
+						<input id="weather-apis-ndvi-date" type="date" />
+						<button id="weather-apis-ndvi-raster" type="button" class="button"><?php p($l->t('Raster PNG')); ?></button>
+					</div>
+					<div id="weather-apis-ndvi-error" class="weather-apis-farms__note error weather-apis-farms__ndvi-error" hidden></div>
+					<div id="weather-apis-ndvi-output" class="weather-apis-farms__ndvi-output"></div>
+					<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
+					<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>
+						<img id="weather-apis-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />
+					</div>
 				</div>
-				<div class="weather-apis-farms__ndvi-actions">
-					<button id="weather-apis-ndvi-latest" type="button" class="button"><?php p($l->t('Latest NDVI')); ?></button>
-					<button id="weather-apis-ndvi-timeseries" type="button" class="button"><?php p($l->t('Timeseries')); ?></button>
-					<button id="weather-apis-ndvi-queue" type="button" class="button"><?php p($l->t('Queue raster')); ?></button>
-					<button id="weather-apis-ndvi-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
-				</div>
-				<div class="weather-apis-farms__ndvi-row">
-					<label for="weather-apis-ndvi-start"><?php p($l->t('Start')); ?></label>
-					<input id="weather-apis-ndvi-start" type="date" />
-					<label for="weather-apis-ndvi-end"><?php p($l->t('End')); ?></label>
-					<input id="weather-apis-ndvi-end" type="date" />
-					<label for="weather-apis-ndvi-date"><?php p($l->t('Raster date')); ?></label>
-					<input id="weather-apis-ndvi-date" type="date" />
-					<button id="weather-apis-ndvi-raster" type="button" class="button"><?php p($l->t('Raster PNG')); ?></button>
-				</div>
-				<div id="weather-apis-ndvi-error" class="weather-apis-farms__note error weather-apis-farms__ndvi-error" hidden></div>
-				<div id="weather-apis-ndvi-output" class="weather-apis-farms__ndvi-output"></div>
-				<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
-				<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>
-					<img id="weather-apis-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />
-				</div>
-			</div>
-			<div class="weather-apis-farms__weather" id="weather-apis-farms-weather" hidden>
-				<div class="weather-apis-farms__weather-header">
-					<strong><?php p($l->t('Weather')); ?></strong>
-					<span id="weather-apis-farms-weather-title" class="weather-apis-farms__weather-title"></span>
-				</div>
-				<div class="weather-apis-farms__weather-tabs">
-					<button id="weather-apis-weather-current-tab" type="button" class="button"><?php p($l->t('Current')); ?></button>
-					<button id="weather-apis-weather-hourly-tab" type="button" class="button"><?php p($l->t('Hourly')); ?></button>
-					<button id="weather-apis-weather-daily-tab" type="button" class="button"><?php p($l->t('Daily')); ?></button>
-				</div>
-				<div id="weather-apis-weather-loading" class="weather-apis-farms__note" hidden><?php p($l->t('Loading weather...')); ?></div>
-				<div id="weather-apis-weather-error" class="weather-apis-farms__note error" hidden></div>
-				<div id="weather-apis-weather-current" class="weather-apis-farms__weather-panel" hidden>
-					<div id="weather-apis-weather-current-grid" class="weather-apis-farms__weather-grid"></div>
-				</div>
-				<div id="weather-apis-weather-hourly" class="weather-apis-farms__weather-panel" hidden>
-					<div id="weather-apis-weather-hourly-table" class="weather-apis-farms__weather-table"></div>
-				</div>
-				<div id="weather-apis-weather-daily" class="weather-apis-farms__weather-panel" hidden>
-					<div id="weather-apis-weather-daily-table" class="weather-apis-farms__weather-table"></div>
+				<div class="weather-apis-farms__weather" id="weather-apis-farms-weather" hidden>
+					<div class="weather-apis-farms__weather-header">
+						<strong><?php p($l->t('Weather')); ?></strong>
+						<span id="weather-apis-farms-weather-title" class="weather-apis-farms__weather-title"></span>
+					</div>
+					<div class="weather-apis-farms__weather-tabs">
+						<button id="weather-apis-weather-current-tab" type="button" class="button"><?php p($l->t('Current')); ?></button>
+						<button id="weather-apis-weather-hourly-tab" type="button" class="button"><?php p($l->t('Hourly')); ?></button>
+						<button id="weather-apis-weather-daily-tab" type="button" class="button"><?php p($l->t('Daily')); ?></button>
+					</div>
+					<div id="weather-apis-weather-loading" class="weather-apis-farms__note" hidden><?php p($l->t('Loading weather...')); ?></div>
+					<div id="weather-apis-weather-error" class="weather-apis-farms__note error" hidden></div>
+					<div id="weather-apis-weather-current" class="weather-apis-farms__weather-panel" hidden>
+						<div id="weather-apis-weather-current-grid" class="weather-apis-farms__weather-grid"></div>
+					</div>
+					<div id="weather-apis-weather-hourly" class="weather-apis-farms__weather-panel" hidden>
+						<div id="weather-apis-weather-hourly-table" class="weather-apis-farms__weather-table"></div>
+					</div>
+					<div id="weather-apis-weather-daily" class="weather-apis-farms__weather-panel" hidden>
+						<div id="weather-apis-weather-daily-table" class="weather-apis-farms__weather-table"></div>
+					</div>
 				</div>
 			</div>
 			<div class="weather-apis-farms__modal" id="weather-apis-farms-modal" hidden>

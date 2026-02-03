@@ -947,9 +947,6 @@
 				if (farm.id !== undefined && farm.id !== null && farm.id !== '') {
 					return farm.id
 				}
-				if (farm.slug !== undefined && farm.slug !== null && farm.slug !== '') {
-					return farm.slug
-				}
 				return null
 			}
 
@@ -1815,6 +1812,35 @@
 				emptyMessage: '',
 			}))
 
+			const formatNdviNumber = typeof ndviUi.formatNumber === 'function'
+				? ndviUi.formatNumber
+				: (value, digits = 3) => {
+					if (value === null || value === undefined || value === '') {
+						return '-'
+					}
+					const num = Number(value)
+					if (!Number.isFinite(num)) {
+						return '-'
+					}
+					return num.toFixed(digits)
+				}
+			const formatNdviPercent = typeof ndviUi.formatPercent === 'function'
+				? ndviUi.formatPercent
+				: (value, digits = 1) => {
+					if (value === null || value === undefined || value === '') {
+						return '-'
+					}
+					const num = Number(value)
+					if (!Number.isFinite(num)) {
+						return '-'
+					}
+					const scaled = num * 100
+					return `${formatNdviNumber(scaled, digits)}%`
+				}
+			const formatNdviCount = typeof ndviUi.formatCount === 'function'
+				? ndviUi.formatCount
+				: (value) => formatNdviNumber(value, 0)
+
 			const appendRetryButton = (card, label, handler) => {
 				if (!card || typeof handler !== 'function') {
 					return
@@ -1871,6 +1897,47 @@
 			latestNdviState = reduceLatestState(null, { type: 'reset' })
 			timeseriesNdviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 
+			const NDVI_PERCENT_KEYS = new Set(['cloudFraction', 'cloud_fraction', 'cloudPct', 'cloud_pct'])
+			const NDVI_COUNT_KEYS = new Set(['sampleCount', 'sample_count', 'samples'])
+			const NDVI_DECIMAL_KEYS = new Set(['mean', 'min', 'max', 'value', 'ndvi', 'mean_ndvi'])
+			const NDVI_DATE_KEYS = new Set(['date', 'bucket_date', 'bucketDate'])
+
+			const resolveNdviColumnClass = (key, value) => {
+				const keyName = String(key)
+				if (NDVI_DATE_KEYS.has(keyName) || /date|day|timestamp/i.test(keyName)) {
+					return 'is-date'
+				}
+				if (
+					NDVI_PERCENT_KEYS.has(keyName)
+					|| NDVI_COUNT_KEYS.has(keyName)
+					|| NDVI_DECIMAL_KEYS.has(keyName)
+					|| typeof value === 'number'
+				) {
+					return 'is-number'
+				}
+				return ''
+			}
+
+			const formatNdviTableValue = (key, value) => {
+				if (value === null || value === undefined) {
+					return ''
+				}
+				const keyName = String(key)
+				if (NDVI_PERCENT_KEYS.has(keyName)) {
+					return formatNdviPercent(value)
+				}
+				if (NDVI_COUNT_KEYS.has(keyName)) {
+					return formatNdviCount(value)
+				}
+				if (NDVI_DECIMAL_KEYS.has(keyName)) {
+					return formatNdviNumber(value, 3)
+				}
+				if (typeof value === 'number') {
+					return formatNdviNumber(value, 3)
+				}
+				return String(value)
+			}
+
 			const renderNdviTable = (items) => {
 				if (!ndviTable) {
 					return
@@ -1881,12 +1948,16 @@
 				}
 				const columns = Object.keys(items[0] || {})
 				const table = document.createElement('table')
-				table.className = 'weather-apis-farms__table'
+				table.className = 'weather-apis-farms__table weather-apis-farms__table--sticky'
 				const thead = document.createElement('thead')
 				const headerRow = document.createElement('tr')
-				columns.forEach((name) => {
+				const columnClasses = columns.map((name) => resolveNdviColumnClass(name, items[0]?.[name]))
+				columns.forEach((name, index) => {
 					const th = document.createElement('th')
 					th.textContent = name
+					if (columnClasses[index]) {
+						th.classList.add(columnClasses[index])
+					}
 					headerRow.appendChild(th)
 				})
 				thead.appendChild(headerRow)
@@ -1894,10 +1965,13 @@
 				const tbody = document.createElement('tbody')
 				items.forEach((item) => {
 					const row = document.createElement('tr')
-					columns.forEach((name) => {
+					columns.forEach((name, index) => {
 						const cell = document.createElement('td')
 						const value = item?.[name]
-						cell.textContent = value !== undefined && value !== null ? String(value) : ''
+						cell.textContent = formatNdviTableValue(name, value)
+						if (columnClasses[index]) {
+							cell.classList.add(columnClasses[index])
+						}
 						row.appendChild(cell)
 					})
 					tbody.appendChild(row)
@@ -2007,19 +2081,23 @@
 				})
 			}
 
-			const formatWeatherNumber = (value, digits = 1) => {
-				if (value === null || value === undefined || value === '') {
-					return '-'
-				}
-				const num = Number(value)
-				if (!Number.isFinite(num)) {
-					return '-'
-				}
-				return num.toFixed(digits)
+			const formatIsoDate = (date) => {
+				const year = date.getFullYear()
+				const month = String(date.getMonth() + 1).padStart(2, '0')
+				const day = String(date.getDate()).padStart(2, '0')
+				return `${year}-${month}-${day}`
 			}
 
+			const formatIsoDateTime = (date) => {
+				const hours = String(date.getHours()).padStart(2, '0')
+				const minutes = String(date.getMinutes()).padStart(2, '0')
+				return `${formatIsoDate(date)} ${hours}:${minutes}`
+			}
+
+			const formatWeatherNumber = (value, digits = 1) => formatNdviNumber(value, digits)
+
 			const formatWeatherDateTime = (value) => {
-				const raw = value ? String(value) : ''
+				const raw = value ? String(value).trim() : ''
 				if (!raw) {
 					return '-'
 				}
@@ -2027,19 +2105,22 @@
 				if (Number.isNaN(date.getTime())) {
 					return raw
 				}
-				return date.toLocaleString()
+				return formatIsoDateTime(date)
 			}
 
 			const formatWeatherDate = (value) => {
-				const raw = value ? String(value) : ''
+				const raw = value ? String(value).trim() : ''
 				if (!raw) {
 					return '-'
+				}
+				if (ISO_DATE_PATTERN.test(raw)) {
+					return raw
 				}
 				const date = new Date(raw)
 				if (Number.isNaN(date.getTime())) {
 					return raw
 				}
-				return date.toLocaleDateString()
+				return formatIsoDate(date)
 			}
 
 			const renderWeatherCurrent = (payload) => {
@@ -2077,12 +2158,22 @@
 					return
 				}
 				const table = document.createElement('table')
-				table.className = 'weather-apis-farms__table'
+				table.className = 'weather-apis-farms__table weather-apis-farms__table--sticky'
 				const thead = document.createElement('thead')
 				const headerRow = document.createElement('tr')
-				columns.forEach((column) => {
+				const columnClasses = columns.map((column) => {
+					const key = String(column.key ?? '')
+					if (/timestamp|date|day/i.test(key)) {
+						return 'is-date'
+					}
+					return 'is-number'
+				})
+				columns.forEach((column, index) => {
 					const th = document.createElement('th')
 					th.textContent = column.label
+					if (columnClasses[index]) {
+						th.classList.add(columnClasses[index])
+					}
 					headerRow.appendChild(th)
 				})
 				thead.appendChild(headerRow)
@@ -2090,10 +2181,13 @@
 				const tbody = document.createElement('tbody')
 				rows.forEach((row) => {
 					const tr = document.createElement('tr')
-					columns.forEach((column) => {
+					columns.forEach((column, index) => {
 						const td = document.createElement('td')
 						const raw = row?.[column.key]
 						td.textContent = column.format ? column.format(raw) : String(raw ?? '-')
+						if (columnClasses[index]) {
+							td.classList.add(columnClasses[index])
+						}
 						tr.appendChild(td)
 					})
 					tbody.appendChild(tr)
