@@ -92,6 +92,9 @@
 		const ndviDateInput = document.getElementById('weather-apis-ndvi-date')
 		const ndviError = document.getElementById('weather-apis-ndvi-error')
 		const ndviOutput = document.getElementById('weather-apis-ndvi-output')
+		const ndviCalendar = document.getElementById('weather-apis-ndvi-calendar')
+		const ndviWeekdays = document.getElementById('weather-apis-ndvi-weekdays')
+		const ndviCalendarGrid = document.getElementById('weather-apis-ndvi-calendar-grid')
 		const ndviTable = document.getElementById('weather-apis-ndvi-table')
 		const ndviRasterPreview = document.getElementById('weather-apis-ndvi-raster-preview')
 		const ndviRasterImg = document.getElementById('weather-apis-ndvi-raster-img')
@@ -1400,6 +1403,9 @@
 			const clearNdviOutput = () => {
 				clearNdviError()
 				if (ndviOutput) ndviOutput.textContent = ''
+				if (ndviCalendar) ndviCalendar.hidden = true
+				if (ndviWeekdays) ndviWeekdays.replaceChildren()
+				if (ndviCalendarGrid) ndviCalendarGrid.replaceChildren()
 				if (ndviTable) ndviTable.textContent = ''
 				if (ndviRasterPreview) ndviRasterPreview.hidden = true
 				if (ndviRasterImg) ndviRasterImg.removeAttribute('src')
@@ -1459,6 +1465,39 @@
 				}
 				return { raw, iso, date, invalid: false }
 			}
+
+			const WEEKDAY_ABBREVIATIONS = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa']
+			const WEEKDAY_HEADER = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su']
+			const MONTH_ABBREVIATIONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+			const formatWeekday = (dayIndex) => WEEKDAY_ABBREVIATIONS[dayIndex] ?? ''
+			const formatMonth = (monthIndex) => MONTH_ABBREVIATIONS[monthIndex] ?? ''
+			const formatDateParts = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+			const formatDayMonth = (date, useUtc = false, includeYear = false) => {
+				const day = useUtc ? date.getUTCDate() : date.getDate()
+				const month = formatMonth(useUtc ? date.getUTCMonth() : date.getMonth())
+				const year = useUtc ? date.getUTCFullYear() : date.getFullYear()
+				const base = `${day} ${month}`.trim()
+				return includeYear ? `${base} ${year}` : base
+			}
+			const shouldIncludeYear = (date, useUtc = false) => {
+				const year = useUtc ? date.getUTCFullYear() : date.getFullYear()
+				const now = new Date()
+				const currentYear = useUtc ? now.getUTCFullYear() : now.getFullYear()
+				return year !== currentYear
+			}
+			const formatWeekdayDateLabel = (date, { useUtc = false, includeYear = null } = {}) => {
+				const includeYearFinal = includeYear === null ? shouldIncludeYear(date, useUtc) : includeYear
+				const weekday = formatWeekday(useUtc ? date.getUTCDay() : date.getDay())
+				const datePart = formatDayMonth(date, useUtc, includeYearFinal)
+				return weekday ? `${weekday} ${datePart}` : datePart
+			}
+			const formatTime = (date) => {
+				const hours = String(date.getHours()).padStart(2, '0')
+				const minutes = String(date.getMinutes()).padStart(2, '0')
+				return `${hours}:${minutes}`
+			}
+			const formatWeekdayDateTimeLabel = (date) => `${formatWeekdayDateLabel(date)} \u2022 ${formatTime(date)}`
 
 			const readNdviDateState = () => ({
 				start: parseIsoDate(ndviStartInput?.value),
@@ -1840,6 +1879,26 @@
 			const formatNdviCount = typeof ndviUi.formatCount === 'function'
 				? ndviUi.formatCount
 				: (value) => formatNdviNumber(value, 0)
+			const formatNdviDate = typeof ndviUi.formatDateWithWeekday === 'function'
+				? ndviUi.formatDateWithWeekday
+				: (value) => {
+					const raw = value ? String(value).trim() : ''
+					if (!raw) {
+						return ''
+					}
+					if (ISO_DATE_PATTERN.test(raw)) {
+						const parsed = parseIsoDate(raw)
+						if (parsed.date && !parsed.invalid) {
+							return formatWeekdayDateLabel(parsed.date, { useUtc: true })
+						}
+						return raw
+					}
+					const parsedDate = new Date(raw)
+					if (Number.isNaN(parsedDate.getTime())) {
+						return raw
+					}
+					return formatWeekdayDateLabel(parsedDate)
+				}
 
 			const appendRetryButton = (card, label, handler) => {
 				if (!card || typeof handler !== 'function') {
@@ -1870,6 +1929,7 @@
 					appendRetryButton(card, 'Retry', retryHandler)
 				}
 				replaceNdviOutput(card)
+				hideNdviCalendar()
 			}
 
 			const renderTimeseriesCard = (state, retryHandler) => {
@@ -1892,6 +1952,75 @@
 					appendRetryButton(card, 'Retry', retryHandler)
 				}
 				replaceNdviOutput(card)
+			}
+
+			const hideNdviCalendar = () => {
+				if (ndviCalendar) ndviCalendar.hidden = true
+				if (ndviWeekdays) ndviWeekdays.replaceChildren()
+				if (ndviCalendarGrid) ndviCalendarGrid.replaceChildren()
+			}
+
+			const renderNdviWeekdays = () => {
+				if (!ndviWeekdays) {
+					return
+				}
+				const items = WEEKDAY_HEADER.map((label) => {
+					const span = document.createElement('span')
+					span.textContent = label
+					return span
+				})
+				ndviWeekdays.replaceChildren(...items)
+			}
+
+			const formatUtcDateKey = (date) => formatDateParts(
+				date.getUTCFullYear(),
+				date.getUTCMonth() + 1,
+				date.getUTCDate(),
+			)
+
+			const renderNdviCalendar = (state) => {
+				if (!ndviCalendar || !ndviCalendarGrid) {
+					return
+				}
+				const rangeStart = state?.vm?.rangeStart ?? null
+				const rangeEnd = state?.vm?.rangeEnd ?? null
+				const startInfo = parseIsoDate(rangeStart)
+				const endInfo = parseIsoDate(rangeEnd)
+				if (!startInfo?.date || !endInfo?.date || startInfo.invalid || endInfo.invalid) {
+					hideNdviCalendar()
+					return
+				}
+				renderNdviWeekdays()
+				ndviCalendar.hidden = false
+				ndviCalendarGrid.replaceChildren()
+				const points = Array.isArray(state?.vm?.points) ? state.vm.points : []
+				const pointsByDate = new Set(points.map((point) => point?.date).filter(Boolean))
+				const endTime = endInfo.date.getTime()
+				let cursor = new Date(startInfo.date.getTime())
+				let index = 0
+				while (cursor.getTime() <= endTime) {
+					const iso = formatUtcDateKey(cursor)
+					const cell = document.createElement('div')
+					cell.className = 'weather-apis-farms__ndvi-day'
+					cell.textContent = String(cursor.getUTCDate())
+					cell.setAttribute('role', 'gridcell')
+					cell.dataset.date = iso
+					cell.title = formatNdviDate(iso) || iso
+					if (pointsByDate.has(iso)) {
+						cell.classList.add('has-data')
+					}
+					if (index === 0) {
+						const startColumn = ((cursor.getUTCDay() + 6) % 7) + 1
+						cell.style.gridColumnStart = String(startColumn)
+					}
+					ndviCalendarGrid.appendChild(cell)
+					cursor = new Date(Date.UTC(
+						cursor.getUTCFullYear(),
+						cursor.getUTCMonth(),
+						cursor.getUTCDate() + 1,
+					))
+					index += 1
+				}
 			}
 
 			latestNdviState = reduceLatestState(null, { type: 'reset' })
@@ -1923,6 +2052,9 @@
 					return ''
 				}
 				const keyName = String(key)
+				if (NDVI_DATE_KEYS.has(keyName) || /date|day|timestamp/i.test(keyName)) {
+					return formatNdviDate(value)
+				}
 				if (NDVI_PERCENT_KEYS.has(keyName)) {
 					return formatNdviPercent(value)
 				}
@@ -2081,31 +2213,55 @@
 				})
 			}
 
-			const formatIsoDate = (date) => {
-				const year = date.getFullYear()
-				const month = String(date.getMonth() + 1).padStart(2, '0')
-				const day = String(date.getDate()).padStart(2, '0')
-				return `${year}-${month}-${day}`
-			}
-
-			const formatIsoDateTime = (date) => {
-				const hours = String(date.getHours()).padStart(2, '0')
-				const minutes = String(date.getMinutes()).padStart(2, '0')
-				return `${formatIsoDate(date)} ${hours}:${minutes}`
-			}
-
 			const formatWeatherNumber = (value, digits = 1) => formatNdviNumber(value, digits)
+
+			const parseWeatherDateInfo = (value) => {
+				const raw = value ? String(value).trim() : ''
+				if (!raw) {
+					return null
+				}
+				if (ISO_DATE_PATTERN.test(raw)) {
+					const parsed = parseIsoDate(raw)
+					if (parsed.date && !parsed.invalid) {
+						return { date: parsed.date, useUtc: true }
+					}
+					return null
+				}
+				const date = new Date(raw)
+				if (Number.isNaN(date.getTime())) {
+					return null
+				}
+				return { date, useUtc: false }
+			}
+
+			const formatWeatherTimeOnly = (value) => {
+				const raw = value ? String(value).trim() : ''
+				if (!raw) {
+					return '-'
+				}
+				if (ISO_DATE_PATTERN.test(raw)) {
+					return '00:00'
+				}
+				const info = parseWeatherDateInfo(raw)
+				if (!info) {
+					return raw
+				}
+				return formatTime(info.date)
+			}
 
 			const formatWeatherDateTime = (value) => {
 				const raw = value ? String(value).trim() : ''
 				if (!raw) {
 					return '-'
 				}
-				const date = new Date(raw)
-				if (Number.isNaN(date.getTime())) {
+				const info = parseWeatherDateInfo(raw)
+				if (!info) {
 					return raw
 				}
-				return formatIsoDateTime(date)
+				if (info.useUtc) {
+					return formatWeekdayDateLabel(info.date, { useUtc: true })
+				}
+				return formatWeekdayDateTimeLabel(info.date)
 			}
 
 			const formatWeatherDate = (value) => {
@@ -2113,14 +2269,11 @@
 				if (!raw) {
 					return '-'
 				}
-				if (ISO_DATE_PATTERN.test(raw)) {
+				const info = parseWeatherDateInfo(raw)
+				if (!info) {
 					return raw
 				}
-				const date = new Date(raw)
-				if (Number.isNaN(date.getTime())) {
-					return raw
-				}
-				return formatIsoDate(date)
+				return formatWeekdayDateLabel(info.date, { useUtc: info.useUtc })
 			}
 
 			const renderWeatherCurrent = (payload) => {
@@ -2198,19 +2351,107 @@
 			}
 
 			const renderWeatherHourly = (payload) => {
+				if (!weatherHourlyTable) {
+					return
+				}
 				const rows = Array.isArray(payload?.hours) ? payload.hours : []
-				renderWeatherTable(
-					weatherHourlyTable,
-					rows,
-					[
-						{ key: 'timestamp', label: 'Timestamp', format: formatWeatherDateTime },
-						{ key: 'temperature_c', label: 'Temp (C)', format: formatWeatherNumber },
-						{ key: 'precipitation_mm', label: 'Rain (mm)', format: formatWeatherNumber },
-						{ key: 'wind_speed_mps', label: 'Wind (m/s)', format: formatWeatherNumber },
-						{ key: 'cloud_cover_pct', label: 'Clouds (%)', format: formatWeatherNumber },
-					],
-					'No hourly data.',
-				)
+				if (rows.length === 0) {
+					weatherHourlyTable.textContent = 'No hourly data.'
+					return
+				}
+				const columns = [
+					{ key: 'timestamp', label: 'Time', format: formatWeatherTimeOnly },
+					{ key: 'temperature_c', label: 'Temp (C)', format: formatWeatherNumber },
+					{ key: 'precipitation_mm', label: 'Rain (mm)', format: formatWeatherNumber },
+					{ key: 'wind_speed_mps', label: 'Wind (m/s)', format: formatWeatherNumber },
+					{ key: 'cloud_cover_pct', label: 'Clouds (%)', format: formatWeatherNumber },
+				]
+				const columnClasses = columns.map((column) => {
+					const key = String(column.key ?? '')
+					if (/timestamp|date|day/i.test(key)) {
+						return 'is-date'
+					}
+					return 'is-number'
+				})
+				const groups = []
+				const groupIndex = new Map()
+				rows.forEach((row) => {
+					const info = parseWeatherDateInfo(row?.timestamp)
+					if (!info) {
+						const fallbackKey = 'unknown'
+						let group = groupIndex.get(fallbackKey)
+						if (!group) {
+							group = { key: fallbackKey, label: 'Unknown date', rows: [] }
+							groupIndex.set(fallbackKey, group)
+							groups.push(group)
+						}
+						group.rows.push(row)
+						return
+					}
+					const key = info.useUtc
+						? formatDateParts(
+							info.date.getUTCFullYear(),
+							info.date.getUTCMonth() + 1,
+							info.date.getUTCDate(),
+						)
+						: formatDateParts(
+							info.date.getFullYear(),
+							info.date.getMonth() + 1,
+							info.date.getDate(),
+						)
+					let group = groupIndex.get(key)
+					if (!group) {
+						group = {
+							key,
+							label: formatWeekdayDateLabel(info.date, { useUtc: info.useUtc }),
+							rows: [],
+						}
+						groupIndex.set(key, group)
+						groups.push(group)
+					}
+					group.rows.push(row)
+				})
+				const table = document.createElement('table')
+				table.className = 'weather-apis-farms__table weather-apis-farms__table--sticky'
+				const thead = document.createElement('thead')
+				const headerRow = document.createElement('tr')
+				columns.forEach((column, index) => {
+					const th = document.createElement('th')
+					th.textContent = column.label
+					if (columnClasses[index]) {
+						th.classList.add(columnClasses[index])
+					}
+					headerRow.appendChild(th)
+				})
+				thead.appendChild(headerRow)
+				table.appendChild(thead)
+				const tbody = document.createElement('tbody')
+				groups.forEach((group) => {
+					const groupRow = document.createElement('tr')
+					groupRow.className = 'weather-apis-farms__group-row'
+					const groupCell = document.createElement('td')
+					groupCell.className = 'weather-apis-farms__group-cell'
+					groupCell.colSpan = columns.length
+					groupCell.textContent = group.label
+					groupRow.appendChild(groupCell)
+					tbody.appendChild(groupRow)
+					group.rows.forEach((row) => {
+						const tr = document.createElement('tr')
+						columns.forEach((column, index) => {
+							const td = document.createElement('td')
+							const raw = row?.[column.key]
+							td.textContent = column.format ? column.format(raw) : String(raw ?? '-')
+							if (columnClasses[index]) {
+								td.classList.add(columnClasses[index])
+							}
+							tr.appendChild(td)
+						})
+						tbody.appendChild(tr)
+					})
+				})
+				table.appendChild(tbody)
+				weatherHourlyTable.innerHTML = ''
+				weatherHourlyTable.appendChild(table)
 			}
 
 			const renderWeatherDaily = (payload) => {
@@ -2405,6 +2646,7 @@
 					validation.end,
 				)
 				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				renderNdviCalendar(timeseriesNdviState)
 				const payload = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
 					method: 'GET',
 					query: buildNdviQuery('ndvi_timeseries', {
@@ -2421,6 +2663,7 @@
 						validation.end,
 					)
 					renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+					renderNdviCalendar(timeseriesNdviState)
 					if (ndviTable) {
 						ndviTable.textContent = ''
 					}
@@ -2433,6 +2676,7 @@
 					validation.end,
 				)
 				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				renderNdviCalendar(timeseriesNdviState)
 				if (timeseriesNdviState.status === NDVI_SERIES_STATE.has_data) {
 					renderNdviTable(timeseriesNdviState.vm?.points ?? [])
 				} else if (ndviTable) {

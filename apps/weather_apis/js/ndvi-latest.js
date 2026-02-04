@@ -3,6 +3,12 @@
 
 	const DAY_MS = 86400000
 	const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+	const WEEKDAY_ABBREVIATIONS = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa']
+	const MONTH_ABBREVIATIONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+	const formatWeekday = (dayIndex) => WEEKDAY_ABBREVIATIONS[dayIndex] ?? ''
+	const formatMonth = (monthIndex) => MONTH_ABBREVIATIONS[monthIndex] ?? ''
+	const formatDateParts = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
 	const isPlainObject = (value) => value && typeof value === 'object' && !Array.isArray(value)
 
@@ -30,9 +36,7 @@
 			const year = value.getUTCFullYear()
 			const month = value.getUTCMonth() + 1
 			const day = value.getUTCDate()
-			const iso = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day
-				.toString()
-				.padStart(2, '0')}`
+			const iso = formatDateParts(year, month, day)
 			return { iso, date: new Date(Date.UTC(year, month - 1, day)) }
 		}
 		if (typeof value !== 'string') {
@@ -376,14 +380,80 @@
 
 	const formatCount = (value) => formatNumber(value, 0)
 
+	const resolveCurrentYear = (nowValue) => {
+		const now = resolveNowDate(nowValue)
+		return now?.date?.getUTCFullYear() ?? new Date().getUTCFullYear()
+	}
+
+	const formatDateLabel = (date, includeYear) => {
+		const day = date.getUTCDate()
+		const month = formatMonth(date.getUTCMonth())
+		const year = date.getUTCFullYear()
+		const base = `${day} ${month}`.trim()
+		return includeYear ? `${base} ${year}` : base
+	}
+
+	const formatDateWithWeekday = (value, nowValue) => {
+		if (!value) {
+			return '-'
+		}
+		const parsed = parseDateOnly(value)
+		if (!parsed) {
+			return String(value)
+		}
+		const currentYear = resolveCurrentYear(nowValue)
+		const includeYear = parsed.date.getUTCFullYear() !== currentYear
+		const weekday = formatWeekday(parsed.date.getUTCDay())
+		const dateLabel = formatDateLabel(parsed.date, includeYear)
+		return weekday ? `${weekday} ${dateLabel}` : dateLabel
+	}
+
+	const formatDateRangeLabel = (startValue, endValue) => {
+		const start = parseDateOnly(startValue)
+		const end = parseDateOnly(endValue)
+		if (!start && !end) {
+			return '-'
+		}
+		if (start && !end) {
+			return formatDateLabel(start.date, true)
+		}
+		if (!start && end) {
+			return formatDateLabel(end.date, true)
+		}
+		const startDate = start.date
+		const endDate = end.date
+		const sameYear = startDate.getUTCFullYear() === endDate.getUTCFullYear()
+		const sameMonth = sameYear && startDate.getUTCMonth() === endDate.getUTCMonth()
+		if (sameMonth) {
+			const month = formatMonth(startDate.getUTCMonth())
+			const year = startDate.getUTCFullYear()
+			const startDay = startDate.getUTCDate()
+			const endDay = endDate.getUTCDate()
+			if (startDay === endDay) {
+				return `${month} ${startDay}, ${year}`
+			}
+			return `${month} ${startDay}\u2013${endDay}, ${year}`
+		}
+		if (sameYear) {
+			const year = startDate.getUTCFullYear()
+			const startLabel = `${formatMonth(startDate.getUTCMonth())} ${startDate.getUTCDate()}`
+			const endLabel = `${formatMonth(endDate.getUTCMonth())} ${endDate.getUTCDate()}`
+			return `${startLabel}\u2013${endLabel}, ${year}`
+		}
+		const startLabel = `${formatMonth(startDate.getUTCMonth())} ${startDate.getUTCDate()}, ${startDate.getUTCFullYear()}`
+		const endLabel = `${formatMonth(endDate.getUTCMonth())} ${endDate.getUTCDate()}, ${endDate.getUTCFullYear()}`
+		return `${startLabel}\u2013${endLabel}`
+	}
+
 	const formatDateWithAge = (dateValue, daysAgo) => {
 		if (!dateValue) {
 			return '-'
 		}
+		const formatted = formatDateWithWeekday(dateValue)
 		if (daysAgo === null || daysAgo === undefined) {
-			return dateValue
+			return formatted
 		}
-		return `${dateValue} (${daysAgo} day${daysAgo === 1 ? '' : 's'} ago)`
+		return `${formatted} (${daysAgo} day${daysAgo === 1 ? '' : 's'} ago)`
 	}
 
 	const buildLatestCardModel = (state) => {
@@ -462,11 +532,12 @@
 			return model
 		}
 		const vm = state.vm || createEmptyTimeseriesVm(null, null)
-		const rangeStart = vm.rangeStart ?? '-'
-		const rangeEnd = vm.rangeEnd ?? '-'
+		const rangeLabel = formatDateRangeLabel(vm.rangeStart, vm.rangeEnd)
+		const rangeStart = vm.rangeStart ? formatDateWithWeekday(vm.rangeStart) : '-'
+		const rangeEnd = vm.rangeEnd ? formatDateWithWeekday(vm.rangeEnd) : '-'
 		const shown = Number.isFinite(vm.shownCount) ? vm.shownCount : vm.receivedCount
 		const observationLabel = shown === 1 ? 'observation' : 'observations'
-		const summary = `${shown} ${observationLabel} (${rangeStart} → ${rangeEnd})`
+		const summary = `${shown} ${observationLabel} (${rangeLabel})`
 		const facts = [
 			{ label: 'Range start', value: rangeStart },
 			{ label: 'Range end', value: rangeEnd },
@@ -520,6 +591,8 @@
 		formatNumber,
 		formatPercent,
 		formatCount,
+		formatDateWithWeekday,
+		formatDateRangeLabel,
 	}
 
 	if (typeof window !== 'undefined') {

@@ -70,6 +70,7 @@ assert.ok(seriesState.vm.shownCount >= 2)
 const seriesModel = ndvi.buildTimeseriesCardModel(seriesState)
 assert.ok(!JSON.stringify(seriesModel).includes('No observations for the selected range.'))
 assert.ok(seriesModel.summary.includes('observations'))
+assert.ok(seriesModel.summary.includes('Jan 1\u201330, 2026'))
 
 const filteredState = ndvi.reduceTimeseriesState(
 	undefined,
@@ -112,3 +113,8 @@ assert.strictEqual(ndvi.formatNumber(0.123456), '0.123')
 assert.strictEqual(ndvi.formatNumber(12345.6, 1), '12,345.6')
 assert.strictEqual(ndvi.formatPercent(0.15), '15%')
 assert.strictEqual(ndvi.formatCount(16384), '16,384')
+assert.strictEqual(ndvi.formatDateWithWeekday('2026-01-27', '2026-02-02'), 'Tu 27 Jan')
+assert.strictEqual(ndvi.formatDateWithWeekday('2025-12-31', '2026-02-02'), 'W 31 Dec 2025')
+assert.strictEqual(ndvi.formatDateWithWeekday(null), '-')
+assert.strictEqual(ndvi.formatDateWithWeekday('not-a-date'), 'not-a-date')
+assert.strictEqual(ndvi.formatDateRangeLabel('2026-01-01', '2026-01-30'), 'Jan 1\u201330, 2026')

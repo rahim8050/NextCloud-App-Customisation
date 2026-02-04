@@ -152,6 +152,10 @@ style('weather_apis', 'admin-settings');
 					</div>
 					<div id="weather-apis-ndvi-error" class="weather-apis-farms__note error weather-apis-farms__ndvi-error" hidden></div>
 					<div id="weather-apis-ndvi-output" class="weather-apis-farms__ndvi-output"></div>
+					<div id="weather-apis-ndvi-calendar" class="weather-apis-farms__ndvi-calendar" hidden>
+						<div id="weather-apis-ndvi-weekdays" class="weather-apis-farms__ndvi-weekdays" aria-hidden="true"></div>
+						<div id="weather-apis-ndvi-calendar-grid" class="weather-apis-farms__ndvi-calendar-grid" role="grid" aria-label="<?php p($l->t('NDVI date range calendar')); ?>"></div>
+					</div>
 					<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
 					<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>
 						<img id="weather-apis-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />

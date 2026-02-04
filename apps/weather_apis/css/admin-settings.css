@@ -657,6 +657,50 @@
 	min-width: 100%;
 }
 
+.weather-apis-farms__ndvi-calendar {
+	display: grid;
+	gap: 6px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	padding: 8px;
+	font-size: 12px;
+}
+
+.weather-apis-farms__ndvi-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 4px;
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	text-align: center;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.weather-apis-farms__ndvi-calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 4px;
+}
+
+.weather-apis-farms__ndvi-day {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 28px;
+	padding: 4px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-background-hover);
+	font-variant-numeric: tabular-nums;
+}
+
+.weather-apis-farms__ndvi-day.has-data {
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 10%, var(--color-background-hover));
+}
+
 .weather-apis-farms__ndvi-preview img {
 	max-width: 220px;
 	border-radius: var(--border-radius);
@@ -765,6 +809,17 @@
 
 .weather-apis-farms__table tbody tr:hover {
 	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 12%, transparent);
+}
+
+.weather-apis-farms__group-row td {
+	background: var(--color-background-hover);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.weather-apis-farms__group-cell {
+	padding: 6px 8px;
 }
 
 .weather-apis-farms__modal {
