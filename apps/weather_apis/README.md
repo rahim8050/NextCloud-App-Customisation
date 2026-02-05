@@ -2,23 +2,27 @@
 
 This app will integrate Nextcloud with our Django Weather APIs (DRF).
 
-Status: **pre-integration** (docs + tooling only). See `apps/weather_apis/AGENTS.md` for the security and integration contract.
+Status: **pre-integration** (admin-only integration foundations + proxy endpoints are implemented; no end-user features yet). See `apps/weather_apis/AGENTS.md` for the security and integration contract.
 
 ## Configuration keys (contract)
 
-These keys are stored in Nextcloud app config under app id `weather_apis`. System config values (config.php) with the same names take precedence.
+These keys are stored in Nextcloud app config under app id `weather_apis`. System config overrides apply only to the HMAC integration keys noted below; all other keys are app config only.
 
 | Key | Type | Purpose | Validation |
 | --- | ---- | ------- | ---------- |
 | `baseUrl` | string | Django API base URL | **HTTPS-only**, no embedded credentials, SSRF-safe host/IP (see `AGENTS.md`) |
 | `INTEGRATION_HMAC_CLIENT_ID` | string | DRF integration client id | Required; must exist as a key in `INTEGRATION_HMAC_CLIENTS_JSON` |
-| `INTEGRATION_HMAC_CLIENTS_JSON` | string (encrypted) | JSON map of `client_id -> secret_b64` | Required; strict base64 decode; non-empty mapping |
+| `INTEGRATION_HMAC_CLIENTS_JSON` | string (encrypted in app config) | JSON map of `client_id -> secret_b64` | Required; strict base64 decode; non-empty mapping |
 | `apiKey` | string (encrypted) | Backend auth secret | Stored encrypted via `ICrypto`; never displayed back in UI |
 | `timeoutSeconds` | int | Outbound HTTP timeout | TODO define bounds (recommend 1–30) |
 | `devAllowHttp` | bool | Explicit dev override | Default `false`; when `true`, allows `http` only for allowlisted hosts |
 | `allowlistHosts` | string | Hosts allowed under the dev override | Comma- or newline-separated entries; host must match exactly before private IPs/`http` are permitted |
 
-Legacy keys (`clientId`, `hmacSecret`, `hmacSecretPrevious`, `hmacSecretPreviousExpiresAt`, `hmac_client_id`, `hmac_secret`, `signingSecret`, `base_url`, `api_key`, `timeout_seconds`, `dev_allow_insecure_local_http`, `dev_allowlist_hosts`) are **blocked by default**. Remove them or temporarily set `INTEGRATION_LEGACY_CONFIG_ALLOWED=1` in system config while migrating (no fallback is performed).
+System config only:
+- `INTEGRATION_LEGACY_CONFIG_ALLOWED` (bool, default `false`): allows legacy HMAC keys to coexist during migration (they are still not used for requests).
+
+Legacy HMAC keys (`clientId`, `hmacSecret`, `hmacSecretPrevious`, `hmacSecretPreviousExpiresAt`, `hmac_client_id`, `hmac_secret`, `signingSecret`) are **blocked by default**. Remove them or temporarily set `INTEGRATION_LEGACY_CONFIG_ALLOWED=1` while migrating.
+Legacy app-config keys (`base_url`, `api_key`, `timeout_seconds`, `dev_allow_insecure_local_http`, `dev_allowlist_hosts`, `devAllowlistHosts`) are still read as fallbacks and migrated forward when present.
 
 Configure these values via Settings → Administration → Weather APIs. Secrets are write-only in the form; generate/rotate returns a new base64 HMAC secret once. Leave those fields blank when saving to keep existing values.
 
@@ -42,7 +46,7 @@ This app connects to the DRF backend through the admin-configured base URL, typi
 ### Admin settings fields
 
 - Base URL (`baseUrl`): Scheme + host + optional path for the DRF reverse proxy (for example `https://example.local/api`). Production must use HTTPS; the dev override is limited to allowlisted hosts.
-- Client ID (`INTEGRATION_HMAC_CLIENT_ID`): HMAC client identifier used for the integration token handshake.
+- Client ID (`INTEGRATION_HMAC_CLIENT_ID`): HMAC client identifier used for the integration token handshake (generated via the admin actions when missing).
 - API key (`apiKey`): Backend auth secret stored encrypted at rest; never displayed back in the UI.
 - HMAC secret (`INTEGRATION_HMAC_CLIENTS_JSON`): Base64-encoded secret used for HMAC signing; stored encrypted at rest via `ICrypto`. Newly generated/rotated secrets are returned once; stored values are not displayed.
 - Timeout seconds (`timeoutSeconds`): Total timeout for outbound HTTP to the backend (bounded; see config table above).
@@ -59,18 +63,47 @@ In Settings → Administration → Weather APIs, admins can generate and rotate 
 - Rotate secret: `POST /apps/weather_apis/api/v1/admin/rotate-hmac` (admin-only, CSRF required)
   - Always rotates the base64 HMAC secret.
   - Returns `{ status: "ok", ok: true, message, clientId, hmacSecret }` once; the UI shows the secret only after the request.
+- Config snapshot: `GET /apps/weather_apis/api/v1/admin/config` (admin-only)
+  - Returns non-secret config fields and integration status metadata (baseUrl, clientId, timeoutSeconds, devAllowHttp, allowlistHosts, hasApiKey, hasHmacSecret, status).
 - Test connection: `POST /apps/weather_apis/api/v1/admin/test-connection` (admin-only, CSRF required)
   - Performs a backend token request (HMAC + API key) and never returns the token.
   - Returns `{ status: 0, ok: true, message, data: { expires_in } }` on success, or `{ status: 1, ok: false, message, code }` on error.
 - Diagnostics: `GET /apps/weather_apis/admin/diagnostics` (admin-only)
   - Mints a token, calls `/integrations/nextcloud/status/`, calls `/integrations/nextcloud/preview.png`.
-  - Returns `{ status: "ok", ok: true, message, data: { token, status, png } }` (no tokens returned).
+  - Returns `{ status: "ok", ok: true, message, data: { token: { ok, expires_in? }, status: { ok, ... }, png: { ok, ... } } }` (no tokens returned).
 - Preview proxy: `GET /apps/weather_apis/admin/preview.png` (admin-only)
   - Streams the DRF PNG preview through Nextcloud; tokens never reach the browser.
 
 `apiKey` (wk_live_...) still comes from DRF; Nextcloud only generates `clientId` + base64 `hmacSecret`.
 
 ### Admin farm proxy endpoints
+
+All endpoints below are admin-only. Mutating requests require CSRF. The farm schema is derived from `GET {baseUrl}/api/schema/?format=json` and cached for ~1 hour.
+
+- `GET /apps/weather_apis/api/v1/admin/farms/schema`
+  - Returns schema summary (fields, columns, and operations) derived from the DRF OpenAPI schema.
+- `POST /apps/weather_apis/api/v1/admin/farms/list`
+  - Proxies DRF farm list endpoint; query params are schema-driven.
+- `POST /apps/weather_apis/api/v1/admin/farms/create`
+  - Proxies DRF farm create endpoint; required fields = `required - readOnly`.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}`
+  - Proxies DRF farm retrieve endpoint.
+- `PUT /apps/weather_apis/api/v1/admin/farms/{farm_id}`
+  - Proxies DRF farm update endpoint; required fields = `required - readOnly`.
+- `PATCH /apps/weather_apis/api/v1/admin/farms/{farm_id}`
+  - Proxies DRF farm partial update endpoint; strips read-only fields.
+- `DELETE /apps/weather_apis/api/v1/admin/farms/{farm_id}`
+  - Proxies DRF farm delete endpoint.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/latest`
+  - Proxies DRF NDVI latest endpoint; query params are schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/timeseries`
+  - Proxies DRF NDVI timeseries endpoint; query params are schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster.png`
+  - Streams raw `image/png` bytes via Nextcloud (no JSON wrapper).
+- `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster/queue`
+  - Proxies DRF NDVI raster queue endpoint; request body is schema-driven.
+- `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/refresh`
+  - Proxies DRF NDVI refresh endpoint; request body is schema-driven.
 
 - `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/current`
   - Admin-only.
@@ -91,6 +124,8 @@ curl -u admin:APP_PASSWORD \
   "https://nextcloud.example.com/index.php/apps/weather_apis/api/v1/integration/whoami"
 ```
 
+`/apps/weather_apis/api/test/whoami` is an alias of the integration whoami route.
+
 OCS route:
 ```bash
 curl -u admin:APP_PASSWORD \
@@ -101,6 +136,7 @@ curl -u admin:APP_PASSWORD \
 ### Troubleshooting
 
 - CSRF/requesttoken: Admin settings saves require a valid `requesttoken` (use the UI or send the header when posting).
+- Password confirmation: Settings save is password-confirmed; ensure your session is reauthenticated in the UI.
 - Permissions: Settings and integration endpoints are admin-only; non-admin sessions return 401/403.
 - Allowlist/SSRF blocks: Base URL validation fails if HTTPS is missing, the host is disallowed, or DNS resolves to blocked ranges.
 - Timeouts: Slow or unreachable backends return `backend_timeout`; verify reverse proxy reachability and `timeoutSeconds`.
@@ -135,10 +171,11 @@ curl -u admin:APP_PASSWORD \
 ### Ping (HMAC-only)
 - Endpoint: `GET {baseUrl}/api/v1/integrations/nextcloud/ping/`
 - Headers:
-  * `X-Client-Id: <IntegrationClient.client_id UUID>`
-  * `X-Timestamp: <unix seconds>`
-  * `X-Nonce: <random string>`
-  * `X-Signature: <hex hmac sha256>`
+  * `X-NC-CLIENT-ID: <IntegrationClient.client_id UUID>`
+  * `X-NC-TIMESTAMP: <unix seconds>`
+  * `X-NC-NONCE: <random string>`
+  * `X-NC-SIGNATURE: <hex hmac sha256>`
+  * `X-Client-Id: <IntegrationClient.client_id UUID>` (optional alias)
 
 ### Diagnostics status
 - Endpoint: `GET {baseUrl}/api/v1/integrations/nextcloud/status/`
