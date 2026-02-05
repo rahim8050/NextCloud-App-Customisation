@@ -8,19 +8,18 @@ Most of the code here is upstream Nextcloud (core + bundled apps). The custom wo
 
 Custom / local apps you currently have in `apps/`:
 
-- `apps/weather_apis` — custom Nextcloud app that integrates with an external Weather APIs backend (Django/DRF).
-  - Current state: integration foundations (admin settings + config/validation + signing/service layer). UI → backend calls are being finalized.
-  - App docs: `apps/weather_apis/README.md`
-  - Agent rules (for Codex/LLMs): `apps/weather_apis/AGENTS.md`
+- `apps/weather_apis` — custom Nextcloud app that integrates with an external Weather APIs backend (Django/DRF). Admin-only integration foundations are implemented (settings UI, config/validation, HMAC signing/service layer, diagnostics + test connection) plus admin proxy endpoints for farms/NDVI/weather. Docs: `apps/weather_apis/README.md`. Contributing: `apps/weather_apis/CONTRIBUTING.md`. Agent rules (for Codex/LLMs): `apps/weather_apis/AGENTS.md`.
 
-- `apps/context_chat` — local app experiments (present in this tree).
+- `apps/context_chat` — upstream Nextcloud Assistant Context Chat app present in this tree. See `apps/context_chat/README.md` for its dependencies (AppAPI, Assistant, Context Chat Backend) and setup details.
 
-> Note: This repository is **not** a standalone “farm management suite”. If you want farm workflows, they should be implemented as actual Nextcloud apps (and documented inside their own app folders).
+> Note: This repository is **not** a standalone “farm management suite”. Current farm/NDVI/weather admin tooling lives inside the `weather_apis` app; any additional workflows should be implemented as apps and documented inside their own folders.
 
 ## Repo layout (high level)
 
 - `core/`, `lib/`, `resources/` — Nextcloud server core
 - `apps/` — bundled apps + your custom apps (including `weather_apis`)
+- `config/` — Nextcloud config (including `config.php`)
+- `data/` — Nextcloud data directory (logs, file storage, app data)
 - `occ` — Nextcloud CLI entrypoint
 
 ## Quickstart (local)
@@ -37,7 +36,7 @@ sudo -u www-data php occ app:enable weather_apis
 ```
 ### Configure the app
 Use the Nextcloud Admin settings UI for weather_apis (and/or follow the app-level README):
-- apps/weather_apis/README.md
+- `apps/weather_apis/README.md`
 
 ### Development notes (local)
 This checkout is typically located at:
