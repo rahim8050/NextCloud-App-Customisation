@@ -106,6 +106,8 @@ Every “rule” here must have an enforcement path: unit tests, static analysis
 
 **Storage rule**
 - The `apiKey` must be stored encrypted at rest using `OCP\Security\ICrypto` before writing to app config.
+- Do not hash `apiKey` or `hmacSecret`; HMAC requires plaintext secret bytes for signing.
+- Store secrets encrypted at rest and decrypt only in memory right before signing or sending to the backend.
 
 **Exposure rule**
 - Never return secrets in any API response (including to admins).
