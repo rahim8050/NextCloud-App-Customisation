@@ -14,6 +14,7 @@ use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\ICache;
+use OCP\IMemcache;
 use OCP\IConfig;
 use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
@@ -319,6 +320,92 @@ final class WeatherApiClientTest extends TestCase {
 
 		$cache = $this->createMock(ICache::class);
 		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->nextcloudStatus('status-request');
+		$this->assertTrue($result['ok']);
+	}
+
+	public function testNextcloudStatusWaitsForSharedTokenMintAndUsesCachedToken(): void {
+		$statusResponse = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"ok":true,"server_time":"2025-01-01T00:00:00Z","version":"1.0.0","capabilities":{"png_preview":true}}}',
+		);
+
+		$statusClient = $this->createMock(IClient::class);
+		$statusClient
+			->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/integrations/nextcloud/status/'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'status-request', 'Bearer shared-token')
+					&& $options['headers']['Accept'] === 'application/json'),
+			)
+			->willReturn($statusResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($statusClient);
+
+		$cache = $this->createMock(IMemcache::class);
+		$cache->expects($this->once())
+			->method('add')
+			->with('integration_access_token:mint_lock', 'nonce', 15)
+			->willReturn(false);
+
+		$reads = 0;
+		$cache->method('get')->willReturnCallback(function () use (&$reads): ?string {
+			$reads++;
+			return $reads >= 2 ? 'shared-token' : null;
+		});
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->nextcloudStatus('status-request');
+		$this->assertTrue($result['ok']);
+	}
+
+	public function testNextcloudStatusMintReleasesTokenLock(): void {
+		$tokenResponse = $this->createResponse(200, '{"access":"token","expires_in":300}');
+		$statusResponse = $this->createResponse(
+			200,
+			'{"status":0,"message":"OK","data":{"ok":true,"server_time":"2025-01-01T00:00:00Z","version":"1.0.0","capabilities":{"png_preview":true}}}',
+		);
+
+		$tokenClient = $this->createMock(IClient::class);
+		$tokenClient->expects($this->once())
+			->method('post')
+			->willReturn($tokenResponse);
+
+		$statusClient = $this->createMock(IClient::class);
+		$statusClient->expects($this->once())
+			->method('get')
+			->with(
+				$this->stringContains('/api/v1/integrations/nextcloud/status/'),
+				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'status-request', 'Bearer token')
+					&& $options['headers']['Accept'] === 'application/json'),
+			)
+			->willReturn($statusResponse);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->exactly(2))
+			->method('newClient')
+			->willReturnOnConsecutiveCalls($tokenClient, $statusClient);
+
+		$cache = $this->createMock(IMemcache::class);
+		$cache->expects($this->once())
+			->method('add')
+			->with('integration_access_token:mint_lock', 'nonce', 15)
+			->willReturn(true);
+		$cache->expects($this->once())
+			->method('cad')
+			->with('integration_access_token:mint_lock', 'nonce')
+			->willReturn(true);
+		$cache->expects($this->once())
+			->method('set')
+			->with('integration_access_token', 'token', 295)
+			->willReturn(true);
+		$cache->method('get')->willReturn(null);
 
 		$client = $this->createClient($clientService, $cache);
 		$result = $client->nextcloudStatus('status-request');

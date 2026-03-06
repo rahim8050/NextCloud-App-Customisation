@@ -10,6 +10,7 @@ use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\Http\Client\LocalServerException;
 use OCP\ICache;
+use OCP\IMemcache;
 use Psr\Log\LoggerInterface;
 
 final class WeatherApiClient implements WeatherApiClientInterface {
@@ -19,6 +20,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	private const STATUS_PATH = '/api/v1/integrations/nextcloud/status/';
 	private const PREVIEW_PATH = '/api/v1/integrations/nextcloud/preview.png';
 	private const TOKEN_CACHE_KEY = 'integration_access_token';
+	private const TOKEN_MINT_LOCK_SUFFIX = ':mint_lock';
+	private const TOKEN_MINT_LOCK_TTL_SECONDS = 15;
+	private const TOKEN_MINT_LOCK_WAIT_MICROSECONDS = 50000;
+	private const TOKEN_MINT_LOCK_MAX_WAIT_MICROSECONDS = 1500000;
 	private const TOKEN_TTL_FALLBACK_SECONDS = 240;
 	private const TOKEN_TTL_SKEW_SECONDS = 5;
 
@@ -809,6 +814,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		return self::TOKEN_CACHE_KEY;
 	}
 
+	private function getTokenMintLockKey(): string {
+		return $this->getTokenCacheKey() . self::TOKEN_MINT_LOCK_SUFFIX;
+	}
+
 	/**
 	 * @param mixed $body
 	 * @return array<array-key, mixed>
@@ -1102,12 +1111,53 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 	}
 
 	private function getCachedToken(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
-		$value = $this->cache->get($this->getTokenCacheKey());
-		if (is_string($value) && $value !== '') {
-			return $value;
+		$cached = $this->readCachedToken();
+		if ($cached !== null) {
+			return $cached;
 		}
 
+		return $this->getOrMintTokenWithLock($baseUrl, $allowLocalAddress, $correlationId);
+	}
+
+	private function getOrMintTokenWithLock(string $baseUrl, bool $allowLocalAddress, string $correlationId): string {
+		if (!$this->cache instanceof IMemcache) {
+			return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
+		}
+
+		$lockKey = $this->getTokenMintLockKey();
+		$lockValue = (string)($this->nonceProvider)();
+		if ($this->cache->add($lockKey, $lockValue, self::TOKEN_MINT_LOCK_TTL_SECONDS)) {
+			try {
+				$cached = $this->readCachedToken();
+				if ($cached !== null) {
+					return $cached;
+				}
+
+				return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
+			} finally {
+				$this->cache->cad($lockKey, $lockValue);
+			}
+		}
+
+		$deadline = microtime(true) + (self::TOKEN_MINT_LOCK_MAX_WAIT_MICROSECONDS / 1000000);
+		do {
+			usleep(self::TOKEN_MINT_LOCK_WAIT_MICROSECONDS);
+			$cached = $this->readCachedToken();
+			if ($cached !== null) {
+				return $cached;
+			}
+		} while (microtime(true) < $deadline);
+
 		return $this->mintToken($baseUrl, $allowLocalAddress, $correlationId);
+	}
+
+	private function readCachedToken(): ?string {
+		$value = $this->cache->get($this->getTokenCacheKey());
+		if (!is_string($value) || $value === '') {
+			return null;
+		}
+
+		return $value;
 	}
 
 	private function logSigningContext(
