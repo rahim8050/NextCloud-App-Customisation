@@ -830,6 +830,7 @@ final class WeatherApiClientTest extends TestCase {
 	private function hasCorrectOptions(array $options, string $requestId, string $authorization = ''): bool {
 		return $options['timeout'] === 15
 			&& $options['connect_timeout'] === 10
+			&& $options['http_errors'] === false
 			&& $options['allow_redirects'] === ['max' => 0]
 			&& $options['headers']['X-Request-Id'] === $requestId
 			&& ($authorization === '' || $options['headers']['Authorization'] === $authorization);

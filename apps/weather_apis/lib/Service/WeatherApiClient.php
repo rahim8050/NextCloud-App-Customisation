@@ -747,6 +747,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		$options = [
 			'timeout' => $timeout,
 			'connect_timeout' => min(10, $timeout),
+			'http_errors' => false,
+			// Let the client read 4xx/5xx bodies so we can surface validation errors.
 			'verify' => true,
 			'allow_redirects' => ['max' => 0],
 			'headers' => [
