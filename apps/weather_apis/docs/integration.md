@@ -100,9 +100,11 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
   - Admin-only.
   - Streams raw `image/png` bytes via Nextcloud (no JSON wrapper, no token exposure).
   - Response headers: `Content-Type: image/png`, `Cache-Control: no-store`.
+  - Optional query param: `external_farm_id` (UUID) for synced farms.
 - `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster/queue`
   - Admin-only + CSRF required.
   - Proxies DRF NDVI raster queue endpoint; request body is schema-driven.
+  - Optional query param: `external_farm_id` (UUID) for synced farms.
 - `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/refresh`
   - Admin-only + CSRF required.
   - Proxies DRF NDVI refresh endpoint; request body is schema-driven.
@@ -120,3 +122,16 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.
 - All outbound HTTP uses Nextcloud `IClientService`.
 - `X-Request-Id` is propagated to the backend for tracing.
+
+## Farm Sync Plan
+
+For the phased Nextcloud -> DRF farm sync implementation plan, see `docs/farm_sync_plan.md`.
+
+## Farm Sync Observability (Admin)
+
+Nextcloud will surface farm sync diagnostics in the admin UI, using the same
+structured logging conventions as DRF. DRF emits `farm_sync_created`,
+`farm_sync_updated`, and `farm_sync_failed` with `external_farm_id`,
+`external_user_id`, and `client_id` (see `~/projects/weather-apis`).
+Admin views should link to these events for troubleshooting without exposing
+secrets.

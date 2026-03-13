@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Tests\Unit\Controller;
 
 use OCA\WeatherApis\Controller\AdminFarmsController;
 use OCA\WeatherApis\Service\DrfSchemaService;
+use OCA\WeatherApis\Service\FarmSyncServiceInterface;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
 use OCA\WeatherApis\Service\WeatherApiException;
 use OCP\AppFramework\Http\Attribute\AdminRequired;
@@ -154,6 +155,40 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('Test Farm', $data['data']['name']);
 	}
 
+	public function testSyncFarmCallsService(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'external_farm_id' => 'farm-uuid',
+			'external_user_id' => 'nc-user',
+			'name' => 'north-field',
+			'bbox' => [
+				'south' => -1.234,
+				'west' => 36.812,
+				'north' => -1.220,
+				'east' => 36.830,
+			],
+			'centroid' => [
+				'lat' => -1.227,
+				'lon' => 36.820,
+			],
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$farmSyncService = $this->createMock(FarmSyncServiceInterface::class);
+		$farmSyncService->expects($this->once())
+			->method('sync')
+			->with($this->isType('array'), 'request-id')
+			->willReturn(['ok' => true]);
+
+		$controller = $this->createController($request, $weatherApiClient, null, $farmSyncService);
+		$response = $controller->syncFarm();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['ok' => true], $data['data']);
+	}
+
 	public function testRasterPngReturnsBinary(): void {
 		$schema = $this->createSchema();
 
@@ -183,6 +218,72 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('png-bytes', $response->getData());
 		$headers = $this->getResponseHeaders($response);
 		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testRasterPngPassesExternalFarmId(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'date' => '2024-02-01',
+			'external_farm_id' => 'farm-uuid',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestBinary')
+			->with(
+				'GET',
+				'/api/v1/farms/55/ndvi/raster.png',
+				['date' => '2024-02-01', 'external_farm_id' => 'farm-uuid'],
+				'request-id',
+			)
+			->willReturn([
+				'body' => 'png-bytes',
+				'contentType' => 'image/png',
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviRasterPng('55');
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+	}
+
+	public function testRasterQueuePassesExternalFarmId(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$request->method('getParams')->willReturn([
+			'date' => '2024-02-01',
+			'external_farm_id' => 'farm-uuid',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with(
+				'POST',
+				'/api/v1/farms/55/ndvi/raster/queue',
+				['external_farm_id' => 'farm-uuid'],
+				['date' => '2024-02-01'],
+				'request-id',
+			)
+			->willReturn(['payload' => ['ok' => true], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueNdviRaster('55');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
 	}
 
 	public function testNdviLatestStripsFarmIdFromQuery(): void {
@@ -515,15 +616,18 @@ final class AdminFarmsControllerTest extends TestCase {
 		IRequest $request,
 		WeatherApiClientInterface $client,
 		?LoggerInterface $logger = null,
+		?FarmSyncServiceInterface $farmSyncService = null,
 	): AdminFarmsController {
 		$schemaService = $this->createSchemaService($client);
 		$logger = $logger ?? $this->createMock(LoggerInterface::class);
+		$farmSyncService = $farmSyncService ?? $this->createMock(FarmSyncServiceInterface::class);
 
 		return new AdminFarmsController(
 			'weather_apis',
 			$request,
 			$schemaService,
 			$client,
+			$farmSyncService,
 			$logger,
 		);
 	}

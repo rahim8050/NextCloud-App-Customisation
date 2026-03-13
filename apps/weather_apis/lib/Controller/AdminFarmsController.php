@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\WeatherApis\Controller;
 
 use OCA\WeatherApis\Service\DrfSchemaService;
+use OCA\WeatherApis\Service\FarmSyncServiceInterface;
 use OCA\WeatherApis\Service\HttpStatus;
 use OCA\WeatherApis\Service\LogSanitizer;
 use OCA\WeatherApis\Service\WeatherApiClientInterface;
@@ -35,6 +36,7 @@ final class AdminFarmsController extends Controller {
 		IRequest $request,
 		private readonly DrfSchemaService $schemaService,
 		private readonly WeatherApiClientInterface $weatherApiClient,
+		private readonly FarmSyncServiceInterface $farmSyncService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($appName, $request);
@@ -175,6 +177,42 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $this->buildSuccessResponse($payload, 'Farm created.');
+	}
+
+	#[AdminRequired]
+	public function syncFarm(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('sync farm', $requestId);
+
+		$params = $this->request->getParams();
+
+		try {
+			$payload = $this->farmSyncService->sync($params, $requestId);
+		} catch (WeatherApiException $exception) {
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			$this->logger->warning(
+				'Weather API farm sync failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
+			return $this->buildErrorResponse(
+				'backend_error',
+				'Farm sync failed.',
+				$requestId,
+				Http::STATUS_BAD_REQUEST,
+			);
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm synced.');
 	}
 
 
@@ -416,6 +454,7 @@ final class AdminFarmsController extends Controller {
 			$pathTemplate = (string)($operation['path'] ?? '');
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
 			$query = $this->filterQueryParams(
 				$params,
 				$operation['queryParams'] ?? [],
@@ -425,6 +464,7 @@ final class AdminFarmsController extends Controller {
 			if ($dateField !== null && array_key_exists($dateField, $query)) {
 				$this->parseIsoDateValue($query[$dateField], $dateField);
 			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->logProxyRequest('ndvi raster', $operation, $path, $query, $requestId);
 			$binary = $this->weatherApiClient->requestBinary(
 				(string)($operation['method'] ?? 'GET'),
@@ -469,6 +509,7 @@ final class AdminFarmsController extends Controller {
 			$pathTemplate = (string)($operation['path'] ?? '');
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
 			$query = [];
 			$body = null;
 			$bodyFields = $operation['bodyFields'] ?? [];
@@ -486,6 +527,7 @@ final class AdminFarmsController extends Controller {
 					$this->parseIsoDateValue($query[$dateField], $dateField);
 				}
 			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->logProxyRequest('ndvi raster queue', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
 				(string)($operation['method'] ?? 'POST'),
@@ -1118,6 +1160,46 @@ final class AdminFarmsController extends Controller {
 
 		return null;
 	}
+
+	/**
+	 * @param array<string, mixed> $params
+	 * @param array<string, mixed> $query
+	 * @return array<string, mixed>
+	 */
+	private function pullExternalFarmId(array &$params): ?string {
+		if (!array_key_exists('external_farm_id', $params)) {
+			return null;
+		}
+
+		$value = $params['external_farm_id'];
+		unset($params['external_farm_id']);
+
+		if (!is_string($value)) {
+			throw new WeatherApiException('invalid_argument', 'Invalid external_farm_id.');
+		}
+
+		$trimmed = trim($value);
+		if ($trimmed === '') {
+			throw new WeatherApiException('invalid_argument', 'Invalid external_farm_id.');
+		}
+
+		return $trimmed;
+	}
+
+	/**
+	 * @param array<string, mixed> $query
+	 * @return array<string, mixed>
+	 */
+	private function appendExternalFarmIdValue(?string $externalFarmId, array $query): array {
+		if ($externalFarmId === null) {
+			return $query;
+		}
+
+		$query['external_farm_id'] = $externalFarmId;
+
+		return $query;
+	}
+
 
 	/**
 	 * @param array<string, mixed>|null $details

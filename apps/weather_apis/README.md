@@ -86,6 +86,9 @@ All endpoints below are admin-only. Mutating requests require CSRF. The farm sch
   - Proxies DRF farm list endpoint; query params are schema-driven.
 - `POST /apps/weather_apis/api/v1/admin/farms/create`
   - Proxies DRF farm create endpoint; required fields = `required - readOnly`.
+- `POST /apps/weather_apis/api/v1/admin/farms/sync`
+  - Admin-only.
+  - Proxies DRF farm sync endpoint for Nextcloud-owned farms. Payload includes `external_farm_id`, `external_user_id`, `name`, `bbox`, `centroid`.
 - `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}`
   - Proxies DRF farm retrieve endpoint.
 - `PUT /apps/weather_apis/api/v1/admin/farms/{farm_id}`
@@ -100,8 +103,10 @@ All endpoints below are admin-only. Mutating requests require CSRF. The farm sch
   - Proxies DRF NDVI timeseries endpoint; query params are schema-driven.
 - `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster.png`
   - Streams raw `image/png` bytes via Nextcloud (no JSON wrapper).
+  - Optional query param: `external_farm_id` (UUID) to resolve farms synced from external systems.
 - `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/raster/queue`
   - Proxies DRF NDVI raster queue endpoint; request body is schema-driven.
+  - Optional query param: `external_farm_id` (UUID) to resolve farms synced from external systems.
 - `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/ndvi/refresh`
   - Proxies DRF NDVI refresh endpoint; request body is schema-driven.
 

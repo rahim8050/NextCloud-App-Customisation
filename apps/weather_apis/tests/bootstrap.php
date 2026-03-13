@@ -91,4 +91,9 @@ namespace {
 	}
 
 	require_once $autoload;
+
+	$farmSyncService = __DIR__ . '/../lib/Service/FarmSyncService.php';
+	if (is_file($farmSyncService)) {
+		require_once $farmSyncService;
+	}
 }

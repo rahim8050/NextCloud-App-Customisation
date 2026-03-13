@@ -64,6 +64,11 @@ return [
 			'verb' => 'POST',
 		],
 		[
+			'name' => 'adminFarms#syncFarm',
+			'url' => '/api/v1/admin/farms/sync',
+			'verb' => 'POST',
+		],
+		[
 			'name' => 'adminFarms#getFarm',
 			'url' => '/api/v1/admin/farms/{id}',
 			'verb' => 'GET',

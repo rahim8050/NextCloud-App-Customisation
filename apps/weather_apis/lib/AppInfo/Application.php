@@ -12,6 +12,8 @@ use OCA\WeatherApis\Controller\SettingsController;
 use OCA\WeatherApis\Sections\AdminSection;
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\DrfSchemaService;
+use OCA\WeatherApis\Service\FarmSyncService;
+use OCA\WeatherApis\Service\FarmSyncServiceInterface;
 use OCA\WeatherApis\Service\IntegrationConfig;
 use OCA\WeatherApis\Service\OpenApiRegistry;
 use OCA\WeatherApis\Service\TokenSigner;
@@ -155,6 +157,17 @@ final class Application extends App implements IBootstrap {
 			);
 		});
 
+		$context->registerService(FarmSyncService::class, function (ContainerInterface $c) {
+			return new FarmSyncService(
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(LoggerInterface::class),
+			);
+		});
+
+		$context->registerService(FarmSyncServiceInterface::class, function (ContainerInterface $c): FarmSyncServiceInterface {
+			return $c->get(FarmSyncService::class);
+		});
+
 		$context->registerService(AdminFarmsController::class, function (ContainerInterface $c) {
 			$logger = $c->get(LoggerInterface::class);
 			return new AdminFarmsController(
@@ -162,6 +175,7 @@ final class Application extends App implements IBootstrap {
 				$c->get(IRequest::class),
 				$c->get(DrfSchemaService::class),
 				$c->get(WeatherApiClientInterface::class),
+				$c->get(FarmSyncServiceInterface::class),
 				$logger,
 			);
 		});
