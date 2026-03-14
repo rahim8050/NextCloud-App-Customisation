@@ -35,6 +35,7 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmUpdateUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmPatchUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__ID__', $response->getParams()['farmDeleteUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/sync', $response->getParams()['farmSyncUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/latest', $response->getParams()['farmNdviLatestUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/timeseries', $response->getParams()['farmNdviTimeseriesUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png', $response->getParams()['farmNdviRasterUrl']);
@@ -83,7 +84,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(22))
+		$urlGenerator->expects($this->exactly(23))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -100,6 +101,7 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminFarms.updateFarm', ['id' => '__ID__']],
 				['weather_apis.adminFarms.patchFarm', ['id' => '__ID__']],
 				['weather_apis.adminFarms.deleteFarm', ['id' => '__ID__']],
+				['weather_apis.adminFarms.syncFarm', []],
 				['weather_apis.adminFarms.getNdviLatest', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.getNdviTimeseries', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']],
@@ -124,6 +126,7 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/farms/__ID__',
 				'/apps/weather_apis/api/v1/admin/farms/__ID__',
 				'/apps/weather_apis/api/v1/admin/farms/__ID__',
+				'/apps/weather_apis/api/v1/admin/farms/sync',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/latest',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/timeseries',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png',

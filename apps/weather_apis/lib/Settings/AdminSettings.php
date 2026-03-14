@@ -60,6 +60,7 @@ final class AdminSettings implements IDelegatedSettings {
 			'farmUpdateUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.updateFarm', ['id' => '__ID__']),
 			'farmPatchUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.patchFarm', ['id' => '__ID__']),
 			'farmDeleteUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.deleteFarm', ['id' => '__ID__']),
+			'farmSyncUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.syncFarm'),
 			'farmNdviLatestUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviLatest', ['farmId' => '__FARM_ID__']),
 			'farmNdviTimeseriesUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviTimeseries', ['farmId' => '__FARM_ID__']),
 			'farmNdviRasterUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']),

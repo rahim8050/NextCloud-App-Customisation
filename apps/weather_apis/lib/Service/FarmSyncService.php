@@ -69,9 +69,18 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 		$name = $this->requireString($payload, 'name');
 
 		$bbox = $this->requireArray($payload, 'bbox');
-		$centroid = $this->requireArray($payload, 'centroid');
+		
+		// Centroid is optional - only validate if provided
+		$centroid = $payload['centroid'] ?? null;
+		$centroidNormalized = null;
+		if (is_array($centroid)) {
+			$centroidNormalized = [
+				'lat' => $this->requireFloat($centroid, 'lat'),
+				'lon' => $this->requireFloat($centroid, 'lon'),
+			];
+		}
 
-		return [
+		$normalized = [
 			'external_farm_id' => $externalFarmId,
 			'external_user_id' => $externalUserId,
 			'name' => $name,
@@ -81,11 +90,14 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 				'north' => $this->requireFloat($bbox, 'north'),
 				'east' => $this->requireFloat($bbox, 'east'),
 			],
-			'centroid' => [
-				'lat' => $this->requireFloat($centroid, 'lat'),
-				'lon' => $this->requireFloat($centroid, 'lon'),
-			],
 		];
+		
+		// Only include centroid if it was provided and valid
+		if ($centroidNormalized !== null) {
+			$normalized['centroid'] = $centroidNormalized;
+		}
+
+		return $normalized;
 	}
 
 	/**

@@ -4,7 +4,7 @@ style('weather_apis', 'admin-settings');
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -195,6 +195,36 @@ style('weather_apis', 'admin-settings');
 					</div>
 					<div class="weather-apis-farms__modal-actions">
 						<button id="weather-apis-farms-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
+					</div>
+				</div>
+			</div>
+			<div class="weather-apis-farms__modal" id="weather-apis-farms-sync-modal" hidden>
+				<div class="weather-apis-farms__modal-card">
+					<div class="weather-apis-farms__modal-header">
+						<strong id="weather-apis-farms-sync-modal-title"><?php p($l->t('Sync Farm to DRF')); ?></strong>
+						<button id="weather-apis-farms-sync-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+					</div>
+					<div class="weather-apis-farms__modal-body">
+						<p class="weather-apis-farms__sync-description"><?php p($l->t('Sync this farm to the DRF backend. This will create or update the farm using external identifiers.')); ?></p>
+						<div id="weather-apis-farms-sync-fields" class="weather-apis-farms__modal-fields">
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('External Farm ID')); ?></label>
+								<input id="weather-apis-sync-external-farm-id" type="text" readonly />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('External User ID')); ?></label>
+								<input id="weather-apis-sync-external-user-id" type="text" readonly />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Farm Name')); ?></label>
+								<input id="weather-apis-sync-name" type="text" readonly />
+							</div>
+						</div>
+						<p class="hint"><?php p($l->t('This action will sync the farm to the DRF backend using the integration token.')); ?></p>
+					</div>
+					<div class="weather-apis-farms__modal-actions">
+						<button id="weather-apis-farms-sync-modal-cancel" type="button" class="button"><?php p($l->t('Cancel')); ?></button>
+						<button id="weather-apis-farms-sync-modal-confirm" type="button" class="button primary"><?php p($l->t('Sync Farm')); ?></button>
 					</div>
 				</div>
 			</div>

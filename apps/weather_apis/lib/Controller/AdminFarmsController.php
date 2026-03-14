@@ -1164,7 +1164,7 @@ final class AdminFarmsController extends Controller {
 	/**
 	 * @param array<string, mixed> $params
 	 * @param array<string, mixed> $query
-	 * @return array<string, mixed>
+	 * @return null|string
 	 */
 	private function pullExternalFarmId(array &$params): ?string {
 		if (!array_key_exists('external_farm_id', $params)) {

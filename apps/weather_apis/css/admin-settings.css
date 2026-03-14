@@ -872,6 +872,29 @@
 	font-size: 12px;
 }
 
+.weather-apis-farms__sync-description {
+	margin-bottom: 16px;
+	color: var(--color-text-maxcontrast, #666);
+}
+
+.weather-apis-farms__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+.weather-apis-farms__field label {
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast, #666);
+}
+
+.weather-apis-farms__field input[readonly] {
+	background: var(--color-background-hover, #f5f5f5);
+	cursor: not-allowed;
+}
+
 .weather-apis-farms__modal-actions {
 	display: flex;
 	justify-content: flex-end;

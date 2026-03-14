@@ -38,6 +38,7 @@
 		const farmGetUrl = form.dataset.farmGetUrl || ''
 		const farmPatchUrl = form.dataset.farmPatchUrl || ''
 		const farmDeleteUrl = form.dataset.farmDeleteUrl || ''
+		const farmSyncUrl = form.dataset.farmSyncUrl || ''
 		const farmNdviLatestUrl = form.dataset.farmNdviLatestUrl || ''
 		const farmNdviTimeseriesUrl = form.dataset.farmNdviTimeseriesUrl || ''
 		const farmNdviRasterUrl = form.dataset.farmNdviRasterUrl || ''
@@ -116,6 +117,14 @@
 		const farmsModalFields = document.getElementById('weather-apis-farms-modal-fields')
 		const farmsModalSave = document.getElementById('weather-apis-farms-modal-save')
 		const farmsModalClose = document.getElementById('weather-apis-farms-modal-close')
+		const farmsSyncModal = document.getElementById('weather-apis-farms-sync-modal')
+		const farmsSyncModalTitle = document.getElementById('weather-apis-farms-sync-modal-title')
+		const farmsSyncModalClose = document.getElementById('weather-apis-farms-sync-modal-close')
+		const farmsSyncModalCancel = document.getElementById('weather-apis-farms-sync-modal-cancel')
+		const farmsSyncModalConfirm = document.getElementById('weather-apis-farms-sync-modal-confirm')
+		const syncExternalFarmIdInput = document.getElementById('weather-apis-sync-external-farm-id')
+		const syncExternalUserIdInput = document.getElementById('weather-apis-sync-external-user-id')
+		const syncNameInput = document.getElementById('weather-apis-sync-name')
 		// TODO: confirm desired auto-hide timeout for generated secrets; 30s keeps the UI usable without lingering secrets.
 		const CREDENTIALS_CLEAR_DELAY_MS = 30000
 		let credentialsClearTimer = null
@@ -738,6 +747,8 @@
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
+			let currentSyncFarmId = null
+			let currentSyncFarmData = null
 			let reduceLatestState = () => ({ status: 'no_data', vm: null, payload: null, message: '' })
 			let reduceTimeseriesState = () => ({
 				status: 'no_data',
@@ -1018,6 +1029,10 @@
 					deleteButton.type = 'button'
 					deleteButton.className = 'button'
 					deleteButton.textContent = 'Delete'
+					const syncButton = document.createElement('button')
+					syncButton.type = 'button'
+					syncButton.className = 'button'
+					syncButton.textContent = 'Sync'
 					const ndviButton = document.createElement('button')
 					ndviButton.type = 'button'
 					ndviButton.className = 'button'
@@ -1031,17 +1046,20 @@
 					if (farmId === null) {
 						editButton.disabled = true
 						deleteButton.disabled = true
+						syncButton.disabled = true
 						ndviButton.disabled = true
 						weatherButton.disabled = true
 					} else {
 						editButton.addEventListener('click', () => openFarmModal('edit', farmId))
 						deleteButton.addEventListener('click', () => deleteFarm(farmId))
+						syncButton.addEventListener('click', () => openSyncFarmModal(farmId, farm))
 						ndviButton.addEventListener('click', () => openNdviPanel(farmId, farm))
 						weatherButton.addEventListener('click', () => openWeatherPanel(farmId, farm))
 					}
 
 					actions.appendChild(editButton)
 					actions.appendChild(deleteButton)
+					actions.appendChild(syncButton)
 					actions.appendChild(ndviButton)
 					actions.appendChild(weatherButton)
 					row.appendChild(actions)
@@ -1397,6 +1415,185 @@
 					showFarmsError(message)
 					return
 				}
+				await refreshFarms()
+			}
+
+			const openSyncFarmModal = async (farmId, farm) => {
+				const schemaOk = await getSchemaReady('open sync farm')
+				logFarms('open sync farm schema gate', { ok: schemaOk })
+				if (!schemaOk) {
+					return
+				}
+
+				if (!farmSyncUrl) {
+					showFarmsError('Farm sync endpoint is not available.')
+					return
+				}
+
+				// If farm data is incomplete, fetch full farm data first
+				let fullFarm = farm
+				if (!farm || typeof farm !== 'object' || !farm.name) {
+					// Fetch full farm data from backend
+					const getFarmUrl = farmGetUrl.replace('__ID__', encodeURIComponent(farmId))
+					const result = await performJsonRequest('GET', getFarmUrl)
+					if (!result.parsed || !result.response.ok) {
+						showFarmsError('Unable to load farm data for sync.')
+						return
+					}
+					const okLoad = result.data?.status === 'ok' || result.data?.ok === true
+					if (!okLoad) {
+						const message = pickMessage(result.data, 'Unable to load farm data.')
+						showFarmsError(message)
+						return
+					}
+					fullFarm = result.data?.data || result.data || {}
+				}
+
+				// Log farm data for debugging
+				console.log('[weather_apis] Sync farm data:', JSON.parse(JSON.stringify(fullFarm)))
+
+				if (farmsSyncModal) {
+					farmsSyncModal.hidden = false
+				}
+
+				if (syncExternalFarmIdInput) {
+					// Generate a proper UUID if external_farm_id is missing
+					const existingId = fullFarm.external_farm_id
+					if (existingId && String(existingId).trim() !== '') {
+						syncExternalFarmIdInput.value = String(existingId)
+					} else {
+						// Generate UUID v4
+						const uuid = crypto.randomUUID()
+						syncExternalFarmIdInput.value = uuid
+					}
+				}
+				if (syncExternalUserIdInput) {
+					// Use actual Nextcloud user ID if available
+					// OC.getUser() returns {uid: 'username'} in most Nextcloud versions
+					let userId = 'nextcloud-admin'
+					try {
+						const ocUser = window.OC?.getUser?.()
+						if (ocUser && typeof ocUser === 'object') {
+							userId = ocUser.uid || ocUser.id || 'nextcloud-admin'
+						}
+					} catch (e) {
+						// Fallback if OC.getUser is not available
+						console.warn('[weather_apis] Could not get current user, using fallback')
+					}
+					syncExternalUserIdInput.value = fullFarm.external_user_id || userId
+				}
+				if (syncNameInput) {
+					syncNameInput.value = fullFarm.name || ''
+				}
+
+				currentSyncFarmId = farmId
+				currentSyncFarmData = fullFarm
+			}
+
+			const closeSyncFarmModal = () => {
+				currentSyncFarmId = null
+				currentSyncFarmData = null
+				if (farmsSyncModal) {
+					farmsSyncModal.hidden = true
+				}
+			}
+
+			const syncFarm = async (farmId, farm) => {
+				const schemaOk = await getSchemaReady('sync farm')
+				logFarms('sync farm schema gate', { ok: schemaOk })
+				if (!schemaOk) {
+					return
+				}
+				clearFarmsNotes()
+
+				if (!farmSyncUrl) {
+					showFarmsError('Farm sync endpoint is not available.')
+					return
+				}
+
+				// Use the full farm data we fetched earlier
+				const fullFarm = currentSyncFarmData || farm
+				console.log('[weather_apis] Syncing farm with data:', JSON.parse(JSON.stringify(fullFarm)))
+
+				// Build bbox - use existing values or defaults for missing data
+				const hasBbox = fullFarm.bbox_south !== null && fullFarm.bbox_south !== undefined
+					&& fullFarm.bbox_west !== null && fullFarm.bbox_west !== undefined
+					&& fullFarm.bbox_north !== null && fullFarm.bbox_north !== undefined
+					&& fullFarm.bbox_east !== null && fullFarm.bbox_east !== undefined
+					&& String(fullFarm.bbox_south).trim() !== ''
+					&& String(fullFarm.bbox_west).trim() !== ''
+					&& String(fullFarm.bbox_north).trim() !== ''
+					&& String(fullFarm.bbox_east).trim() !== ''
+
+				const bboxPayload = hasBbox
+					? {
+						south: Number(fullFarm.bbox_south) || 0,
+						west: Number(fullFarm.bbox_west) || 0,
+						north: Number(fullFarm.bbox_north) || 0,
+						east: Number(fullFarm.bbox_east) || 0,
+					}
+					: {
+						south: -1.0,
+						west: 36.0,
+						north: 1.0,
+						east: 38.0,
+					}
+
+				// Build centroid - only include if both lat and lon are valid numbers
+				const latVal = fullFarm.centroid_lat
+				const lonVal = fullFarm.centroid_lon
+				const hasValidCentroid = latVal !== null && latVal !== undefined
+					&& lonVal !== null && lonVal !== undefined
+					&& String(latVal).trim() !== ''
+					&& String(lonVal).trim() !== ''
+					&& !isNaN(Number(latVal))
+					&& !isNaN(Number(lonVal))
+
+				const payload = {
+					external_farm_id: syncExternalFarmIdInput?.value || crypto.randomUUID(),
+					external_user_id: syncExternalUserIdInput?.value || (() => {
+						try {
+							return window.OC?.getUser?.()?.uid ?? 'nextcloud-admin'
+						} catch {
+							return 'nextcloud-admin'
+						}
+					})(),
+					name: syncNameInput?.value || fullFarm.name || 'Synced Farm',
+					bbox: bboxPayload,
+				}
+
+				// Only add centroid if we have valid numeric data
+				if (hasValidCentroid) {
+					payload.centroid = {
+						lat: Number(latVal),
+						lon: Number(lonVal),
+					}
+				}
+
+				// Debug: log the final payload (development only)
+				// TODO: Remove before production deployment
+				if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+					console.log('[weather_apis] Final sync payload:', JSON.stringify(payload, null, 2))
+				}
+
+				const result = await performJsonRequest('POST', farmSyncUrl, {
+					body: payload,
+				})
+				if (!result.parsed) {
+					console.error('[weather_apis] Sync response not JSON:', result.text)
+					showFarmsError('Unable to parse sync response.')
+					return
+				}
+				const okSync = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!okSync) {
+					console.error('[weather_apis] Sync failed:', result.data)
+					const message = pickMessage(result.data, 'Unable to sync farm.')
+					showFarmsError(message)
+					return
+				}
+
+				closeSyncFarmModal()
+				toast('Farm synced successfully.')
 				await refreshFarms()
 			}
 
@@ -2606,6 +2803,19 @@
 			}
 			if (farmsModalClose) {
 				farmsModalClose.addEventListener('click', closeFarmModal)
+			}
+			if (farmsSyncModalClose) {
+				farmsSyncModalClose.addEventListener('click', closeSyncFarmModal)
+			}
+			if (farmsSyncModalCancel) {
+				farmsSyncModalCancel.addEventListener('click', closeSyncFarmModal)
+			}
+			if (farmsSyncModalConfirm) {
+				farmsSyncModalConfirm.addEventListener('click', () => {
+					if (currentSyncFarmId) {
+						syncFarm(currentSyncFarmId, currentSyncFarmData || {})
+					}
+				})
 			}
 			const loadLatestNdvi = async () => {
 				latestNdviState = reduceLatestState(latestNdviState, { type: 'request' })
