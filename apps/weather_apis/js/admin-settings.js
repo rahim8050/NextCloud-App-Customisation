@@ -47,6 +47,8 @@
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
+		const farmObservationsUrl = form.dataset.farmObservationsUrl || ''
+		const farmObservationUrl = form.dataset.farmObservationUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -101,6 +103,53 @@
 		const ndviRasterImg = document.getElementById('weather-apis-ndvi-raster-img')
 		const farmsWeather = document.getElementById('weather-apis-farms-weather')
 		const farmsWeatherTitle = document.getElementById('weather-apis-farms-weather-title')
+		const farmsObservations = document.getElementById('weather-apis-farms-observations')
+		const farmsObservationsTitle = document.getElementById('weather-apis-farms-observations-title')
+		const farmsObservationsError = document.getElementById('weather-apis-farms-observations-error')
+		const farmsObservationsTable = document.getElementById('weather-apis-farms-observations-table')
+		const farmsObservationsPagination = document.getElementById('weather-apis-farms-observations-pagination')
+		const farmsObservationsPrev = document.getElementById('weather-apis-farms-observations-prev')
+		const farmsObservationsNext = document.getElementById('weather-apis-farms-observations-next')
+		const farmsObservationsPage = document.getElementById('weather-apis-farms-observations-page')
+		const observationsStartInput = document.getElementById('weather-apis-observations-start')
+		const observationsEndInput = document.getElementById('weather-apis-observations-end')
+		const observationsTypeInput = document.getElementById('weather-apis-observations-type')
+		const observationsLimitInput = document.getElementById('weather-apis-observations-limit')
+		const observationsRefresh = document.getElementById('weather-apis-observations-refresh')
+		const observationsCreate = document.getElementById('weather-apis-observations-create')
+		const observationsModal = document.getElementById('weather-apis-farms-observation-modal')
+		const observationsModalTitle = document.getElementById('weather-apis-farms-observation-modal-title')
+		const observationsModalClose = document.getElementById('weather-apis-farms-observation-modal-close')
+		const observationsModalSave = document.getElementById('weather-apis-farms-observation-modal-save')
+		const observationObservedAt = document.getElementById('weather-apis-observation-observed-at')
+		const observationEventType = document.getElementById('weather-apis-observation-event-type')
+		const observationNote = document.getElementById('weather-apis-observation-note')
+		const observationSource = document.getElementById('weather-apis-observation-source')
+		const observationObserver = document.getElementById('weather-apis-observation-observer')
+		const observationCrop = document.getElementById('weather-apis-observation-crop')
+		const observationVariety = document.getElementById('weather-apis-observation-variety')
+		const observationGrowthStage = document.getElementById('weather-apis-observation-growth-stage')
+		const observationAreaHa = document.getElementById('weather-apis-observation-area-ha')
+		const observationLocationNote = document.getElementById('weather-apis-observation-location-note')
+		const observationSeedRate = document.getElementById('weather-apis-observation-seed-rate')
+		const observationPlantingMethod = document.getElementById('weather-apis-observation-planting-method')
+		const observationIrrigationType = document.getElementById('weather-apis-observation-irrigation-type')
+		const observationWaterMm = document.getElementById('weather-apis-observation-water-mm')
+		const observationFertilizerType = document.getElementById('weather-apis-observation-fertilizer-type')
+		const observationNutrientN = document.getElementById('weather-apis-observation-nutrient-n')
+		const observationNutrientP = document.getElementById('weather-apis-observation-nutrient-p')
+		const observationNutrientK = document.getElementById('weather-apis-observation-nutrient-k')
+		const observationPest = document.getElementById('weather-apis-observation-pest')
+		const observationProduct = document.getElementById('weather-apis-observation-product')
+		const observationDose = document.getElementById('weather-apis-observation-dose')
+		const observationYield = document.getElementById('weather-apis-observation-yield')
+		const observationMoisture = document.getElementById('weather-apis-observation-moisture')
+		const observationPestPressure = document.getElementById('weather-apis-observation-pest-pressure')
+		const observationSoilPh = document.getElementById('weather-apis-observation-soil-ph')
+		const observationOrganicMatter = document.getElementById('weather-apis-observation-organic-matter')
+		const observationFieldGroups = observationsModal
+			? observationsModal.querySelectorAll('[data-event-types]')
+			: []
 		const weatherCurrentTab = document.getElementById('weather-apis-weather-current-tab')
 		const weatherHourlyTab = document.getElementById('weather-apis-weather-hourly-tab')
 		const weatherDailyTab = document.getElementById('weather-apis-weather-daily-tab')
@@ -569,6 +618,14 @@
 			if (token) {
 				headers.requesttoken = token
 			}
+			if (options.headers && typeof options.headers === 'object') {
+				Object.entries(options.headers).forEach(([name, value]) => {
+					if (value === undefined || value === null) {
+						return
+					}
+					headers[name] = String(value)
+				})
+			}
 
 			const resolvedUrl = resolveRequestUrl(url)
 			const queryString = buildQueryString(options.query)
@@ -739,6 +796,9 @@
 			let nextParams = null
 			let prevParams = null
 			let selectedFarm = null
+			let observationsLimit = 50
+			let observationsOffset = 0
+			let currentObservationId = null
 			let modalInitial = {}
 			let ndviTouched = { start: false, end: false, raster: false }
 			let ndviRasterObjectUrl = null
@@ -1041,6 +1101,10 @@
 					weatherButton.type = 'button'
 					weatherButton.className = 'button'
 					weatherButton.textContent = 'Weather'
+					const observationsButton = document.createElement('button')
+					observationsButton.type = 'button'
+					observationsButton.className = 'button'
+					observationsButton.textContent = 'Observations'
 
 					const farmId = resolveFarmId(farm)
 					if (farmId === null) {
@@ -1049,12 +1113,14 @@
 						syncButton.disabled = true
 						ndviButton.disabled = true
 						weatherButton.disabled = true
+						observationsButton.disabled = true
 					} else {
 						editButton.addEventListener('click', () => openFarmModal('edit', farmId))
 						deleteButton.addEventListener('click', () => deleteFarm(farmId))
 						syncButton.addEventListener('click', () => openSyncFarmModal(farmId, farm))
 						ndviButton.addEventListener('click', () => openNdviPanel(farmId, farm))
 						weatherButton.addEventListener('click', () => openWeatherPanel(farmId, farm))
+						observationsButton.addEventListener('click', () => openObservationsPanel(farmId, farm))
 					}
 
 					actions.appendChild(editButton)
@@ -1062,6 +1128,7 @@
 					actions.appendChild(syncButton)
 					actions.appendChild(ndviButton)
 					actions.appendChild(weatherButton)
+					actions.appendChild(observationsButton)
 					row.appendChild(actions)
 					farmsBody.appendChild(row)
 				})
@@ -1392,6 +1459,15 @@
 				resolve(false)
 			})
 
+			const confirmObservationDeleteAsync = () => new Promise((resolve) => {
+				const dialogs = window.OC?.dialogs
+				if (dialogs && typeof dialogs.confirm === 'function') {
+					dialogs.confirm('Delete this observation?', 'Confirm deletion', (result) => resolve(result))
+					return
+				}
+				resolve(false)
+			})
+
 			const deleteFarm = async (farmId) => {
 				const schemaOk = await getSchemaReady('delete farm')
 				logFarms('delete farm schema gate', { ok: schemaOk })
@@ -1399,7 +1475,7 @@
 					return
 				}
 				clearFarmsNotes()
-				const confirmed = await confirmDeleteAsync()
+				const confirmed = await confirmObservationDeleteAsync()
 				if (!confirmed) {
 					return
 				}
@@ -1549,8 +1625,15 @@
 					&& !isNaN(Number(latVal))
 					&& !isNaN(Number(lonVal))
 
+				const providedExternalFarmId = syncExternalFarmIdInput?.value?.trim()
+				const externalFarmId = providedExternalFarmId && providedExternalFarmId !== ''
+					? providedExternalFarmId
+					: crypto.randomUUID()
+				if (syncExternalFarmIdInput) {
+					syncExternalFarmIdInput.value = externalFarmId
+				}
 				const payload = {
-					external_farm_id: syncExternalFarmIdInput?.value || crypto.randomUUID(),
+					external_farm_id: externalFarmId,
 					external_user_id: syncExternalUserIdInput?.value || (() => {
 						try {
 							return window.OC?.getUser?.()?.uid ?? 'nextcloud-admin'
@@ -1576,8 +1659,12 @@
 					console.log('[weather_apis] Final sync payload:', JSON.stringify(payload, null, 2))
 				}
 
+				const idempotencyKey = `farm-sync:${externalFarmId}`
 				const result = await performJsonRequest('POST', farmSyncUrl, {
 					body: payload,
+					headers: {
+						'Idempotency-Key': idempotencyKey,
+					},
 				})
 				if (!result.parsed) {
 					console.error('[weather_apis] Sync response not JSON:', result.text)
@@ -2318,6 +2405,9 @@
 				if (farmsWeather) {
 					farmsWeather.hidden = true
 				}
+				if (farmsObservations) {
+					farmsObservations.hidden = true
+				}
 				if (farmsNdviTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
 					farmsNdviTitle.textContent = label
@@ -2377,6 +2467,22 @@
 				weatherError.hidden = true
 			}
 
+			const clearObservationsError = () => {
+				if (!farmsObservationsError) {
+					return
+				}
+				farmsObservationsError.textContent = ''
+				farmsObservationsError.hidden = true
+			}
+
+			const showObservationsError = (message) => {
+				if (!farmsObservationsError) {
+					return
+				}
+				farmsObservationsError.textContent = message
+				farmsObservationsError.hidden = false
+			}
+
 			const showWeatherError = (message) => {
 				if (!weatherError) {
 					return
@@ -2408,6 +2514,452 @@
 						button.classList.toggle('active', key === tab)
 					}
 				})
+			}
+
+			const renderObservationsTable = (items) => {
+				if (!farmsObservationsTable) {
+					return
+				}
+				if (!Array.isArray(items) || items.length === 0) {
+					farmsObservationsTable.textContent = 'No observations.'
+					return
+				}
+				const columns = Object.keys(items[0] || {})
+				const hasActions = columns.includes('id')
+				const table = document.createElement('table')
+				table.className = 'weather-apis-farms__table weather-apis-farms__table--sticky'
+				const metadataColumn = columns.indexOf('metadata')
+				const thead = document.createElement('thead')
+				const headerRow = document.createElement('tr')
+				columns.forEach((name) => {
+					const th = document.createElement('th')
+					th.textContent = name
+					if (name === 'metadata') {
+						th.classList.add('weather-apis-farms__cell--metadata')
+					}
+					headerRow.appendChild(th)
+				})
+				if (hasActions) {
+					const th = document.createElement('th')
+					th.textContent = 'Actions'
+					headerRow.appendChild(th)
+				}
+				thead.appendChild(headerRow)
+				table.appendChild(thead)
+				const tbody = document.createElement('tbody')
+				items.forEach((item) => {
+					const row = document.createElement('tr')
+					columns.forEach((name, index) => {
+						const cell = document.createElement('td')
+						const value = item?.[name]
+						const text = formatObservationValue(value, name)
+						cell.textContent = text
+						if (index === metadataColumn) {
+							cell.classList.add('weather-apis-farms__cell--metadata')
+							cell.title = text === '—' ? '' : text
+						}
+						row.appendChild(cell)
+					})
+					if (hasActions) {
+						const actions = document.createElement('td')
+						const editButton = document.createElement('button')
+						editButton.type = 'button'
+						editButton.className = 'button'
+						editButton.textContent = 'Edit'
+						const deleteButton = document.createElement('button')
+						deleteButton.type = 'button'
+						deleteButton.className = 'button'
+						deleteButton.textContent = 'Delete'
+						actions.appendChild(editButton)
+						actions.appendChild(deleteButton)
+						row.appendChild(actions)
+						const observationId = item?.id ?? null
+						if (observationId === null) {
+							editButton.disabled = true
+							deleteButton.disabled = true
+						} else {
+							editButton.addEventListener('click', () => openObservationModal('edit', item))
+							deleteButton.addEventListener('click', () => deleteObservation(String(observationId)))
+						}
+					}
+					tbody.appendChild(row)
+				})
+				table.appendChild(tbody)
+				farmsObservationsTable.replaceChildren()
+				farmsObservationsTable.appendChild(table)
+			}
+
+			const setObservationsPagination = (count) => {
+				if (!farmsObservationsPagination || !farmsObservationsPrev || !farmsObservationsNext || !farmsObservationsPage) {
+					return
+				}
+				farmsObservationsPagination.hidden = false
+				farmsObservationsPrev.disabled = observationsOffset <= 0 || !schemaReady
+				const hasNext = Number.isFinite(count) ? count >= observationsLimit : false
+				farmsObservationsNext.disabled = !hasNext || !schemaReady
+				const start = observationsOffset + 1
+				const end = observationsOffset + count
+				farmsObservationsPage.textContent = count === 0
+					? 'No observations'
+					: `${start}-${end}`
+			}
+
+			const loadObservations = async () => {
+				const schemaOk = await getSchemaReady('farm observations')
+				logFarms('observations schema gate', { ok: schemaOk })
+				if (!schemaOk) {
+					return
+				}
+				clearFarmsNotes()
+				clearObservationsError()
+				if (!selectedFarm) {
+					showObservationsError('Select a farm first.')
+					return
+				}
+				if (!farmObservationsUrl) {
+					showObservationsError('Farm observations endpoint is not available.')
+					return
+				}
+				const url = farmObservationsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const limitValue = Number.parseInt(observationsLimitInput?.value || '', 10)
+				if (Number.isFinite(limitValue) && limitValue > 0) {
+					observationsLimit = Math.min(limitValue, 500)
+				}
+				const result = await performJsonRequest('GET', url, {
+					query: {
+						start: observationsStartInput?.value || undefined,
+						end: observationsEndInput?.value || undefined,
+						event_type: observationsTypeInput?.value || undefined,
+						limit: observationsLimit,
+						offset: observationsOffset,
+					},
+				})
+				if (!result.parsed) {
+					showObservationsError('Unable to parse observations response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to load observations.')
+					showObservationsError(message)
+					return
+				}
+				const payload = unwrapResponseData(result.data)
+				const normalized = payload && payload.data !== undefined
+					? payload.data
+					: payload
+				const items = Array.isArray(normalized)
+					? normalized
+					: Array.isArray(normalized?.results)
+						? normalized.results
+						: []
+				renderObservationsTable(items)
+				setObservationsPagination(items.length)
+			}
+
+			const openObservationsPanel = (farmId, farm) => {
+				selectedFarm = { id: farmId, data: farm }
+				observationsOffset = 0
+				currentObservationId = null
+				if (observationsLimitInput && !observationsLimitInput.value) {
+					observationsLimitInput.value = String(observationsLimit)
+				}
+				if (farmsObservations) {
+					farmsObservations.hidden = false
+				}
+				if (farmsNdvi) {
+					farmsNdvi.hidden = true
+				}
+				if (farmsWeather) {
+					farmsWeather.hidden = true
+				}
+				if (farmsObservationsTitle) {
+					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
+					farmsObservationsTitle.textContent = label
+				}
+				loadObservations()
+			}
+
+			const setInputValue = (input, value) => {
+				if (!input) {
+					return
+				}
+				input.value = value === null || value === undefined ? '' : String(value)
+			}
+
+			const formatObservationValue = (value, key = '') => {
+				if (value === null || value === undefined) {
+					return '—'
+				}
+				if (key === 'metadata') {
+					let obj = value
+					if (typeof value === 'string') {
+						try {
+							obj = JSON.parse(value)
+						} catch {
+							return value
+						}
+					}
+					if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+						const parts = Object.entries(obj)
+							.map(([k, v]) => `${k}=${v}`)
+							.filter((item) => item.length > 1)
+						return parts.length === 0 ? '—' : parts.join(', ')
+					}
+				}
+				if (typeof value === 'object') {
+					return JSON.stringify(value)
+				}
+				return String(value)
+			}
+
+			const readString = (input) => {
+				const value = input?.value ? input.value.trim() : ''
+				return value === '' ? null : value
+			}
+
+			const readNumber = (input) => {
+				if (!input?.value) {
+					return null
+				}
+				const parsed = Number.parseFloat(input.value)
+				return Number.isFinite(parsed) ? parsed : null
+			}
+
+			const resetObservationMetadataInputs = () => {
+				setInputValue(observationSource, '')
+				setInputValue(observationObserver, '')
+				setInputValue(observationCrop, '')
+				setInputValue(observationVariety, '')
+				setInputValue(observationGrowthStage, '')
+				setInputValue(observationAreaHa, '')
+				setInputValue(observationLocationNote, '')
+				setInputValue(observationSeedRate, '')
+				setInputValue(observationPlantingMethod, '')
+				setInputValue(observationIrrigationType, '')
+				setInputValue(observationWaterMm, '')
+				setInputValue(observationFertilizerType, '')
+				setInputValue(observationNutrientN, '')
+				setInputValue(observationNutrientP, '')
+				setInputValue(observationNutrientK, '')
+				setInputValue(observationPest, '')
+				setInputValue(observationProduct, '')
+				setInputValue(observationDose, '')
+				setInputValue(observationYield, '')
+				setInputValue(observationMoisture, '')
+				setInputValue(observationPestPressure, '')
+				setInputValue(observationSoilPh, '')
+				setInputValue(observationOrganicMatter, '')
+			}
+
+			const applyObservationMetadata = (metadata) => {
+				let data = metadata
+				if (typeof metadata === 'string') {
+					try {
+						data = JSON.parse(metadata)
+					} catch {
+						return
+					}
+				}
+				if (!data || typeof data !== 'object' || Array.isArray(data)) {
+					return
+				}
+				setInputValue(observationSource, data.source)
+				setInputValue(observationObserver, data.observer)
+				setInputValue(observationCrop, data.crop)
+				setInputValue(observationVariety, data.variety)
+				setInputValue(observationGrowthStage, data.growth_stage)
+				setInputValue(observationAreaHa, data.area_ha)
+				setInputValue(observationLocationNote, data.location_note)
+				setInputValue(observationSeedRate, data.seed_rate_kg_ha)
+				setInputValue(observationPlantingMethod, data.planting_method)
+				setInputValue(observationIrrigationType, data.irrigation_type)
+				setInputValue(observationWaterMm, data.water_mm)
+				setInputValue(observationFertilizerType, data.fertilizer_type)
+				setInputValue(observationNutrientN, data.nutrient_n_kg_ha)
+				setInputValue(observationNutrientP, data.nutrient_p_kg_ha)
+				setInputValue(observationNutrientK, data.nutrient_k_kg_ha)
+				setInputValue(observationPest, data.pest)
+				setInputValue(observationProduct, data.product)
+				setInputValue(observationDose, data.dose_ml_ha)
+				setInputValue(observationYield, data.yield_kg)
+				setInputValue(observationMoisture, data.moisture_percent)
+				setInputValue(observationPestPressure, data.pest_pressure)
+				setInputValue(observationSoilPh, data.soil_ph)
+				setInputValue(observationOrganicMatter, data.organic_matter_percent)
+			}
+
+			const collectObservationMetadata = () => {
+				const metadata = {}
+				const assignIfPresent = (key, value) => {
+					if (value === null || value === undefined || value === '') {
+						return
+					}
+					metadata[key] = value
+				}
+				assignIfPresent('source', readString(observationSource))
+				assignIfPresent('observer', readString(observationObserver))
+				assignIfPresent('crop', readString(observationCrop))
+				assignIfPresent('variety', readString(observationVariety))
+				assignIfPresent('growth_stage', readString(observationGrowthStage))
+				assignIfPresent('area_ha', readNumber(observationAreaHa))
+				assignIfPresent('location_note', readString(observationLocationNote))
+				assignIfPresent('seed_rate_kg_ha', readNumber(observationSeedRate))
+				assignIfPresent('planting_method', readString(observationPlantingMethod))
+				assignIfPresent('irrigation_type', readString(observationIrrigationType))
+				assignIfPresent('water_mm', readNumber(observationWaterMm))
+				assignIfPresent('fertilizer_type', readString(observationFertilizerType))
+				assignIfPresent('nutrient_n_kg_ha', readNumber(observationNutrientN))
+				assignIfPresent('nutrient_p_kg_ha', readNumber(observationNutrientP))
+				assignIfPresent('nutrient_k_kg_ha', readNumber(observationNutrientK))
+				assignIfPresent('pest', readString(observationPest))
+				assignIfPresent('product', readString(observationProduct))
+				assignIfPresent('dose_ml_ha', readNumber(observationDose))
+				assignIfPresent('yield_kg', readNumber(observationYield))
+				assignIfPresent('moisture_percent', readNumber(observationMoisture))
+				assignIfPresent('pest_pressure', readString(observationPestPressure))
+				assignIfPresent('soil_ph', readNumber(observationSoilPh))
+				assignIfPresent('organic_matter_percent', readNumber(observationOrganicMatter))
+				return Object.keys(metadata).length === 0 ? null : metadata
+			}
+
+			const updateObservationEventGroups = () => {
+				if (!observationFieldGroups || observationFieldGroups.length === 0) {
+					return
+				}
+				const eventType = observationEventType?.value ? observationEventType.value.trim() : ''
+				observationFieldGroups.forEach((group) => {
+					const types = group.dataset.eventTypes
+						? group.dataset.eventTypes.split(',').map((item) => item.trim()).filter(Boolean)
+						: []
+					group.hidden = eventType === '' || !types.includes(eventType)
+				})
+			}
+
+			const openObservationModal = (mode, observation = null) => {
+				currentObservationId = observation?.id ?? null
+				if (observationsModalTitle) {
+					observationsModalTitle.textContent = mode === 'edit' ? 'Edit observation' : 'New observation'
+				}
+				if (observationObservedAt) {
+					observationObservedAt.value = observation?.observed_at ?? ''
+				}
+				if (observationEventType) {
+					observationEventType.value = observation?.event_type ?? ''
+				}
+				if (observationNote) {
+					observationNote.value = observation?.note ?? ''
+				}
+				resetObservationMetadataInputs()
+				applyObservationMetadata(observation?.metadata)
+				updateObservationEventGroups()
+				if (observationsModal) {
+					observationsModal.hidden = false
+				}
+			}
+
+			const closeObservationModal = () => {
+				currentObservationId = null
+				if (observationsModal) {
+					observationsModal.hidden = true
+				}
+			}
+
+			const buildObservationPayload = () => {
+				const payload = {}
+				if (!observationObservedAt?.value) {
+					toast('Observed at is required.')
+					return null
+				}
+				if (!observationEventType?.value) {
+					toast('Event type is required.')
+					return null
+				}
+				if (observationObservedAt?.value) {
+					payload.observed_at = observationObservedAt.value
+				}
+				if (observationEventType?.value) {
+					payload.event_type = observationEventType.value
+				}
+				if (observationNote?.value) {
+					payload.note = observationNote.value
+				}
+				const metadata = collectObservationMetadata()
+				if (metadata !== null) {
+					payload.metadata = metadata
+				}
+				return payload
+			}
+
+			const saveObservation = async () => {
+				clearObservationsError()
+				if (!selectedFarm) {
+					showObservationsError('Select a farm first.')
+					return
+				}
+				if (!farmObservationsUrl || !farmObservationUrl) {
+					showObservationsError('Farm observations endpoint is not available.')
+					return
+				}
+				const payload = buildObservationPayload()
+				if (!payload) {
+					return
+				}
+				const isEdit = currentObservationId !== null
+				const url = isEdit
+					? farmObservationUrl
+						.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+						.replace('__OBSERVATION_ID__', encodeURIComponent(currentObservationId))
+					: farmObservationsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const method = isEdit ? 'PATCH' : 'POST'
+				const result = await performJsonRequest(method, url, { body: payload })
+				if (!result.parsed) {
+					showObservationsError('Unable to parse observation response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to save observation.')
+					showObservationsError(message)
+					toast(message)
+					return
+				}
+				toast(pickMessage(result.data, 'Observation saved.'))
+				closeObservationModal()
+				await loadObservations()
+			}
+
+			const deleteObservation = async (observationId) => {
+				clearObservationsError()
+				if (!selectedFarm) {
+					showObservationsError('Select a farm first.')
+					return
+				}
+				if (!farmObservationUrl) {
+					showObservationsError('Farm observations endpoint is not available.')
+					return
+				}
+				const confirmed = await confirmDeleteAsync()
+				if (!confirmed) {
+					return
+				}
+				const url = farmObservationUrl
+					.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					.replace('__OBSERVATION_ID__', encodeURIComponent(observationId))
+				const result = await performJsonRequest('DELETE', url)
+				if (!result.parsed) {
+					showObservationsError('Unable to parse delete response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to delete observation.')
+					showObservationsError(message)
+					toast(message)
+					return
+				}
+				toast(pickMessage(result.data, 'Observation deleted.'))
+				await loadObservations()
 			}
 
 			const formatWeatherNumber = (value, digits = 1) => formatNdviNumber(value, digits)
@@ -2721,6 +3273,9 @@
 				if (farmsNdvi) {
 					farmsNdvi.hidden = true
 				}
+				if (farmsObservations) {
+					farmsObservations.hidden = true
+				}
 				if (farmsWeatherTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
 					farmsWeatherTitle.textContent = label
@@ -2799,6 +3354,41 @@
 			if (farmsNext) {
 				farmsNext.addEventListener('click', () => {
 					if (nextParams) refreshFarms(nextParams)
+				})
+			}
+			if (observationsRefresh) {
+				observationsRefresh.addEventListener('click', () => {
+					observationsOffset = 0
+					loadObservations()
+				})
+			}
+			if (observationsCreate) {
+				observationsCreate.addEventListener('click', () => {
+					openObservationModal('create')
+				})
+			}
+			if (observationEventType) {
+				observationEventType.addEventListener('change', updateObservationEventGroups)
+			}
+			if (observationsModalClose) {
+				observationsModalClose.addEventListener('click', closeObservationModal)
+			}
+			if (observationsModalSave) {
+				observationsModalSave.addEventListener('click', saveObservation)
+			}
+			if (farmsObservationsPrev) {
+				farmsObservationsPrev.addEventListener('click', () => {
+					if (observationsOffset <= 0) {
+						return
+					}
+					observationsOffset = Math.max(0, observationsOffset - observationsLimit)
+					loadObservations()
+				})
+			}
+			if (farmsObservationsNext) {
+				farmsObservationsNext.addEventListener('click', () => {
+					observationsOffset += observationsLimit
+					loadObservations()
 				})
 			}
 			if (farmsModalClose) {

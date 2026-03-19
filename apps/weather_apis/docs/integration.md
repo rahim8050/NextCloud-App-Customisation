@@ -117,6 +117,59 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
 - `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/weather/daily`
   - Admin-only.
   - Proxies DRF farm weather daily endpoint; query param `days` (default 7).
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/observations`
+  - Admin-only.
+  - Proxies DRF farm observation list endpoint.
+  - Optional query params: `start`, `end`, `event_type`, `limit`, `offset`.
+- `POST /apps/weather_apis/api/v1/admin/farms/{farm_id}/observations`
+  - Admin-only + CSRF required.
+  - Proxies DRF farm observation create endpoint; request body is schema-driven.
+- `GET /apps/weather_apis/api/v1/admin/farms/{farm_id}/observations/{observation_id}`
+  - Admin-only.
+  - Proxies DRF farm observation retrieve endpoint.
+- `PATCH /apps/weather_apis/api/v1/admin/farms/{farm_id}/observations/{observation_id}`
+  - Admin-only + CSRF required.
+  - Proxies DRF farm observation update endpoint; request body is schema-driven.
+- `DELETE /apps/weather_apis/api/v1/admin/farms/{farm_id}/observations/{observation_id}`
+  - Admin-only + CSRF required.
+  - Proxies DRF farm observation delete endpoint.
+
+### Observation Metadata Schema (Admin UI)
+
+The admin UI enforces a structured metadata schema for farm observations (no raw JSON entry). The UI builds a `metadata` object and sends it in the request body when present.
+
+Core metadata (optional unless noted):
+- `source` (enum): `manual`, `sensor`, `integration`
+- `observer` (string)
+- `crop` (string)
+- `variety` (string)
+- `growth_stage` (enum): `preplant`, `emergence`, `vegetative`, `flowering`, `fruiting`, `maturity`, `postharvest`
+- `area_ha` (number)
+- `location_note` (string)
+
+Event-specific metadata (only shown in the UI for matching `event_type`):
+- `planting`:
+  - `seed_rate_kg_ha` (number)
+  - `planting_method` (enum): `broadcast`, `row`, `transplant`
+- `irrigation`:
+  - `irrigation_type` (enum): `drip`, `sprinkler`, `flood`, `other`
+  - `water_mm` (number)
+- `fertilization`:
+  - `fertilizer_type` (string)
+  - `nutrient_n_kg_ha` (number)
+  - `nutrient_p_kg_ha` (number)
+  - `nutrient_k_kg_ha` (number)
+- `pest_control`:
+  - `pest` (string)
+  - `product` (string)
+  - `dose_ml_ha` (number)
+- `harvest`:
+  - `yield_kg` (number)
+  - `moisture_percent` (number)
+- `scouting` / `soil_test`:
+  - `pest_pressure` (enum): `none`, `low`, `medium`, `high`
+  - `soil_ph` (number)
+  - `organic_matter_percent` (number)
 
 `apiKey` (wk_live_...) is still provisioned by DRF; Nextcloud only generates and rotates `clientId` + base64 `hmacSecret`.
 - SSRF defenses include strict base URL validation (HTTPS-only in production, no embedded credentials, no localhost), DNS resolution checks, dev allowlists, redirects disabled, and bounded timeouts.
@@ -126,6 +179,11 @@ If an envelope is returned with `status: 1`, the client maps `errors.code` and `
 ## Farm Sync Plan
 
 For the phased Nextcloud -> DRF farm sync implementation plan, see `docs/farm_sync_plan.md`.
+
+### Farm Sync Idempotency
+
+- DRF's `POST /api/v1/farms/sync` honors an `Idempotency-Key` header (trimmed to 191 bytes). Once a successful sync has been recorded for that key, subsequent requests with the same key immediately replay the original envelope instead of persisting another farm.
+- Nextcloud generates the header from the farm's `external_farm_id` (`farm-sync:<external_farm_id>`) and forwards it via `FarmSyncService`, so the admin UI can safely retry without creating duplicate records. The Django backend still logs each attempt for observability (`farm_sync_created` / `farm_sync_updated`).
 
 ## Farm Sync Observability (Admin)
 

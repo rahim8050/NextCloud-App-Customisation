@@ -185,9 +185,10 @@ final class AdminFarmsController extends Controller {
 		$this->logEndpointEntry('sync farm', $requestId);
 
 		$params = $this->request->getParams();
+		$idempotencyKey = $this->resolveIdempotencyKey();
 
 		try {
-			$payload = $this->farmSyncService->sync($params, $requestId);
+			$payload = $this->farmSyncService->sync($params, $requestId, $idempotencyKey);
 		} catch (WeatherApiException $exception) {
 			return $this->buildErrorResponse(
 				$exception->getErrorCode(),
@@ -738,6 +739,165 @@ final class AdminFarmsController extends Controller {
 		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
 	}
 
+	#[AdminRequired]
+	public function listFarmObservations(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('list farm observations', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('observations_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$queryDefs = $operation['queryParams'] ?? [];
+			if (!is_array($queryDefs)) {
+				$queryDefs = [];
+			}
+			$query = $this->buildListQueryParams($params, $queryDefs);
+			$this->logProxyRequest('list farm observations', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('list farm observations', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'list farm observations');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'list farm observations');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm observations loaded.');
+	}
+
+	#[AdminRequired]
+	public function createFarmObservation(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('create farm observation', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('observations_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], true);
+			$this->logProxyRequest('create farm observation', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body,
+				$requestId,
+			);
+			$this->logProxyResponse('create farm observation', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'create farm observation');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'create farm observation');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm observation created.');
+	}
+
+	#[AdminRequired]
+	public function getFarmObservation(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get farm observation', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('observations_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'observation_id' => $observationId],
+			);
+			$this->logProxyRequest('get farm observation', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('get farm observation', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get farm observation');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get farm observation');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm observation loaded.');
+	}
+
+	#[AdminRequired]
+	public function patchFarmObservation(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('patch farm observation', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('observations_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'observation_id' => $observationId],
+			);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('patch farm observation', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'),
+				$path,
+				[],
+				$body,
+				$requestId,
+			);
+			$this->logProxyResponse('patch farm observation', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'patch farm observation');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'patch farm observation');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm observation updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteFarmObservation(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('delete farm observation', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('observations_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'observation_id' => $observationId],
+			);
+			$this->logProxyRequest('delete farm observation', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'),
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('delete farm observation', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'delete farm observation');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'delete farm observation');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm observation deleted.');
+	}
+
 
 	private function logEndpointEntry(string $action, string $requestId): void {
 		$path = $this->request->getPathInfo();
@@ -754,6 +914,11 @@ final class AdminFarmsController extends Controller {
 				'path' => $path,
 			]),
 		);
+	}
+
+	private function resolveIdempotencyKey(): ?string {
+		$header = trim($this->request->getHeader('Idempotency-Key'));
+		return $header === '' ? null : $header;
 	}
 
 	private function resolveRequestId(): string {
@@ -1227,9 +1392,9 @@ final class AdminFarmsController extends Controller {
 	}
 
 	/**
-	 * @param array<string, mixed> $data
+	 * @param array<array-key, mixed>|null $data
 	 */
-	private function buildSuccessResponse(array $data, string $message, int $status = Http::STATUS_OK): JSONResponse {
+	private function buildSuccessResponse(?array $data, string $message, int $status = Http::STATUS_OK): JSONResponse {
 		return new JSONResponse([
 			'status' => 'ok',
 			'ok' => true,

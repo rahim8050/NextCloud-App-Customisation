@@ -4,7 +4,7 @@ style('weather_apis', 'admin-settings');
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>" data-farm-observations-url="<?php p($_['farmObservationsUrl']); ?>" data-farm-observation-url="<?php p($_['farmObservationUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -183,6 +183,31 @@ style('weather_apis', 'admin-settings');
 						<div id="weather-apis-weather-daily-table" class="weather-apis-farms__weather-table"></div>
 					</div>
 				</div>
+				<div class="weather-apis-farms__observations" id="weather-apis-farms-observations" hidden>
+					<div class="weather-apis-farms__weather-header">
+						<strong><?php p($l->t('Observations')); ?></strong>
+						<span id="weather-apis-farms-observations-title" class="weather-apis-farms__weather-title"></span>
+					</div>
+					<div class="weather-apis-farms__ndvi-row">
+						<label for="weather-apis-observations-start"><?php p($l->t('Start')); ?></label>
+						<input id="weather-apis-observations-start" type="datetime-local" />
+						<label for="weather-apis-observations-end"><?php p($l->t('End')); ?></label>
+						<input id="weather-apis-observations-end" type="datetime-local" />
+						<label for="weather-apis-observations-type"><?php p($l->t('Event type')); ?></label>
+						<input id="weather-apis-observations-type" type="text" />
+						<label for="weather-apis-observations-limit"><?php p($l->t('Limit')); ?></label>
+						<input id="weather-apis-observations-limit" type="number" min="1" max="500" />
+						<button id="weather-apis-observations-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+						<button id="weather-apis-observations-create" type="button" class="button primary"><?php p($l->t('New observation')); ?></button>
+					</div>
+					<div id="weather-apis-farms-observations-error" class="weather-apis-farms__note error" hidden></div>
+					<div id="weather-apis-farms-observations-table" class="weather-apis-farms__weather-table"></div>
+					<div class="weather-apis-farms__pagination" id="weather-apis-farms-observations-pagination" hidden>
+						<button id="weather-apis-farms-observations-prev" type="button" class="button"><?php p($l->t('Previous')); ?></button>
+						<div id="weather-apis-farms-observations-page" class="weather-apis-farms__page"></div>
+						<button id="weather-apis-farms-observations-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
+					</div>
+				</div>
 			</div>
 			<div class="weather-apis-farms__modal" id="weather-apis-farms-modal" hidden>
 				<div class="weather-apis-farms__modal-card">
@@ -225,6 +250,186 @@ style('weather_apis', 'admin-settings');
 					<div class="weather-apis-farms__modal-actions">
 						<button id="weather-apis-farms-sync-modal-cancel" type="button" class="button"><?php p($l->t('Cancel')); ?></button>
 						<button id="weather-apis-farms-sync-modal-confirm" type="button" class="button primary"><?php p($l->t('Sync Farm')); ?></button>
+					</div>
+				</div>
+			</div>
+			<div class="weather-apis-farms__modal" id="weather-apis-farms-observation-modal" hidden>
+				<div class="weather-apis-farms__modal-card">
+					<div class="weather-apis-farms__modal-header">
+						<strong id="weather-apis-farms-observation-modal-title"><?php p($l->t('Observation')); ?></strong>
+						<button id="weather-apis-farms-observation-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+					</div>
+					<div class="weather-apis-farms__modal-body">
+						<div id="weather-apis-farms-observation-fields" class="weather-apis-farms__modal-fields">
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Observed at')); ?></label>
+								<input id="weather-apis-observation-observed-at" type="datetime-local" />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Event type')); ?></label>
+								<select id="weather-apis-observation-event-type">
+									<option value=""><?php p($l->t('Select event type')); ?></option>
+									<option value="planting"><?php p($l->t('Planting')); ?></option>
+									<option value="harvest"><?php p($l->t('Harvest')); ?></option>
+									<option value="irrigation"><?php p($l->t('Irrigation')); ?></option>
+									<option value="fertilization"><?php p($l->t('Fertilization')); ?></option>
+									<option value="pest_control"><?php p($l->t('Pest control')); ?></option>
+									<option value="scouting"><?php p($l->t('Scouting')); ?></option>
+									<option value="soil_test"><?php p($l->t('Soil test')); ?></option>
+									<option value="weather_impact"><?php p($l->t('Weather impact')); ?></option>
+									<option value="other"><?php p($l->t('Other')); ?></option>
+								</select>
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Note')); ?></label>
+								<input id="weather-apis-observation-note" type="text" />
+							</div>
+							<div class="weather-apis-farms__field-group-title"><?php p($l->t('Core metadata')); ?></div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Source')); ?></label>
+								<select id="weather-apis-observation-source">
+									<option value=""><?php p($l->t('Select source')); ?></option>
+									<option value="manual"><?php p($l->t('Manual')); ?></option>
+									<option value="sensor"><?php p($l->t('Sensor')); ?></option>
+									<option value="integration"><?php p($l->t('Integration')); ?></option>
+								</select>
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Observer')); ?></label>
+								<input id="weather-apis-observation-observer" type="text" />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Crop')); ?></label>
+								<input id="weather-apis-observation-crop" type="text" />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Variety')); ?></label>
+								<input id="weather-apis-observation-variety" type="text" />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Growth stage')); ?></label>
+								<select id="weather-apis-observation-growth-stage">
+									<option value=""><?php p($l->t('Select growth stage')); ?></option>
+									<option value="preplant"><?php p($l->t('Preplant')); ?></option>
+									<option value="emergence"><?php p($l->t('Emergence')); ?></option>
+									<option value="vegetative"><?php p($l->t('Vegetative')); ?></option>
+									<option value="flowering"><?php p($l->t('Flowering')); ?></option>
+									<option value="fruiting"><?php p($l->t('Fruiting')); ?></option>
+									<option value="maturity"><?php p($l->t('Maturity')); ?></option>
+									<option value="postharvest"><?php p($l->t('Postharvest')); ?></option>
+								</select>
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Area (ha)')); ?></label>
+								<input id="weather-apis-observation-area-ha" type="number" min="0" step="0.01" />
+							</div>
+							<div class="weather-apis-farms__field">
+								<label><?php p($l->t('Location note')); ?></label>
+								<input id="weather-apis-observation-location-note" type="text" />
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="planting">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Planting details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Seed rate (kg/ha)')); ?></label>
+									<input id="weather-apis-observation-seed-rate" type="number" min="0" step="0.01" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Planting method')); ?></label>
+									<select id="weather-apis-observation-planting-method">
+										<option value=""><?php p($l->t('Select method')); ?></option>
+										<option value="broadcast"><?php p($l->t('Broadcast')); ?></option>
+										<option value="row"><?php p($l->t('Row')); ?></option>
+										<option value="transplant"><?php p($l->t('Transplant')); ?></option>
+									</select>
+								</div>
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="irrigation">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Irrigation details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Irrigation type')); ?></label>
+									<select id="weather-apis-observation-irrigation-type">
+										<option value=""><?php p($l->t('Select type')); ?></option>
+										<option value="drip"><?php p($l->t('Drip')); ?></option>
+										<option value="sprinkler"><?php p($l->t('Sprinkler')); ?></option>
+										<option value="flood"><?php p($l->t('Flood')); ?></option>
+										<option value="other"><?php p($l->t('Other')); ?></option>
+									</select>
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Water applied (mm)')); ?></label>
+									<input id="weather-apis-observation-water-mm" type="number" min="0" step="0.1" />
+								</div>
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="fertilization">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Fertilization details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Fertilizer type')); ?></label>
+									<input id="weather-apis-observation-fertilizer-type" type="text" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('N (kg/ha)')); ?></label>
+									<input id="weather-apis-observation-nutrient-n" type="number" min="0" step="0.01" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('P (kg/ha)')); ?></label>
+									<input id="weather-apis-observation-nutrient-p" type="number" min="0" step="0.01" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('K (kg/ha)')); ?></label>
+									<input id="weather-apis-observation-nutrient-k" type="number" min="0" step="0.01" />
+								</div>
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="pest_control">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Pest control details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Pest')); ?></label>
+									<input id="weather-apis-observation-pest" type="text" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Product')); ?></label>
+									<input id="weather-apis-observation-product" type="text" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Dose (ml/ha)')); ?></label>
+									<input id="weather-apis-observation-dose" type="number" min="0" step="0.01" />
+								</div>
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="harvest">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Harvest details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Yield (kg)')); ?></label>
+									<input id="weather-apis-observation-yield" type="number" min="0" step="0.01" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Moisture (%%)')); ?></label>
+									<input id="weather-apis-observation-moisture" type="number" min="0" max="100" step="0.1" />
+								</div>
+							</div>
+							<div class="weather-apis-farms__field-group" data-event-types="scouting,soil_test">
+								<div class="weather-apis-farms__field-group-title"><?php p($l->t('Scouting / soil details')); ?></div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Pest pressure')); ?></label>
+									<select id="weather-apis-observation-pest-pressure">
+										<option value=""><?php p($l->t('Select pressure')); ?></option>
+										<option value="none"><?php p($l->t('None')); ?></option>
+										<option value="low"><?php p($l->t('Low')); ?></option>
+										<option value="medium"><?php p($l->t('Medium')); ?></option>
+										<option value="high"><?php p($l->t('High')); ?></option>
+									</select>
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Soil pH')); ?></label>
+									<input id="weather-apis-observation-soil-ph" type="number" min="0" max="14" step="0.01" />
+								</div>
+								<div class="weather-apis-farms__field">
+									<label><?php p($l->t('Organic matter (%%)')); ?></label>
+									<input id="weather-apis-observation-organic-matter" type="number" min="0" max="100" step="0.1" />
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="weather-apis-farms__modal-actions">
+						<button id="weather-apis-farms-observation-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
 					</div>
 				</div>
 			</div>

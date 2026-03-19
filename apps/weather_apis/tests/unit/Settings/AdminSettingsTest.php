@@ -44,6 +44,8 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
 		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations', $response->getParams()['farmObservationsUrl']);
+		$this->assertSame('/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__', $response->getParams()['farmObservationUrl']);
 	}
 
 	public function testAdminUrlsRemainRoutePaths(): void {
@@ -84,7 +86,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(23))
+		$urlGenerator->expects($this->exactly(25))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -110,6 +112,8 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.listFarmObservations', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getFarmObservation', ['farmId' => '__FARM_ID__', 'observationId' => '__OBSERVATION_ID__']],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
@@ -135,6 +139,8 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/current',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/hourly',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/weather/daily',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);
