@@ -218,13 +218,14 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		array $queryParams = [],
 		?array $body = null,
 		?string $correlationId = null,
+		array $headers = [],
 	): array {
 		$requestId = $this->resolveCorrelationId($correlationId);
 		$httpMethod = $this->normalizeMethod($method);
 
 		return $this->withTokenRetry(
 			$requestId,
-			function (string $baseUrl, string $token, bool $allowLocalAddress, string $resolvedId) use ($httpMethod, $path, $queryParams, $body): array {
+			function (string $baseUrl, string $token, bool $allowLocalAddress, string $resolvedId) use ($httpMethod, $path, $queryParams, $body, $headers): array {
 				$client = $this->clientService->newClient();
 				$options = $this->buildBaseOptions($resolvedId, $allowLocalAddress);
 
@@ -232,6 +233,10 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 					'Accept' => 'application/json',
 					'Authorization' => 'Bearer ' . $token,
 				]);
+
+				if ($headers !== []) {
+					$options['headers'] = array_merge($options['headers'], $headers);
+				}
 
 				if ($body !== null) {
 					$options['headers']['Content-Type'] = 'application/json';

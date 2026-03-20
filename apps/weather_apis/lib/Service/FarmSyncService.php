@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 
 final class FarmSyncService implements FarmSyncServiceInterface {
 	private const FARM_SYNC_PATH = '/api/v1/farms/sync';
+	private const IDEMPOTENCY_HEADER = 'Idempotency-Key';
+	private const IDEMPOTENCY_KEY_MAX_LENGTH = 191;
 
 	public function __construct(
 		private readonly WeatherApiClientInterface $client,
@@ -20,8 +22,9 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 	 * @return array<array-key, mixed>
 	 * @throws WeatherApiException
 	 */
-	public function sync(array $payload, string $correlationId): array {
+	public function sync(array $payload, string $correlationId, ?string $idempotencyKey = null): array {
 		$normalized = $this->normalizePayload($payload);
+		$headers = $this->buildIdempotencyHeaders($idempotencyKey);
 
 		try {
 			$response = $this->client->requestJsonWithStatus(
@@ -30,6 +33,7 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 				[],
 				$normalized,
 				$correlationId,
+				$headers,
 			);
 		} catch (WeatherApiException $exception) {
 			$this->logger->warning(
@@ -45,16 +49,17 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 			throw $exception;
 		}
 
-		$this->logger->info(
-			'Farm sync request sent.',
-			LogSanitizer::sanitizeContext([
-				'correlation_id' => $correlationId,
-				'status_code' => $response['statusCode'],
-				'external_farm_id' => $normalized['external_farm_id'],
-				'external_user_id' => $normalized['external_user_id'],
-				'path' => self::FARM_SYNC_PATH,
-			]),
-		);
+		$logContext = [
+			'correlation_id' => $correlationId,
+			'status_code' => $response['statusCode'],
+			'external_farm_id' => $normalized['external_farm_id'],
+			'external_user_id' => $normalized['external_user_id'],
+			'path' => self::FARM_SYNC_PATH,
+		];
+		if (isset($headers[self::IDEMPOTENCY_HEADER])) {
+			$logContext['idempotency_key'] = $headers[self::IDEMPOTENCY_HEADER];
+		}
+		$this->logger->info('Farm sync request sent.', LogSanitizer::sanitizeContext($logContext));
 
 		return $response['payload'];
 	}
@@ -144,5 +149,28 @@ final class FarmSyncService implements FarmSyncServiceInterface {
 		}
 
 		throw new WeatherApiException('invalid_argument', 'Missing or invalid ' . $key . '.');
+	}
+
+	private function buildIdempotencyHeaders(?string $key): array {
+		$trimmed = $key === null ? '' : trim($key);
+		if ($trimmed === '') {
+			return [];
+		}
+
+		return [
+			self::IDEMPOTENCY_HEADER => $this->clampString($trimmed, self::IDEMPOTENCY_KEY_MAX_LENGTH),
+		];
+	}
+
+	private function clampString(string $value, int $maxLength): string {
+		if ($maxLength < 0) {
+			return $value;
+		}
+
+		if (mb_strlen($value) <= $maxLength) {
+			return $value;
+		}
+
+		return mb_substr($value, 0, $maxLength);
 	}
 }

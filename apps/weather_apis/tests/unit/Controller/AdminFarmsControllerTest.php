@@ -20,11 +20,28 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 final class AdminFarmsControllerTest extends TestCase {
+	/**
+	 * @param IRequest&\PHPUnit\Framework\MockObject\MockObject $request
+	 */
+	private function stubRequestHeaders($request, string $requestId = 'request-id', string $idempotencyKey = ''): void {
+		$request->method('getHeader')
+			->willReturnCallback(static function (string $name) use ($requestId, $idempotencyKey): string {
+				if ($name === 'X-Request-Id') {
+					return $requestId;
+				}
+				if ($name === 'Idempotency-Key') {
+					return $idempotencyKey;
+				}
+
+				return '';
+			});
+	}
+
 	public function testListFarmsReturnsPayload(): void {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'page' => 2,
 			'_route' => 'weather_apis.adminFarms.listFarms',
@@ -53,7 +70,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		unset($schema['paths']['/api/v1/farms/']['get']['parameters']);
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'page' => 3,
 			'ordering' => 'name',
@@ -82,7 +99,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
@@ -108,7 +125,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		];
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
@@ -129,7 +146,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'id' => 99,
 			'created_at' => '2025-01-01T00:00:00Z',
@@ -157,7 +174,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testSyncFarmCallsService(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'external_farm_id' => 'farm-uuid',
 			'external_user_id' => 'nc-user',
@@ -178,7 +195,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$farmSyncService = $this->createMock(FarmSyncServiceInterface::class);
 		$farmSyncService->expects($this->once())
 			->method('sync')
-			->with($this->isType('array'), 'request-id')
+			->with($this->isType('array'), 'request-id', null)
 			->willReturn(['ok' => true]);
 
 		$controller = $this->createController($request, $weatherApiClient, null, $farmSyncService);
@@ -193,7 +210,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'date' => '2024-02-01',
 		]);
@@ -224,7 +241,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'date' => '2024-02-01',
 			'external_farm_id' => 'farm-uuid',
@@ -258,7 +275,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'date' => '2024-02-01',
 			'external_farm_id' => 'farm-uuid',
@@ -290,7 +307,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'farmId' => '19',
 			'date' => '2024-02-01',
@@ -315,7 +332,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testNdviLatestRejectsInvalidFarmId(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
@@ -336,7 +353,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'_route' => 'weather_apis.adminFarms.getNdviTimeseries',
 		]);
@@ -359,7 +376,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'start' => '2024-02-10',
 			'end' => '2024-02-01',
@@ -384,7 +401,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'_route' => 'weather_apis.adminFarms.queueNdviRaster',
 		]);
@@ -407,7 +424,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'_route' => 'weather_apis.adminFarms.getNdviRasterPng',
 		]);
@@ -430,7 +447,7 @@ final class AdminFarmsControllerTest extends TestCase {
 		$schema = $this->createSchema();
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'farmId' => '19',
 			'date' => '2024-02-01',
@@ -478,7 +495,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherCurrentReturnsPayload(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
@@ -500,7 +517,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherCurrentMapsUpstreamFailure(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
@@ -519,7 +536,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherHourlyReturnsPayload(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'hours' => 24,
 		]);
@@ -543,7 +560,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherHourlyMapsUpstreamFailure(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'hours' => 24,
 		]);
@@ -564,7 +581,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherDailyReturnsPayload(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'days' => 5,
 		]);
@@ -588,7 +605,7 @@ final class AdminFarmsControllerTest extends TestCase {
 
 	public function testWeatherDailyMapsUpstreamFailure(): void {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('X-Request-Id')->willReturn('request-id');
+		$this->stubRequestHeaders($request);
 		$request->method('getParams')->willReturn([
 			'days' => 5,
 		]);
@@ -605,6 +622,158 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame('error', $data['status']);
 		$this->assertSame('upstream_error', $data['code']);
 		$this->assertSame(502, $response->getStatus());
+	}
+
+	public function testListFarmObservationsPassesPagination(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'limit' => 25,
+			'offset' => 50,
+			'event_type' => 'irrigation',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with(
+				'GET',
+				'/api/v1/farms/88/observations/',
+				['limit' => 25, 'offset' => 50, 'event_type' => 'irrigation'],
+				null,
+				'request-id',
+			)
+			->willReturn(['payload' => ['results' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->listFarmObservations('88');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['results' => []], $data['data']);
+	}
+
+	public function testCreateFarmObservationCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'observed_at' => '2026-03-01T10:00:00Z',
+			'event_type' => 'irrigation',
+			'note' => 'manual',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with(
+				'POST',
+				'/api/v1/farms/88/observations/',
+				[],
+				[
+					'observed_at' => '2026-03-01T10:00:00Z',
+					'event_type' => 'irrigation',
+					'note' => 'manual',
+				],
+				'request-id',
+			)
+			->willReturn(['payload' => ['id' => 1], 'statusCode' => 201]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->createFarmObservation('88');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['id' => 1], $data['data']);
+	}
+
+	public function testGetFarmObservationCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/88/observations/9/', [], null, 'request-id')
+			->willReturn(['payload' => ['id' => 9], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmObservation('88', '9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['id' => 9], $data['data']);
+	}
+
+	public function testPatchFarmObservationCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'note' => 'updated',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with(
+				'PATCH',
+				'/api/v1/farms/88/observations/9/',
+				[],
+				['note' => 'updated'],
+				'request-id',
+			)
+			->willReturn(['payload' => ['id' => 9], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->patchFarmObservation('88', '9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(['id' => 9], $data['data']);
+	}
+
+	public function testDeleteFarmObservationCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('DELETE', '/api/v1/farms/88/observations/9/', [], null, 'request-id')
+			->willReturn(['payload' => null, 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->deleteFarmObservation('88', '9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertNull($data['data']);
 	}
 
 	public function testMethodsRequireAdmin(): void {
@@ -794,6 +963,81 @@ final class AdminFarmsControllerTest extends TestCase {
 								],
 							],
 						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/observations/' => [
+					'get' => [
+						'operationId' => 'v1_farms_observations_list',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+							[
+								'name' => 'event_type',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+							[
+								'name' => 'limit',
+								'in' => 'query',
+								'schema' => ['type' => 'integer'],
+							],
+							[
+								'name' => 'offset',
+								'in' => 'query',
+								'schema' => ['type' => 'integer'],
+							],
+						],
+					],
+					'post' => [
+						'operationId' => 'v1_farms_observations_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['observed_at', 'event_type'],
+										'properties' => [
+											'observed_at' => ['type' => 'string'],
+											'event_type' => ['type' => 'string'],
+											'note' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/observations/{observation_id}/' => [
+					'get' => [
+						'operationId' => 'v1_farms_observations_retrieve',
+					],
+					'patch' => [
+						'operationId' => 'v1_farms_observations_update',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'observed_at' => ['type' => 'string'],
+											'event_type' => ['type' => 'string'],
+											'note' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+					'delete' => [
+						'operationId' => 'v1_farms_observations_delete',
 					],
 				],
 			],

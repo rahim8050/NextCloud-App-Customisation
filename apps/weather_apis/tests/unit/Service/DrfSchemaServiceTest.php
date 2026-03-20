@@ -276,6 +276,15 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
 				],
+				'/api/v1/farms/{farm_id}/observations/' => [
+					'get' => ['operationId' => 'v1_farms_observations_list'],
+					'post' => ['operationId' => 'v1_farms_observations_create'],
+				],
+				'/api/v1/farms/{farm_id}/observations/{observation_id}/' => [
+					'get' => ['operationId' => 'v1_farms_observations_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_observations_update'],
+					'delete' => ['operationId' => 'v1_farms_observations_delete'],
+				],
 			],
 		];
 	}
@@ -373,6 +382,15 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/observations/' => [
+					'get' => ['operationId' => 'v1_farms_observations_list'],
+					'post' => ['operationId' => 'v1_farms_observations_create'],
+				],
+				'/api/v1/farms/{farm_id}/observations/{observation_id}/' => [
+					'get' => ['operationId' => 'v1_farms_observations_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_observations_update'],
+					'delete' => ['operationId' => 'v1_farms_observations_delete'],
 				],
 			],
 		];

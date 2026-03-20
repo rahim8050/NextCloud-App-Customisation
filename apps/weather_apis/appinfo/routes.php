@@ -128,6 +128,31 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/weather/daily',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#listFarmObservations',
+			'url' => '/api/v1/admin/farms/{farmId}/observations',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#createFarmObservation',
+			'url' => '/api/v1/admin/farms/{farmId}/observations',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getFarmObservation',
+			'url' => '/api/v1/admin/farms/{farmId}/observations/{observationId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#patchFarmObservation',
+			'url' => '/api/v1/admin/farms/{farmId}/observations/{observationId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminFarms#deleteFarmObservation',
+			'url' => '/api/v1/admin/farms/{farmId}/observations/{observationId}',
+			'verb' => 'DELETE',
+		],
 	],
 	'ocs' => [
 		[

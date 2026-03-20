@@ -22,6 +22,7 @@ interface WeatherApiClientInterface {
 	/**
 	 * @param array<string, mixed> $queryParams
 	 * @param array<string, mixed>|null $body
+	 * @param array<string, string> $headers
 	 * @return array{payload: array<array-key, mixed>, statusCode: int}
 	 * @throws WeatherApiException
 	 */
@@ -31,6 +32,7 @@ interface WeatherApiClientInterface {
 		array $queryParams = [],
 		?array $body = null,
 		?string $correlationId = null,
+		array $headers = [],
 	): array;
 
 	/**
