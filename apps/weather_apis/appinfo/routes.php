@@ -129,6 +129,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/state',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#listFarmObservations',
 			'url' => '/api/v1/admin/farms/{farmId}/observations',
 			'verb' => 'GET',

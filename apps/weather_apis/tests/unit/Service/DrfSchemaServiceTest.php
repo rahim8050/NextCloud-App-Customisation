@@ -276,6 +276,9 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
 				],
+				'/api/v1/farm-state/{farm_id}/' => [
+					'get' => ['operationId' => 'v1_farm_state_retrieve'],
+				],
 				'/api/v1/farms/{farm_id}/observations/' => [
 					'get' => ['operationId' => 'v1_farms_observations_list'],
 					'post' => ['operationId' => 'v1_farms_observations_create'],
@@ -382,6 +385,9 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
+				],
+				'/api/v1/farm-state/{farm_id}/' => [
+					'get' => ['operationId' => 'v1_farm_state_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/observations/' => [
 					'get' => ['operationId' => 'v1_farms_observations_list'],

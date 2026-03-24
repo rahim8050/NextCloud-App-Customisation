@@ -47,6 +47,7 @@
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
+		const farmStateUrl = form.dataset.farmStateUrl || ''
 		const farmObservationsUrl = form.dataset.farmObservationsUrl || ''
 		const farmObservationUrl = form.dataset.farmObservationUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
@@ -90,6 +91,9 @@
 		const ndviRasterButton = document.getElementById('weather-apis-ndvi-raster')
 		const ndviQueueButton = document.getElementById('weather-apis-ndvi-queue')
 		const ndviRefreshButton = document.getElementById('weather-apis-ndvi-refresh')
+		const farmStateButton = document.getElementById('weather-apis-farm-state')
+		const farmStateOutput = document.getElementById('weather-apis-farm-state-output')
+		const farmStateContent = document.getElementById('weather-apis-farm-state-content')
 		const ndviStartInput = document.getElementById('weather-apis-ndvi-start')
 		const ndviEndInput = document.getElementById('weather-apis-ndvi-end')
 		const ndviDateInput = document.getElementById('weather-apis-ndvi-date')
@@ -3615,6 +3619,83 @@
 							debug: data,
 						})
 						replaceNdviOutput(card)
+					}
+				})
+			}
+			if (farmStateButton) {
+				farmStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="weather-apis-farms__note">Loading farm state...</div>'
+					}
+					const url = farmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="weather-apis-farms__note error">Unable to load farm state.</div>'
+							}
+							return
+						}
+						const data = payload?.data ?? payload
+						const state = data?.state ?? 'unknown'
+						const meanNdvi = data?.mean_ndvi ?? null
+						const maxNdvi = data?.max_ndvi ?? null
+						const coveragePct = data?.coverage_pct ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.WeatherApisNdviUi ?? window.WeatherApisNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+						const formatPercent = typeof ndviUi.formatPercent === 'function' ? ndviUi.formatPercent : (v) => String(v * 100) + '%'
+
+						const stateLabels = {
+							establishment: 'Establishment',
+							full_canopy: 'Full Canopy',
+							decline: 'Decline',
+							growth: 'Growth',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							establishment: 'warning',
+							full_canopy: 'success',
+							decline: 'warning',
+							growth: 'success',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean NDVI', meanNdvi !== null ? formatNumber(meanNdvi, 3) : '-')
+						pushFact(facts, 'Max NDVI', maxNdvi !== null ? formatNumber(maxNdvi, 3) : '-')
+						pushFact(facts, 'Coverage', coveragePct !== null ? formatPercent(coveragePct / 100, 1) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'Farm State',
+							level: stateLevel[state] ?? 'info',
+							summary: interpretation || `Farm state: ${stateLabels[state] ?? state}`,
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[weather_apis] farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="weather-apis-farms__note error">Failed to load farm state.</div>'
+						}
 					}
 				})
 			}

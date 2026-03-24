@@ -624,6 +624,57 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(502, $response->getStatus());
 	}
 
+	public function testFarmStateReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farm-state/9/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['success' => 0, 'message' => 'Farm state', 'data' => [
+					'farm_id' => 9,
+					'mean_ndvi' => 0.45,
+					'max_ndvi' => 0.72,
+					'coverage_pct' => 65.3,
+					'trend' => 0.02,
+					'state' => 'full_canopy',
+					'interpretation' => 'Dense canopy detected.',
+					'action' => 'Maintain current management.',
+				]],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame(0, $data['success']);
+		$this->assertSame('full_canopy', $data['data']['state']);
+		$this->assertSame(0.45, $data['data']['mean_ndvi']);
+	}
+
+	public function testFarmStateMapsUpstreamFailure(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('upstream_error', $data['code']);
+		$this->assertSame(502, $response->getStatus());
+	}
+
 	public function testListFarmObservationsPassesPagination(): void {
 		$schema = $this->createSchema();
 
@@ -963,6 +1014,11 @@ final class AdminFarmsControllerTest extends TestCase {
 								],
 							],
 						],
+					],
+				],
+				'/api/v1/farm-state/{farm_id}/' => [
+					'get' => [
+						'operationId' => 'v1_farm_state_retrieve',
 					],
 				],
 				'/api/v1/farms/{farm_id}/observations/' => [

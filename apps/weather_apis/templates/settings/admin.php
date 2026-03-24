@@ -140,6 +140,7 @@ style('weather_apis', 'admin-settings');
 						<button id="weather-apis-ndvi-timeseries" type="button" class="button"><?php p($l->t('Timeseries')); ?></button>
 						<button id="weather-apis-ndvi-queue" type="button" class="button"><?php p($l->t('Queue raster')); ?></button>
 						<button id="weather-apis-ndvi-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+						<button id="weather-apis-farm-state" type="button" class="button"><?php p($l->t('Farm State')); ?></button>
 					</div>
 					<div class="weather-apis-farms__ndvi-row">
 						<label for="weather-apis-ndvi-start"><?php p($l->t('Start')); ?></label>
@@ -159,6 +160,9 @@ style('weather_apis', 'admin-settings');
 					<div id="weather-apis-ndvi-table" class="weather-apis-farms__ndvi-table"></div>
 					<div id="weather-apis-ndvi-raster-preview" class="weather-apis-farms__ndvi-preview" hidden>
 						<img id="weather-apis-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />
+					</div>
+					<div id="weather-apis-farm-state-output" class="weather-apis-farms__ndvi-output" hidden>
+						<div id="weather-apis-farm-state-content" class="weather-apis-farms__farm-state-content"></div>
 					</div>
 				</div>
 				<div class="weather-apis-farms__weather" id="weather-apis-farms-weather" hidden>

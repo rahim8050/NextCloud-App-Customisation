@@ -43,6 +43,7 @@ final class RoutesTest extends TestCase {
 			'adminFarms#getNdviRasterPng',
 			'adminFarms#queueNdviRaster',
 			'adminFarms#refreshNdvi',
+			'adminFarms#getFarmState',
 		];
 
 		foreach ($definedRoutes as $route) {

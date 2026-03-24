@@ -739,6 +739,55 @@ final class AdminFarmsController extends Controller {
 		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
 	}
 
+
+	#[AdminRequired]
+	public function getFarmState(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('farm state', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [
+			'method' => 'GET',
+			'path' => '/api/v1/farm-state/{farm_id}/',
+		];
+		$pathTemplate = $operation['path'];
+		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$query = $this->filterQueryParams($params, []);
+
+		try {
+			$this->logProxyRequest('farm state', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('farm state', $operation, $path, $requestId, $result['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('farm state', $operation, $path, $query, $requestId, $exception);
+			if ($exception->getErrorCode() === 'invalid_argument') {
+				return $this->handleWeatherApiException($exception, $requestId, 'farm state');
+			}
+			return $this->buildUpstreamErrorResponse();
+		} catch (\Throwable $throwable) {
+			$this->logger->warning(
+				'Weather API farm state failed',
+				LogSanitizer::sanitizeContext([
+					'requestId' => $requestId,
+					'error' => $throwable->getMessage(),
+				]),
+			);
+			return $this->buildUpstreamErrorResponse();
+		}
+
+		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
+	}
+
 	#[AdminRequired]
 	public function listFarmObservations(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();

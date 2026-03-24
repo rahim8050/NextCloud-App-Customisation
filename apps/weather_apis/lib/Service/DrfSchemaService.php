@@ -30,6 +30,7 @@ final class DrfSchemaService {
 		'ndvi_raster' => 'v1_farms_ndvi_raster.png_retrieve',
 		'ndvi_raster_queue' => 'v1_farms_ndvi_raster_queue_create',
 		'ndvi_refresh' => 'v1_farms_ndvi_refresh_create',
+		'farm_state' => 'v1_farm_state_retrieve',
 	];
 
 	private ICache $cache;
