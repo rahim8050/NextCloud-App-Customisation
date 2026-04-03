@@ -293,6 +293,118 @@
 			fallback,
 		)
 
+		const readObject = (value) => (
+			value && typeof value === 'object' && !Array.isArray(value)
+				? value
+				: null
+		)
+
+		const parseEmbeddedErrorData = (value) => {
+			if (typeof value !== 'string') {
+				return null
+			}
+			const text = value.trim()
+			if (!text || (!text.startsWith('{') && !text.startsWith('['))) {
+				return null
+			}
+			try {
+				const parsed = JSON.parse(text)
+				return readObject(parsed)
+			} catch {
+				return null
+			}
+		}
+
+		const readRetrySeconds = (...values) => {
+			for (const value of values) {
+				if (value === null || value === undefined || value === '') {
+					continue
+				}
+				const parsed = typeof value === 'number'
+					? value
+					: Number.parseFloat(String(value))
+				if (Number.isFinite(parsed) && parsed >= 0) {
+					return Math.ceil(parsed)
+				}
+			}
+			return null
+		}
+
+		const formatRetryDelay = (seconds) => {
+			const totalSeconds = Math.max(1, Math.ceil(seconds))
+			if (totalSeconds < 60) {
+				return `${totalSeconds} second${totalSeconds === 1 ? '' : 's'}`
+			}
+			const minutes = Math.ceil(totalSeconds / 60)
+			if (minutes < 60) {
+				return `${minutes} minute${minutes === 1 ? '' : 's'}`
+			}
+			const hours = Math.floor(minutes / 60)
+			const remainingMinutes = minutes % 60
+			if (remainingMinutes === 0) {
+				return `${hours} hour${hours === 1 ? '' : 's'}`
+			}
+			return `${hours} hour${hours === 1 ? '' : 's'} ${remainingMinutes} minute${remainingMinutes === 1 ? '' : 's'}`
+		}
+
+		const buildNdviErrorMessage = (response, data, fallback, rawText = '') => {
+			const error = readObject(data?.error)
+			const details = readObject(error?.details)
+			const nestedErrors = readObject(details?.errors)
+			const upstream = parseEmbeddedErrorData(details?.drfMessage)
+			const upstreamErrors = readObject(upstream?.errors)
+			const httpStatus = Number.isFinite(details?.httpStatus)
+				? details.httpStatus
+				: response?.status
+			const errorCode = typeof error?.code === 'string'
+				? error.code
+				: (typeof data?.code === 'string' ? data.code : '')
+			const detailMessage = toText(
+				details?.detail
+				?? nestedErrors?.detail
+				?? upstreamErrors?.detail
+				?? data?.errors?.detail
+				?? '',
+				'',
+			)
+			const genericMessage = pickMessage(data, '')
+			const isCooldown = httpStatus === 429
+				|| errorCode === 'too_many_requests'
+				|| /too many requests/i.test(genericMessage)
+				|| /already queued recently/i.test(detailMessage)
+
+			if (isCooldown) {
+				const retryAfterHeader = response?.headers?.get
+					? response.headers.get('retry-after')
+					: null
+				const waitSeconds = readRetrySeconds(
+					details?.wait,
+					nestedErrors?.wait,
+					upstreamErrors?.wait,
+					details?.retryAfter,
+					retryAfterHeader,
+				)
+				const baseMessage = detailMessage || 'Raster already queued recently.'
+				if (/try again/i.test(baseMessage)) {
+					return baseMessage
+				}
+				if (waitSeconds !== null) {
+					return `${baseMessage} Try again in about ${formatRetryDelay(waitSeconds)}.`
+				}
+				return `${baseMessage} Try again in about 15 minutes.`
+			}
+
+			const message = detailMessage || genericMessage
+			if (message) {
+				return message
+			}
+
+			const snippet = String(rawText ?? '').trim().slice(0, 200)
+			return snippet || fallback
+		}
+
+		const shouldToastNdviError = (message) => /already queued recently|try again in about/i.test(String(message ?? ''))
+
 		const buildConnectionErrorMessage = (response, data) => {
 			const backendDetails = data?.error?.details && typeof data.error.details === 'object'
 				? data.error.details
@@ -1891,6 +2003,9 @@
 				return match ?? null
 			}
 
+			const NDVI_DEFAULT_MAX_CLOUD = 60
+			const NDVI_DEFAULT_RASTER_SIZE = 512
+
 			const buildNdviQuery = (operationKey, overrides = {}) => {
 				const operation = resolveOperation(operationKey)
 				const params = operation?.queryParams ?? []
@@ -1898,9 +2013,13 @@
 				const startName = resolveParamName(params, 'start')
 				const endName = resolveParamName(params, 'end')
 				const dateName = resolveParamName(params, 'date')
+				const sizeName = resolveParamName(params, 'size')
+				const maxCloudName = resolveParamName(params, 'max_cloud')
 				const startValue = overrides.start ?? resolveIsoDateValue(ndviStartInput)
 				const endValue = overrides.end ?? resolveIsoDateValue(ndviEndInput)
 				const dateValue = overrides.date ?? resolveIsoDateValue(ndviDateInput)
+				const sizeValue = overrides.size ?? NDVI_DEFAULT_RASTER_SIZE
+				const maxCloudValue = overrides.max_cloud ?? NDVI_DEFAULT_MAX_CLOUD
 				if (startName && startValue) {
 					query[startName] = startValue
 				}
@@ -1909,6 +2028,12 @@
 				}
 				if (dateName && dateValue) {
 					query[dateName] = dateValue
+				}
+				if (sizeName && sizeValue !== null && sizeValue !== undefined && sizeValue !== '') {
+					query[sizeName] = sizeValue
+				}
+				if (maxCloudName && maxCloudValue !== null && maxCloudValue !== undefined && maxCloudValue !== '') {
+					query[maxCloudName] = maxCloudValue
 				}
 				return query
 			}
@@ -1920,9 +2045,13 @@
 				const startName = resolveBodyFieldName(fields, 'start')
 				const endName = resolveBodyFieldName(fields, 'end')
 				const dateName = resolveBodyFieldName(fields, 'date')
+				const sizeName = resolveBodyFieldName(fields, 'size')
+				const maxCloudName = resolveBodyFieldName(fields, 'max_cloud')
 				const startValue = overrides.start ?? resolveIsoDateValue(ndviStartInput)
 				const endValue = overrides.end ?? resolveIsoDateValue(ndviEndInput)
 				const dateValue = overrides.date ?? resolveIsoDateValue(ndviDateInput)
+				const sizeValue = overrides.size ?? NDVI_DEFAULT_RASTER_SIZE
+				const maxCloudValue = overrides.max_cloud ?? NDVI_DEFAULT_MAX_CLOUD
 				if (startName && startValue) {
 					body[startName] = startValue
 				}
@@ -1931,6 +2060,12 @@
 				}
 				if (dateName && dateValue) {
 					body[dateName] = dateValue
+				}
+				if (sizeName && sizeValue !== null && sizeValue !== undefined && sizeValue !== '') {
+					body[sizeName] = sizeValue
+				}
+				if (maxCloudName && maxCloudValue !== null && maxCloudValue !== undefined && maxCloudValue !== '') {
+					body[maxCloudName] = maxCloudValue
 				}
 				return body
 			}
@@ -2444,20 +2579,44 @@
 				const fallbackMessage = `Unable to load ${operationKey}.`
 
 				if (!responseOk || !expectsJson) {
-					const message = snippet || pickMessage(result.data, fallbackMessage)
+					const message = buildNdviErrorMessage(
+						result.response,
+						result.data,
+						fallbackMessage,
+						result.text || snippet,
+					)
 					showNdviError(message)
+					if (shouldToastNdviError(message)) {
+						toast(message)
+					}
 					return null
 				}
 				if (!result.parsed) {
-					const message = snippet || 'Unable to parse NDVI response.'
+					const message = buildNdviErrorMessage(
+						result.response,
+						result.data,
+						'Unable to parse NDVI response.',
+						result.text || snippet,
+					)
 					showNdviError(message)
+					if (shouldToastNdviError(message)) {
+						toast(message)
+					}
 					return null
 				}
 				const statusValue = result.data?.status
 				const okNdvi = result.data?.ok === true || statusValue === 'ok' || statusValue === 0
 				if (!okNdvi) {
-					const message = pickMessage(result.data, fallbackMessage)
+					const message = buildNdviErrorMessage(
+						result.response,
+						result.data,
+						fallbackMessage,
+						result.text || snippet,
+					)
 					showNdviError(message)
+					if (shouldToastNdviError(message)) {
+						toast(message)
+					}
 					return null
 				}
 				return returnRaw ? result.data : unwrapResponseData(result.data)
@@ -3527,15 +3686,31 @@
 						})
 						const contentType = response.headers.get('content-type') || ''
 						if (!response.ok) {
-							const text = await response.text()
-							const snippet = text.trim().slice(0, 200)
-							showNdviError(snippet || `Unable to load raster preview (HTTP ${response.status}).`)
+							const result = await readJsonResponse(response)
+							const message = buildNdviErrorMessage(
+								response,
+								result.data,
+								`Unable to load raster preview (HTTP ${response.status}).`,
+								result.text,
+							)
+							showNdviError(message)
+							if (shouldToastNdviError(message)) {
+								toast(message)
+							}
 							return
 						}
 						if (contentType && !contentType.includes('image/png')) {
-							const text = await response.text()
-							const snippet = text.trim().slice(0, 200)
-							showNdviError(snippet || 'Raster preview did not return an image.')
+							const result = await readJsonResponse(response)
+							const message = buildNdviErrorMessage(
+								response,
+								result.data,
+								'Raster preview did not return an image.',
+								result.text,
+							)
+							showNdviError(message)
+							if (shouldToastNdviError(message)) {
+								toast(message)
+							}
 							return
 						}
 						const blob = await response.blob()
