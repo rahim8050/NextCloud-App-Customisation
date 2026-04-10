@@ -304,4 +304,5 @@ ndvi request: method=GET path=/api/v1/farms/<FARM_ID>/ndvi/timeseries/ status=20
 - Refresh shows farm columns/values.
 - New farm modal renders inputs (name, is_active, decimal bbox/centroid/area).
 - NDVI actions run without date validation errors (ISO dates; MM/DD/YYYY normalized to ISO).
+- Farm State card renders `State`, `Mean NDVI`, `Max NDVI`, `Coverage`, `Action`, and `Trend`, with the `action` field visible in the main card and not only in debug JSON.
 - Raster PNG displays/downloads.

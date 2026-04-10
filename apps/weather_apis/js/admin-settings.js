@@ -171,7 +171,6 @@
 		const farmsModalSave = document.getElementById('weather-apis-farms-modal-save')
 		const farmsModalClose = document.getElementById('weather-apis-farms-modal-close')
 		const farmsSyncModal = document.getElementById('weather-apis-farms-sync-modal')
-		const farmsSyncModalTitle = document.getElementById('weather-apis-farms-sync-modal-title')
 		const farmsSyncModalClose = document.getElementById('weather-apis-farms-sync-modal-close')
 		const farmsSyncModalCancel = document.getElementById('weather-apis-farms-sync-modal-cancel')
 		const farmsSyncModalConfirm = document.getElementById('weather-apis-farms-sync-modal-confirm')
@@ -1641,8 +1640,7 @@
 					fullFarm = result.data?.data || result.data || {}
 				}
 
-				// Log farm data for debugging
-				console.log('[weather_apis] Sync farm data:', JSON.parse(JSON.stringify(fullFarm)))
+				logFarms('sync farm data', fullFarm)
 
 				if (farmsSyncModal) {
 					farmsSyncModal.hidden = false
@@ -1705,7 +1703,7 @@
 
 				// Use the full farm data we fetched earlier
 				const fullFarm = currentSyncFarmData || farm
-				console.log('[weather_apis] Syncing farm with data:', JSON.parse(JSON.stringify(fullFarm)))
+				logFarms('sync farm payload', fullFarm)
 
 				// Build bbox - use existing values or defaults for missing data
 				const hasBbox = fullFarm.bbox_south !== null && fullFarm.bbox_south !== undefined
@@ -1772,7 +1770,7 @@
 				// Debug: log the final payload (development only)
 				// TODO: Remove before production deployment
 				if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-					console.log('[weather_apis] Final sync payload:', JSON.stringify(payload, null, 2))
+					logFarms('sync farm final payload', payload)
 				}
 
 				const idempotencyKey = `farm-sync:${externalFarmId}`
@@ -1783,13 +1781,13 @@
 					},
 				})
 				if (!result.parsed) {
-					console.error('[weather_apis] Sync response not JSON:', result.text)
+					logFarms('sync farm response not json', { responseText: result.text })
 					showFarmsError('Unable to parse sync response.')
 					return
 				}
 				const okSync = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
 				if (!okSync) {
-					console.error('[weather_apis] Sync failed:', result.data)
+					logFarms('sync farm failed', result.data ?? {})
 					const message = pickMessage(result.data, 'Unable to sync farm.')
 					showFarmsError(message)
 					return
@@ -2164,6 +2162,7 @@
 				level = 'info',
 				summary,
 				badges = [],
+				callout,
 				facts,
 				debug,
 			} = {}) => {
@@ -2171,11 +2170,27 @@
 				const resolvedLevel = levels.has(level) ? level : 'info'
 				const card = document.createElement('div')
 				card.className = `weather-apis-result weather-apis-result--${resolvedLevel}`
-				if (title) {
-					const heading = document.createElement('strong')
-					heading.className = 'weather-apis-result__title'
-					heading.textContent = toText(title, '')
-					card.appendChild(heading)
+				if (title || (Array.isArray(badges) && badges.length > 0)) {
+					const header = document.createElement('div')
+					header.className = 'weather-apis-result__header'
+					if (title) {
+						const heading = document.createElement('strong')
+						heading.className = 'weather-apis-result__title'
+						heading.textContent = toText(title, '')
+						header.appendChild(heading)
+					}
+					if (Array.isArray(badges) && badges.length > 0) {
+						const badgeWrap = document.createElement('div')
+						badgeWrap.className = 'weather-apis-result__badges'
+						badges.forEach((badge) => {
+							const badgeEl = document.createElement('span')
+							badgeEl.className = 'weather-apis-result__badge'
+							badgeEl.textContent = toText(badge, '')
+							badgeWrap.appendChild(badgeEl)
+						})
+						header.appendChild(badgeWrap)
+					}
+					card.appendChild(header)
 				}
 				if (summary) {
 					const summaryEl = document.createElement('p')
@@ -2183,16 +2198,18 @@
 					summaryEl.textContent = toText(summary, '')
 					card.appendChild(summaryEl)
 				}
-				if (Array.isArray(badges) && badges.length > 0) {
-					const badgeWrap = document.createElement('div')
-					badgeWrap.className = 'weather-apis-result__badges'
-					badges.forEach((badge) => {
-						const badgeEl = document.createElement('span')
-						badgeEl.className = 'weather-apis-result__badge'
-						badgeEl.textContent = toText(badge, '')
-						badgeWrap.appendChild(badgeEl)
-					})
-					card.appendChild(badgeWrap)
+				if (callout) {
+					const calloutEl = document.createElement('div')
+					calloutEl.className = 'weather-apis-result__callout'
+					const calloutLabel = document.createElement('span')
+					calloutLabel.className = 'weather-apis-result__callout-label'
+					calloutLabel.textContent = 'Action'
+					const calloutValue = document.createElement('span')
+					calloutValue.className = 'weather-apis-result__callout-value'
+					calloutValue.textContent = toText(callout, '')
+					calloutEl.appendChild(calloutLabel)
+					calloutEl.appendChild(calloutValue)
+					card.appendChild(calloutEl)
 				}
 				const factsEl = renderKeyValueFacts(facts)
 				if (factsEl) {
@@ -3858,7 +3875,11 @@
 						const card = renderResultCard({
 							title: 'Farm State',
 							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
 							summary: interpretation || `Farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
 							facts,
 							debug: data,
 						})
