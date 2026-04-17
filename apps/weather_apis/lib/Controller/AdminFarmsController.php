@@ -294,10 +294,12 @@ final class AdminFarmsController extends Controller {
 		try {
 			$operation = $this->schemaService->getFarmOperation('partial_update', $requestId);
 			$path = $this->applyPathParams((string)($operation['path'] ?? ''), ['id' => $id]);
+			
 			$params = $this->stripPathParams(
 				$this->request->getParams(),
 				(string)($operation['path'] ?? ''),
 			);
+			
 			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
 			$this->logProxyRequest('patch farm', $operation, $path, [], $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(

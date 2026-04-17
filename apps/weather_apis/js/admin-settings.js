@@ -2170,28 +2170,37 @@
 				const resolvedLevel = levels.has(level) ? level : 'info'
 				const card = document.createElement('div')
 				card.className = `weather-apis-result weather-apis-result--${resolvedLevel}`
-				if (title || (Array.isArray(badges) && badges.length > 0)) {
-					const header = document.createElement('div')
-					header.className = 'weather-apis-result__header'
-					if (title) {
-						const heading = document.createElement('strong')
-						heading.className = 'weather-apis-result__title'
-						heading.textContent = toText(title, '')
-						header.appendChild(heading)
-					}
-					if (Array.isArray(badges) && badges.length > 0) {
-						const badgeWrap = document.createElement('div')
-						badgeWrap.className = 'weather-apis-result__badges'
-						badges.forEach((badge) => {
-							const badgeEl = document.createElement('span')
-							badgeEl.className = 'weather-apis-result__badge'
-							badgeEl.textContent = toText(badge, '')
-							badgeWrap.appendChild(badgeEl)
-						})
-						header.appendChild(badgeWrap)
-					}
-					card.appendChild(header)
+
+				const header = document.createElement('div')
+				header.className = 'weather-apis-result__header'
+
+				if (title) {
+					const heading = document.createElement('strong')
+					heading.className = 'weather-apis-result__title'
+					heading.textContent = toText(title, '')
+					header.appendChild(heading)
 				}
+				if (Array.isArray(badges) && badges.length > 0) {
+					const badgeWrap = document.createElement('div')
+					badgeWrap.className = 'weather-apis-result__badges'
+					badges.forEach((badge) => {
+						const badgeEl = document.createElement('span')
+						badgeEl.className = 'weather-apis-result__badge'
+						badgeEl.textContent = toText(badge, '')
+						badgeWrap.appendChild(badgeEl)
+					})
+					header.appendChild(badgeWrap)
+				}
+
+				const closeBtn = document.createElement('button')
+				closeBtn.className = 'weather-apis-result__close icon-close'
+				closeBtn.title = 'Dismiss'
+				closeBtn.setAttribute('aria-label', 'Dismiss')
+				closeBtn.addEventListener('click', () => {
+					card.remove()
+				})
+				header.appendChild(closeBtn)
+				card.appendChild(header)
 				if (summary) {
 					const summaryEl = document.createElement('p')
 					summaryEl.className = 'weather-apis-result__summary'

@@ -1052,3 +1052,30 @@
 	width: 100%;
 	box-sizing: border-box;
 }
+
+.weather-apis-settings .weather-apis-result__close {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: transparent;
+	border: none;
+	opacity: 0.4;
+	cursor: pointer;
+	transition: opacity 120ms ease;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+}
+
+.weather-apis-settings .weather-apis-result__close::after {
+	content: "✕"; /* Multiplication X */
+	font-size: 20px;
+	color: var(--color-main-text);
+}
+
+.weather-apis-settings .weather-apis-result__close:hover {
+	opacity: 1;
+}
