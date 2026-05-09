@@ -10,3 +10,6 @@
 # local tooling artifacts (not part of repo)
 ../../netstat
 ../../wg
+
+# AI prompts (local workspace only)
+prompts/

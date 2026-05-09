@@ -33,6 +33,14 @@ final class DrfSchemaService {
 		'farm_state' => 'v1_farm_state_retrieve',
 	];
 
+	private const ACTIVITY_OPERATION_IDS = [
+		'list' => 'v1_activities_list',
+		'create' => 'v1_activities_create',
+		'retrieve' => 'v1_activities_retrieve',
+		'partial_update' => 'v1_activities_partial_update',
+		'destroy' => 'v1_activities_destroy',
+	];
+
 	private ICache $cache;
 
 	public function __construct(
@@ -67,6 +75,35 @@ final class DrfSchemaService {
 
 		if (!is_array($operations) || !isset($operations[$operationKey]) || !is_array($operations[$operationKey])) {
 			throw new WeatherApiException('backend_error', 'Schema is missing farm operation: ' . $operationKey);
+		}
+
+		return $operations[$operationKey];
+	}
+
+	/**
+	 * @return array{schema: array<string, mixed>, warning: string|null}
+	 * @throws WeatherApiException
+	 */
+	public function getActivitySchemaSummary(string $correlationId): array {
+		[$schema, $warning] = $this->loadSchema($correlationId);
+		$schema = $this->normalizeSchema($schema);
+
+		return [
+			'schema' => $this->buildActivitySummary($schema),
+			'warning' => $warning,
+		];
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 * @throws WeatherApiException
+	 */
+	public function getActivityOperation(string $operationKey, string $correlationId): array {
+		$result = $this->getActivitySchemaSummary($correlationId);
+		$operations = $result['schema']['operations'] ?? [];
+
+		if (!is_array($operations) || !isset($operations[$operationKey]) || !is_array($operations[$operationKey])) {
+			throw new WeatherApiException('backend_error', 'Schema is missing activity operation: ' . $operationKey);
 		}
 
 		return $operations[$operationKey];
@@ -153,6 +190,184 @@ final class DrfSchemaService {
 			'columns' => array_values($columns),
 			'operations' => $operations,
 		];
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, mixed>
+	 * @throws WeatherApiException
+	 */
+	private function buildActivitySummary(array $schema): array {
+		$activityFields = $this->extractActivityFields($schema);
+		$createFields = $this->extractActivityWriteFields($schema, self::ACTIVITY_OPERATION_IDS['create']);
+		$updateFields = $this->extractActivityWriteFields($schema, self::ACTIVITY_OPERATION_IDS['partial_update']);
+		$columns = $this->extractActivityColumns($schema);
+		if ($columns === []) {
+			$columns = array_keys($activityFields);
+		}
+		$operations = [];
+
+		foreach (self::ACTIVITY_OPERATION_IDS as $key => $operationId) {
+			$operations[$key] = $this->extractOperation($schema, $operationId);
+		}
+
+		return [
+			'fields' => $activityFields,
+			'fieldsCreate' => $createFields,
+			'fieldsUpdate' => $updateFields,
+			'columns' => array_values($columns),
+			'operations' => $operations,
+		];
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 * @throws WeatherApiException
+	 */
+	private function extractActivityFields(array $schema): array {
+		$fields = [];
+		try {
+			$activity = $this->resolveSchema($schema, $this->getComponent($schema, 'Activity'));
+
+			if (($activity['type'] ?? null) === 'object' && isset($activity['properties']) && is_array($activity['properties'])) {
+				$required = [];
+				if (isset($activity['required']) && is_array($activity['required'])) {
+					$required = array_map('strval', $activity['required']);
+				}
+
+				$fields = $this->extractFieldsFromSchema($schema, $activity, $required);
+			}
+		} catch (WeatherApiException) {
+			$fields = [];
+		}
+
+		if ($fields === []) {
+			$fields = $this->extractActivityFieldsFromListResponse($schema);
+		}
+
+		if ($fields === []) {
+			$fields = $this->extractActivityFieldsFromCreateOperation($schema);
+		}
+
+		if ($fields === []) {
+			$fields = $this->extractActivityFieldsFromOperations($schema);
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractActivityWriteFields(array $schema, string $operationId): array {
+		try {
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$fields = $this->extractBodyFields($schema, $operation['spec']);
+		if ($fields === []) {
+			return [];
+		}
+
+		return $this->filterWritableFields($fields);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string>
+	 */
+	private function extractActivityColumns(array $schema): array {
+		try {
+			$operationId = self::ACTIVITY_OPERATION_IDS['list'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$itemSchema = $this->extractListItemSchema($schema, $operation['spec']);
+		if ($itemSchema === null) {
+			return [];
+		}
+
+		$properties = $itemSchema['properties'] ?? null;
+		if (!is_array($properties)) {
+			return [];
+		}
+
+		return array_map('strval', array_keys($properties));
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractActivityFieldsFromListResponse(array $schema): array {
+		try {
+			$operationId = self::ACTIVITY_OPERATION_IDS['list'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		$itemSchema = $this->extractListItemSchema($schema, $operation['spec']);
+		if ($itemSchema === null) {
+			return [];
+		}
+
+		if (($itemSchema['type'] ?? null) !== 'object' || !isset($itemSchema['properties']) || !is_array($itemSchema['properties'])) {
+			return [];
+		}
+
+		$required = [];
+		if (isset($itemSchema['required']) && is_array($itemSchema['required'])) {
+			$required = array_map('strval', $itemSchema['required']);
+		}
+
+		return $this->extractFieldsFromSchema($schema, $itemSchema, $required);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractActivityFieldsFromCreateOperation(array $schema): array {
+		try {
+			$operationId = self::ACTIVITY_OPERATION_IDS['create'];
+			$operation = $this->findOperation($schema, $operationId);
+		} catch (WeatherApiException) {
+			return [];
+		}
+
+		return $this->extractBodyFields($schema, $operation['spec']);
+	}
+
+	/**
+	 * @param array<string, mixed> $schema
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function extractActivityFieldsFromOperations(array $schema): array {
+		$allFields = [];
+
+		foreach (self::ACTIVITY_OPERATION_IDS as $operationId) {
+			try {
+				$operation = $this->findOperation($schema, $operationId);
+			} catch (WeatherApiException) {
+				continue;
+			}
+
+			$bodyFields = $this->extractBodyFields($schema, $operation['spec']);
+			foreach ($bodyFields as $name => $field) {
+				if (!isset($allFields[$name])) {
+					$allFields[$name] = $field;
+				}
+			}
+		}
+
+		return $allFields;
 	}
 
 	/**

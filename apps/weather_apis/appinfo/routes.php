@@ -158,6 +158,42 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/observations/{observationId}',
 			'verb' => 'DELETE',
 		],
+		// Activity endpoints
+		[
+			'name' => 'adminActivities#getSchema',
+			'url' => '/api/v1/admin/activities/schema',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminActivities#listActivities',
+			'url' => '/api/v1/admin/activities/list',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminActivities#createActivity',
+			'url' => '/api/v1/admin/activities/create',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminActivities#getActivity',
+			'url' => '/api/v1/admin/activities/{id}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminActivities#updateActivity',
+			'url' => '/api/v1/admin/activities/{id}',
+			'verb' => 'PUT',
+		],
+		[
+			'name' => 'adminActivities#patchActivity',
+			'url' => '/api/v1/admin/activities/{id}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminActivities#deleteActivity',
+			'url' => '/api/v1/admin/activities/{id}',
+			'verb' => 'DELETE',
+		],
 	],
 	'ocs' => [
 		[
