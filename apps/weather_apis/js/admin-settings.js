@@ -2173,6 +2173,11 @@
 
 				const header = document.createElement('div')
 				header.className = 'weather-apis-result__header'
+				const body = document.createElement('div')
+				body.className = 'weather-apis-result__body'
+				const teaser = document.createElement('div')
+				teaser.className = 'weather-apis-result__teaser'
+				teaser.hidden = true
 
 				if (title) {
 					const heading = document.createElement('strong')
@@ -2192,20 +2197,48 @@
 					header.appendChild(badgeWrap)
 				}
 
-				const closeBtn = document.createElement('button')
-				closeBtn.className = 'weather-apis-result__close icon-close'
-				closeBtn.title = 'Dismiss'
-				closeBtn.setAttribute('aria-label', 'Dismiss')
-				closeBtn.addEventListener('click', () => {
+				const actions = document.createElement('div')
+				actions.className = 'weather-apis-result__actions'
+				const hideBtn = document.createElement('button')
+				hideBtn.type = 'button'
+				hideBtn.className = 'weather-apis-result__close weather-apis-result__close--secondary'
+				hideBtn.textContent = 'Hide card'
+				const setCollapsed = (collapsed) => {
+					body.hidden = collapsed
+					if (collapsed) {
+						if (!card.contains(teaser)) {
+							card.appendChild(teaser)
+						}
+					} else if (card.contains(teaser)) {
+						teaser.remove()
+					}
+					card.classList.toggle('is-collapsed', collapsed)
+					hideBtn.textContent = collapsed ? 'View details' : 'Hide card'
+					hideBtn.setAttribute('aria-label', collapsed ? 'View details' : 'Hide card')
+					hideBtn.title = collapsed ? 'View card details' : 'Hide card'
+				}
+				hideBtn.addEventListener('click', () => {
+					setCollapsed(!body.hidden)
+				})
+				const dismissBtn = document.createElement('button')
+				dismissBtn.type = 'button'
+				dismissBtn.className = 'weather-apis-result__close'
+				dismissBtn.textContent = 'Dismiss'
+				dismissBtn.title = 'Dismiss card'
+				dismissBtn.setAttribute('aria-label', 'Dismiss card')
+				dismissBtn.addEventListener('click', () => {
 					card.remove()
 				})
-				header.appendChild(closeBtn)
+				actions.appendChild(hideBtn)
+				actions.appendChild(dismissBtn)
+				header.appendChild(actions)
 				card.appendChild(header)
+				card.appendChild(body)
 				if (summary) {
 					const summaryEl = document.createElement('p')
 					summaryEl.className = 'weather-apis-result__summary'
 					summaryEl.textContent = toText(summary, '')
-					card.appendChild(summaryEl)
+					body.appendChild(summaryEl)
 				}
 				if (callout) {
 					const calloutEl = document.createElement('div')
@@ -2218,16 +2251,21 @@
 					calloutValue.textContent = toText(callout, '')
 					calloutEl.appendChild(calloutLabel)
 					calloutEl.appendChild(calloutValue)
-					card.appendChild(calloutEl)
+					body.appendChild(calloutEl)
 				}
 				const factsEl = renderKeyValueFacts(facts)
 				if (factsEl) {
-					card.appendChild(factsEl)
+					body.appendChild(factsEl)
 				}
 				const debugEl = renderDebugDetails(debug)
 				if (debugEl) {
-					card.appendChild(debugEl)
+					body.appendChild(debugEl)
 				}
+				const teaserLabel = document.createElement('span')
+				teaserLabel.className = 'weather-apis-result__teaser-label'
+				teaserLabel.textContent = 'Card details are hidden. Use the header button to view details.'
+				teaser.appendChild(teaserLabel)
+				setCollapsed(false)
 				return card
 			}
 
@@ -4314,7 +4352,825 @@
 			})
 		}
 
+const setupActivities = () => {
+			const activitiesRoot = document.getElementById('weather-apis-activities')
+			if (!activitiesRoot) {
+				return
+			}
+
+			const activitySchemaUrl = form.dataset.activitySchemaUrl || ''
+			const activityListUrl = form.dataset.activityListUrl || ''
+			const activityCreateUrl = form.dataset.activityCreateUrl || ''
+			const activityGetUrl = form.dataset.activityGetUrl || ''
+			const activityUpdateUrl = form.dataset.activityUpdateUrl || ''
+			const activityPatchUrl = form.dataset.activityPatchUrl || ''
+			const activityDeleteUrl = form.dataset.activityDeleteUrl || ''
+
+			const activitiesWarning = document.getElementById('weather-apis-activities-warning')
+			const activitiesError = document.getElementById('weather-apis-activities-error')
+			const activitiesLoading = document.getElementById('weather-apis-activities-loading')
+			const activitiesColumns = document.getElementById('weather-apis-activities-columns')
+			const activitiesBody = document.getElementById('weather-apis-activities-body')
+			const activitiesEmpty = document.getElementById('weather-apis-activities-empty')
+			const activitiesPagination = document.getElementById('weather-apis-activities-pagination')
+			const activitiesPrev = document.getElementById('weather-apis-activities-prev')
+			const activitiesNext = document.getElementById('weather-apis-activities-next')
+			const activitiesPage = document.getElementById('weather-apis-activities-page')
+			const activitiesRefresh = document.getElementById('weather-apis-activities-refresh')
+			const activitiesCreateBtn = document.getElementById('weather-apis-activities-create')
+			const activitiesModal = document.getElementById('weather-apis-activities-modal')
+			const activitiesModalTitle = document.getElementById('weather-apis-activities-modal-title')
+			const activitiesModalFields = document.getElementById('weather-apis-activities-modal-fields')
+			const activitiesModalErrors = document.getElementById('weather-apis-activities-modal-errors')
+			const activitiesModalSave = document.getElementById('weather-apis-activities-modal-save')
+			const activitiesModalClose = document.getElementById('weather-apis-activities-modal-close')
+			const activitiesDeleteModal = document.getElementById('weather-apis-activities-delete-modal')
+			const activitiesDeleteInfo = document.getElementById('weather-apis-activities-delete-info')
+			const activitiesDeleteCancel = document.getElementById('weather-apis-activities-delete-cancel')
+			const activitiesDeleteConfirm = document.getElementById('weather-apis-activities-delete-confirm')
+
+			let activitySchema = null
+			let activityFields = {}
+			let activityFieldsCreate = {}
+			let activityFieldsUpdate = {}
+			let activityColumns = []
+			let activityOperations = {}
+			let activeColumns = []
+			let nextParams = null
+			let prevParams = null
+			let selectedActivityId = null
+			let modalMode = 'create'
+			let modalInitial = {}
+			let farmsCache = null
+			let schemaReady = false
+			let schemaLoadPromise = null
+
+			const STATUS_CONFIG = {
+				created: { label: 'Created', color: '#888', icon: '○' },
+				pending: { label: 'Pending', color: '#f59e0b', icon: '◐' },
+				dispatched: { label: 'Dispatched', color: '#3b82f6', icon: '→' },
+				running: { label: 'Running', color: '#3b82f6', icon: '◌' },
+				success: { label: 'Success', color: '#22c55e', icon: '✓' },
+				failed: { label: 'Failed', color: '#ef4444', icon: '✕' },
+				retry: { label: 'Retry', color: '#f97316', icon: '↻' },
+			}
+
+			const TYPE_CONFIG = {
+				vaccination: { label: 'Vaccination', color: '#8b5cf6' },
+				fertilizer: { label: 'Fertilizer', color: '#10b981' },
+				irrigation: { label: 'Irrigation', color: '#0ea5e9' },
+				ndvi_trigger: { label: 'NDVI Trigger', color: '#f59e0b' },
+			}
+
+			const RECURRENCE_CONFIG = {
+				none: { label: 'One-time' },
+				interval: { label: 'Interval' },
+				cron: { label: 'Cron (future)' },
+			}
+
+			const clearActivitiesNotes = () => {
+				if (activitiesWarning) {
+					activitiesWarning.textContent = ''
+					activitiesWarning.hidden = true
+				}
+				if (activitiesError) {
+					activitiesError.textContent = ''
+					activitiesError.hidden = true
+				}
+			}
+
+			const showActivitiesWarning = (message) => {
+				if (!activitiesWarning) return
+				activitiesWarning.textContent = message
+				activitiesWarning.hidden = false
+			}
+
+			const showActivitiesError = (message) => {
+				if (!activitiesError) return
+				activitiesError.textContent = message
+				activitiesError.hidden = false
+				toast(message)
+			}
+
+			const logActivities = (message, context = {}) => {
+				if (typeof console === 'undefined' || typeof console.info !== 'function') return
+				console.info('[weather_apis] activities', message, context)
+			}
+
+			const setActivitiesActionsEnabled = (enabled) => {
+				if (activitiesRefresh) activitiesRefresh.disabled = !enabled
+				if (activitiesCreateBtn) activitiesCreateBtn.disabled = !enabled
+				if (!enabled) {
+					if (activitiesPrev) activitiesPrev.disabled = true
+					if (activitiesNext) activitiesNext.disabled = true
+				}
+			}
+
+			const unwrapResponseData = (data) => {
+				if (data && typeof data === 'object' && data.data !== undefined) {
+					return data.data
+				}
+				return data ?? {}
+			}
+
+			const pickObject = (...candidates) => {
+				for (const candidate of candidates) {
+					if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+						if (Object.keys(candidate).length > 0) {
+							return candidate
+						}
+					}
+				}
+				return {}
+			}
+
+			const pickArray = (...candidates) => {
+				for (const candidate of candidates) {
+					if (Array.isArray(candidate) && candidate.length > 0) {
+						return candidate
+					}
+				}
+				return []
+			}
+
+			const unwrapSchemaContainer = (value) => {
+				let current = value
+				for (let depth = 0; depth < 4; depth++) {
+					if (current && typeof current === 'object' && current.schema && typeof current.schema === 'object') {
+						current = current.schema
+						continue
+					}
+					break
+				}
+				return current ?? {}
+			}
+
+			const normalizeFieldDefinition = (def = {}) => {
+				const normalized = { ...def }
+				if (normalized.type === 'string' && normalized.format === 'decimal') {
+					normalized.type = 'number'
+				}
+				return normalized
+			}
+
+			const normalizeFields = (fields) => {
+				if (!fields || typeof fields !== 'object') return {}
+				const out = {}
+				Object.entries(fields).forEach(([name, def]) => {
+					if (!def || typeof def !== 'object') return
+					out[name] = normalizeFieldDefinition(def)
+				})
+				return out
+			}
+
+			const filterWritableFields = (fields) => {
+				const out = {}
+				Object.entries(fields || {}).forEach(([name, def]) => {
+					if (def?.readOnly) return
+					out[name] = def
+				})
+				return out
+			}
+
+			const extractOpenApiActivityFields = (schema) => {
+				const activity = schema?.components?.schemas?.Activity
+				const properties = activity?.properties
+				if (!properties || typeof properties !== 'object') return {}
+				const required = Array.isArray(activity?.required) ? activity.required.map(String) : []
+				const fields = {}
+				Object.entries(properties).forEach(([name, prop]) => {
+					if (!prop || typeof prop !== 'object') return
+					const enumValues = Array.isArray(prop.enum) ? prop.enum : null
+					fields[name] = normalizeFieldDefinition({
+						type: prop.type || 'string',
+						format: prop.format || null,
+						required: required.includes(name),
+						readOnly: Boolean(prop.readOnly),
+						enum: enumValues,
+					})
+				})
+				return fields
+			}
+
+			const getSchemaReady = async (source = 'unknown') => {
+				if (schemaReady) return true
+				if (!schemaLoadPromise) {
+					logActivities('schema load started', { source })
+					setActivitiesActionsEnabled(false)
+					schemaLoadPromise = (async () => {
+						const schemaOk = await loadSchema()
+						schemaReady = schemaOk
+						logActivities(schemaOk ? 'schema load ok' : 'schema load failed', { source })
+						setActivitiesActionsEnabled(schemaOk)
+						return schemaOk
+					})().catch((error) => {
+						schemaReady = false
+						logActivities('schema load failed', { source, error: toText(error) })
+						setActivitiesActionsEnabled(false)
+						return false
+					})
+				}
+				const schemaOk = await schemaLoadPromise
+				setActivitiesActionsEnabled(schemaOk)
+				return schemaOk
+			}
+
+			const loadSchema = async () => {
+				clearActivitiesNotes()
+				if (!activitySchemaUrl) {
+					showActivitiesError('Activity schema endpoint is not available.')
+					return false
+				}
+
+				const result = await performJsonRequest('GET', activitySchemaUrl)
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse activity schema response.')
+					return false
+				}
+				const respOk = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!respOk) {
+					const message = pickMessage(result.data, 'Unable to load activity schema.')
+					showActivitiesError(message)
+					return false
+				}
+
+				const payload = unwrapResponseData(result.data)
+				const schemaContainer = payload?.schema ?? payload ?? {}
+				const unwrappedSchema = unwrapSchemaContainer(schemaContainer)
+				const openApiFields = extractOpenApiActivityFields(unwrappedSchema)
+				const openApiWritable = filterWritableFields(openApiFields)
+
+				activitySchema = unwrappedSchema ?? {}
+				activityFields = normalizeFields(pickObject(
+					payload?.fields,
+					activitySchema?.fields,
+					schemaContainer?.fields,
+					openApiFields,
+				))
+				activityFieldsCreate = normalizeFields(pickObject(
+					payload?.fieldsCreate,
+					activitySchema?.fieldsCreate,
+					schemaContainer?.fieldsCreate,
+					openApiWritable,
+					activityFields,
+				))
+				activityFieldsUpdate = normalizeFields(pickObject(
+					payload?.fieldsUpdate,
+					activitySchema?.fieldsUpdate,
+					schemaContainer?.fieldsUpdate,
+					openApiWritable,
+					activityFieldsCreate,
+					activityFields,
+				))
+				activityColumns = pickArray(
+					payload?.columns,
+					activitySchema?.columns,
+					schemaContainer?.columns,
+					Object.keys(openApiFields),
+				)
+				activityOperations = pickObject(payload?.operations, activitySchema?.operations, schemaContainer?.operations)
+
+				if (!activityFields || Object.keys(activityFields).length === 0) {
+					showActivitiesError('Activity schema did not return any fields.')
+					return false
+				}
+				if (!activityColumns || activityColumns.length === 0) {
+					activityColumns = Object.keys(activityFields)
+				}
+				if (!activityColumns || activityColumns.length === 0) {
+					showActivitiesError('Activity schema did not return any columns.')
+					return false
+				}
+
+				if (payload?.warning) {
+					showActivitiesWarning(payload.warning)
+				}
+
+				renderActivityColumns()
+				return true
+			}
+
+			const loadFarmsCache = async () => {
+				if (farmsCache !== null) return farmsCache
+				if (!farmListUrl) {
+					farmsCache = []
+					return farmsCache
+				}
+				const result = await performJsonRequest('POST', farmListUrl, { body: {} })
+				if (!result.parsed || !result.response.ok) {
+					farmsCache = []
+					return farmsCache
+				}
+				const payload = unwrapResponseData(result.data)
+				farmsCache = Array.isArray(payload) ? payload : (Array.isArray(payload?.results) ? payload.results : [])
+				return farmsCache
+			}
+
+			const renderActivityColumns = () => {
+				if (!activitiesColumns) return
+				let derived = pickArray(activityColumns)
+				if (derived.length === 0) {
+					const fallback = Object.keys(activityFields || {})
+					derived = fallback.length > 0 ? fallback : []
+				}
+				activeColumns = derived
+				activitiesColumns.innerHTML = ''
+				activeColumns.forEach((name) => {
+					const th = document.createElement('th')
+					th.textContent = name
+					activitiesColumns.appendChild(th)
+				})
+				const actions = document.createElement('th')
+				actions.textContent = 'Actions'
+				activitiesColumns.appendChild(actions)
+			}
+
+			const formatActivityValue = (value, field, columnName) => {
+				if (value === null || value === undefined) return '—'
+
+				if (columnName === 'status' && typeof value === 'string') {
+					const config = STATUS_CONFIG[value] || { label: value, color: '#888', icon: '?' }
+					const span = document.createElement('span')
+					span.className = 'weather-apis-activities__status-badge'
+					span.style.setProperty('--status-color', config.color)
+					span.textContent = `${config.icon} ${config.label}`
+					return span
+				}
+
+				if (columnName === 'type' && typeof value === 'string') {
+					const config = TYPE_CONFIG[value] || { label: value, color: '#888' }
+					const span = document.createElement('span')
+					span.className = 'weather-apis-activities__type-badge'
+					span.style.setProperty('--type-color', config.color)
+					span.textContent = config.label
+					return span
+				}
+
+				if (columnName === 'recurrence_type' && typeof value === 'string') {
+					const config = RECURRENCE_CONFIG[value] || { label: value }
+					return config.label
+				}
+
+				if (field?.type === 'boolean') {
+					return value ? 'true' : 'false'
+				}
+
+				if (typeof value === 'object') {
+					return JSON.stringify(value)
+				}
+
+				return String(value)
+			}
+
+			const renderActivityRows = (items) => {
+				if (!activitiesBody) return
+				activitiesBody.innerHTML = ''
+
+				if (!Array.isArray(items) || items.length === 0) {
+					if (activitiesEmpty) activitiesEmpty.hidden = false
+					if (activitiesPagination) activitiesPagination.hidden = true
+					return
+				}
+
+				if (activitiesEmpty) activitiesEmpty.hidden = true
+				if (activitiesPagination) activitiesPagination.hidden = false
+
+				items.forEach((activity) => {
+					const row = document.createElement('tr')
+					row.dataset.activityId = activity.id
+
+					activeColumns.forEach((name) => {
+						const cell = document.createElement('td')
+						const formatted = formatActivityValue(activity?.[name], activityFields?.[name], name)
+						if (formatted instanceof HTMLElement) {
+							cell.appendChild(formatted)
+						} else {
+							cell.textContent = formatted
+						}
+						row.appendChild(cell)
+					})
+
+					const actions = document.createElement('td')
+					const editButton = document.createElement('button')
+					editButton.type = 'button'
+					editButton.className = 'button'
+					editButton.textContent = 'Edit'
+					const deleteButton = document.createElement('button')
+					deleteButton.type = 'button'
+					deleteButton.className = 'button'
+					deleteButton.textContent = 'Delete'
+
+					const activityId = activity?.id
+					if (activityId === null || activityId === undefined) {
+						editButton.disabled = true
+						deleteButton.disabled = true
+					} else {
+						editButton.addEventListener('click', () => openActivityModal('edit', activityId))
+						deleteButton.addEventListener('click', () => openDeleteActivityModal(activityId, activity))
+					}
+
+					actions.appendChild(editButton)
+					actions.appendChild(deleteButton)
+					row.appendChild(actions)
+					activitiesBody.appendChild(row)
+				})
+			}
+
+			const parseQueryParams = (url) => {
+				if (!url || typeof url !== 'string') return null
+				const queryIndex = url.indexOf('?')
+				if (queryIndex === -1) return null
+				const params = new URLSearchParams(url.slice(queryIndex + 1))
+				const result = {}
+				params.forEach((value, key) => {
+					if (Object.prototype.hasOwnProperty.call(result, key)) {
+						if (Array.isArray(result[key])) {
+							result[key].push(value)
+						} else {
+							result[key] = [result[key], value]
+						}
+					} else {
+						result[key] = value
+					}
+				})
+				return result
+			}
+
+			const renderActivityPagination = (payload, itemCount) => {
+				if (!activitiesPagination || !activitiesPage || !activitiesPrev || !activitiesNext) return
+				const next = payload?.next ?? null
+				const previous = payload?.previous ?? null
+				const count = Number.isFinite(payload?.count) ? payload.count : null
+				nextParams = parseQueryParams(next)
+				prevParams = parseQueryParams(previous)
+
+				if (!nextParams && !prevParams && count === null) {
+					activitiesPagination.hidden = true
+					return
+				}
+
+				activitiesPagination.hidden = false
+				activitiesPrev.disabled = !prevParams || !schemaReady
+				activitiesNext.disabled = !nextParams || !schemaReady
+				activitiesPage.textContent = count !== null ? `${itemCount} of ${count}` : 'Pagination available'
+			}
+
+			const refreshActivities = async (params = null) => {
+				const schemaOk = await getSchemaReady('refresh activities')
+				logActivities('refresh schema gate', { ok: schemaOk })
+				if (!schemaOk) return
+				clearActivitiesNotes()
+
+				if (activitiesLoading) activitiesLoading.hidden = false
+
+				if (!activityListUrl) {
+					showActivitiesError('Activity list endpoint is not available.')
+					if (activitiesLoading) activitiesLoading.hidden = true
+					return
+				}
+
+				const result = await performJsonRequest('POST', activityListUrl, { body: params || {} })
+				if (activitiesLoading) activitiesLoading.hidden = true
+
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse activity list response.')
+					return
+				}
+				const okList = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!okList) {
+					const message = pickMessage(result.data, 'Unable to load activities.')
+					showActivitiesError(message)
+					return
+				}
+
+				const payload = unwrapResponseData(result.data)
+				const items = Array.isArray(payload) ? payload : (Array.isArray(payload?.results) ? payload.results : [])
+				renderActivityRows(items)
+				renderActivityPagination(payload, items.length)
+			}
+
+			const resolveModalFields = (mode) => {
+				const preferred = mode === 'edit' ? activityFieldsUpdate : activityFieldsCreate
+				if (preferred && typeof preferred === 'object' && Object.keys(preferred).length > 0) {
+					return preferred
+				}
+				return activityFields || {}
+			}
+
+			const openActivityModal = async (mode, activityId) => {
+				const schemaOk = await getSchemaReady(`${mode} activity`)
+				logActivities(`${mode} activity schema gate`, { ok: schemaOk })
+				if (!schemaOk) return
+				if (!activitiesModal || !activitiesModalFields || !activitiesModalTitle || !activitiesModalSave) return
+
+				clearActivitiesNotes()
+				modalMode = mode
+				modalInitial = {}
+				let existing = {}
+
+				if (mode === 'edit') {
+					const url = activityGetUrl.replace('__ID__', encodeURIComponent(activityId))
+					const result = await performJsonRequest('GET', url)
+					if (!result.parsed) {
+						showActivitiesError('Unable to parse activity response.')
+						return
+					}
+					const respOk = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!respOk) {
+						const message = pickMessage(result.data, 'Unable to load activity.')
+						showActivitiesError(message)
+						return
+					}
+					existing = unwrapResponseData(result.data) ?? {}
+					modalInitial = existing
+					selectedActivityId = activityId
+				}
+
+				activitiesModalTitle.textContent = mode === 'edit' ? 'Edit activity' : 'Create activity'
+				activitiesModalFields.innerHTML = ''
+
+				const fieldSet = resolveModalFields(mode)
+				const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
+
+				if (entries.length === 0) {
+					showActivitiesError('Activity schema did not return any writable fields.')
+					return
+				}
+
+				entries.forEach(([name, def]) => {
+					const row = document.createElement('div')
+					row.className = 'weather-apis-activities__field'
+
+					const label = document.createElement('label')
+					label.textContent = `${name}${def?.required ? ' *' : ''}`
+					row.appendChild(label)
+
+					let input = null
+
+					if (name === 'type' && def?.enum) {
+						input = document.createElement('select')
+						def.enum.forEach((enumVal) => {
+							const option = document.createElement('option')
+							option.value = enumVal
+							const typeConfig = TYPE_CONFIG[enumVal] || { label: enumVal }
+							option.textContent = typeConfig.label
+							if (existing?.[name] === enumVal) option.selected = true
+							input.appendChild(option)
+						})
+						if (existing?.[name] === undefined) {
+							const defaultOpt = document.createElement('option')
+							defaultOpt.value = ''
+							defaultOpt.textContent = 'Select type'
+							defaultOpt.selected = true
+							input.insertBefore(defaultOpt, input.firstChild)
+						}
+					} else if (name === 'recurrence_type' && def?.enum) {
+						input = document.createElement('select')
+						def.enum.forEach((enumVal) => {
+							const option = document.createElement('option')
+							option.value = enumVal
+							const recConfig = RECURRENCE_CONFIG[enumVal] || { label: enumVal }
+							option.textContent = recConfig.label
+							if (existing?.[name] === enumVal) option.selected = true
+							input.appendChild(option)
+						})
+						if (existing?.[name] === undefined) {
+							const defaultOpt = document.createElement('option')
+							defaultOpt.value = ''
+							defaultOpt.textContent = 'Select recurrence'
+							defaultOpt.selected = true
+							input.insertBefore(defaultOpt, input.firstChild)
+						}
+					} else if (name === 'farm') {
+						input = document.createElement('select')
+						const defaultOpt = document.createElement('option')
+						defaultOpt.value = ''
+						defaultOpt.textContent = 'Select farm'
+						defaultOpt.selected = true
+						input.appendChild(defaultOpt)
+						loadFarmsCache().then((farms) => {
+							farms.forEach((farm) => {
+								const option = document.createElement('option')
+								option.value = farm.id
+								option.textContent = farm.name || `Farm ${farm.id}`
+								if (existing?.[name] === farm.id) option.selected = true
+								input.appendChild(option)
+							})
+						})
+					} else if (name === 'metadata') {
+						input = document.createElement('textarea')
+						input.rows = 4
+						if (existing?.[name] !== undefined && existing?.[name] !== null) {
+							try {
+								input.value = JSON.stringify(existing[name], null, 2)
+							} catch {
+								input.value = String(existing[name])
+							}
+						}
+					} else if (def?.type === 'boolean') {
+						input = document.createElement('input')
+						input.type = 'checkbox'
+						input.checked = Boolean(existing?.[name])
+					} else if (def?.type === 'integer' || def?.type === 'number') {
+						input = document.createElement('input')
+						input.type = 'number'
+						input.step = def?.type === 'integer' ? '1' : 'any'
+						if (existing?.[name] !== undefined && existing?.[name] !== null) {
+							input.value = String(existing[name])
+						}
+					} else if (def?.format === 'date-time') {
+						input = document.createElement('input')
+						input.type = 'datetime-local'
+						if (existing?.[name]) {
+							const dt = new Date(existing[name])
+							if (!Number.isNaN(dt.getTime())) {
+								const offset = dt.getTimezoneOffset()
+								const localDt = new Date(dt.getTime() - offset * 60000)
+								input.value = localDt.toISOString().slice(0, 16)
+							}
+						}
+					} else {
+						input = document.createElement('input')
+						input.type = 'text'
+						if (existing?.[name] !== undefined && existing?.[name] !== null) {
+							input.value = String(existing[name])
+						}
+					}
+
+					if (input) {
+						input.dataset.fieldName = name
+						if (def?.required) input.required = true
+						row.appendChild(input)
+					}
+					activitiesModalFields.appendChild(row)
+				})
+
+				activitiesModal.hidden = false
+
+				activitiesModalSave.onclick = async () => {
+					const payload = {}
+					const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
+					let hasErrors = false
+
+					for (const [name, def] of entries) {
+						const input = activitiesModalFields.querySelector(`[data-field-name="${name}"]`)
+						if (!input) continue
+
+						let value = null
+
+						if (name === 'metadata') {
+							const rawValue = input.value.trim()
+							if (rawValue) {
+								try {
+									value = JSON.parse(rawValue)
+								} catch (e) {
+									showActivitiesError(`Invalid JSON in metadata: ${e.message}`)
+									hasErrors = true
+									continue
+								}
+							}
+						} else if (def?.type === 'boolean') {
+							value = Boolean(input.checked)
+						} else if (def?.type === 'integer' || def?.type === 'number') {
+							value = input.value === '' ? null : Number(input.value)
+						} else {
+							value = input.value !== undefined ? String(input.value).trim() : ''
+						}
+
+						if (mode === 'create') {
+							if (def?.required && (value === null || value === '')) {
+								showActivitiesError(`Missing required field: ${name}`)
+								hasErrors = true
+								continue
+							}
+							if (value !== null && value !== '') {
+								payload[name] = value
+							}
+						} else {
+							const initial = modalInitial?.[name]
+							const normalizedInitial = def?.type === 'boolean'
+								? Boolean(initial)
+								: (def?.type === 'integer' || def?.type === 'number')
+									? (initial === undefined || initial === null || initial === '' ? null : Number(initial))
+									: (initial === undefined || initial === null ? '' : String(initial))
+							const normalizedValue = def?.type === 'boolean'
+								? Boolean(value)
+								: (def?.type === 'integer' || def?.type === 'number')
+									? (value === null || value === '' ? null : Number(value))
+									: (value === null ? '' : String(value))
+							if (normalizedValue !== normalizedInitial) {
+								payload[name] = value
+							}
+						}
+					}
+
+					if (hasErrors) return
+
+					if (mode === 'edit' && Object.keys(payload).length === 0) {
+						showActivitiesError('No changes to save.')
+						return
+					}
+
+					const url = mode === 'edit'
+						? activityPatchUrl.replace('__ID__', encodeURIComponent(selectedActivityId))
+						: activityCreateUrl
+					const method = mode === 'edit' ? 'PATCH' : 'POST'
+					const result = await performJsonRequest(method, url, { body: payload })
+
+					if (!result.parsed) {
+						showActivitiesError('Unable to parse activity save response.')
+						return
+					}
+					const okSave = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!okSave) {
+						const message = pickMessage(result.data, 'Unable to save activity.')
+						showActivitiesError(message)
+						return
+					}
+
+					closeActivityModal()
+					await refreshActivities()
+					toast(mode === 'edit' ? 'Activity updated.' : 'Activity created.')
+				}
+			}
+
+			const closeActivityModal = () => {
+				if (activitiesModal) activitiesModal.hidden = true
+				selectedActivityId = null
+				modalInitial = {}
+			}
+
+			const openDeleteActivityModal = (activityId, activity) => {
+				if (!activitiesDeleteModal || !activitiesDeleteInfo) return
+				selectedActivityId = activityId
+				activitiesDeleteInfo.textContent = `Activity #${activityId} (${activity?.type || 'unknown'} at ${activity?.scheduled_at || 'N/A'})`
+				activitiesDeleteModal.hidden = false
+			}
+
+			const closeDeleteActivityModal = () => {
+				if (activitiesDeleteModal) activitiesDeleteModal.hidden = true
+				selectedActivityId = null
+			}
+
+			const deleteActivity = async () => {
+				if (!selectedActivityId) return
+
+				const url = activityDeleteUrl.replace('__ID__', encodeURIComponent(selectedActivityId))
+				const result = await performJsonRequest('DELETE', url)
+
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse delete response.')
+					return
+				}
+				const okDelete = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!okDelete) {
+					const message = pickMessage(result.data, 'Unable to delete activity.')
+					showActivitiesError(message)
+					return
+				}
+
+				closeDeleteActivityModal()
+				toast('Activity deleted.')
+				await refreshActivities()
+			}
+
+			if (activitiesRefresh) {
+				activitiesRefresh.addEventListener('click', () => refreshActivities())
+			}
+
+			if (activitiesCreateBtn) {
+				activitiesCreateBtn.addEventListener('click', () => openActivityModal('create', null))
+			}
+
+			if (activitiesModalClose) {
+				activitiesModalClose.addEventListener('click', closeActivityModal)
+			}
+
+			if (activitiesDeleteCancel) {
+				activitiesDeleteCancel.addEventListener('click', closeDeleteActivityModal)
+			}
+
+			if (activitiesDeleteConfirm) {
+				activitiesDeleteConfirm.addEventListener('click', deleteActivity)
+			}
+
+			if (activitiesPrev) {
+				activitiesPrev.addEventListener('click', () => {
+					if (prevParams) refreshActivities(prevParams)
+				})
+			}
+
+			if (activitiesNext) {
+				activitiesNext.addEventListener('click', () => {
+					if (nextParams) refreshActivities(nextParams)
+				})
+			}
+
+			refreshActivities()
+		}
+
 		setupFarms()
+		setupActivities()
 
 		const buildFormData = () => {
 			const formData = new FormData(form)

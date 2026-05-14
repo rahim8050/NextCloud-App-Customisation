@@ -37,6 +37,7 @@ final class DrfSchemaService {
 		'list' => 'v1_activities_list',
 		'create' => 'v1_activities_create',
 		'retrieve' => 'v1_activities_retrieve',
+		'update' => 'v1_activities_update',
 		'partial_update' => 'v1_activities_partial_update',
 		'destroy' => 'v1_activities_destroy',
 	];

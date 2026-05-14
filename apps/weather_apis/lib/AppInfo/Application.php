@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\WeatherApis\AppInfo;
 
+use OCA\WeatherApis\Controller\AdminActivitiesController;
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Controller\AdminFarmsController;
 use OCA\WeatherApis\Controller\ApiController;
@@ -188,6 +189,17 @@ final class Application extends App implements IBootstrap {
 				$c->get(WeatherApiClientInterface::class),
 				$c->get(IUserSession::class),
 				$c->get(IGroupManager::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(AdminActivitiesController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new AdminActivitiesController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(DrfSchemaService::class),
+				$c->get(WeatherApiClientInterface::class),
 				$logger,
 			);
 		});

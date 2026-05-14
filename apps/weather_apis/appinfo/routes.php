@@ -161,37 +161,37 @@ return [
 		// Activity endpoints
 		[
 			'name' => 'adminActivities#getSchema',
-			'url' => '/api/v1/admin/activities/schema',
+			'url' => '/api/v1/activities/schema',
 			'verb' => 'GET',
 		],
 		[
 			'name' => 'adminActivities#listActivities',
-			'url' => '/api/v1/admin/activities/list',
+			'url' => '/api/v1/activities/list',
 			'verb' => 'POST',
 		],
 		[
 			'name' => 'adminActivities#createActivity',
-			'url' => '/api/v1/admin/activities/create',
+			'url' => '/api/v1/activities/create',
 			'verb' => 'POST',
 		],
 		[
 			'name' => 'adminActivities#getActivity',
-			'url' => '/api/v1/admin/activities/{id}',
+			'url' => '/api/v1/activities/{id}',
 			'verb' => 'GET',
 		],
 		[
 			'name' => 'adminActivities#updateActivity',
-			'url' => '/api/v1/admin/activities/{id}',
+			'url' => '/api/v1/activities/{id}',
 			'verb' => 'PUT',
 		],
 		[
 			'name' => 'adminActivities#patchActivity',
-			'url' => '/api/v1/admin/activities/{id}',
+			'url' => '/api/v1/activities/{id}',
 			'verb' => 'PATCH',
 		],
 		[
 			'name' => 'adminActivities#deleteActivity',
-			'url' => '/api/v1/admin/activities/{id}',
+			'url' => '/api/v1/activities/{id}',
 			'verb' => 'DELETE',
 		],
 	],

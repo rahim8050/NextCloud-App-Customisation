@@ -118,7 +118,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			$bodyHash,
 		);
 
-		$signature = hash_hmac('sha256', $canonical, $secret);
+		$signature = base64_encode(hash_hmac('sha256', $canonical, $secret, true));
 		$this->logSigningContext(
 			$correlationId,
 			'GET',
@@ -418,7 +418,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 			throw new WeatherApiException($exception->getErrorCode(), $exception->getMessage(), $exception);
 		}
 
-		$signature = hash_hmac('sha256', $canonical, $secret);
+		$signature = base64_encode(hash_hmac('sha256', $canonical, $secret, true));
 		$this->logSigningContext(
 			$correlationId,
 			'POST',
