@@ -1511,6 +1511,10 @@
 	z-index: 999999 !important;
 }
 
+.weather-apis-radio__modal[hidden] {
+	display: none !important;
+}
+
 .weather-apis-radio__modal-card {
 	background: var(--color-main-background);
 	border-radius: 8px;
