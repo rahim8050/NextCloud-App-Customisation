@@ -476,67 +476,6 @@ style('weather_apis', 'admin-settings');
 			</div>
 		</div>
 
-		<div class="form-group weather-apis-activities" id="weather-apis-activities">
-			<div class="weather-apis-activities__header">
-				<div>
-					<strong><?php p($l->t('Activities')); ?></strong>
-					<p class="hint"><?php p($l->t('Manage scheduled activities from the DRF backend.')); ?></p>
-				</div>
-				<div class="weather-apis-activities__actions">
-					<button id="weather-apis-activities-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
-				</div>
-			</div>
-			<div id="weather-apis-activities-warning" class="weather-apis-activities__note warning" hidden></div>
-			<div id="weather-apis-activities-error" class="weather-apis-activities__note error" hidden></div>
-			<div id="weather-apis-activities-loading" class="weather-apis-activities__note" hidden><?php p($l->t('Loading activities...')); ?></div>
-			<div class="weather-apis-activities__table-wrap">
-				<table class="weather-apis-activities__table">
-					<thead>
-						<tr id="weather-apis-activities-columns"></tr>
-					</thead>
-					<tbody id="weather-apis-activities-body"></tbody>
-				</table>
-			</div>
-			<div class="weather-apis-activities__empty" id="weather-apis-activities-empty" hidden>
-				<p><?php p($l->t('No activities found.')); ?></p>
-			</div>
-			<div class="weather-apis-activities__pagination" id="weather-apis-activities-pagination" hidden>
-				<button id="weather-apis-activities-prev" type="button" class="button"><?php p($l->t('Previous')); ?></button>
-				<div id="weather-apis-activities-page" class="weather-apis-activities__page"></div>
-				<button id="weather-apis-activities-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
-			</div>
-			<div class="weather-apis-activities__modal" id="weather-apis-activities-modal" hidden>
-				<div class="weather-apis-activities__modal-card">
-					<div class="weather-apis-activities__modal-header">
-						<strong id="weather-apis-activities-modal-title"></strong>
-						<button id="weather-apis-activities-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
-					</div>
-					<div class="weather-apis-activities__modal-body">
-						<div id="weather-apis-activities-modal-fields" class="weather-apis-activities__modal-fields"></div>
-						<div id="weather-apis-activities-modal-errors" class="weather-apis-activities__modal-errors" hidden></div>
-					</div>
-					<div class="weather-apis-activities__modal-actions">
-						<button id="weather-apis-activities-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
-					</div>
-				</div>
-			</div>
-			<div class="weather-apis-activities__modal" id="weather-apis-activities-delete-modal" hidden>
-				<div class="weather-apis-activities__modal-card">
-					<div class="weather-apis-activities__modal-header">
-						<strong><?php p($l->t('Confirm Delete')); ?></strong>
-					</div>
-					<div class="weather-apis-activities__modal-body">
-						<p><?php p($l->t('Are you sure you want to delete this activity? This action cannot be undone.')); ?></p>
-						<p id="weather-apis-activities-delete-info"></p>
-					</div>
-					<div class="weather-apis-activities__modal-actions">
-						<button id="weather-apis-activities-delete-cancel" type="button" class="button"><?php p($l->t('Cancel')); ?></button>
-						<button id="weather-apis-activities-delete-confirm" type="button" class="button error"><?php p($l->t('Delete')); ?></button>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<div class="form-group">
 			<label for="weather-apis-timeout"><?php p($l->t('Timeout seconds')); ?></label>
 			<input id="weather-apis-timeout" type="number" name="timeoutSeconds" min="1" max="30" value="<?php p($_['timeoutSeconds']); ?>" required />

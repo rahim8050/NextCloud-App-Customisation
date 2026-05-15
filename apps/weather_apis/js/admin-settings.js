@@ -3328,11 +3328,6 @@
 			}
 
 			const loadActivities = async () => {
-				const schemaOk = await getSchemaReady('farm activities')
-				logFarms('activities schema gate', { ok: schemaOk })
-				if (!schemaOk) {
-					return
-				}
 				clearFarmsNotes()
 				clearActivitiesError()
 				if (!selectedFarm) {
@@ -5729,25 +5724,7 @@ const setupActivities = () => {
 		}
 
 		setupFarms()
-		setupActivities()
-
-		const buildFormData = () => {
-			const formData = new FormData(form)
-			formData.set('baseUrl', (baseUrlInput?.value ?? '').trim())
-			formData.set('clientId', (clientIdInput?.value ?? '').trim())
-			formData.set('apiKey', (apiKeyInput?.value ?? '').trim())
-			formData.set('hmacSecret', (hmacSecretInput?.value ?? '').trim())
-			formData.set('allowlistHosts', (allowlistInput?.value ?? '').trim())
-			formData.set('devAllowHttp', devAllowHttpInput?.checked ? '1' : '0')
-
-			const parsedTimeout = Number.parseInt(timeoutInput?.value ?? '10', 10)
-			const timeout = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? String(parsedTimeout) : '10'
-			formData.set('timeoutSeconds', timeout)
-
-			const token = resolveRequestToken()
-			if (token) {
-				formData.set('requesttoken', token)
-			}
+	}
 
 			return formData
 		}
