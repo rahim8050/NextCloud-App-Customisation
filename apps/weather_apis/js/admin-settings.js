@@ -3454,16 +3454,11 @@
 					return activityAllFields
 				}
 				return {
-					title: { type: 'string', required: true },
-					description: { type: 'string' },
-					type: { type: 'string' },
-					status: { type: 'string' },
-					priority: { type: 'string' },
-					scheduled_at: { type: 'string', format: 'date-time' },
-					due_at: { type: 'string', format: 'date-time' },
-					completed_at: { type: 'string', format: 'date-time' },
-					recurrence_type: { type: 'string' },
-					notes: { type: 'string' },
+					type: { type: 'string', required: true, enum: ['vaccination', 'fertilizer', 'irrigation', 'ndvi_trigger'] },
+					scheduled_at: { type: 'string', format: 'date-time', required: true },
+					recurrence_type: { type: 'string', enum: ['none', 'interval', 'cron'] },
+					interval_days: { type: 'integer' },
+					metadata: { type: 'object' },
 				}
 			}
 
@@ -3480,7 +3475,37 @@
 
 				let input = null
 
-				if (def?.enum) {
+				if (name === 'type' && def?.enum) {
+					input = document.createElement('select')
+					const defaultOpt = document.createElement('option')
+					defaultOpt.value = ''
+					defaultOpt.textContent = 'Select type'
+					defaultOpt.selected = true
+					input.appendChild(defaultOpt)
+					const typeLabels = { vaccination: 'Vaccination', fertilizer: 'Fertilizer', irrigation: 'Irrigation', ndvi_trigger: 'NDVI Trigger' }
+					def.enum.forEach((enumVal) => {
+						const option = document.createElement('option')
+						option.value = enumVal
+						option.textContent = typeLabels[enumVal] || enumVal
+						if (existing?.[name] === enumVal) option.selected = true
+						input.appendChild(option)
+					})
+				} else if (name === 'recurrence_type' && def?.enum) {
+					input = document.createElement('select')
+					const defaultOpt = document.createElement('option')
+					defaultOpt.value = ''
+					defaultOpt.textContent = 'Select recurrence'
+					defaultOpt.selected = true
+					input.appendChild(defaultOpt)
+					const recLabels = { none: 'One-time', interval: 'Interval', cron: 'Cron (future)' }
+					def.enum.forEach((enumVal) => {
+						const option = document.createElement('option')
+						option.value = enumVal
+						option.textContent = recLabels[enumVal] || enumVal
+						if (existing?.[name] === enumVal) option.selected = true
+						input.appendChild(option)
+					})
+				} else if (def?.enum) {
 					input = document.createElement('select')
 					const defaultOpt = document.createElement('option')
 					defaultOpt.value = ''
@@ -3652,6 +3677,9 @@
 					return
 				}
 				const isEdit = currentActivityId !== null
+				if (!isEdit) {
+					payload.farm = selectedFarm.id
+				}
 				const url = isEdit
 					? farmActivityUrl
 						.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
