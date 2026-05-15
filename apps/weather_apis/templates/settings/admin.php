@@ -235,18 +235,18 @@ style('weather_apis', 'admin-settings');
 						<button id="weather-apis-farms-activities-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
 					</div>
 				</div>
-				<div class="weather-apis-farms__modal" id="weather-apis-farms-activity-modal" hidden>
-					<div class="weather-apis-farms__modal-card">
-						<div class="weather-apis-farms__modal-header">
-							<strong id="weather-apis-farms-activity-modal-title"><?php p($l->t('Activity')); ?></strong>
-							<button id="weather-apis-farms-activity-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
-						</div>
-						<div class="weather-apis-farms__modal-body">
-							<div id="weather-apis-farms-activity-fields" class="weather-apis-farms__modal-fields"></div>
-						</div>
-						<div class="weather-apis-farms__modal-actions">
-							<button id="weather-apis-farms-activity-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
-						</div>
+			</div>
+			<div class="weather-apis-farms__modal" id="weather-apis-farms-activity-modal" hidden>
+				<div class="weather-apis-farms__modal-card">
+					<div class="weather-apis-farms__modal-header">
+						<strong id="weather-apis-farms-activity-modal-title"><?php p($l->t('Activity')); ?></strong>
+						<button id="weather-apis-farms-activity-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+					</div>
+					<div class="weather-apis-farms__modal-body">
+						<div id="weather-apis-farms-activity-fields" class="weather-apis-farms__modal-fields"></div>
+					</div>
+					<div class="weather-apis-farms__modal-actions">
+						<button id="weather-apis-farms-activity-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
 					</div>
 				</div>
 			</div>
