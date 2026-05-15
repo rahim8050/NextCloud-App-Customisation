@@ -945,9 +945,21 @@
 				radioError.hidden = false
 			}
 
+			const unwrapOcsEnvelope = (data) => {
+				if (data?.ocs?.data !== undefined) return data.ocs.data
+				return data
+			}
+
 			const unwrapResponseData = (data) => {
-				if (data && typeof data === 'object' && data.data !== undefined) return data.data
-				return data ?? {}
+				const unwrapped = unwrapOcsEnvelope(data)
+				if (unwrapped && typeof unwrapped === 'object' && unwrapped.data !== undefined) return unwrapped.data
+				return unwrapped ?? {}
+			}
+
+			const isOcsSuccess = (data) => {
+				if (data?.ocs?.meta?.status === 'ok') return true
+				const inner = unwrapOcsEnvelope(data)
+				return inner?.status === 'ok' || inner?.status === 0 || inner?.ok === true
 			}
 
 			const loadStations = async () => {
@@ -957,9 +969,10 @@
 				try {
 					const result = await performJsonRequest('GET', radioStationsUrl)
 					if (radioLoading) radioLoading.hidden = true
-					if (!result.parsed) { showRadioError('Unable to parse radio stations response.'); return }
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.status === 0 || result.data?.ok === true)
-					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio stations.'); return }
+					if (!result.parsed) { console.error('[weather_apis] radio parse failed', result.text); showRadioError('Unable to parse radio stations response.'); return }
+					console.info('[weather_apis] radio stations response', result.data)
+					const ok = isOcsSuccess(result.data)
+					if (!ok) { console.error('[weather_apis] radio not ok', result.data); showRadioError(result.data?.ocs?.meta?.message || result.data?.message || 'Unable to load radio stations.'); return }
 					stationsData = unwrapResponseData(result.data)
 					if (!Array.isArray(stationsData)) stationsData = []
 					renderStations()
@@ -978,8 +991,8 @@
 					const result = await performJsonRequest('GET', radioProvidersUrl)
 					if (radioLoading) radioLoading.hidden = true
 					if (!result.parsed) { showRadioError('Unable to parse radio providers response.'); return }
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.status === 0 || result.data?.ok === true)
-					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio providers.'); return }
+					const ok = isOcsSuccess(result.data)
+					if (!ok) { showRadioError(result.data?.ocs?.meta?.message || result.data?.message || 'Unable to load radio providers.'); return }
 					providersData = unwrapResponseData(result.data)
 					if (!Array.isArray(providersData)) providersData = []
 					renderProviders()
@@ -1089,7 +1102,7 @@
 				const url = radioStreamUrl.replace('__STATION_ID__', encodeURIComponent(station.id))
 				try {
 					const result = await performJsonRequest('GET', url)
-					if (!result.parsed || !result.response.ok) { showRadioError('Unable to get stream URL.'); return }
+					if (!result.parsed || !isOcsSuccess(result.data)) { showRadioError('Unable to get stream URL.'); return }
 					const data = unwrapResponseData(result.data)
 					const streamUrl = data?.stream_url || data?.data?.stream_url
 					if (!streamUrl) { showRadioError('No stream URL available.'); return }
