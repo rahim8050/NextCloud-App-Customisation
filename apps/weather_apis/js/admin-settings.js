@@ -3265,7 +3265,7 @@
 				const columns = Object.keys(items[0] || {})
 				columns.forEach((name) => {
 					const th = document.createElement('th')
-					th.textContent = formatHeaderLabel(name)
+					th.textContent = name
 					headerRow.appendChild(th)
 				})
 				const actionsTh = document.createElement('th')
