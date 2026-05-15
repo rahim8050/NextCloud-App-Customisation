@@ -3224,6 +3224,12 @@
 
 			let activitiesOffset = 0
 			let currentActivityId = null
+			let activityModalMode = 'create'
+			let activityModalInitial = {}
+			let activityCreateFields = {}
+			let activityUpdateFields = {}
+			let activityAllFields = {}
+			let activitySchemaLoaded = false
 			const activitiesLimit = 100
 
 			const clearActivitiesError = () => {
@@ -3412,51 +3418,165 @@
 					activitiesModal.hidden = true
 				}
 				currentActivityId = null
+				activityModalInitial = {}
 			}
 
-			const openActivityModal = (mode, activity = null) => {
-				currentActivityId = activity?.id ?? null
+			const loadActivitySchema = async () => {
+				if (activitySchemaLoaded) {
+					return true
+				}
+				const schemaOk = await getSchemaReady('activity schema')
+				if (!schemaOk) {
+					return false
+				}
+				try {
+					const opCreate = await getFarmOperation('activities_create', 'farm-activity-schema')
+					const opUpdate = await getFarmOperation('activities_update', 'farm-activity-schema')
+					const opRetrieve = await getFarmOperation('activities_retrieve', 'farm-activity-schema')
+					activityCreateFields = opCreate?.bodyFields || {}
+					activityUpdateFields = opUpdate?.bodyFields || {}
+					if (Object.keys(activityUpdateFields).length === 0) {
+						activityUpdateFields = activityCreateFields
+					}
+					const allFields = { ...activityCreateFields, ...activityUpdateFields }
+					activityAllFields = allFields
+					activitySchemaLoaded = true
+					return true
+				} catch (e) {
+					logFarms('activity schema load failed', { error: e.message })
+					return false
+				}
+			}
+
+			const resolveActivityModalFields = (mode) => {
+				const preferred = mode === 'edit' ? activityUpdateFields : activityCreateFields
+				if (preferred && typeof preferred === 'object' && Object.keys(preferred).length > 0) {
+					return preferred
+				}
+				return activityAllFields || {}
+			}
+
+			const renderActivityModalField = (name, def, existing) => {
+				if (!activitiesModalFields) return
+				if (def?.readOnly) return
+
+				const row = document.createElement('div')
+				row.className = 'weather-apis-farms__field'
+
+				const label = document.createElement('label')
+				label.textContent = `${name}${def?.required ? ' *' : ''}`
+				row.appendChild(label)
+
+				let input = null
+
+				if (def?.enum) {
+					input = document.createElement('select')
+					const defaultOpt = document.createElement('option')
+					defaultOpt.value = ''
+					defaultOpt.textContent = `Select ${name}`
+					defaultOpt.selected = true
+					input.appendChild(defaultOpt)
+					def.enum.forEach((enumVal) => {
+						const option = document.createElement('option')
+						option.value = enumVal
+						option.textContent = enumVal
+						if (existing?.[name] === enumVal) option.selected = true
+						input.appendChild(option)
+					})
+				} else if (def?.type === 'boolean') {
+					input = document.createElement('input')
+					input.type = 'checkbox'
+					input.checked = Boolean(existing?.[name])
+				} else if (def?.type === 'integer' || def?.type === 'number') {
+					input = document.createElement('input')
+					input.type = 'number'
+					input.step = def?.type === 'integer' ? '1' : 'any'
+					if (existing?.[name] !== undefined && existing?.[name] !== null) {
+						input.value = String(existing[name])
+					}
+				} else if (def?.format === 'date-time') {
+					input = document.createElement('input')
+					input.type = 'datetime-local'
+					if (existing?.[name]) {
+						const dt = new Date(existing[name])
+						if (!Number.isNaN(dt.getTime())) {
+							const offset = dt.getTimezoneOffset()
+							const localDt = new Date(dt.getTime() - offset * 60000)
+							input.value = localDt.toISOString().slice(0, 16)
+						}
+					}
+				} else if (name === 'metadata' || def?.type === 'object') {
+					input = document.createElement('textarea')
+					input.rows = 4
+					if (existing?.[name] !== undefined && existing?.[name] !== null) {
+						try {
+							input.value = JSON.stringify(existing[name], null, 2)
+						} catch {
+							input.value = String(existing[name])
+						}
+					}
+				} else {
+					input = document.createElement('input')
+					input.type = 'text'
+					if (existing?.[name] !== undefined && existing?.[name] !== null) {
+						input.value = String(existing[name])
+					}
+				}
+
+				if (input) {
+					input.dataset.fieldName = name
+					if (def?.required) input.required = true
+					row.appendChild(input)
+				}
+				activitiesModalFields.appendChild(row)
+			}
+
+			const openActivityModal = async (mode, activity = null) => {
+				const schemaOk = await loadActivitySchema()
+				if (!schemaOk) {
+					showActivitiesError('Unable to load activity schema.')
+					return
+				}
+
+				activityModalMode = mode
+				activityModalInitial = {}
+				let existing = {}
+
+				if (mode === 'edit' && activity?.id) {
+					currentActivityId = activity.id
+					const url = farmActivityUrl
+						.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+						.replace('__ACTIVITY_ID__', encodeURIComponent(activity.id))
+					const result = await performJsonRequest('GET', url)
+					if (!result.parsed) {
+						showActivitiesError('Unable to parse activity response.')
+						return
+					}
+					const respOk = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!respOk) {
+						const message = pickMessage(result.data, 'Unable to load activity.')
+						showActivitiesError(message)
+						return
+					}
+					existing = unwrapResponseData(result.data) ?? {}
+					activityModalInitial = existing
+				} else {
+					currentActivityId = null
+				}
+
 				if (activitiesModalTitle) {
 					activitiesModalTitle.textContent = mode === 'edit' ? 'Edit activity' : 'New activity'
 				}
 				if (activitiesModalFields) {
 					activitiesModalFields.innerHTML = ''
-					const fields = [
-						{ key: 'title', label: 'Title', type: 'text', required: true },
-						{ key: 'description', label: 'Description', type: 'textarea' },
-						{ key: 'type', label: 'Type', type: 'text' },
-						{ key: 'status', label: 'Status', type: 'text' },
-						{ key: 'priority', label: 'Priority', type: 'text' },
-						{ key: 'scheduled_at', label: 'Scheduled at', type: 'datetime-local' },
-						{ key: 'due_at', label: 'Due at', type: 'datetime-local' },
-						{ key: 'completed_at', label: 'Completed at', type: 'datetime-local' },
-						{ key: 'recurrence', label: 'Recurrence', type: 'text' },
-						{ key: 'notes', label: 'Notes', type: 'textarea' },
-					]
-					fields.forEach((field) => {
-						const wrap = document.createElement('div')
-						wrap.className = 'weather-apis-farms__field'
-						const label = document.createElement('label')
-						label.textContent = field.label
-						wrap.appendChild(label)
-						let input
-						if (field.type === 'textarea') {
-							input = document.createElement('textarea')
-							input.rows = 3
-						} else {
-							input = document.createElement('input')
-							input.type = field.type
-						}
-						input.id = `weather-apis-activity-${field.key}`
-						input.dataset.key = field.key
-						if (field.required) {
-							input.required = true
-						}
-						if (activity && activity[field.key] !== undefined && activity[field.key] !== null) {
-							input.value = String(activity[field.key])
-						}
-						wrap.appendChild(input)
-						activitiesModalFields.appendChild(wrap)
+					const fieldSet = resolveActivityModalFields(mode)
+					const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
+					if (entries.length === 0) {
+						showActivitiesError('Activity schema did not return any writable fields.')
+						return
+					}
+					entries.forEach(([name, def]) => {
+						renderActivityModalField(name, def, existing)
 					})
 				}
 				if (activitiesModal) {
@@ -3464,28 +3584,61 @@
 				}
 			}
 
-			const buildActivityPayload = () => {
+			const collectActivityPayload = () => {
 				const payload = {}
-				if (!activitiesModalFields) {
-					return payload
+				if (!activitiesModalFields) return payload
+				const fieldSet = resolveActivityModalFields(activityModalMode)
+				const entries = Object.entries(fieldSet).filter(([, def]) => !def?.readOnly)
+
+				for (const [name, def] of entries) {
+					const input = activitiesModalFields.querySelector(`[data-field-name="${name}"]`)
+					if (!input) continue
+
+					let value = null
+					if (name === 'metadata' || def?.type === 'object') {
+						const rawValue = input.value.trim()
+						if (rawValue) {
+							try {
+								value = JSON.parse(rawValue)
+							} catch {
+								value = rawValue
+							}
+						}
+					} else if (def?.type === 'boolean') {
+						value = Boolean(input.checked)
+					} else if (def?.type === 'integer' || def?.type === 'number') {
+						value = input.value === '' ? null : Number(input.value)
+					} else {
+						value = input.value !== undefined ? String(input.value).trim() : ''
+					}
+
+					if (activityModalMode === 'create') {
+						if (def?.required && (value === null || value === '')) {
+							showActivitiesError(`Missing required field: ${name}`)
+							return null
+						}
+						if (value !== null && value !== '') {
+							payload[name] = value
+						}
+					} else {
+						const initial = activityModalInitial?.[name]
+						const normalizedInitial = def?.type === 'boolean'
+							? Boolean(initial)
+							: def?.type === 'integer' || def?.type === 'number'
+								? (initial !== null && initial !== undefined ? Number(initial) : null)
+								: initial !== null && initial !== undefined ? String(initial) : ''
+						if (value !== normalizedInitial) {
+							payload[name] = value
+						}
+					}
 				}
-				const inputs = activitiesModalFields.querySelectorAll('input, textarea')
-				inputs.forEach((input) => {
-					const key = input.dataset.key
-					if (!key) {
-						return
-					}
-					const value = input.value.trim()
-					if (value !== '') {
-						payload[key] = value
-					}
-				})
 				return payload
 			}
 
 			const saveActivity = async () => {
 				clearActivitiesError()
-				const payload = buildActivityPayload()
+				const payload = collectActivityPayload()
+				if (payload === null) return
 				if (!selectedFarm) {
 					showActivitiesError('Select a farm first.')
 					return

@@ -484,7 +484,6 @@ style('weather_apis', 'admin-settings');
 				</div>
 				<div class="weather-apis-activities__actions">
 					<button id="weather-apis-activities-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
-					<button id="weather-apis-activities-create" type="button" class="button primary"><?php p($l->t('New activity')); ?></button>
 				</div>
 			</div>
 			<div id="weather-apis-activities-warning" class="weather-apis-activities__note warning" hidden></div>
