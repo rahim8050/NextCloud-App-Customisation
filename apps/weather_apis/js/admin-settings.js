@@ -3548,11 +3548,8 @@
 			}
 
 			const openActivityModal = async (mode, activity = null) => {
-				const schemaOk = await loadActivitySchema()
-				if (!schemaOk) {
-					showActivitiesError('Unable to load activity schema.')
-					return
-				}
+				clearActivitiesError()
+				await loadActivitySchema()
 
 				activityModalMode = mode
 				activityModalInitial = {}

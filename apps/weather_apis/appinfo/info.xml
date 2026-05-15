@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+  <id>weather_apis</id>
+  <name>Weather APIs</name>
+  <summary>DRF-backed weather integration for Nextcloud</summary>
+  <description>Nextcloud Weather APIs app integrating with the DRF backend.</description>
+  <licence>AGPL-3.0-or-later</licence>
+  <version>0.0.4</version>
+  <namespace>WeatherApis</namespace>
+  <type>app</type>
+
+  <dependencies>
+    <nextcloud min-version="32.0.0" max-version="32.99.99"/>
+  </dependencies>
+
+  <settings>
+    <admin>OCA\WeatherApis\Settings\AdminSettings</admin>
+    <admin-section>OCA\WeatherApis\Sections\AdminSection</admin-section>
+  </settings>
+
+
+</info>
