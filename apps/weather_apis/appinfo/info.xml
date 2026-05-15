@@ -6,7 +6,7 @@
   <summary>DRF-backed weather integration for Nextcloud</summary>
   <description>Nextcloud Weather APIs app integrating with the DRF backend.</description>
   <licence>AGPL-3.0-or-later</licence>
-  <version>0.0.5</version>
+  <version>0.0.3</version>
   <namespace>WeatherApis</namespace>
   <type>app</type>
 
