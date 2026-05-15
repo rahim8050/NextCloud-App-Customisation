@@ -949,6 +949,165 @@ final class AdminFarmsController extends Controller {
 		return $this->buildSuccessResponse($payload, 'Farm observation deleted.');
 	}
 
+	#[AdminRequired]
+	public function listFarmActivities(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('list farm activities', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('activities_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$queryDefs = $operation['queryParams'] ?? [];
+			if (!is_array($queryDefs)) {
+				$queryDefs = [];
+			}
+			$query = $this->buildListQueryParams($params, $queryDefs);
+			$this->logProxyRequest('list farm activities', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('list farm activities', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'list farm activities');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'list farm activities');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm activities loaded.');
+	}
+
+	#[AdminRequired]
+	public function createFarmActivity(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('create farm activity', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('activities_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], true);
+			$this->logProxyRequest('create farm activity', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body,
+				$requestId,
+			);
+			$this->logProxyResponse('create farm activity', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'create farm activity');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'create farm activity');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm activity created.');
+	}
+
+	#[AdminRequired]
+	public function getFarmActivity(string $farmId, string $activityId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get farm activity', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('activities_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'activity_id' => $activityId],
+			);
+			$this->logProxyRequest('get farm activity', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('get farm activity', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get farm activity');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get farm activity');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm activity loaded.');
+	}
+
+	#[AdminRequired]
+	public function patchFarmActivity(string $farmId, string $activityId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('patch farm activity', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('activities_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'activity_id' => $activityId],
+			);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('patch farm activity', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'),
+				$path,
+				[],
+				$body,
+				$requestId,
+			);
+			$this->logProxyResponse('patch farm activity', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'patch farm activity');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'patch farm activity');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm activity updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteFarmActivity(string $farmId, string $activityId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('delete farm activity', $requestId);
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('activities_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams(
+				$pathTemplate,
+				['farm_id' => $farmId, 'activity_id' => $activityId],
+			);
+			$this->logProxyRequest('delete farm activity', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'),
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('delete farm activity', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'delete farm activity');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'delete farm activity');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Farm activity deleted.');
+	}
+
 
 	private function logEndpointEntry(string $action, string $requestId): void {
 		$path = $this->request->getPathInfo();
