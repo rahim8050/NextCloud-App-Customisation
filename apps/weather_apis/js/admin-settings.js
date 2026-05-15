@@ -958,7 +958,7 @@
 					const result = await performJsonRequest('GET', radioStationsUrl)
 					if (radioLoading) radioLoading.hidden = true
 					if (!result.parsed) { showRadioError('Unable to parse radio stations response.'); return }
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.status === 0 || result.data?.ok === true)
 					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio stations.'); return }
 					stationsData = unwrapResponseData(result.data)
 					if (!Array.isArray(stationsData)) stationsData = []
@@ -978,7 +978,7 @@
 					const result = await performJsonRequest('GET', radioProvidersUrl)
 					if (radioLoading) radioLoading.hidden = true
 					if (!result.parsed) { showRadioError('Unable to parse radio providers response.'); return }
-					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.status === 0 || result.data?.ok === true)
 					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio providers.'); return }
 					providersData = unwrapResponseData(result.data)
 					if (!Array.isArray(providersData)) providersData = []
