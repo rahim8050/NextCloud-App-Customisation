@@ -3425,14 +3425,14 @@
 				if (activitySchemaLoaded) {
 					return true
 				}
-				const schemaOk = await getSchemaReady('activity schema')
+				const schemaOk = await getSchemaReady('farm activities')
 				if (!schemaOk) {
-					return false
+					activitySchemaLoaded = true
+					return true
 				}
 				try {
 					const opCreate = await getFarmOperation('activities_create', 'farm-activity-schema')
 					const opUpdate = await getFarmOperation('activities_update', 'farm-activity-schema')
-					const opRetrieve = await getFarmOperation('activities_retrieve', 'farm-activity-schema')
 					activityCreateFields = opCreate?.bodyFields || {}
 					activityUpdateFields = opUpdate?.bodyFields || {}
 					if (Object.keys(activityUpdateFields).length === 0) {
@@ -3440,12 +3440,14 @@
 					}
 					const allFields = { ...activityCreateFields, ...activityUpdateFields }
 					activityAllFields = allFields
-					activitySchemaLoaded = true
-					return true
 				} catch (e) {
-					logFarms('activity schema load failed', { error: e.message })
-					return false
+					logFarms('activity schema load failed, using empty fields', { error: e.message })
+					activityCreateFields = {}
+					activityUpdateFields = {}
+					activityAllFields = {}
 				}
+				activitySchemaLoaded = true
+				return true
 			}
 
 			const resolveActivityModalFields = (mode) => {
@@ -3453,7 +3455,21 @@
 				if (preferred && typeof preferred === 'object' && Object.keys(preferred).length > 0) {
 					return preferred
 				}
-				return activityAllFields || {}
+				if (activityAllFields && typeof activityAllFields === 'object' && Object.keys(activityAllFields).length > 0) {
+					return activityAllFields
+				}
+				return {
+					title: { type: 'string', required: true },
+					description: { type: 'string' },
+					type: { type: 'string' },
+					status: { type: 'string' },
+					priority: { type: 'string' },
+					scheduled_at: { type: 'string', format: 'date-time' },
+					due_at: { type: 'string', format: 'date-time' },
+					completed_at: { type: 'string', format: 'date-time' },
+					recurrence_type: { type: 'string' },
+					notes: { type: 'string' },
+				}
 			}
 
 			const renderActivityModalField = (name, def, existing) => {
