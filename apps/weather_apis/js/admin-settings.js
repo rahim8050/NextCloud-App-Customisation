@@ -2638,6 +2638,9 @@
 				if (farmsObservations) {
 					farmsObservations.hidden = true
 				}
+				if (farmsActivities) {
+					farmsActivities.hidden = true
+				}
 				if (farmsNdviTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
 					farmsNdviTitle.textContent = label
@@ -2926,6 +2929,9 @@
 				}
 				if (farmsWeather) {
 					farmsWeather.hidden = true
+				}
+				if (farmsActivities) {
+					farmsActivities.hidden = true
 				}
 				if (farmsObservationsTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
@@ -3854,6 +3860,9 @@
 				}
 				if (farmsObservations) {
 					farmsObservations.hidden = true
+				}
+				if (farmsActivities) {
+					farmsActivities.hidden = true
 				}
 				if (farmsWeatherTitle) {
 					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
