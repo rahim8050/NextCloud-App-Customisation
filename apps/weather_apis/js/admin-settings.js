@@ -3247,7 +3247,7 @@
 					return
 				}
 				const table = document.createElement('table')
-				table.className = 'weather-apis-farms__dynamic-table'
+				table.className = 'weather-apis-farms__table weather-apis-farms__table--sticky'
 				const thead = document.createElement('thead')
 				const headerRow = document.createElement('tr')
 				const columns = Object.keys(items[0] || {})

@@ -250,6 +250,7 @@ style('weather_apis', 'admin-settings');
 					</div>
 				</div>
 			</div>
+			<div class="weather-apis-farms__modal" id="weather-apis-farms-modal" hidden>
 				<div class="weather-apis-farms__modal-card">
 					<div class="weather-apis-farms__modal-header">
 						<strong id="weather-apis-farms-modal-title"></strong>

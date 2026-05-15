@@ -918,6 +918,13 @@
 	grid-column: 1 / -1;
 }
 
+.weather-apis-farms__activities {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+	grid-column: 1 / -1;
+}
+
 .weather-apis-farms__observations .weather-apis-farms__table td {
 	max-width: 220px;
 	overflow: hidden;
