@@ -476,6 +476,74 @@ style('weather_apis', 'admin-settings');
 			</div>
 		</div>
 
+		<div class="form-group weather-apis-radio" id="weather-apis-radio">
+			<div class="weather-apis-radio__header">
+				<div>
+					<strong><?php p($l->t('Radio')); ?></strong>
+					<p class="hint"><?php p($l->t('Browse and play radio stations from the DRF backend.')); ?></p>
+				</div>
+				<div class="weather-apis-radio__actions">
+					<button id="weather-apis-radio-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+				</div>
+			</div>
+			<div class="weather-apis-radio__tabs">
+				<button id="weather-apis-radio-stations-tab" type="button" class="button primary"><?php p($l->t('Stations')); ?></button>
+				<button id="weather-apis-radio-providers-tab" type="button" class="button"><?php p($l->t('Providers')); ?></button>
+			</div>
+			<div id="weather-apis-radio-loading" class="weather-apis-radio__note" hidden><?php p($l->t('Loading radio...')); ?></div>
+			<div id="weather-apis-radio-error" class="weather-apis-radio__note error" hidden></div>
+			<div id="weather-apis-radio-stations" class="weather-apis-radio__panel">
+				<div class="weather-apis-radio__filters">
+					<label for="weather-apis-radio-search"><?php p($l->t('Search')); ?></label>
+					<input id="weather-apis-radio-search" type="text" placeholder="<?php p($l->t('Filter by name, genre, or country')); ?>" />
+					<label for="weather-apis-radio-genre-filter"><?php p($l->t('Genre')); ?></label>
+					<select id="weather-apis-radio-genre-filter">
+						<option value=""><?php p($l->t('All genres')); ?></option>
+					</select>
+					<label for="weather-apis-radio-country-filter"><?php p($l->t('Country')); ?></label>
+					<select id="weather-apis-radio-country-filter">
+						<option value=""><?php p($l->t('All countries')); ?></option>
+					</select>
+				</div>
+				<div class="weather-apis-radio__table-wrap">
+					<table class="weather-apis-radio__table">
+						<thead>
+							<tr id="weather-apis-radio-stations-columns"></tr>
+						</thead>
+						<tbody id="weather-apis-radio-stations-body"></tbody>
+					</table>
+				</div>
+				<div id="weather-apis-radio-stations-empty" hidden>
+					<p><?php p($l->t('No stations found.')); ?></p>
+				</div>
+			</div>
+			<div id="weather-apis-radio-providers" class="weather-apis-radio__panel" hidden>
+				<div class="weather-apis-radio__table-wrap">
+					<table class="weather-apis-radio__table">
+						<thead>
+							<tr id="weather-apis-radio-providers-columns"></tr>
+						</thead>
+						<tbody id="weather-apis-radio-providers-body"></tbody>
+					</table>
+				</div>
+				<div id="weather-apis-radio-providers-empty" hidden>
+					<p><?php p($l->t('No providers found.')); ?></p>
+				</div>
+			</div>
+			<div class="weather-apis-radio__modal" id="weather-apis-radio-player-modal" hidden>
+				<div class="weather-apis-radio__modal-card">
+					<div class="weather-apis-radio__modal-header">
+						<strong id="weather-apis-radio-player-title"><?php p($l->t('Now Playing')); ?></strong>
+						<button id="weather-apis-radio-player-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+					</div>
+					<div class="weather-apis-radio__modal-body">
+						<div id="weather-apis-radio-player-info" class="weather-apis-radio__player-info"></div>
+						<audio id="weather-apis-radio-audio" controls style="width:100%;margin-top:12px;"></audio>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="form-group">
 			<label for="weather-apis-timeout"><?php p($l->t('Timeout seconds')); ?></label>
 			<input id="weather-apis-timeout" type="number" name="timeoutSeconds" min="1" max="30" value="<?php p($_['timeoutSeconds']); ?>" required />

@@ -899,6 +899,246 @@
 			}
 		}
 
+		const setupRadio = () => {
+			const radioRoot = document.getElementById('weather-apis-radio')
+			if (!radioRoot) return
+
+			const radioProvidersUrl = form.dataset.radioProvidersUrl || ''
+			const radioStationsUrl = form.dataset.radioStationsUrl || ''
+			const radioStationUrl = form.dataset.radioStationUrl || ''
+			const radioStreamUrl = form.dataset.radioStreamUrl || ''
+
+			const radioRefresh = document.getElementById('weather-apis-radio-refresh')
+			const radioStationsTab = document.getElementById('weather-apis-radio-stations-tab')
+			const radioProvidersTab = document.getElementById('weather-apis-radio-providers-tab')
+			const radioLoading = document.getElementById('weather-apis-radio-loading')
+			const radioError = document.getElementById('weather-apis-radio-error')
+			const radioStationsPanel = document.getElementById('weather-apis-radio-stations')
+			const radioProvidersPanel = document.getElementById('weather-apis-radio-providers')
+			const radioSearch = document.getElementById('weather-apis-radio-search')
+			const radioGenreFilter = document.getElementById('weather-apis-radio-genre-filter')
+			const radioCountryFilter = document.getElementById('weather-apis-radio-country-filter')
+			const radioStationsColumns = document.getElementById('weather-apis-radio-stations-columns')
+			const radioStationsBody = document.getElementById('weather-apis-radio-stations-body')
+			const radioStationsEmpty = document.getElementById('weather-apis-radio-stations-empty')
+			const radioProvidersColumns = document.getElementById('weather-apis-radio-providers-columns')
+			const radioProvidersBody = document.getElementById('weather-apis-radio-providers-body')
+			const radioProvidersEmpty = document.getElementById('weather-apis-radio-providers-empty')
+			const radioPlayerModal = document.getElementById('weather-apis-radio-player-modal')
+			const radioPlayerTitle = document.getElementById('weather-apis-radio-player-title')
+			const radioPlayerClose = document.getElementById('weather-apis-radio-player-close')
+			const radioPlayerInfo = document.getElementById('weather-apis-radio-player-info')
+			const radioAudio = document.getElementById('weather-apis-radio-audio')
+
+			let stationsData = []
+			let providersData = []
+			let activeTab = 'stations'
+
+			const clearRadioNotes = () => {
+				if (radioError) { radioError.textContent = ''; radioError.hidden = true }
+				if (radioLoading) radioLoading.hidden = true
+			}
+
+			const showRadioError = (msg) => {
+				if (!radioError) return
+				radioError.textContent = msg
+				radioError.hidden = false
+			}
+
+			const unwrapResponseData = (data) => {
+				if (data && typeof data === 'object' && data.data !== undefined) return data.data
+				return data ?? {}
+			}
+
+			const loadStations = async () => {
+				clearRadioNotes()
+				if (!radioStationsUrl) { showRadioError('Radio stations endpoint not available.'); return }
+				if (radioLoading) radioLoading.hidden = false
+				try {
+					const result = await performJsonRequest('GET', radioStationsUrl)
+					if (radioLoading) radioLoading.hidden = true
+					if (!result.parsed) { showRadioError('Unable to parse radio stations response.'); return }
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio stations.'); return }
+					stationsData = unwrapResponseData(result.data)
+					if (!Array.isArray(stationsData)) stationsData = []
+					renderStations()
+					populateFilters()
+				} catch (e) {
+					if (radioLoading) radioLoading.hidden = true
+					showRadioError('Failed to load radio stations.')
+				}
+			}
+
+			const loadProviders = async () => {
+				clearRadioNotes()
+				if (!radioProvidersUrl) { showRadioError('Radio providers endpoint not available.'); return }
+				if (radioLoading) radioLoading.hidden = false
+				try {
+					const result = await performJsonRequest('GET', radioProvidersUrl)
+					if (radioLoading) radioLoading.hidden = true
+					if (!result.parsed) { showRadioError('Unable to parse radio providers response.'); return }
+					const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+					if (!ok) { showRadioError(result.data?.message || 'Unable to load radio providers.'); return }
+					providersData = unwrapResponseData(result.data)
+					if (!Array.isArray(providersData)) providersData = []
+					renderProviders()
+				} catch (e) {
+					if (radioLoading) radioLoading.hidden = true
+					showRadioError('Failed to load radio providers.')
+				}
+			}
+
+			const renderStations = () => {
+				if (!radioStationsBody || !radioStationsColumns) return
+				const query = (radioSearch?.value || '').toLowerCase()
+				const genre = radioGenreFilter?.value || ''
+				const country = radioCountryFilter?.value || ''
+				const filtered = stationsData.filter(s => {
+					if (genre && s.genre !== genre) return false
+					if (country && s.country !== country) return false
+					if (query) {
+						const text = `${s.name} ${s.genre} ${s.country} ${s.provider_name || ''}`.toLowerCase()
+						if (!text.includes(query)) return false
+					}
+					return true
+				})
+				radioStationsColumns.innerHTML = ''
+				radioStationsBody.innerHTML = ''
+				if (filtered.length === 0) {
+					if (radioStationsEmpty) radioStationsEmpty.hidden = false
+					return
+				}
+				if (radioStationsEmpty) radioStationsEmpty.hidden = true
+				const cols = ['name', 'provider_name', 'genre', 'country', 'language', 'format', 'bitrate']
+				cols.forEach(c => {
+					const th = document.createElement('th')
+					th.textContent = c.replace(/_/g, ' ')
+					radioStationsColumns.appendChild(th)
+				})
+				const th = document.createElement('th')
+				th.textContent = 'Play'
+				radioStationsColumns.appendChild(th)
+				filtered.forEach(station => {
+					const tr = document.createElement('tr')
+					cols.forEach(c => {
+						const td = document.createElement('td')
+						td.textContent = station[c] || '—'
+						tr.appendChild(td)
+					})
+					const playTd = document.createElement('td')
+					const playBtn = document.createElement('button')
+					playBtn.type = 'button'
+					playBtn.className = 'button'
+					playBtn.textContent = 'Play'
+					playBtn.addEventListener('click', () => playStation(station))
+					playTd.appendChild(playBtn)
+					tr.appendChild(playTd)
+					radioStationsBody.appendChild(tr)
+				})
+			}
+
+			const renderProviders = () => {
+				if (!radioProvidersBody || !radioProvidersColumns) return
+				radioProvidersColumns.innerHTML = ''
+				radioProvidersBody.innerHTML = ''
+				if (providersData.length === 0) {
+					if (radioProvidersEmpty) radioProvidersEmpty.hidden = false
+					return
+				}
+				if (radioProvidersEmpty) radioProvidersEmpty.hidden = true
+				const cols = ['name', 'slug', 'website_url']
+				cols.forEach(c => {
+					const th = document.createElement('th')
+					th.textContent = c.replace(/_/g, ' ')
+					radioProvidersColumns.appendChild(th)
+				})
+				providersData.forEach(p => {
+					const tr = document.createElement('tr')
+					cols.forEach(c => {
+						const td = document.createElement('td')
+						td.textContent = p[c] || '—'
+						tr.appendChild(td)
+					})
+					radioProvidersBody.appendChild(tr)
+				})
+			}
+
+			const populateFilters = () => {
+				if (!radioGenreFilter || !radioCountryFilter) return
+				const genres = [...new Set(stationsData.map(s => s.genre).filter(Boolean))].sort()
+				const countries = [...new Set(stationsData.map(s => s.country).filter(Boolean))].sort()
+				radioGenreFilter.innerHTML = '<option value="">All genres</option>'
+				genres.forEach(g => {
+					const opt = document.createElement('option')
+					opt.value = g
+					opt.textContent = g
+					radioGenreFilter.appendChild(opt)
+				})
+				radioCountryFilter.innerHTML = '<option value="">All countries</option>'
+				countries.forEach(c => {
+					const opt = document.createElement('option')
+					opt.value = c
+					opt.textContent = c
+					radioCountryFilter.appendChild(opt)
+				})
+			}
+
+			const playStation = async (station) => {
+				if (!radioStreamUrl || !radioPlayerModal) return
+				const url = radioStreamUrl.replace('__STATION_ID__', encodeURIComponent(station.id))
+				try {
+					const result = await performJsonRequest('GET', url)
+					if (!result.parsed || !result.response.ok) { showRadioError('Unable to get stream URL.'); return }
+					const data = unwrapResponseData(result.data)
+					const streamUrl = data?.stream_url || data?.data?.stream_url
+					if (!streamUrl) { showRadioError('No stream URL available.'); return }
+					if (radioPlayerTitle) radioPlayerTitle.textContent = station.name
+					if (radioPlayerInfo) {
+						radioPlayerInfo.innerHTML = `<p><strong>${station.name}</strong> — ${station.genre || 'Unknown genre'} (${station.country || 'Unknown'})</p><p>Format: ${station.format || 'MP3'} · ${station.bitrate || 128}kbps</p>`
+					}
+					if (radioAudio) {
+						radioAudio.src = streamUrl
+						radioAudio.play().catch(() => {})
+					}
+					radioPlayerModal.hidden = false
+				} catch (e) {
+					showRadioError('Failed to load stream URL.')
+				}
+			}
+
+			const closePlayerModal = () => {
+				if (radioPlayerModal) radioPlayerModal.hidden = true
+				if (radioAudio) { radioAudio.pause(); radioAudio.src = '' }
+			}
+
+			const switchTab = (tab) => {
+				activeTab = tab
+				if (tab === 'stations') {
+					if (radioStationsPanel) radioStationsPanel.hidden = false
+					if (radioProvidersPanel) radioProvidersPanel.hidden = true
+					if (radioStationsTab) { radioStationsTab.classList.add('primary') }
+					if (radioProvidersTab) radioProvidersTab.classList.remove('primary')
+				} else {
+					if (radioStationsPanel) radioStationsPanel.hidden = true
+					if (radioProvidersPanel) radioProvidersPanel.hidden = false
+					if (radioStationsTab) radioStationsTab.classList.remove('primary')
+					if (radioProvidersTab) radioProvidersTab.classList.add('primary')
+				}
+			}
+
+			if (radioRefresh) radioRefresh.addEventListener('click', () => { loadStations(); loadProviders() })
+			if (radioStationsTab) radioStationsTab.addEventListener('click', () => switchTab('stations'))
+			if (radioProvidersTab) radioProvidersTab.addEventListener('click', () => switchTab('providers'))
+			if (radioSearch) radioSearch.addEventListener('input', renderStations)
+			if (radioGenreFilter) radioGenreFilter.addEventListener('change', renderStations)
+			if (radioCountryFilter) radioCountryFilter.addEventListener('change', renderStations)
+			if (radioPlayerClose) radioPlayerClose.addEventListener('click', closePlayerModal)
+
+			loadStations()
+			loadProviders()
+		}
+
 		const setupFarms = () => {
 			if (!farmsRoot) {
 				return
@@ -5752,6 +5992,7 @@ const setupActivities = () => {
 		}
 
 		setupFarms()
+		setupRadio()
 
 		const buildFormData = () => {
 			const formData = new FormData(form)

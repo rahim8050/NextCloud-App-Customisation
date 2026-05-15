@@ -219,6 +219,28 @@ return [
 			'url' => '/api/v1/activities/{id}',
 			'verb' => 'DELETE',
 		],
+		// Radio endpoints
+		[
+			'name' => 'adminRadio#listProviders',
+			'url' => '/api/v1/admin/radio/providers',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#listStations',
+			'url' => '/api/v1/admin/radio/stations',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getStation',
+			'url' => '/api/v1/admin/radio/stations/{stationId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getStreamUrl',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/stream',
+			'verb' => 'GET',
+		],
+	
 	],
 	'ocs' => [
 		[

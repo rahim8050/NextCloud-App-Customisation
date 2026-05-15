@@ -1412,3 +1412,123 @@
 		padding: 8px;
 	}
 }
+
+/* Radio section */
+.weather-apis-radio {
+	display: grid;
+	gap: 12px;
+}
+
+.weather-apis-radio__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.weather-apis-radio__header .hint {
+	margin: 0;
+}
+
+.weather-apis-radio__tabs {
+	display: flex;
+	gap: 8px;
+}
+
+.weather-apis-radio__note {
+	padding: 8px 12px;
+	border-radius: 4px;
+	background: var(--color-background-hover);
+}
+
+.weather-apis-radio__note.error {
+	background: var(--color-error);
+	color: var(--color-error-text);
+}
+
+.weather-apis-radio__panel {
+	display: grid;
+	gap: 12px;
+}
+
+.weather-apis-radio__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.weather-apis-radio__filters label {
+	font-weight: 600;
+}
+
+.weather-apis-radio__filters input[type="text"] {
+	flex: 1;
+	min-width: 200px;
+}
+
+.weather-apis-radio__filters select {
+	min-width: 150px;
+}
+
+.weather-apis-radio__table-wrap {
+	overflow-x: auto;
+}
+
+.weather-apis-radio__table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.weather-apis-radio__table th,
+.weather-apis-radio__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.weather-apis-radio__table th {
+	background: var(--color-background-hover);
+	font-weight: 600;
+	position: sticky;
+	top: 0;
+}
+
+.weather-apis-radio__table tbody tr:hover {
+	background: var(--color-background-hover);
+}
+
+.weather-apis-radio__modal {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.weather-apis-radio__modal-card {
+	background: var(--color-main-background);
+	border-radius: 8px;
+	padding: 20px;
+	max-width: 500px;
+	width: 90%;
+	max-height: 80vh;
+	overflow-y: auto;
+}
+
+.weather-apis-radio__modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.weather-apis-radio__modal-body {
+	min-height: 100px;
+}
+
+.weather-apis-radio__player-info p {
+	margin: 4px 0;
+}

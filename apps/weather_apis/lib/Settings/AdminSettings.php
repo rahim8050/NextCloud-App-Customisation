@@ -87,6 +87,10 @@ final class AdminSettings implements IDelegatedSettings {
 			'activityUpdateUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminActivities.updateActivity', ['id' => '__ID__']),
 			'activityPatchUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminActivities.patchActivity', ['id' => '__ID__']),
 			'activityDeleteUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminActivities.deleteActivity', ['id' => '__ID__']),
+			'radioProvidersUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.listProviders'),
+			'radioStationsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.listStations'),
+			'radioStationUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStation', ['stationId' => '__STATION_ID__']),
+			'radioStreamUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']),
 		]);
 	}
 
