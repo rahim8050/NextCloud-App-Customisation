@@ -1134,6 +1134,11 @@
 			if (radioGenreFilter) radioGenreFilter.addEventListener('change', renderStations)
 			if (radioCountryFilter) radioCountryFilter.addEventListener('change', renderStations)
 			if (radioPlayerClose) radioPlayerClose.addEventListener('click', closePlayerModal)
+			if (radioPlayerModal) {
+				radioPlayerModal.addEventListener('click', (e) => {
+					if (e.target === radioPlayerModal) closePlayerModal()
+				})
+			}
 
 			loadStations()
 			loadProviders()
