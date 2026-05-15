@@ -1108,6 +1108,7 @@
 			}
 
 			const closePlayerModal = () => {
+				console.info('[weather_apis] closing radio player modal')
 				if (radioPlayerModal) radioPlayerModal.hidden = true
 				if (radioAudio) { radioAudio.pause(); radioAudio.src = '' }
 			}
