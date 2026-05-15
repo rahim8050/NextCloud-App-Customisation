@@ -50,6 +50,8 @@
 		const farmStateUrl = form.dataset.farmStateUrl || ''
 		const farmObservationsUrl = form.dataset.farmObservationsUrl || ''
 		const farmObservationUrl = form.dataset.farmObservationUrl || ''
+		const farmActivitiesUrl = form.dataset.farmActivitiesUrl || ''
+		const farmActivityUrl = form.dataset.farmActivityUrl || ''
 		const credentialsPanel = document.getElementById('weather-apis-credentials-result')
 		const generatedClientIdInput = document.getElementById('weather-apis-generated-client-id')
 		const generatedSecretInput = document.getElementById('weather-apis-generated-secret')
@@ -115,12 +117,30 @@
 		const farmsObservationsPrev = document.getElementById('weather-apis-farms-observations-prev')
 		const farmsObservationsNext = document.getElementById('weather-apis-farms-observations-next')
 		const farmsObservationsPage = document.getElementById('weather-apis-farms-observations-page')
+		const farmsActivities = document.getElementById('weather-apis-farms-activities')
+		const farmsActivitiesTitle = document.getElementById('weather-apis-farms-activities-title')
+		const farmsActivitiesError = document.getElementById('weather-apis-farms-activities-error')
+		const farmsActivitiesTable = document.getElementById('weather-apis-farms-activities-table')
+		const farmsActivitiesPagination = document.getElementById('weather-apis-farms-activities-pagination')
+		const farmsActivitiesPrev = document.getElementById('weather-apis-farms-activities-prev')
+		const farmsActivitiesNext = document.getElementById('weather-apis-farms-activities-next')
+		const farmsActivitiesPage = document.getElementById('weather-apis-farms-activities-page')
 		const observationsStartInput = document.getElementById('weather-apis-observations-start')
 		const observationsEndInput = document.getElementById('weather-apis-observations-end')
 		const observationsTypeInput = document.getElementById('weather-apis-observations-type')
 		const observationsLimitInput = document.getElementById('weather-apis-observations-limit')
 		const observationsRefresh = document.getElementById('weather-apis-observations-refresh')
 		const observationsCreate = document.getElementById('weather-apis-observations-create')
+		const activitiesStatusInput = document.getElementById('weather-apis-activities-status')
+		const activitiesTypeFilterInput = document.getElementById('weather-apis-activities-type-filter')
+		const activitiesLimitInput = document.getElementById('weather-apis-activities-limit')
+		const activitiesRefresh = document.getElementById('weather-apis-activities-refresh')
+		const activitiesCreate = document.getElementById('weather-apis-activities-create')
+		const activitiesModal = document.getElementById('weather-apis-farms-activity-modal')
+		const activitiesModalTitle = document.getElementById('weather-apis-farms-activity-modal-title')
+		const activitiesModalClose = document.getElementById('weather-apis-farms-activity-modal-close')
+		const activitiesModalSave = document.getElementById('weather-apis-farms-activity-modal-save')
+		const activitiesModalFields = document.getElementById('weather-apis-farms-activity-fields')
 		const observationsModal = document.getElementById('weather-apis-farms-observation-modal')
 		const observationsModalTitle = document.getElementById('weather-apis-farms-observation-modal-title')
 		const observationsModalClose = document.getElementById('weather-apis-farms-observation-modal-close')
@@ -1220,6 +1240,10 @@
 					observationsButton.type = 'button'
 					observationsButton.className = 'button'
 					observationsButton.textContent = 'Observations'
+					const activitiesButton = document.createElement('button')
+					activitiesButton.type = 'button'
+					activitiesButton.className = 'button'
+					activitiesButton.textContent = 'Activities'
 
 					const farmId = resolveFarmId(farm)
 					if (farmId === null) {
@@ -1229,6 +1253,7 @@
 						ndviButton.disabled = true
 						weatherButton.disabled = true
 						observationsButton.disabled = true
+						activitiesButton.disabled = true
 					} else {
 						editButton.addEventListener('click', () => openFarmModal('edit', farmId))
 						deleteButton.addEventListener('click', () => deleteFarm(farmId))
@@ -1236,6 +1261,7 @@
 						ndviButton.addEventListener('click', () => openNdviPanel(farmId, farm))
 						weatherButton.addEventListener('click', () => openWeatherPanel(farmId, farm))
 						observationsButton.addEventListener('click', () => openObservationsPanel(farmId, farm))
+						activitiesButton.addEventListener('click', () => openActivitiesPanel(farmId, farm))
 					}
 
 					actions.appendChild(editButton)
@@ -1244,6 +1270,7 @@
 					actions.appendChild(ndviButton)
 					actions.appendChild(weatherButton)
 					actions.appendChild(observationsButton)
+					actions.appendChild(activitiesButton)
 					row.appendChild(actions)
 					farmsBody.appendChild(row)
 				})
@@ -3189,6 +3216,331 @@
 				await loadObservations()
 			}
 
+			let activitiesOffset = 0
+			let currentActivityId = null
+			const activitiesLimit = 100
+
+			const clearActivitiesError = () => {
+				if (farmsActivitiesError) {
+					farmsActivitiesError.hidden = true
+					farmsActivitiesError.textContent = ''
+				}
+			}
+
+			const showActivitiesError = (message) => {
+				if (!farmsActivitiesError) {
+					return
+				}
+				farmsActivitiesError.textContent = message
+				farmsActivitiesError.hidden = false
+			}
+
+			const renderActivitiesTable = (items) => {
+				if (!farmsActivitiesTable) {
+					return
+				}
+				farmsActivitiesTable.innerHTML = ''
+				if (!Array.isArray(items) || items.length === 0) {
+					const p = document.createElement('p')
+					p.textContent = 'No activities found.'
+					farmsActivitiesTable.appendChild(p)
+					return
+				}
+				const table = document.createElement('table')
+				table.className = 'weather-apis-farms__dynamic-table'
+				const thead = document.createElement('thead')
+				const headerRow = document.createElement('tr')
+				const columns = Object.keys(items[0] || {})
+				columns.forEach((name) => {
+					const th = document.createElement('th')
+					th.textContent = formatHeaderLabel(name)
+					headerRow.appendChild(th)
+				})
+				const actionsTh = document.createElement('th')
+				actionsTh.textContent = 'Actions'
+				headerRow.appendChild(actionsTh)
+				thead.appendChild(headerRow)
+				table.appendChild(thead)
+				const tbody = document.createElement('tbody')
+				items.forEach((item) => {
+					const row = document.createElement('tr')
+					columns.forEach((name) => {
+						const td = document.createElement('td')
+						td.textContent = formatActivityValue(item?.[name], name)
+						row.appendChild(td)
+					})
+					const actionsTd = document.createElement('td')
+					const editBtn = document.createElement('button')
+					editBtn.type = 'button'
+					editBtn.className = 'button'
+					editBtn.textContent = 'Edit'
+					editBtn.addEventListener('click', () => openActivityModal('edit', item))
+					const deleteBtn = document.createElement('button')
+					deleteBtn.type = 'button'
+					deleteBtn.className = 'button'
+					deleteBtn.textContent = 'Delete'
+					deleteBtn.addEventListener('click', () => deleteActivity(item?.id))
+					actionsTd.appendChild(editBtn)
+					actionsTd.appendChild(deleteBtn)
+					row.appendChild(actionsTd)
+					tbody.appendChild(row)
+				})
+				table.appendChild(tbody)
+				farmsActivitiesTable.appendChild(table)
+			}
+
+			const setActivitiesPagination = (count) => {
+				if (!farmsActivitiesPagination || !farmsActivitiesPage) {
+					return
+				}
+				if (count <= 0) {
+					farmsActivitiesPagination.hidden = true
+					return
+				}
+				farmsActivitiesPagination.hidden = false
+				farmsActivitiesPage.textContent = `Offset ${activitiesOffset} · ${count} items`
+				if (farmsActivitiesPrev) {
+					farmsActivitiesPrev.disabled = activitiesOffset <= 0
+					farmsActivitiesPrev.onclick = () => {
+						activitiesOffset = Math.max(0, activitiesOffset - activitiesLimit)
+						loadActivities()
+					}
+				}
+				if (farmsActivitiesNext) {
+					farmsActivitiesNext.disabled = count < activitiesLimit
+					farmsActivitiesNext.onclick = () => {
+						activitiesOffset += activitiesLimit
+						loadActivities()
+					}
+				}
+			}
+
+			const loadActivities = async () => {
+				const schemaOk = await getSchemaReady('farm activities')
+				logFarms('activities schema gate', { ok: schemaOk })
+				if (!schemaOk) {
+					return
+				}
+				clearFarmsNotes()
+				clearActivitiesError()
+				if (!selectedFarm) {
+					showActivitiesError('Select a farm first.')
+					return
+				}
+				if (!farmActivitiesUrl) {
+					showActivitiesError('Farm activities endpoint is not available.')
+					return
+				}
+				const url = farmActivitiesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const limitValue = Number.parseInt(activitiesLimitInput?.value || '', 10)
+				const limit = Number.isFinite(limitValue) && limitValue > 0 ? Math.min(limitValue, 500) : activitiesLimit
+				const result = await performJsonRequest('GET', url, {
+					query: {
+						status: activitiesStatusInput?.value || undefined,
+						type: activitiesTypeFilterInput?.value || undefined,
+						limit,
+						offset: activitiesOffset,
+					},
+				})
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse activities response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to load activities.')
+					showActivitiesError(message)
+					return
+				}
+				const payload = unwrapResponseData(result.data)
+				const normalized = payload && payload.data !== undefined ? payload.data : payload
+				const items = Array.isArray(normalized)
+					? normalized
+					: Array.isArray(normalized?.results) ? normalized.results : []
+				renderActivitiesTable(items)
+				setActivitiesPagination(items.length)
+			}
+
+			const openActivitiesPanel = (farmId, farm) => {
+				selectedFarm = { id: farmId, data: farm }
+				activitiesOffset = 0
+				currentActivityId = null
+				if (activitiesLimitInput && !activitiesLimitInput.value) {
+					activitiesLimitInput.value = String(activitiesLimit)
+				}
+				if (farmsActivities) {
+					farmsActivities.hidden = false
+				}
+				if (farmsNdvi) {
+					farmsNdvi.hidden = true
+				}
+				if (farmsWeather) {
+					farmsWeather.hidden = true
+				}
+				if (farmsObservations) {
+					farmsObservations.hidden = true
+				}
+				if (farmsActivitiesTitle) {
+					const label = farm?.name ? `${farm.name} (#${farmId})` : `Farm #${farmId}`
+					farmsActivitiesTitle.textContent = label
+				}
+				loadActivities()
+			}
+
+			const formatActivityValue = (value, key = '') => {
+				if (value === null || value === undefined) {
+					return '—'
+				}
+				if (typeof value === 'object') {
+					try {
+						return JSON.stringify(value)
+					} catch {
+						return String(value)
+					}
+				}
+				return String(value)
+			}
+
+			const closeActivityModal = () => {
+				if (activitiesModal) {
+					activitiesModal.hidden = true
+				}
+				currentActivityId = null
+			}
+
+			const openActivityModal = (mode, activity = null) => {
+				currentActivityId = activity?.id ?? null
+				if (activitiesModalTitle) {
+					activitiesModalTitle.textContent = mode === 'edit' ? 'Edit activity' : 'New activity'
+				}
+				if (activitiesModalFields) {
+					activitiesModalFields.innerHTML = ''
+					const fields = [
+						{ key: 'title', label: 'Title', type: 'text', required: true },
+						{ key: 'description', label: 'Description', type: 'textarea' },
+						{ key: 'type', label: 'Type', type: 'text' },
+						{ key: 'status', label: 'Status', type: 'text' },
+						{ key: 'priority', label: 'Priority', type: 'text' },
+						{ key: 'scheduled_at', label: 'Scheduled at', type: 'datetime-local' },
+						{ key: 'due_at', label: 'Due at', type: 'datetime-local' },
+						{ key: 'completed_at', label: 'Completed at', type: 'datetime-local' },
+						{ key: 'recurrence', label: 'Recurrence', type: 'text' },
+						{ key: 'notes', label: 'Notes', type: 'textarea' },
+					]
+					fields.forEach((field) => {
+						const wrap = document.createElement('div')
+						wrap.className = 'weather-apis-farms__field'
+						const label = document.createElement('label')
+						label.textContent = field.label
+						wrap.appendChild(label)
+						let input
+						if (field.type === 'textarea') {
+							input = document.createElement('textarea')
+							input.rows = 3
+						} else {
+							input = document.createElement('input')
+							input.type = field.type
+						}
+						input.id = `weather-apis-activity-${field.key}`
+						input.dataset.key = field.key
+						if (field.required) {
+							input.required = true
+						}
+						if (activity && activity[field.key] !== undefined && activity[field.key] !== null) {
+							input.value = String(activity[field.key])
+						}
+						wrap.appendChild(input)
+						activitiesModalFields.appendChild(wrap)
+					})
+				}
+				if (activitiesModal) {
+					activitiesModal.hidden = false
+				}
+			}
+
+			const buildActivityPayload = () => {
+				const payload = {}
+				if (!activitiesModalFields) {
+					return payload
+				}
+				const inputs = activitiesModalFields.querySelectorAll('input, textarea')
+				inputs.forEach((input) => {
+					const key = input.dataset.key
+					if (!key) {
+						return
+					}
+					const value = input.value.trim()
+					if (value !== '') {
+						payload[key] = value
+					}
+				})
+				return payload
+			}
+
+			const saveActivity = async () => {
+				clearActivitiesError()
+				const payload = buildActivityPayload()
+				if (!selectedFarm) {
+					showActivitiesError('Select a farm first.')
+					return
+				}
+				const isEdit = currentActivityId !== null
+				const url = isEdit
+					? farmActivityUrl
+						.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+						.replace('__ACTIVITY_ID__', encodeURIComponent(currentActivityId))
+					: farmActivitiesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const method = isEdit ? 'PATCH' : 'POST'
+				const result = await performJsonRequest(method, url, { body: payload })
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, isEdit ? 'Unable to update activity.' : 'Unable to create activity.')
+					showActivitiesError(message)
+					toast(message)
+					return
+				}
+				toast(pickMessage(result.data, 'Activity saved.'))
+				closeActivityModal()
+				await loadActivities()
+			}
+
+			const deleteActivity = async (activityId) => {
+				clearActivitiesError()
+				if (!selectedFarm) {
+					showActivitiesError('Select a farm first.')
+					return
+				}
+				if (!farmActivityUrl) {
+					showActivitiesError('Farm activities endpoint is not available.')
+					return
+				}
+				const confirmed = await confirmDeleteAsync()
+				if (!confirmed) {
+					return
+				}
+				const url = farmActivityUrl
+					.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					.replace('__ACTIVITY_ID__', encodeURIComponent(activityId))
+				const result = await performJsonRequest('DELETE', url)
+				if (!result.parsed) {
+					showActivitiesError('Unable to parse delete response.')
+					return
+				}
+				const ok = result.response.ok && (result.data?.status === 'ok' || result.data?.ok === true)
+				if (!ok) {
+					const message = pickMessage(result.data, 'Unable to delete activity.')
+					showActivitiesError(message)
+					toast(message)
+					return
+				}
+				toast(pickMessage(result.data, 'Activity deleted.'))
+				await loadActivities()
+			}
+
 			const formatWeatherNumber = (value, digits = 1) => formatNdviNumber(value, digits)
 
 			const parseWeatherDateInfo = (value) => {
@@ -3616,6 +3968,38 @@
 				farmsObservationsNext.addEventListener('click', () => {
 					observationsOffset += observationsLimit
 					loadObservations()
+				})
+			}
+			if (activitiesRefresh) {
+				activitiesRefresh.addEventListener('click', () => {
+					activitiesOffset = 0
+					loadActivities()
+				})
+			}
+			if (activitiesCreate) {
+				activitiesCreate.addEventListener('click', () => {
+					openActivityModal('create')
+				})
+			}
+			if (activitiesModalClose) {
+				activitiesModalClose.addEventListener('click', closeActivityModal)
+			}
+			if (activitiesModalSave) {
+				activitiesModalSave.addEventListener('click', saveActivity)
+			}
+			if (farmsActivitiesPrev) {
+				farmsActivitiesPrev.addEventListener('click', () => {
+					if (activitiesOffset <= 0) {
+						return
+					}
+					activitiesOffset = Math.max(0, activitiesOffset - activitiesLimit)
+					loadActivities()
+				})
+			}
+			if (farmsActivitiesNext) {
+				farmsActivitiesNext.addEventListener('click', () => {
+					activitiesOffset += activitiesLimit
+					loadActivities()
 				})
 			}
 			if (farmsModalClose) {

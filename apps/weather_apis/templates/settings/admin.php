@@ -4,7 +4,7 @@ style('weather_apis', 'admin-settings');
 <div id="weather-apis-settings-root" class="section weather-apis-settings">
 	<h1><?php p($l->t('Weather APIs')); ?></h1>
 
-	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>" data-farm-state-url="<?php p($_['farmStateUrl']); ?>" data-farm-observations-url="<?php p($_['farmObservationsUrl']); ?>" data-farm-observation-url="<?php p($_['farmObservationUrl']); ?>" data-activity-schema-url="<?php p($_['activitySchemaUrl']); ?>" data-activity-list-url="<?php p($_['activityListUrl']); ?>" data-activity-create-url="<?php p($_['activityCreateUrl']); ?>" data-activity-get-url="<?php p($_['activityGetUrl']); ?>" data-activity-update-url="<?php p($_['activityUpdateUrl']); ?>" data-activity-patch-url="<?php p($_['activityPatchUrl']); ?>" data-activity-delete-url="<?php p($_['activityDeleteUrl']); ?>">
+	<form id="weather-apis-settings-form" class="weather-apis-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>" data-farm-state-url="<?php p($_['farmStateUrl']); ?>" data-farm-observations-url="<?php p($_['farmObservationsUrl']); ?>" data-farm-observation-url="<?php p($_['farmObservationUrl']); ?>" data-farm-activities-url="<?php p($_['farmActivitiesUrl']); ?>" data-farm-activity-url="<?php p($_['farmActivityUrl']); ?>" data-activity-schema-url="<?php p($_['activitySchemaUrl']); ?>" data-activity-list-url="<?php p($_['activityListUrl']); ?>" data-activity-create-url="<?php p($_['activityCreateUrl']); ?>" data-activity-get-url="<?php p($_['activityGetUrl']); ?>" data-activity-update-url="<?php p($_['activityUpdateUrl']); ?>" data-activity-patch-url="<?php p($_['activityPatchUrl']); ?>" data-activity-delete-url="<?php p($_['activityDeleteUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -212,8 +212,44 @@ style('weather_apis', 'admin-settings');
 						<button id="weather-apis-farms-observations-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
 					</div>
 				</div>
+				<div class="weather-apis-farms__activities" id="weather-apis-farms-activities" hidden>
+					<div class="weather-apis-farms__weather-header">
+						<strong><?php p($l->t('Activities')); ?></strong>
+						<span id="weather-apis-farms-activities-title" class="weather-apis-farms__weather-title"></span>
+					</div>
+					<div class="weather-apis-farms__ndvi-row">
+						<label for="weather-apis-activities-status"><?php p($l->t('Status')); ?></label>
+						<input id="weather-apis-activities-status" type="text" />
+						<label for="weather-apis-activities-type-filter"><?php p($l->t('Type')); ?></label>
+						<input id="weather-apis-activities-type-filter" type="text" />
+						<label for="weather-apis-activities-limit"><?php p($l->t('Limit')); ?></label>
+						<input id="weather-apis-activities-limit" type="number" min="1" max="500" />
+						<button id="weather-apis-activities-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+						<button id="weather-apis-activities-create" type="button" class="button primary"><?php p($l->t('New activity')); ?></button>
+					</div>
+					<div id="weather-apis-farms-activities-error" class="weather-apis-farms__note error" hidden></div>
+					<div id="weather-apis-farms-activities-table" class="weather-apis-farms__weather-table"></div>
+					<div class="weather-apis-farms__pagination" id="weather-apis-farms-activities-pagination" hidden>
+						<button id="weather-apis-farms-activities-prev" type="button" class="button"><?php p($l->t('Previous')); ?></button>
+						<div id="weather-apis-farms-activities-page" class="weather-apis-farms__page"></div>
+						<button id="weather-apis-farms-activities-next" type="button" class="button"><?php p($l->t('Next')); ?></button>
+					</div>
+				</div>
+				<div class="weather-apis-farms__modal" id="weather-apis-farms-activity-modal" hidden>
+					<div class="weather-apis-farms__modal-card">
+						<div class="weather-apis-farms__modal-header">
+							<strong id="weather-apis-farms-activity-modal-title"><?php p($l->t('Activity')); ?></strong>
+							<button id="weather-apis-farms-activity-modal-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
+						</div>
+						<div class="weather-apis-farms__modal-body">
+							<div id="weather-apis-farms-activity-fields" class="weather-apis-farms__modal-fields"></div>
+						</div>
+						<div class="weather-apis-farms__modal-actions">
+							<button id="weather-apis-farms-activity-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="weather-apis-farms__modal" id="weather-apis-farms-modal" hidden>
 				<div class="weather-apis-farms__modal-card">
 					<div class="weather-apis-farms__modal-header">
 						<strong id="weather-apis-farms-modal-title"></strong>
