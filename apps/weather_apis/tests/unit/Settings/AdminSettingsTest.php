@@ -87,7 +87,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(26))
+		$urlGenerator->expects($this->exactly(39))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -116,6 +116,19 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminFarms.getFarmState', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.listFarmObservations', ['farmId' => '__FARM_ID__']],
 				['weather_apis.adminFarms.getFarmObservation', ['farmId' => '__FARM_ID__', 'observationId' => '__OBSERVATION_ID__']],
+				['weather_apis.adminFarms.listFarmActivities', ['farmId' => '__FARM_ID__']],
+				['weather_apis.adminFarms.getFarmActivity', ['farmId' => '__FARM_ID__', 'activityId' => '__ACTIVITY_ID__']],
+				['weather_apis.adminActivities.getSchema'],
+				['weather_apis.adminActivities.listActivities'],
+				['weather_apis.adminActivities.createActivity'],
+				['weather_apis.adminActivities.getActivity', ['id' => '__ID__']],
+				['weather_apis.adminActivities.updateActivity', ['id' => '__ID__']],
+				['weather_apis.adminActivities.patchActivity', ['id' => '__ID__']],
+				['weather_apis.adminActivities.deleteActivity', ['id' => '__ID__']],
+				['weather_apis.adminRadio.listProviders'],
+				['weather_apis.adminRadio.listStations'],
+				['weather_apis.adminRadio.getStation', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
@@ -144,6 +157,19 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/state',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations',
 				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/activities',
+				'/apps/weather_apis/api/v1/admin/farms/__FARM_ID__/activities/__ACTIVITY_ID__',
+				'/apps/weather_apis/api/v1/admin/activities/schema',
+				'/apps/weather_apis/api/v1/admin/activities/list',
+				'/apps/weather_apis/api/v1/admin/activities/create',
+				'/apps/weather_apis/api/v1/admin/activities/__ID__',
+				'/apps/weather_apis/api/v1/admin/activities/__ID__',
+				'/apps/weather_apis/api/v1/admin/activities/__ID__',
+				'/apps/weather_apis/api/v1/admin/activities/__ID__',
+				'/apps/weather_apis/api/v1/admin/radio/providers',
+				'/apps/weather_apis/api/v1/admin/radio/stations',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/stream',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);

@@ -530,15 +530,52 @@ style('weather_apis', 'admin-settings');
 					<p><?php p($l->t('No providers found.')); ?></p>
 				</div>
 			</div>
-			<div class="weather-apis-radio__modal" id="weather-apis-radio-player-modal" hidden>
-				<div class="weather-apis-radio__modal-card">
-					<div class="weather-apis-radio__modal-header">
-						<strong id="weather-apis-radio-player-title"><?php p($l->t('Now Playing')); ?></strong>
-						<button id="weather-apis-radio-player-close" type="button" class="button"><?php p($l->t('Close')); ?></button>
-					</div>
-					<div class="weather-apis-radio__modal-body">
-						<div id="weather-apis-radio-player-info" class="weather-apis-radio__player-info"></div>
-						<audio id="weather-apis-radio-audio" controls style="width:100%;margin-top:12px;"></audio>
+			<div class="weather-apis-radio__player" id="weather-apis-radio-player" hidden>
+				<div class="weather-apis-radio__player-bar">
+					<img id="weather-apis-radio-bar-logo" src="" alt="" class="weather-apis-radio__bar-logo" hidden />
+					<span id="weather-apis-radio-bar-title" class="weather-apis-radio__bar-title"></span>
+					<button id="weather-apis-radio-bar-play" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Play')); ?>">
+						<svg id="weather-apis-radio-bar-icon-play" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7Z"/></svg>
+						<svg id="weather-apis-radio-bar-icon-pause" viewBox="0 0 24 24" width="20" height="20" hidden><path fill="currentColor" d="M6 19h4V5H6v14Zm8-14v14h4V5h-4Z"/></svg>
+					</button>
+					<button id="weather-apis-radio-bar-expand" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Expand')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7 14l5-5 5 5H7Z"/></svg>
+					</button>
+					<button id="weather-apis-radio-bar-close" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Close')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+					</button>
+				</div>
+				<div class="weather-apis-radio__modal" id="weather-apis-radio-player-modal" hidden>
+					<div class="weather-apis-radio__modal-card">
+						<button id="weather-apis-radio-player-close" type="button" class="weather-apis-radio__modal-close" aria-label="<?php p($l->t('Close')); ?>">
+							<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+						</button>
+						<button id="weather-apis-radio-player-minimize" type="button" class="weather-apis-radio__modal-minimize" aria-label="<?php p($l->t('Minimize')); ?>">
+							<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7 10l5 5 5-5H7Z"/></svg>
+						</button>
+						<div class="weather-apis-radio__modal-body">
+							<div class="weather-apis-radio__player-art">
+								<img id="weather-apis-radio-player-logo" src="" alt="" hidden />
+								<div id="weather-apis-radio-player-icon" class="weather-apis-radio__player-icon">
+									<svg viewBox="0 0 24 24" width="48" height="48"><path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
+								</div>
+							</div>
+							<div class="weather-apis-radio__player-meta">
+								<strong id="weather-apis-radio-player-title"><?php p($l->t('Now Playing')); ?></strong>
+								<span id="weather-apis-radio-player-subtitle" class="weather-apis-radio__player-subtitle"></span>
+							</div>
+							<div class="weather-apis-radio__player-controls">
+								<button id="weather-apis-radio-player-play" type="button" class="weather-apis-radio__play-btn" aria-label="<?php p($l->t('Play')); ?>">
+									<svg id="weather-apis-radio-icon-play" viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M8 5v14l11-7Z"/></svg>
+									<svg id="weather-apis-radio-icon-pause" viewBox="0 0 24 24" width="32" height="32" hidden><path fill="currentColor" d="M6 19h4V5H6v14Zm8-14v14h4V5h-4Z"/></svg>
+								</button>
+								<div class="weather-apis-radio__volume">
+									<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3Z"/></svg>
+									<input id="weather-apis-radio-volume" type="range" min="0" max="100" value="80" class="weather-apis-radio__volume-slider" aria-label="<?php p($l->t('Volume')); ?>" />
+								</div>
+							</div>
+							<audio id="weather-apis-radio-audio" hidden></audio>
+						</div>
 					</div>
 				</div>
 			</div>

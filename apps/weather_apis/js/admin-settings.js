@@ -903,6 +903,40 @@
 			const radioRoot = document.getElementById('weather-apis-radio')
 			if (!radioRoot) return
 
+			const radioPlayer = document.getElementById('weather-apis-radio-player')
+			const radioPlayerModal = document.getElementById('weather-apis-radio-player-modal')
+			const radioPlayerTitle = document.getElementById('weather-apis-radio-player-title')
+			const radioPlayerSubtitle = document.getElementById('weather-apis-radio-player-subtitle')
+			const radioPlayerClose = document.getElementById('weather-apis-radio-player-close')
+			const radioPlayerMinimize = document.getElementById('weather-apis-radio-player-minimize')
+			const radioPlayerLogo = document.getElementById('weather-apis-radio-player-logo')
+			const radioPlayerIcon = document.getElementById('weather-apis-radio-player-icon')
+			const radioPlayerPlay = document.getElementById('weather-apis-radio-player-play')
+			const radioIconPlay = document.getElementById('weather-apis-radio-icon-play')
+			const radioIconPause = document.getElementById('weather-apis-radio-icon-pause')
+			const radioVolume = document.getElementById('weather-apis-radio-volume')
+			const radioAudio = document.getElementById('weather-apis-radio-audio')
+
+			const radioBarLogo = document.getElementById('weather-apis-radio-bar-logo')
+			const radioBarTitle = document.getElementById('weather-apis-radio-bar-title')
+			const radioBarPlay = document.getElementById('weather-apis-radio-bar-play')
+			const radioBarIconPlay = document.getElementById('weather-apis-radio-bar-icon-play')
+			const radioBarIconPause = document.getElementById('weather-apis-radio-bar-icon-pause')
+			const radioBarExpand = document.getElementById('weather-apis-radio-bar-expand')
+			const radioBarClose = document.getElementById('weather-apis-radio-bar-close')
+
+			const loadHlsJs = () => {
+				if (window.Hls) return Promise.resolve()
+				return new Promise((resolve, reject) => {
+					const s = document.createElement('script')
+					s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
+					s.onload = resolve
+					s.onerror = reject
+					document.head.appendChild(s)
+				})
+			}
+			loadHlsJs().catch(() => { console.warn('[weather_apis] failed to load HLS.js') })
+
 			const radioProvidersUrl = form.dataset.radioProvidersUrl || ''
 			const radioStationsUrl = form.dataset.radioStationsUrl || ''
 			const radioStationUrl = form.dataset.radioStationUrl || ''
@@ -924,11 +958,6 @@
 			const radioProvidersColumns = document.getElementById('weather-apis-radio-providers-columns')
 			const radioProvidersBody = document.getElementById('weather-apis-radio-providers-body')
 			const radioProvidersEmpty = document.getElementById('weather-apis-radio-providers-empty')
-			const radioPlayerModal = document.getElementById('weather-apis-radio-player-modal')
-			const radioPlayerTitle = document.getElementById('weather-apis-radio-player-title')
-			const radioPlayerClose = document.getElementById('weather-apis-radio-player-close')
-			const radioPlayerInfo = document.getElementById('weather-apis-radio-player-info')
-			const radioAudio = document.getElementById('weather-apis-radio-audio')
 
 			let stationsData = []
 			let providersData = []
@@ -952,7 +981,15 @@
 
 			const unwrapResponseData = (data) => {
 				const unwrapped = unwrapOcsEnvelope(data)
-				if (unwrapped && typeof unwrapped === 'object' && unwrapped.data !== undefined) return unwrapped.data
+				if (unwrapped && typeof unwrapped === 'object' && unwrapped.data !== undefined) {
+					const inner = unwrapped.data
+					if (Array.isArray(inner)) return inner
+					if (inner && typeof inner === 'object') {
+						if (Array.isArray(inner.results)) return inner.results
+						if (Array.isArray(inner.data)) return inner.data
+					}
+					return inner
+				}
 				return unwrapped ?? {}
 			}
 
@@ -1097,33 +1134,128 @@
 				})
 			}
 
+			let hlsInstance = null
+
 			const playStation = async (station) => {
 				if (!radioStreamUrl || !radioPlayerModal) return
 				const url = radioStreamUrl.replace('__STATION_ID__', encodeURIComponent(station.id))
 				try {
 					const result = await performJsonRequest('GET', url)
-					if (!result.parsed || !isOcsSuccess(result.data)) { showRadioError('Unable to get stream URL.'); return }
+					console.info('[weather_apis] radio stream response', result.data)
+					if (!result.parsed || !isOcsSuccess(result.data)) { console.error('[weather_apis] stream not ok', result.data); showRadioError('Unable to get stream URL.'); return }
 					const data = unwrapResponseData(result.data)
-					const streamUrl = data?.stream_url || data?.data?.stream_url
-					if (!streamUrl) { showRadioError('No stream URL available.'); return }
+					console.info('[weather_apis] unwrapped stream data', data)
+					let streamUrl = data?.stream_url || data?.data?.stream_url || data?.url
+					if (!streamUrl) { console.error('[weather_apis] no stream URL in', data); showRadioError('No stream URL available.'); return }
+					if (streamUrl.startsWith('http://') && window.location.protocol === 'https:') {
+						streamUrl = streamUrl.replace('http://', 'https://')
+					}
+					console.info('[weather_apis] playing stream', streamUrl)
+					const updateBarLogo = () => {
+						if (radioBarLogo) {
+							if (station.logo_url) {
+								radioBarLogo.src = station.logo_url
+								radioBarLogo.hidden = false
+							} else {
+								radioBarLogo.hidden = true
+							}
+						}
+					}
 					if (radioPlayerTitle) radioPlayerTitle.textContent = station.name
-					if (radioPlayerInfo) {
-						radioPlayerInfo.innerHTML = `<p><strong>${station.name}</strong> — ${station.genre || 'Unknown genre'} (${station.country || 'Unknown'})</p><p>Format: ${station.format || 'MP3'} · ${station.bitrate || 128}kbps</p>`
+					if (radioBarTitle) radioBarTitle.textContent = station.name
+					if (radioPlayerSubtitle) radioPlayerSubtitle.textContent = `${station.genre || 'Unknown genre'} · ${station.country || 'Unknown'}`
+					if (radioPlayerLogo) {
+						if (station.logo_url) {
+							radioPlayerLogo.src = station.logo_url
+							radioPlayerLogo.hidden = false
+							radioPlayerIcon.hidden = true
+						} else {
+							radioPlayerLogo.hidden = true
+							radioPlayerIcon.hidden = false
+						}
 					}
+					updateBarLogo()
 					if (radioAudio) {
-						radioAudio.src = streamUrl
-						radioAudio.play().catch(() => {})
+						if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null }
+						radioAudio.src = ''
+						const isHls = streamUrl.includes('.m3u8')
+						if (isHls && Hls && Hls.isSupported()) {
+							console.info('[weather_apis] using HLS.js for stream')
+							hlsInstance = new Hls()
+							hlsInstance.loadSource(streamUrl)
+							hlsInstance.attachMedia(radioAudio)
+							hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+								radioAudio.play().catch(err => { console.error('[weather_apis] audio play failed', err) })
+								updatePlayPauseIcon(true)
+							})
+							hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+								console.error('[weather_apis] HLS.js error', data.type, data.details, data.fatal, data)
+								if (!data.fatal) {
+									if (data.type === Hls.ErrorTypes.NETWORK_ERROR) { hlsInstance.startLoad() }
+									else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) { hlsInstance.recoverMediaError() }
+									return
+								}
+								const msg = data.details === 'manifestLoadError' ? 'Stream manifest blocked (CORS/geo-restriction).' : 'Stream playback failed.'
+								showRadioError(msg)
+							})
+						} else if (isHls && radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
+							console.info('[weather_apis] using native HLS (Safari)')
+							radioAudio.src = streamUrl
+							radioAudio.play().catch(err => { console.error('[weather_apis] audio play failed', err) })
+							updatePlayPauseIcon(true)
+						} else {
+							console.info('[weather_apis] using direct audio playback')
+							radioAudio.src = streamUrl
+							radioAudio.play().catch(err => { console.error('[weather_apis] audio play failed', err) })
+							updatePlayPauseIcon(true)
+						}
 					}
-					radioPlayerModal.hidden = false
+					if (radioPlayer) {
+						radioPlayer.hidden = false
+						if (radioPlayer.parentElement !== document.body) {
+							document.body.appendChild(radioPlayer)
+						}
+						console.info('[weather_apis] player shown, parent:', radioPlayer.parentElement?.tagName)
+					}
 				} catch (e) {
+					console.error('[weather_apis] stream load error', e)
 					showRadioError('Failed to load stream URL.')
 				}
 			}
 
-			const closePlayerModal = () => {
-				console.info('[weather_apis] closing radio player modal')
+			const updatePlayPauseIcon = (isPlaying) => {
+				if (radioIconPlay) radioIconPlay.hidden = isPlaying
+				if (radioIconPause) radioIconPause.hidden = !isPlaying
+				if (radioBarIconPlay) radioBarIconPlay.hidden = isPlaying
+				if (radioBarIconPause) radioBarIconPause.hidden = !isPlaying
+			}
+
+			const togglePlayPause = () => {
+				if (!radioAudio) return
+				if (radioAudio.paused) {
+					radioAudio.play().catch(() => {})
+					updatePlayPauseIcon(true)
+				} else {
+					radioAudio.pause()
+					updatePlayPauseIcon(false)
+				}
+			}
+
+			const minimizePlayer = () => {
 				if (radioPlayerModal) radioPlayerModal.hidden = true
+			}
+
+			const expandPlayer = () => {
+				if (radioPlayerModal) radioPlayerModal.hidden = false
+			}
+
+			const closePlayer = () => {
+				console.info('[weather_apis] closing radio player')
+				if (radioPlayer) radioPlayer.hidden = true
+				if (radioPlayerModal) radioPlayerModal.hidden = true
+				if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null }
 				if (radioAudio) { radioAudio.pause(); radioAudio.src = '' }
+				updatePlayPauseIcon(false)
 			}
 
 			const switchTab = (tab) => {
@@ -1147,10 +1279,21 @@
 			if (radioSearch) radioSearch.addEventListener('input', renderStations)
 			if (radioGenreFilter) radioGenreFilter.addEventListener('change', renderStations)
 			if (radioCountryFilter) radioCountryFilter.addEventListener('change', renderStations)
-			if (radioPlayerClose) radioPlayerClose.addEventListener('click', closePlayerModal)
+			if (radioPlayerClose) radioPlayerClose.addEventListener('click', closePlayer)
+			if (radioPlayerMinimize) radioPlayerMinimize.addEventListener('click', minimizePlayer)
+			if (radioPlayerPlay) radioPlayerPlay.addEventListener('click', togglePlayPause)
+			if (radioBarPlay) radioBarPlay.addEventListener('click', togglePlayPause)
+			if (radioBarExpand) radioBarExpand.addEventListener('click', expandPlayer)
+			if (radioBarClose) radioBarClose.addEventListener('click', closePlayer)
+			if (radioVolume) radioVolume.addEventListener('input', () => { if (radioAudio) radioAudio.volume = radioVolume.value / 100 })
+			if (radioAudio) {
+				radioAudio.volume = 0.8
+				radioAudio.addEventListener('play', () => updatePlayPauseIcon(true))
+				radioAudio.addEventListener('pause', () => updatePlayPauseIcon(false))
+			}
 			if (radioPlayerModal) {
 				radioPlayerModal.addEventListener('click', (e) => {
-					if (e.target === radioPlayerModal) closePlayerModal()
+					if (e.target === radioPlayerModal) minimizePlayer()
 				})
 			}
 

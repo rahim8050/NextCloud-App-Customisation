@@ -7,9 +7,11 @@ namespace OCA\WeatherApis\AppInfo;
 use OCA\WeatherApis\Controller\AdminActivitiesController;
 use OCA\WeatherApis\Controller\AdminConfigController;
 use OCA\WeatherApis\Controller\AdminFarmsController;
+use OCA\WeatherApis\Controller\AdminRadioController;
 use OCA\WeatherApis\Controller\ApiController;
 use OCA\WeatherApis\Controller\OcsApiController;
 use OCA\WeatherApis\Controller\SettingsController;
+use OCA\WeatherApis\Listeners\CSPListener;
 use OCA\WeatherApis\Sections\AdminSection;
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\DrfSchemaService;
@@ -35,6 +37,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Security\CSP\AddContentSecurityPolicyEvent;
 use OCP\Security\ICrypto;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,6 +53,8 @@ final class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
+		$context->registerEventListener(AddContentSecurityPolicyEvent::class, CSPListener::class);
+
 		$context->registerService(AppConfig::class, function (ContainerInterface $c) {
 			return new AppConfig(
 				$c->get(IConfig::class),
@@ -199,6 +204,16 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IRequest::class),
 				$c->get(DrfSchemaService::class),
+				$c->get(WeatherApiClientInterface::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(AdminRadioController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new AdminRadioController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
 				$c->get(WeatherApiClientInterface::class),
 				$logger,
 			);

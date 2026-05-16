@@ -173,7 +173,7 @@ final class AdminRadioController extends Controller {
 				'code' => $exception->getErrorCode(),
 				'message' => $exception->getMessage(),
 				'requestId' => $requestId,
-				'details' => $exception->getDetails() ?? new \stdClass(),
+				'details' => $exception->getDetails(),
 			],
 		], Http::STATUS_BAD_REQUEST);
 	}

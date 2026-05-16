@@ -1096,6 +1096,25 @@ final class AdminFarmsControllerTest extends TestCase {
 						'operationId' => 'v1_farms_observations_delete',
 					],
 				],
+				'/api/v1/farms/{farm_id}/activities/' => [
+					'get' => [
+						'operationId' => 'v1_farms_activities_list',
+					],
+					'post' => [
+						'operationId' => 'v1_farms_activities_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/activities/{id}/' => [
+					'get' => [
+						'operationId' => 'v1_farms_activities_retrieve',
+					],
+					'put' => [
+						'operationId' => 'v1_farms_activities_update',
+					],
+					'delete' => [
+						'operationId' => 'v1_farms_activities_delete',
+					],
+				],
 			],
 		];
 	}

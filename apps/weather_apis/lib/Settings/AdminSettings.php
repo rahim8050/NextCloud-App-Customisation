@@ -6,6 +6,7 @@ namespace OCA\WeatherApis\Settings;
 
 use OCA\WeatherApis\Service\AppConfig;
 use OCA\WeatherApis\Service\IntegrationConfig;
+use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -37,7 +38,7 @@ final class AdminSettings implements IDelegatedSettings {
 		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
 		$hmacSecretSet = $this->integrationConfig->getSecretB64OrNull() !== null;
 
-		return new TemplateResponse('weather_apis', 'settings/admin', [
+		$response = new TemplateResponse('weather_apis', 'settings/admin', [
 			'appName' => $this->appName,
 			'baseUrl' => $this->appConfig->getBaseUrl(),
 			'clientId' => $clientId,
@@ -92,6 +93,13 @@ final class AdminSettings implements IDelegatedSettings {
 			'radioStationUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStation', ['stationId' => '__STATION_ID__']),
 			'radioStreamUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']),
 		]);
+
+		$csp = new ContentSecurityPolicy();
+		$csp->addAllowedMediaDomain('*');
+		$csp->addAllowedConnectDomain('*');
+		$response->setContentSecurityPolicy($csp);
+
+		return $response;
 	}
 
 	public function getName(): ?string {

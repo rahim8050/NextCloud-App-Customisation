@@ -915,14 +915,12 @@
 	display: grid;
 	gap: 12px;
 	min-width: 0;
-	grid-column: 1 / -1;
 }
 
 .weather-apis-farms__activities {
 	display: grid;
 	gap: 12px;
 	min-width: 0;
-	grid-column: 1 / -1;
 }
 
 .weather-apis-farms__observations .weather-apis-farms__table td {
@@ -1155,6 +1153,8 @@
 	margin-top: 24px;
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
+	min-width: 0;
+	grid-column: 1 / -1;
 }
 
 .weather-apis-activities__header {
@@ -1206,12 +1206,14 @@
 .weather-apis-activities__table-wrap {
 	overflow-x: auto;
 	margin-bottom: 12px;
+	min-width: 0;
 }
 
 .weather-apis-activities__table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 13px;
+	min-width: 0;
 }
 
 .weather-apis-activities__table th,
@@ -1219,6 +1221,10 @@
 	padding: 10px 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .weather-apis-activities__table th {
@@ -1410,13 +1416,15 @@
 	.weather-apis-activities__table th,
 	.weather-apis-activities__table td {
 		padding: 8px;
+		max-width: 120px;
 	}
 }
 
-/* Radio section */
+/* Radio section — matches weather-apis-farms__observations containment */
 .weather-apis-radio {
 	display: grid;
 	gap: 12px;
+	min-width: 0;
 }
 
 .weather-apis-radio__header {
@@ -1449,6 +1457,7 @@
 .weather-apis-radio__panel {
 	display: grid;
 	gap: 12px;
+	min-width: 0;
 }
 
 .weather-apis-radio__filters {
@@ -1473,11 +1482,13 @@
 
 .weather-apis-radio__table-wrap {
 	overflow-x: auto;
+	min-width: 0;
 }
 
 .weather-apis-radio__table {
 	width: 100%;
 	border-collapse: collapse;
+	min-width: 0;
 }
 
 .weather-apis-radio__table th,
@@ -1485,6 +1496,10 @@
 	padding: 10px 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .weather-apis-radio__table th {
@@ -1498,17 +1513,91 @@
 	background: var(--color-background-hover);
 }
 
+.weather-apis-radio__player {
+	position: fixed !important;
+	z-index: 1000001 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	padding-bottom: env(safe-area-inset-bottom);
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+.weather-apis-radio__player[hidden] {
+	display: none !important;
+}
+
+.weather-apis-radio__player-bar {
+	background: var(--color-main-background) !important;
+	border-top: 1px solid var(--color-border) !important;
+	padding: 8px 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.weather-apis-radio__bar-logo {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	object-fit: cover;
+}
+
+.weather-apis-radio__bar-title {
+	flex: 1;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-text-main);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.weather-apis-radio__bar-btn {
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: transparent;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+	flex-shrink: 0;
+}
+
+.weather-apis-radio__bar-btn:hover {
+	background: var(--color-background-hover);
+}
+
+.weather-apis-radio__player-bar .weather-apis-radio__bar-btn:first-of-type {
+	background: var(--color-primary-element);
+	color: white;
+}
+
+.weather-apis-radio__player-bar .weather-apis-radio__bar-btn:first-of-type:hover {
+	background: var(--color-primary-element-hover);
+}
+
 .weather-apis-radio__modal {
 	position: fixed !important;
 	top: 0 !important;
 	left: 0 !important;
 	right: 0 !important;
 	bottom: 0 !important;
-	background: rgba(0, 0, 0, 0.6) !important;
+	background: rgba(0, 0, 0, 0.7) !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	z-index: 999999 !important;
+	backdrop-filter: blur(4px);
 }
 
 .weather-apis-radio__modal[hidden] {
@@ -1517,25 +1606,307 @@
 
 .weather-apis-radio__modal-card {
 	background: var(--color-main-background);
-	border-radius: 8px;
-	padding: 20px;
-	max-width: 500px;
+	border-radius: 16px;
+	padding: 32px 28px 24px;
+	max-width: 380px;
 	width: 90%;
-	max-height: 80vh;
-	overflow-y: auto;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	position: relative;
 }
 
-.weather-apis-radio__modal-header {
+.weather-apis-radio__modal-close {
+	position: absolute;
+	top: 12px;
+	right: 48px;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: var(--color-background-hover);
+	border-radius: 50%;
+	cursor: pointer;
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 16px;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+}
+
+.weather-apis-radio__modal-minimize {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: var(--color-background-hover);
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+}
+
+.weather-apis-radio__modal-close:hover,
+.weather-apis-radio__modal-minimize:hover {
+	background: var(--color-background-dark);
 }
 
 .weather-apis-radio__modal-body {
-	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+.weather-apis-radio__player-art {
+	width: 120px;
+	height: 120px;
+	border-radius: 16px;
+	background: linear-gradient(135deg, var(--color-primary-element-light), var(--color-primary-element));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.weather-apis-radio__player-art img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 16px;
+}
+
+.weather-apis-radio__player-icon {
+	color: white;
+	opacity: 0.9;
+}
+
+.weather-apis-radio__player-meta {
+	text-align: center;
+}
+
+.weather-apis-radio__player-meta strong {
+	display: block;
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--color-text-main);
+	margin-bottom: 4px;
+}
+
+.weather-apis-radio__player-subtitle {
+	font-size: 13px;
+	color: var(--color-text-lighter);
+}
+
+.weather-apis-radio__player-controls {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	width: 100%;
+	justify-content: center;
+}
+
+.weather-apis-radio__play-btn {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	border: none;
+	background: var(--color-primary-element);
+	color: white;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.15s, background 0.15s;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.weather-apis-radio__play-btn:hover {
+	background: var(--color-primary-element-hover);
+	transform: scale(1.05);
+}
+
+.weather-apis-radio__play-btn:active {
+	transform: scale(0.95);
+}
+
+.weather-apis-radio__volume {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-text-lighter);
+}
+
+.weather-apis-radio__volume-slider {
+	width: 100px;
+	height: 4px;
+	-webkit-appearance: none;
+	appearance: none;
+	background: var(--color-border);
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+}
+
+.weather-apis-radio__volume-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+	cursor: pointer;
+}
+
+.weather-apis-radio__volume-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+	cursor: pointer;
+	border: none;
 }
 
 .weather-apis-radio__player-info p {
 	margin: 4px 0;
+}
+
+@media (max-width: 768px) {
+	.weather-apis-farms {
+		padding: 8px;
+		overflow-x: hidden;
+	}
+
+	.weather-apis-farms__panels {
+		display: block;
+		gap: 16px;
+	}
+
+	.weather-apis-farms__ndvi,
+	.weather-apis-farms__weather,
+	.weather-apis-farms__observations,
+	.weather-apis-farms__activities {
+		display: block;
+		overflow-x: hidden;
+	}
+
+	.weather-apis-farms__ndvi-row {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.weather-apis-farms__ndvi-row input {
+		width: 100%;
+	}
+
+	.weather-apis-farms__ndvi-actions {
+		flex-wrap: wrap;
+	}
+
+	.weather-apis-farms__weather-tabs {
+		flex-wrap: wrap;
+	}
+
+	.weather-apis-farms__weather-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.weather-apis-radio__header {
+		flex-direction: column;
+	}
+
+	.weather-apis-radio__filters {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.weather-apis-radio__filters input[type="text"],
+	.weather-apis-radio__filters select {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.weather-apis-radio__table th,
+	.weather-apis-radio__table td {
+		max-width: 120px;
+		padding: 8px;
+		font-size: 12px;
+	}
+
+	.weather-apis-activities__table th,
+	.weather-apis-activities__table td {
+		max-width: 120px;
+	}
+
+	.weather-apis-radio__modal-card {
+		padding: 24px 20px 20px;
+		width: 95%;
+	}
+
+	.weather-apis-radio__player-art {
+		width: 100px;
+		height: 100px;
+	}
+
+	.weather-apis-radio__play-btn {
+		width: 56px;
+		height: 56px;
+	}
+
+	.weather-apis-radio__volume-slider {
+		width: 80px;
+	}
+
+	.weather-apis-radio__player-bar {
+		padding: 6px 12px;
+		gap: 8px;
+	}
+
+	.weather-apis-radio__bar-logo {
+		width: 28px;
+		height: 28px;
+	}
+
+	.weather-apis-radio__bar-title {
+		font-size: 13px;
+	}
+
+	.weather-apis-radio__bar-btn {
+		width: 28px;
+		height: 28px;
+	}
+
+	.weather-apis-radio__player {
+		bottom: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		transform: none !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+	}
+
+	.weather-apis-radio__player-bar {
+		display: flex !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.weather-apis-radio__player-art {
+		width: 80px;
+		height: 80px;
+	}
+
+	.weather-apis-radio__play-btn {
+		width: 48px;
+		height: 48px;
+	}
+
+	.weather-apis-radio__volume {
+		display: none;
+	}
 }

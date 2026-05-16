@@ -77,7 +77,7 @@ final class WeatherApiClientTest extends TestCase {
 			'nonce',
 			$bodyHash,
 		);
-		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+		$expectedSignature = base64_encode(hash_hmac('sha256', $canonical, 'plain-secret', true));
 
 		$pingClient = $this->createMock(IClient::class);
 		$pingClient
@@ -122,7 +122,7 @@ final class WeatherApiClientTest extends TestCase {
 			'nonce',
 			$bodyHash,
 		);
-		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+		$expectedSignature = base64_encode(hash_hmac('sha256', $canonical, 'plain-secret', true));
 
 		$tokenClient = $this->createMock(IClient::class);
 		$tokenClient
@@ -176,7 +176,7 @@ final class WeatherApiClientTest extends TestCase {
 			'nonce',
 			$bodyHash,
 		);
-		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+		$expectedSignature = base64_encode(hash_hmac('sha256', $canonical, 'plain-secret', true));
 
 		$tokenClient = $this->createMock(IClient::class);
 		$tokenClient
@@ -228,7 +228,7 @@ final class WeatherApiClientTest extends TestCase {
 			'nonce',
 			$bodyHash,
 		);
-		$expectedSignature = hash_hmac('sha256', $canonical, 'plain-secret');
+		$expectedSignature = base64_encode(hash_hmac('sha256', $canonical, 'plain-secret', true));
 
 		$tokenClient = $this->createMock(IClient::class);
 		$tokenClient
