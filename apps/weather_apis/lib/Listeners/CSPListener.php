@@ -21,6 +21,7 @@ final class CSPListener implements IEventListener {
 		$csp = new ContentSecurityPolicy();
 		$csp->addAllowedMediaDomain('*');
 		$csp->addAllowedConnectDomain('*');
+		$csp->addAllowedImageDomain('*');
 		$event->addPolicy($csp);
 	}
 }

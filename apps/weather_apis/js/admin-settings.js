@@ -1060,10 +1060,10 @@
 					return
 				}
 				if (radioStationsEmpty) radioStationsEmpty.hidden = true
-				const cols = ['name', 'provider_name', 'genre', 'country', 'language', 'format', 'bitrate']
+				const cols = ['logo', 'name', 'provider_name', 'genre', 'country', 'language']
 				cols.forEach(c => {
 					const th = document.createElement('th')
-					th.textContent = c.replace(/_/g, ' ')
+					th.textContent = c === 'logo' ? '' : c.replace(/_/g, ' ')
 					radioStationsColumns.appendChild(th)
 				})
 				const th = document.createElement('th')
@@ -1073,7 +1073,21 @@
 					const tr = document.createElement('tr')
 					cols.forEach(c => {
 						const td = document.createElement('td')
-						td.textContent = station[c] || '—'
+						if (c === 'logo') {
+							const logoUrl = station.logo_url || station.provider_logo_url || ''
+							if (logoUrl) {
+								const img = document.createElement('img')
+								img.src = logoUrl
+								img.alt = ''
+								img.style.cssText = 'width:24px;height:24px;border-radius:4px;object-fit:cover;vertical-align:middle;'
+								img.onerror = () => { img.hidden = true }
+								td.appendChild(img)
+							} else {
+								td.textContent = '—'
+							}
+						} else {
+							td.textContent = station[c] || '—'
+						}
 						tr.appendChild(td)
 					})
 					const playTd = document.createElement('td')
@@ -1151,10 +1165,11 @@
 						streamUrl = streamUrl.replace('http://', 'https://')
 					}
 					console.info('[weather_apis] playing stream', streamUrl)
+					const logoUrl = station.logo_url || station.provider_logo_url || ''
 					const updateBarLogo = () => {
 						if (radioBarLogo) {
-							if (station.logo_url) {
-								radioBarLogo.src = station.logo_url
+							if (logoUrl) {
+								radioBarLogo.src = logoUrl
 								radioBarLogo.hidden = false
 							} else {
 								radioBarLogo.hidden = true
@@ -1165,8 +1180,8 @@
 					if (radioBarTitle) radioBarTitle.textContent = station.name
 					if (radioPlayerSubtitle) radioPlayerSubtitle.textContent = `${station.genre || 'Unknown genre'} · ${station.country || 'Unknown'}`
 					if (radioPlayerLogo) {
-						if (station.logo_url) {
-							radioPlayerLogo.src = station.logo_url
+						if (logoUrl) {
+							radioPlayerLogo.src = logoUrl
 							radioPlayerLogo.hidden = false
 							radioPlayerIcon.hidden = true
 						} else {
