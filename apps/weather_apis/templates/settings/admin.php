@@ -534,6 +534,13 @@ style('weather_apis', 'admin-settings');
 				<div class="weather-apis-radio__player-bar">
 					<img id="weather-apis-radio-bar-logo" src="" alt="" class="weather-apis-radio__bar-logo" hidden />
 					<span id="weather-apis-radio-bar-title" class="weather-apis-radio__bar-title"></span>
+					<span id="weather-apis-radio-bar-time" class="weather-apis-radio__bar-time">0:00</span>
+					<button id="weather-apis-radio-bar-rewind" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Rewind 10 seconds')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12.5 3C17.15 3 21.08 6.03 22.47 10.22L20.08 11C18.92 7.68 15.96 5.25 12.5 5.25C8.36 5.25 5 8.61 5 12.75C5 14.06 5.34 15.29 5.93 16.36L10.5 11.79V15.5H6.79L3.29 12L6.79 8.5H10.5V5.79L12.5 3Z"/><text x="9" y="16" font-size="7" fill="currentColor" font-weight="bold">10</text></svg>
+					</button>
+					<button id="weather-apis-radio-bar-forward" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Forward 10 seconds')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11.5 3C6.85 3 2.92 6.03 1.53 10.22L3.92 11C5.08 7.68 8.04 5.25 11.5 5.25C15.64 5.25 19 8.61 19 12.75C19 14.06 18.66 15.29 18.07 16.36L13.5 11.79V15.5H17.21L20.71 12L17.21 8.5H13.5V5.79L11.5 3Z"/><text x="12" y="16" font-size="7" fill="currentColor" font-weight="bold">10</text></svg>
+					</button>
 					<button id="weather-apis-radio-bar-play" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Play')); ?>">
 						<svg id="weather-apis-radio-bar-icon-play" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7Z"/></svg>
 						<svg id="weather-apis-radio-bar-icon-pause" viewBox="0 0 24 24" width="20" height="20" hidden><path fill="currentColor" d="M6 19h4V5H6v14Zm8-14v14h4V5h-4Z"/></svg>
@@ -544,6 +551,11 @@ style('weather_apis', 'admin-settings');
 					<button id="weather-apis-radio-bar-close" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Close')); ?>">
 						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
 					</button>
+				</div>
+				<div class="weather-apis-radio__progress-bar" id="weather-apis-radio-progress-container">
+					<div class="weather-apis-radio__progress-track" id="weather-apis-radio-progress-track">
+						<div class="weather-apis-radio__progress-fill" id="weather-apis-radio-progress-fill"></div>
+					</div>
 				</div>
 				<div class="weather-apis-radio__modal" id="weather-apis-radio-player-modal" hidden>
 					<div class="weather-apis-radio__modal-card">
@@ -563,15 +575,27 @@ style('weather_apis', 'admin-settings');
 							<div class="weather-apis-radio__player-meta">
 								<strong id="weather-apis-radio-player-title"><?php p($l->t('Now Playing')); ?></strong>
 								<span id="weather-apis-radio-player-subtitle" class="weather-apis-radio__player-subtitle"></span>
+								<span id="weather-apis-radio-player-time" class="weather-apis-radio__player-time">0:00</span>
 							</div>
 							<div class="weather-apis-radio__player-controls">
+								<button id="weather-apis-radio-player-rewind" type="button" class="weather-apis-radio__skip-btn" aria-label="<?php p($l->t('Rewind 10 seconds')); ?>">
+									<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12.5 3C17.15 3 21.08 6.03 22.47 10.22L20.08 11C18.92 7.68 15.96 5.25 12.5 5.25C8.36 5.25 5 8.61 5 12.75C5 14.06 5.34 15.29 5.93 16.36L10.5 11.79V15.5H6.79L3.29 12L6.79 8.5H10.5V5.79L12.5 3Z"/><text x="9" y="16" font-size="7" fill="currentColor" font-weight="bold">10</text></svg>
+								</button>
 								<button id="weather-apis-radio-player-play" type="button" class="weather-apis-radio__play-btn" aria-label="<?php p($l->t('Play')); ?>">
 									<svg id="weather-apis-radio-icon-play" viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M8 5v14l11-7Z"/></svg>
 									<svg id="weather-apis-radio-icon-pause" viewBox="0 0 24 24" width="32" height="32" hidden><path fill="currentColor" d="M6 19h4V5H6v14Zm8-14v14h4V5h-4Z"/></svg>
 								</button>
+								<button id="weather-apis-radio-player-forward" type="button" class="weather-apis-radio__skip-btn" aria-label="<?php p($l->t('Forward 10 seconds')); ?>">
+									<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M11.5 3C6.85 3 2.92 6.03 1.53 10.22L3.92 11C5.08 7.68 8.04 5.25 11.5 5.25C15.64 5.25 19 8.61 19 12.75C19 14.06 18.66 15.29 18.07 16.36L13.5 11.79V15.5H17.21L20.71 12L17.21 8.5H13.5V5.79L11.5 3Z"/><text x="12" y="16" font-size="7" fill="currentColor" font-weight="bold">10</text></svg>
+								</button>
 								<div class="weather-apis-radio__volume">
 									<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3Z"/></svg>
 									<input id="weather-apis-radio-volume" type="range" min="0" max="100" value="80" class="weather-apis-radio__volume-slider" aria-label="<?php p($l->t('Volume')); ?>" />
+								</div>
+							</div>
+							<div class="weather-apis-radio__player-progress" id="weather-apis-radio-modal-progress">
+								<div class="weather-apis-radio__progress-track" id="weather-apis-radio-modal-progress-track">
+									<div class="weather-apis-radio__progress-fill" id="weather-apis-radio-modal-progress-fill"></div>
 								</div>
 							</div>
 							<audio id="weather-apis-radio-audio" hidden></audio>
