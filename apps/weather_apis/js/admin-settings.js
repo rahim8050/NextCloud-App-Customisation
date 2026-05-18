@@ -1249,6 +1249,9 @@
 				}
 			}
 
+			let radioElapsedSeconds = 0
+			let radioElapsedTimer = null
+
 			const updatePlayPauseIcon = (isPlaying) => {
 				if (radioIconPlay) radioIconPlay.hidden = isPlaying
 				if (radioIconPause) radioIconPause.hidden = !isPlaying
@@ -1257,36 +1260,28 @@
 			}
 
 			const formatTime = (seconds) => {
-				if (!isFinite(seconds) || seconds < 0) return '0:00'
+				if (seconds < 0) return '0:00'
 				const mins = Math.floor(seconds / 60)
 				const secs = Math.floor(seconds % 60)
 				return `${mins}:${String(secs).padStart(2, '0')}`
 			}
 
-			const updateProgress = () => {
-				if (!radioAudio) return
-				const current = radioAudio.currentTime || 0
-				const duration = radioAudio.duration || 0
-				const pct = duration > 0 ? (current / duration) * 100 : 0
-				const timeStr = formatTime(current)
-				if (radioBarTime) radioBarTime.textContent = timeStr
-				if (radioPlayerTime) radioPlayerTime.textContent = timeStr
-				if (radioProgressFill) radioProgressFill.style.width = `${pct}%`
-				if (radioModalProgressFill) radioModalProgressFill.style.width = `${pct}%`
+			const startElapsedTimer = () => {
+				stopElapsedTimer()
+				radioElapsedSeconds = 0
+				radioElapsedTimer = setInterval(() => {
+					radioElapsedSeconds++
+					const timeStr = formatTime(radioElapsedSeconds)
+					if (radioBarTime) radioBarTime.textContent = timeStr
+					if (radioPlayerTime) radioPlayerTime.textContent = timeStr
+				}, 1000)
 			}
 
-			const seekRelative = (delta) => {
-				if (!radioAudio || !isFinite(radioAudio.duration)) return
-				const newTime = Math.max(0, Math.min(radioAudio.duration, radioAudio.currentTime + delta))
-				radioAudio.currentTime = newTime
-			}
-
-			const seekFromClick = (e) => {
-				if (!radioAudio || !isFinite(radioAudio.duration)) return
-				const track = e.currentTarget
-				const rect = track.getBoundingClientRect()
-				const pct = (e.clientX - rect.left) / rect.width
-				radioAudio.currentTime = pct * radioAudio.duration
+			const stopElapsedTimer = () => {
+				if (radioElapsedTimer) {
+					clearInterval(radioElapsedTimer)
+					radioElapsedTimer = null
+				}
 			}
 
 			const togglePlayPause = () => {
@@ -1314,6 +1309,7 @@
 				if (radioPlayerModal) radioPlayerModal.hidden = true
 				if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null }
 				if (radioAudio) { radioAudio.pause(); radioAudio.src = '' }
+				stopElapsedTimer()
 				updatePlayPauseIcon(false)
 			}
 
@@ -1342,20 +1338,13 @@
 			if (radioPlayerMinimize) radioPlayerMinimize.addEventListener('click', minimizePlayer)
 			if (radioPlayerPlay) radioPlayerPlay.addEventListener('click', togglePlayPause)
 			if (radioBarPlay) radioBarPlay.addEventListener('click', togglePlayPause)
-			if (radioBarRewind) radioBarRewind.addEventListener('click', () => seekRelative(-10))
-			if (radioBarForward) radioBarForward.addEventListener('click', () => seekRelative(10))
-			if (radioPlayerRewind) radioPlayerRewind.addEventListener('click', () => seekRelative(-10))
-			if (radioPlayerForward) radioPlayerForward.addEventListener('click', () => seekRelative(10))
 			if (radioBarExpand) radioBarExpand.addEventListener('click', expandPlayer)
 			if (radioBarClose) radioBarClose.addEventListener('click', closePlayer)
 			if (radioVolume) radioVolume.addEventListener('input', () => { if (radioAudio) radioAudio.volume = radioVolume.value / 100 })
-			if (radioProgressTrack) radioProgressTrack.addEventListener('click', seekFromClick)
-			if (radioModalProgressTrack) radioModalProgressTrack.addEventListener('click', seekFromClick)
 			if (radioAudio) {
 				radioAudio.volume = 0.8
-				radioAudio.addEventListener('play', () => updatePlayPauseIcon(true))
-				radioAudio.addEventListener('pause', () => updatePlayPauseIcon(false))
-				radioAudio.addEventListener('timeupdate', updateProgress)
+				radioAudio.addEventListener('play', () => { updatePlayPauseIcon(true); startElapsedTimer() })
+				radioAudio.addEventListener('pause', () => { updatePlayPauseIcon(false); stopElapsedTimer() })
 			}
 			if (radioPlayerModal) {
 				radioPlayerModal.addEventListener('click', (e) => {
