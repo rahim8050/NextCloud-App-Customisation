@@ -535,6 +535,7 @@ style('weather_apis', 'admin-settings');
 					<img id="weather-apis-radio-bar-logo" src="" alt="" class="weather-apis-radio__bar-logo" hidden />
 					<span id="weather-apis-radio-bar-title" class="weather-apis-radio__bar-title"></span>
 					<span id="weather-apis-radio-bar-time" class="weather-apis-radio__bar-time">0:00</span>
+					<span id="weather-apis-radio-bar-live" class="weather-apis-radio__bar-live" aria-live="polite"><?php p($l->t('LIVE')); ?></span>
 					<button id="weather-apis-radio-bar-rewind" type="button" class="weather-apis-radio__bar-btn" aria-label="<?php p($l->t('Rewind 10 seconds')); ?>">
 						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12.5 3C17.15 3 21.08 6.03 22.47 10.22L20.08 11C18.92 7.68 15.96 5.25 12.5 5.25C8.36 5.25 5 8.61 5 12.75C5 14.06 5.34 15.29 5.93 16.36L10.5 11.79V15.5H6.79L3.29 12L6.79 8.5H10.5V5.79L12.5 3Z"/><text x="9" y="16" font-size="7" fill="currentColor" font-weight="bold">10</text></svg>
 					</button>
@@ -576,6 +577,7 @@ style('weather_apis', 'admin-settings');
 								<strong id="weather-apis-radio-player-title"><?php p($l->t('Now Playing')); ?></strong>
 								<span id="weather-apis-radio-player-subtitle" class="weather-apis-radio__player-subtitle"></span>
 								<span id="weather-apis-radio-player-time" class="weather-apis-radio__player-time">0:00</span>
+								<span id="weather-apis-radio-player-live" class="weather-apis-radio__bar-live"><?php p($l->t('LIVE')); ?></span>
 							</div>
 							<div class="weather-apis-radio__player-controls">
 								<button id="weather-apis-radio-player-rewind" type="button" class="weather-apis-radio__skip-btn" aria-label="<?php p($l->t('Rewind 10 seconds')); ?>">

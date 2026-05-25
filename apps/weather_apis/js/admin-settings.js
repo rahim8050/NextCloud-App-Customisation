@@ -922,6 +922,7 @@
 			const radioBarLogo = document.getElementById('weather-apis-radio-bar-logo')
 			const radioBarTitle = document.getElementById('weather-apis-radio-bar-title')
 			const radioBarTime = document.getElementById('weather-apis-radio-bar-time')
+			const radioBarLive = document.getElementById('weather-apis-radio-bar-live')
 			const radioBarRewind = document.getElementById('weather-apis-radio-bar-rewind')
 			const radioBarForward = document.getElementById('weather-apis-radio-bar-forward')
 			const radioBarPlay = document.getElementById('weather-apis-radio-bar-play')
@@ -930,11 +931,12 @@
 			const radioBarExpand = document.getElementById('weather-apis-radio-bar-expand')
 			const radioBarClose = document.getElementById('weather-apis-radio-bar-close')
 
-			const radioProgressFill = document.getElementById('weather-apis-radio-progress-fill')
 			const radioProgressTrack = document.getElementById('weather-apis-radio-progress-track')
-			const radioModalProgressFill = document.getElementById('weather-apis-radio-modal-progress-fill')
 			const radioModalProgressTrack = document.getElementById('weather-apis-radio-modal-progress-track')
+			const radioProgressFill = document.getElementById('weather-apis-radio-progress-fill')
+			const radioModalProgressFill = document.getElementById('weather-apis-radio-modal-progress-fill')
 			const radioPlayerTime = document.getElementById('weather-apis-radio-player-time')
+			const radioPlayerLive = document.getElementById('weather-apis-radio-player-live')
 
 			const loadHlsJs = () => {
 				if (window.Hls) return Promise.resolve()
@@ -973,10 +975,98 @@
 			let stationsData = []
 			let providersData = []
 			let activeTab = 'stations'
+			let radioProgressFrame = null
 
 			const clearRadioNotes = () => {
 				if (radioError) { radioError.textContent = ''; radioError.hidden = true }
 				if (radioLoading) radioLoading.hidden = true
+			}
+
+			const stopProgressAnimation = () => {
+				if (radioProgressFrame !== null) {
+					cancelAnimationFrame(radioProgressFrame)
+					radioProgressFrame = null
+				}
+			}
+
+			const setProgressWidth = (fill, percent) => {
+				if (!fill) return
+				const clamped = Math.max(0, Math.min(100, percent))
+				fill.style.width = `${clamped}%`
+			}
+
+			const updateLiveBadges = (isLive) => {
+				if (radioBarLive) radioBarLive.hidden = !isLive
+				if (radioPlayerLive) radioPlayerLive.hidden = !isLive
+			}
+
+			const updateProgressBars = () => {
+				if (!radioAudio) return
+				const seekable = radioAudio.seekable
+				const buffered = radioAudio.buffered
+				const hasSeekableWindow = seekable && seekable.length > 0 && Number.isFinite(seekable.end(0)) && seekable.end(0) > seekable.start(0)
+				const hasDuration = Number.isFinite(radioAudio.duration) && radioAudio.duration > 0
+				const isLive = !hasDuration || radioAudio.duration === Infinity || !hasSeekableWindow
+				updateLiveBadges(isLive)
+
+				if (isLive) {
+					const windowEnd = hasSeekableWindow ? seekable.end(0) : (buffered && buffered.length > 0 ? buffered.end(buffered.length - 1) : radioAudio.currentTime + 30)
+					const windowStart = hasSeekableWindow ? seekable.start(0) : Math.max(0, windowEnd - 30)
+					const denominator = Math.max(1, windowEnd - windowStart)
+					const percent = ((radioAudio.currentTime - windowStart) / denominator) * 100
+					setProgressWidth(radioProgressFill, percent)
+					setProgressWidth(radioModalProgressFill, percent)
+					return
+				}
+
+				const percent = (radioAudio.currentTime / radioAudio.duration) * 100
+				setProgressWidth(radioProgressFill, percent)
+				setProgressWidth(radioModalProgressFill, percent)
+			}
+
+			const seekRadioToPercent = (track, clientX) => {
+				if (!radioAudio || !track) return
+				const rect = track.getBoundingClientRect()
+				if (rect.width <= 0) return
+
+				const offset = Math.max(0, Math.min(rect.width, clientX - rect.left))
+				const ratio = offset / rect.width
+				const seekable = radioAudio.seekable
+				const buffered = radioAudio.buffered
+				const hasSeekableWindow = seekable && seekable.length > 0 && Number.isFinite(seekable.end(0)) && seekable.end(0) > seekable.start(0)
+
+				if (hasSeekableWindow) {
+					const start = seekable.start(0)
+					const end = seekable.end(0)
+					radioAudio.currentTime = start + (end - start) * ratio
+					updateProgressBars()
+					return
+				}
+
+				if (Number.isFinite(radioAudio.duration) && radioAudio.duration > 0) {
+					radioAudio.currentTime = radioAudio.duration * ratio
+					updateProgressBars()
+					return
+				}
+
+				if (buffered && buffered.length > 0) {
+					const start = buffered.start(0)
+					const end = buffered.end(buffered.length - 1)
+					radioAudio.currentTime = start + (end - start) * ratio
+					updateProgressBars()
+					return
+				}
+
+				showRadioError('This live stream does not expose a rewind buffer.')
+			}
+
+			const startProgressAnimation = () => {
+				stopProgressAnimation()
+				const tick = () => {
+					updateProgressBars()
+					radioProgressFrame = window.requestAnimationFrame(tick)
+				}
+				tick()
 			}
 
 			const showRadioError = (msg) => {
@@ -1235,6 +1325,7 @@
 							radioAudio.play().catch(err => { console.error('[weather_apis] audio play failed', err) })
 							updatePlayPauseIcon(true)
 						}
+						updateProgressBars()
 					}
 					if (radioPlayer) {
 						radioPlayer.hidden = false
@@ -1341,10 +1432,42 @@
 			if (radioBarExpand) radioBarExpand.addEventListener('click', expandPlayer)
 			if (radioBarClose) radioBarClose.addEventListener('click', closePlayer)
 			if (radioVolume) radioVolume.addEventListener('input', () => { if (radioAudio) radioAudio.volume = radioVolume.value / 100 })
+			const seekRadioBySeconds = (deltaSeconds) => {
+				if (!radioAudio) return
+				const current = Number.isFinite(radioAudio.currentTime) ? radioAudio.currentTime : 0
+				const target = Math.max(0, current + deltaSeconds)
+				const seekable = radioAudio.seekable
+				if (seekable && seekable.length > 0) {
+					const start = seekable.start(0)
+					const end = seekable.end(0)
+					radioAudio.currentTime = Math.max(start, Math.min(end, target))
+					updateProgressBars()
+					return
+				}
+				if (Number.isFinite(radioAudio.duration) && radioAudio.duration > 0) {
+					radioAudio.currentTime = Math.min(radioAudio.duration, target)
+					updateProgressBars()
+					return
+				}
+				showRadioError('This live stream does not expose a rewind buffer.')
+			}
+
+			if (radioProgressTrack) radioProgressTrack.addEventListener('click', (event) => seekRadioToPercent(radioProgressTrack, event.clientX))
+			if (radioModalProgressTrack) radioModalProgressTrack.addEventListener('click', (event) => seekRadioToPercent(radioModalProgressTrack, event.clientX))
+			if (radioPlayerRewind) radioPlayerRewind.addEventListener('click', () => seekRadioBySeconds(-10))
+			if (radioPlayerForward) radioPlayerForward.addEventListener('click', () => seekRadioBySeconds(10))
+			if (radioBarRewind) radioBarRewind.addEventListener('click', () => seekRadioBySeconds(-10))
+			if (radioBarForward) radioBarForward.addEventListener('click', () => seekRadioBySeconds(10))
 			if (radioAudio) {
 				radioAudio.volume = 0.8
-				radioAudio.addEventListener('play', () => { updatePlayPauseIcon(true); startElapsedTimer() })
-				radioAudio.addEventListener('pause', () => { updatePlayPauseIcon(false); stopElapsedTimer() })
+				radioAudio.addEventListener('play', () => { updatePlayPauseIcon(true); startElapsedTimer(); startProgressAnimation() })
+				radioAudio.addEventListener('pause', () => { updatePlayPauseIcon(false); stopElapsedTimer(); stopProgressAnimation() })
+				radioAudio.addEventListener('timeupdate', updateProgressBars)
+				radioAudio.addEventListener('durationchange', updateProgressBars)
+				radioAudio.addEventListener('progress', updateProgressBars)
+				radioAudio.addEventListener('loadedmetadata', updateProgressBars)
+				radioAudio.addEventListener('seeking', updateProgressBars)
+				radioAudio.addEventListener('seeked', updateProgressBars)
 			}
 			if (radioPlayerModal) {
 				radioPlayerModal.addEventListener('click', (e) => {
