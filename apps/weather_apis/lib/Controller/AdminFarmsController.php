@@ -367,10 +367,12 @@ final class AdminFarmsController extends Controller {
 			$pathTemplate = (string)($operation['path'] ?? '');
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
 			$query = $this->filterQueryParams(
 				$params,
 				$operation['queryParams'] ?? [],
 			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->logProxyRequest('ndvi latest', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
 				(string)($operation['method'] ?? 'GET'),
@@ -410,10 +412,12 @@ final class AdminFarmsController extends Controller {
 			$pathTemplate = (string)($operation['path'] ?? '');
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
 			$query = $this->filterQueryParams(
 				$params,
 				$operation['queryParams'] ?? [],
 			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
 			$startName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'start');
 			$endName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'end');
@@ -607,7 +611,9 @@ final class AdminFarmsController extends Controller {
 		$pathTemplate = $operation['path'];
 		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$externalFarmId = $this->pullExternalFarmId($params);
 		$query = $this->filterQueryParams($params, []);
+		$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 
 		try {
 			$this->logProxyRequest('weather current', $operation, $path, $query, $requestId);
@@ -758,7 +764,9 @@ final class AdminFarmsController extends Controller {
 		$pathTemplate = $operation['path'];
 		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+		$externalFarmId = $this->pullExternalFarmId($params);
 		$query = $this->filterQueryParams($params, []);
+		$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 
 		try {
 			$this->logProxyRequest('farm state', $operation, $path, $query, $requestId);
