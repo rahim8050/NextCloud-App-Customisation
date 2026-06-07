@@ -240,6 +240,41 @@ return [
 			'url' => '/api/v1/admin/radio/stations/{stationId}/stream',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminRadio#getStationNowPlaying',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/now-playing',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getStationAnalytics',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/analytics',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getStationHealth',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/health',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getStationHealthHistory',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/health/history',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getRadioHealth',
+			'url' => '/api/v1/admin/radio/health',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getCurrentEmergency',
+			'url' => '/api/v1/admin/radio/emergency/current',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminRadio#getEmergencyHistory',
+			'url' => '/api/v1/admin/radio/emergency/history',
+			'verb' => 'GET',
+		],
 	
 	],
 	'ocs' => [

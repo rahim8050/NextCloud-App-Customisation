@@ -87,7 +87,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(39))
+		$urlGenerator->expects($this->exactly(46))
 			->method('linkToRoute')
 			->withConsecutive(
 				['weather_apis.settings.saveAdmin'],
@@ -129,6 +129,13 @@ final class AdminSettingsTest extends TestCase {
 				['weather_apis.adminRadio.listStations'],
 				['weather_apis.adminRadio.getStation', ['stationId' => '__STATION_ID__']],
 				['weather_apis.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getStationNowPlaying', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getStationAnalytics', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getStationHealth', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getStationHealthHistory', ['stationId' => '__STATION_ID__']],
+				['weather_apis.adminRadio.getRadioHealth'],
+				['weather_apis.adminRadio.getCurrentEmergency'],
+				['weather_apis.adminRadio.getEmergencyHistory'],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/weather_apis/settings/admin',
@@ -170,6 +177,13 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/weather_apis/api/v1/admin/radio/stations',
 				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__',
 				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/stream',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/now-playing',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/analytics',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/health',
+				'/apps/weather_apis/api/v1/admin/radio/stations/__STATION_ID__/health/history',
+				'/apps/weather_apis/api/v1/admin/radio/health',
+				'/apps/weather_apis/api/v1/admin/radio/emergency/current',
+				'/apps/weather_apis/api/v1/admin/radio/emergency/history',
 			);
 
 		$settings = new AdminSettings('weather_apis', $l10n, $appConfig, $integrationConfig, $urlGenerator);

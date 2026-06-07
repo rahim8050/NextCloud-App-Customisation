@@ -486,6 +486,41 @@ style('weather_apis', 'admin-settings');
 					<button id="weather-apis-radio-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
 				</div>
 			</div>
+			<div id="weather-apis-radio-emergency" class="weather-apis-radio__emergency" hidden>
+				<div class="weather-apis-radio__emergency-header">
+					<strong id="weather-apis-radio-emergency-title"></strong>
+					<span id="weather-apis-radio-emergency-priority" class="weather-apis-radio__priority"></span>
+				</div>
+				<p id="weather-apis-radio-emergency-message" class="weather-apis-radio__emergency-message"></p>
+				<div class="weather-apis-radio__emergency-meta">
+					<span id="weather-apis-radio-emergency-window"></span>
+					<button id="weather-apis-radio-emergency-history-btn" type="button" class="button"><?php p($l->t('View history')); ?></button>
+				</div>
+			</div>
+			<div id="weather-apis-radio-health" class="weather-apis-radio__health" hidden>
+				<div class="weather-apis-radio__health-header">
+					<strong><?php p($l->t('Radio system health')); ?></strong>
+					<span id="weather-apis-radio-health-status" class="weather-apis-radio__health-status"></span>
+				</div>
+				<div class="weather-apis-radio__health-grid">
+					<div class="weather-apis-radio__health-card">
+						<span class="weather-apis-radio__health-label"><?php p($l->t('Total stations')); ?></span>
+						<strong id="weather-apis-radio-health-total">—</strong>
+					</div>
+					<div class="weather-apis-radio__health-card">
+						<span class="weather-apis-radio__health-label"><?php p($l->t('Available')); ?></span>
+						<strong id="weather-apis-radio-health-available">—</strong>
+					</div>
+					<div class="weather-apis-radio__health-card">
+						<span class="weather-apis-radio__health-label"><?php p($l->t('Unavailable')); ?></span>
+						<strong id="weather-apis-radio-health-unavailable">—</strong>
+					</div>
+					<div class="weather-apis-radio__health-card">
+						<span class="weather-apis-radio__health-label"><?php p($l->t('Last probe')); ?></span>
+						<strong id="weather-apis-radio-health-last-probe">—</strong>
+					</div>
+				</div>
+			</div>
 			<div class="weather-apis-radio__tabs">
 				<button id="weather-apis-radio-stations-tab" type="button" class="button primary"><?php p($l->t('Stations')); ?></button>
 				<button id="weather-apis-radio-providers-tab" type="button" class="button"><?php p($l->t('Providers')); ?></button>
@@ -515,6 +550,156 @@ style('weather_apis', 'admin-settings');
 				</div>
 				<div id="weather-apis-radio-stations-empty" hidden>
 					<p><?php p($l->t('No stations found.')); ?></p>
+				</div>
+			</div>
+			<div id="weather-apis-radio-station-modal" class="weather-apis-radio__modal" hidden>
+				<div class="weather-apis-radio__modal-card weather-apis-radio__modal-card--wide">
+					<button id="weather-apis-radio-station-modal-close" type="button" class="weather-apis-radio__modal-close" aria-label="<?php p($l->t('Close')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+					</button>
+					<div class="weather-apis-radio__station-header">
+						<img id="weather-apis-radio-station-modal-logo" src="" alt="" class="weather-apis-radio__station-logo" hidden />
+						<div>
+							<strong id="weather-apis-radio-station-modal-name"></strong>
+							<div class="weather-apis-radio__station-meta">
+								<span id="weather-apis-radio-station-modal-provider"></span>
+								<span id="weather-apis-radio-station-modal-genre"></span>
+								<span id="weather-apis-radio-station-modal-country"></span>
+							</div>
+							<p id="weather-apis-radio-station-modal-description" class="weather-apis-radio__station-description" hidden></p>
+						</div>
+					</div>
+					<div class="weather-apis-radio__station-tabs">
+						<button id="weather-apis-radio-station-tab-now-playing" type="button" class="button primary"><?php p($l->t('Now playing')); ?></button>
+						<button id="weather-apis-radio-station-tab-analytics" type="button" class="button"><?php p($l->t('Analytics')); ?></button>
+						<button id="weather-apis-radio-station-tab-health" type="button" class="button"><?php p($l->t('Health')); ?></button>
+					</div>
+					<div id="weather-apis-radio-station-loading" class="weather-apis-radio__note" hidden><?php p($l->t('Loading...')); ?></div>
+					<div id="weather-apis-radio-station-error" class="weather-apis-radio__note error" hidden></div>
+					<div id="weather-apis-radio-station-panel-now-playing" class="weather-apis-radio__station-panel">
+						<div class="weather-apis-radio__now-playing">
+							<div class="weather-apis-radio__now-playing-art" id="weather-apis-radio-station-now-playing-art">
+								<div class="weather-apis-radio__now-playing-icon">
+									<svg viewBox="0 0 24 24" width="48" height="48"><path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
+								</div>
+							</div>
+							<div class="weather-apis-radio__now-playing-meta">
+								<strong id="weather-apis-radio-station-now-playing-track">—</strong>
+								<span id="weather-apis-radio-station-now-playing-artist">—</span>
+								<span id="weather-apis-radio-station-now-playing-album">—</span>
+								<span id="weather-apis-radio-station-now-playing-updated" class="weather-apis-radio__now-playing-updated"></span>
+							</div>
+						</div>
+						<div id="weather-apis-radio-station-now-playing-empty" class="weather-apis-radio__note" hidden>
+							<p><?php p($l->t('No track metadata available for this station.')); ?></p>
+						</div>
+					</div>
+					<div id="weather-apis-radio-station-panel-analytics" class="weather-apis-radio__station-panel" hidden>
+						<div class="weather-apis-radio__analytics-controls">
+							<label for="weather-apis-radio-station-analytics-days"><?php p($l->t('Days')); ?></label>
+							<select id="weather-apis-radio-station-analytics-days">
+								<option value="7">7</option>
+								<option value="14">14</option>
+								<option value="30" selected>30</option>
+								<option value="60">60</option>
+								<option value="90">90</option>
+							</select>
+							<button id="weather-apis-radio-station-analytics-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+						</div>
+						<div class="weather-apis-radio__analytics-grid">
+							<div class="weather-apis-radio__analytics-card">
+								<span class="weather-apis-radio__analytics-label"><?php p($l->t('Total listens')); ?></span>
+								<strong id="weather-apis-radio-station-analytics-total-listens">—</strong>
+							</div>
+							<div class="weather-apis-radio__analytics-card">
+								<span class="weather-apis-radio__analytics-label"><?php p($l->t('Total duration')); ?></span>
+								<strong id="weather-apis-radio-station-analytics-total-duration">—</strong>
+							</div>
+							<div class="weather-apis-radio__analytics-card">
+								<span class="weather-apis-radio__analytics-label"><?php p($l->t('Unique users')); ?></span>
+								<strong id="weather-apis-radio-station-analytics-unique-users">—</strong>
+							</div>
+						</div>
+						<div class="weather-apis-radio__table-wrap">
+							<table class="weather-apis-radio__table">
+								<thead>
+									<tr>
+										<th><?php p($l->t('Date')); ?></th>
+										<th><?php p($l->t('Listens')); ?></th>
+										<th><?php p($l->t('Duration (s)')); ?></th>
+										<th><?php p($l->t('Unique users')); ?></th>
+									</tr>
+								</thead>
+								<tbody id="weather-apis-radio-station-analytics-body"></tbody>
+							</table>
+						</div>
+						<div id="weather-apis-radio-station-analytics-empty" class="weather-apis-radio__note" hidden>
+							<p><?php p($l->t('No analytics rows in this window.')); ?></p>
+						</div>
+					</div>
+					<div id="weather-apis-radio-station-panel-health" class="weather-apis-radio__station-panel" hidden>
+						<div id="weather-apis-radio-station-health-current" class="weather-apis-radio__health-current">
+							<div class="weather-apis-radio__health-card">
+								<span class="weather-apis-radio__health-label"><?php p($l->t('Status')); ?></span>
+								<strong id="weather-apis-radio-station-health-status">—</strong>
+							</div>
+							<div class="weather-apis-radio__health-card">
+								<span class="weather-apis-radio__health-label"><?php p($l->t('Last probe')); ?></span>
+								<strong id="weather-apis-radio-station-health-last-probe">—</strong>
+							</div>
+							<div class="weather-apis-radio__health-card">
+								<span class="weather-apis-radio__health-label"><?php p($l->t('Latency (ms)')); ?></span>
+								<strong id="weather-apis-radio-station-health-latency">—</strong>
+							</div>
+							<div class="weather-apis-radio__health-card">
+								<span class="weather-apis-radio__health-label"><?php p($l->t('HTTP status')); ?></span>
+								<strong id="weather-apis-radio-station-health-http">—</strong>
+							</div>
+						</div>
+						<div class="weather-apis-radio__table-wrap">
+							<table class="weather-apis-radio__table">
+								<thead>
+									<tr>
+										<th><?php p($l->t('Checked at')); ?></th>
+										<th><?php p($l->t('Reachable')); ?></th>
+										<th><?php p($l->t('HTTP')); ?></th>
+										<th><?php p($l->t('Latency (ms)')); ?></th>
+										<th><?php p($l->t('Error')); ?></th>
+									</tr>
+								</thead>
+								<tbody id="weather-apis-radio-station-health-history-body"></tbody>
+							</table>
+						</div>
+						<div id="weather-apis-radio-station-health-history-empty" class="weather-apis-radio__note" hidden>
+							<p><?php p($l->t('No health-check history yet.')); ?></p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="weather-apis-radio-emergency-history-modal" class="weather-apis-radio__modal" hidden>
+				<div class="weather-apis-radio__modal-card weather-apis-radio__modal-card--wide">
+					<button id="weather-apis-radio-emergency-history-modal-close" type="button" class="weather-apis-radio__modal-close" aria-label="<?php p($l->t('Close')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+					</button>
+					<strong class="weather-apis-radio__modal-title"><?php p($l->t('Emergency broadcast history')); ?></strong>
+					<div id="weather-apis-radio-emergency-history-loading" class="weather-apis-radio__note" hidden><?php p($l->t('Loading...')); ?></div>
+					<div class="weather-apis-radio__table-wrap">
+						<table class="weather-apis-radio__table">
+							<thead>
+								<tr>
+									<th><?php p($l->t('Title')); ?></th>
+									<th><?php p($l->t('Priority')); ?></th>
+									<th><?php p($l->t('Starts')); ?></th>
+									<th><?php p($l->t('Ends')); ?></th>
+									<th><?php p($l->t('Active')); ?></th>
+								</tr>
+							</thead>
+							<tbody id="weather-apis-radio-emergency-history-body"></tbody>
+						</table>
+					</div>
+					<div id="weather-apis-radio-emergency-history-empty" class="weather-apis-radio__note" hidden>
+						<p><?php p($l->t('No past emergencies.')); ?></p>
+					</div>
 				</div>
 			</div>
 			<div id="weather-apis-radio-providers" class="weather-apis-radio__panel" hidden>

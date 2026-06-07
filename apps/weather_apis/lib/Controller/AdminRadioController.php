@@ -116,6 +116,182 @@ final class AdminRadioController extends Controller {
 		return $this->buildSuccessResponse($payload, 'Stream URL loaded.');
 	}
 
+	#[AdminRequired]
+	public function getStationNowPlaying(string $stationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get radio station now playing', $requestId);
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/now-playing/',
+				[],
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get radio station now playing');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get radio station now playing');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Now playing loaded.');
+	}
+
+	#[AdminRequired]
+	public function getStationAnalytics(string $stationId, ?int $days = null): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get radio station analytics', $requestId);
+
+		$queryParams = [];
+		if ($days !== null) {
+			$queryParams['days'] = $days;
+		}
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/analytics/',
+				$queryParams,
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get radio station analytics');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get radio station analytics');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Analytics loaded.');
+	}
+
+	#[AdminRequired]
+	public function getStationHealth(string $stationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get radio station health', $requestId);
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/health/',
+				[],
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get radio station health');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get radio station health');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Station health loaded.');
+	}
+
+	#[AdminRequired]
+	public function getStationHealthHistory(string $stationId, ?int $limit = null): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get radio station health history', $requestId);
+
+		$queryParams = [];
+		if ($limit !== null) {
+			$queryParams['limit'] = $limit;
+		}
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/health/history/',
+				$queryParams,
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get radio station health history');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get radio station health history');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Station health history loaded.');
+	}
+
+	#[AdminRequired]
+	public function getRadioHealth(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get radio health', $requestId);
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/health/',
+				[],
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get radio health');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get radio health');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Radio health loaded.');
+	}
+
+	#[AdminRequired]
+	public function getCurrentEmergency(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get current emergency', $requestId);
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/emergency/current/',
+				[],
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get current emergency');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get current emergency');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Current emergency loaded.');
+	}
+
+	#[AdminRequired]
+	public function getEmergencyHistory(?int $limit = null): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('get emergency history', $requestId);
+
+		$queryParams = [];
+		if ($limit !== null) {
+			$queryParams['limit'] = $limit;
+		}
+
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				'GET',
+				'/api/v1/radio/emergency/history/',
+				$queryParams,
+				null,
+				$requestId,
+			);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			return $this->handleWeatherApiException($exception, $requestId, 'get emergency history');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'get emergency history');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Emergency history loaded.');
+	}
+
 	private function logEndpointEntry(string $action, string $requestId): void {
 		$path = $this->request->getPathInfo();
 		if ($path === '') {

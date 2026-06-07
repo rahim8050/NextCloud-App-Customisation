@@ -92,6 +92,13 @@ final class AdminSettings implements IDelegatedSettings {
 			'radioStationsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.listStations'),
 			'radioStationUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStation', ['stationId' => '__STATION_ID__']),
 			'radioStreamUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']),
+			'radioNowPlayingUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStationNowPlaying', ['stationId' => '__STATION_ID__']),
+			'radioAnalyticsUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStationAnalytics', ['stationId' => '__STATION_ID__']),
+			'radioStationHealthUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStationHealth', ['stationId' => '__STATION_ID__']),
+			'radioStationHealthHistoryUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getStationHealthHistory', ['stationId' => '__STATION_ID__']),
+			'radioHealthUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getRadioHealth'),
+			'radioEmergencyCurrentUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getCurrentEmergency'),
+			'radioEmergencyHistoryUrl' => $this->urlGenerator->linkToRoute('weather_apis.adminRadio.getEmergencyHistory'),
 		]);
 
 		$csp = new ContentSecurityPolicy();

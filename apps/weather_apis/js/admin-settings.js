@@ -954,6 +954,13 @@
 			const radioStationsUrl = form.dataset.radioStationsUrl || ''
 			const radioStationUrl = form.dataset.radioStationUrl || ''
 			const radioStreamUrl = form.dataset.radioStreamUrl || ''
+			const radioNowPlayingUrl = form.dataset.radioNowPlayingUrl || ''
+			const radioAnalyticsUrl = form.dataset.radioAnalyticsUrl || ''
+			const radioStationHealthUrl = form.dataset.radioStationHealthUrl || ''
+			const radioStationHealthHistoryUrl = form.dataset.radioStationHealthHistoryUrl || ''
+			const radioHealthUrl = form.dataset.radioHealthUrl || ''
+			const radioEmergencyCurrentUrl = form.dataset.radioEmergencyCurrentUrl || ''
+			const radioEmergencyHistoryUrl = form.dataset.radioEmergencyHistoryUrl || ''
 
 			const radioRefresh = document.getElementById('weather-apis-radio-refresh')
 			const radioStationsTab = document.getElementById('weather-apis-radio-stations-tab')
@@ -971,6 +978,61 @@
 			const radioProvidersColumns = document.getElementById('weather-apis-radio-providers-columns')
 			const radioProvidersBody = document.getElementById('weather-apis-radio-providers-body')
 			const radioProvidersEmpty = document.getElementById('weather-apis-radio-providers-empty')
+
+			const radioEmergencyBanner = document.getElementById('weather-apis-radio-emergency')
+			const radioEmergencyTitle = document.getElementById('weather-apis-radio-emergency-title')
+			const radioEmergencyPriority = document.getElementById('weather-apis-radio-emergency-priority')
+			const radioEmergencyMessage = document.getElementById('weather-apis-radio-emergency-message')
+			const radioEmergencyWindow = document.getElementById('weather-apis-radio-emergency-window')
+			const radioEmergencyHistoryBtn = document.getElementById('weather-apis-radio-emergency-history-btn')
+			const radioEmergencyHistoryModal = document.getElementById('weather-apis-radio-emergency-history-modal')
+			const radioEmergencyHistoryModalClose = document.getElementById('weather-apis-radio-emergency-history-modal-close')
+			const radioEmergencyHistoryBody = document.getElementById('weather-apis-radio-emergency-history-body')
+			const radioEmergencyHistoryEmpty = document.getElementById('weather-apis-radio-emergency-history-empty')
+			const radioEmergencyHistoryLoading = document.getElementById('weather-apis-radio-emergency-history-loading')
+
+			const radioHealthBox = document.getElementById('weather-apis-radio-health')
+			const radioHealthStatus = document.getElementById('weather-apis-radio-health-status')
+			const radioHealthTotal = document.getElementById('weather-apis-radio-health-total')
+			const radioHealthAvailable = document.getElementById('weather-apis-radio-health-available')
+			const radioHealthUnavailable = document.getElementById('weather-apis-radio-health-unavailable')
+			const radioHealthLastProbe = document.getElementById('weather-apis-radio-health-last-probe')
+
+			const stationModal = document.getElementById('weather-apis-radio-station-modal')
+			const stationModalClose = document.getElementById('weather-apis-radio-station-modal-close')
+			const stationModalLogo = document.getElementById('weather-apis-radio-station-modal-logo')
+			const stationModalName = document.getElementById('weather-apis-radio-station-modal-name')
+			const stationModalProvider = document.getElementById('weather-apis-radio-station-modal-provider')
+			const stationModalGenre = document.getElementById('weather-apis-radio-station-modal-genre')
+			const stationModalCountry = document.getElementById('weather-apis-radio-station-modal-country')
+			const stationModalDescription = document.getElementById('weather-apis-radio-station-modal-description')
+			const stationTabNowPlaying = document.getElementById('weather-apis-radio-station-tab-now-playing')
+			const stationTabAnalytics = document.getElementById('weather-apis-radio-station-tab-analytics')
+			const stationTabHealth = document.getElementById('weather-apis-radio-station-tab-health')
+			const stationPanelNowPlaying = document.getElementById('weather-apis-radio-station-panel-now-playing')
+			const stationPanelAnalytics = document.getElementById('weather-apis-radio-station-panel-analytics')
+			const stationPanelHealth = document.getElementById('weather-apis-radio-station-panel-health')
+			const stationLoading = document.getElementById('weather-apis-radio-station-loading')
+			const stationError = document.getElementById('weather-apis-radio-station-error')
+			const stationNowPlayingTrack = document.getElementById('weather-apis-radio-station-now-playing-track')
+			const stationNowPlayingArtist = document.getElementById('weather-apis-radio-station-now-playing-artist')
+			const stationNowPlayingAlbum = document.getElementById('weather-apis-radio-station-now-playing-album')
+			const stationNowPlayingUpdated = document.getElementById('weather-apis-radio-station-now-playing-updated')
+			const stationNowPlayingEmpty = document.getElementById('weather-apis-radio-station-now-playing-empty')
+			const stationNowPlayingArt = document.getElementById('weather-apis-radio-station-now-playing-art')
+			const stationAnalyticsDays = document.getElementById('weather-apis-radio-station-analytics-days')
+			const stationAnalyticsRefresh = document.getElementById('weather-apis-radio-station-analytics-refresh')
+			const stationAnalyticsTotalListens = document.getElementById('weather-apis-radio-station-analytics-total-listens')
+			const stationAnalyticsTotalDuration = document.getElementById('weather-apis-radio-station-analytics-total-duration')
+			const stationAnalyticsUniqueUsers = document.getElementById('weather-apis-radio-station-analytics-unique-users')
+			const stationAnalyticsBody = document.getElementById('weather-apis-radio-station-analytics-body')
+			const stationAnalyticsEmpty = document.getElementById('weather-apis-radio-station-analytics-empty')
+			const stationHealthStatus = document.getElementById('weather-apis-radio-station-health-status')
+			const stationHealthLastProbe = document.getElementById('weather-apis-radio-station-health-last-probe')
+			const stationHealthLatency = document.getElementById('weather-apis-radio-station-health-latency')
+			const stationHealthHttp = document.getElementById('weather-apis-radio-station-health-http')
+			const stationHealthHistoryBody = document.getElementById('weather-apis-radio-station-health-history-body')
+			const stationHealthHistoryEmpty = document.getElementById('weather-apis-radio-station-health-history-empty')
 
 			let stationsData = []
 			let providersData = []
@@ -1168,8 +1230,11 @@
 					radioStationsColumns.appendChild(th)
 				})
 				const th = document.createElement('th')
-				th.textContent = 'Play'
+				th.textContent = 'Details'
 				radioStationsColumns.appendChild(th)
+				const thPlay = document.createElement('th')
+				thPlay.textContent = 'Play'
+				radioStationsColumns.appendChild(thPlay)
 				filtered.forEach(station => {
 					const tr = document.createElement('tr')
 					cols.forEach(c => {
@@ -1186,11 +1251,27 @@
 							} else {
 								td.textContent = '—'
 							}
+						} else if (c === 'name') {
+							const nameLink = document.createElement('button')
+							nameLink.type = 'button'
+							nameLink.className = 'button weather-apis-radio__name-link'
+							nameLink.textContent = station.name || '—'
+							nameLink.title = 'Open station details'
+							nameLink.addEventListener('click', () => openStationModal(station))
+							td.appendChild(nameLink)
 						} else {
 							td.textContent = station[c] || '—'
 						}
 						tr.appendChild(td)
 					})
+					const detailsTd = document.createElement('td')
+					const detailsBtn = document.createElement('button')
+					detailsBtn.type = 'button'
+					detailsBtn.className = 'button'
+					detailsBtn.textContent = 'Details'
+					detailsBtn.addEventListener('click', () => openStationModal(station))
+					detailsTd.appendChild(detailsBtn)
+					tr.appendChild(detailsTd)
 					const playTd = document.createElement('td')
 					const playBtn = document.createElement('button')
 					playBtn.type = 'button'
@@ -1247,6 +1328,352 @@
 					opt.textContent = c
 					radioCountryFilter.appendChild(opt)
 				})
+			}
+
+			const setStationPanelError = (msg) => {
+				if (!stationError) return
+				if (msg) { stationError.textContent = msg; stationError.hidden = false }
+				else { stationError.textContent = ''; stationError.hidden = true }
+			}
+
+			const setStationPanelLoading = (on) => {
+				if (stationLoading) stationLoading.hidden = !on
+			}
+
+			const formatDateTime = (raw) => {
+				if (!raw) return '—'
+				const d = new Date(raw)
+				if (Number.isNaN(d.getTime())) return raw
+				try { return d.toLocaleString() } catch (e) { return d.toString() }
+			}
+
+			const formatDuration = (seconds) => {
+				if (seconds === null || seconds === undefined) return '—'
+				const n = Number(seconds)
+				if (!Number.isFinite(n) || n < 0) return '—'
+				if (n < 60) return `${n.toFixed(0)} s`
+				const h = Math.floor(n / 3600)
+				const m = Math.floor((n % 3600) / 60)
+				const s = Math.floor(n % 60)
+				if (h > 0) return `${h}h ${m}m`
+				if (m > 0) return `${m}m ${s}s`
+				return `${s}s`
+			}
+
+			const loadRadioHealth = async () => {
+				if (!radioHealthUrl || !radioHealthBox) return
+				try {
+					const result = await performJsonRequest('GET', radioHealthUrl)
+					if (!result.parsed || !isOcsSuccess(result.data)) { return }
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					if (!data || typeof data !== 'object') return
+					radioHealthBox.hidden = false
+					const total = data.total ?? data.stations_total ?? data.total_stations
+					const available = data.available ?? data.stations_available
+					const unavailable = data.unavailable ?? data.stations_unavailable
+					const lastProbe = data.last_probe_at ?? data.last_health_check_at
+					const healthy = data.healthy ?? data.ok ?? (unavailable === 0)
+					if (radioHealthTotal) radioHealthTotal.textContent = total ?? '—'
+					if (radioHealthAvailable) radioHealthAvailable.textContent = available ?? '—'
+					if (radioHealthUnavailable) radioHealthUnavailable.textContent = unavailable ?? '—'
+					if (radioHealthLastProbe) radioHealthLastProbe.textContent = formatDateTime(lastProbe)
+					if (radioHealthStatus) {
+						radioHealthStatus.textContent = healthy ? 'Healthy' : 'Degraded'
+						radioHealthStatus.classList.toggle('ok', !!healthy)
+						radioHealthStatus.classList.toggle('error', !healthy)
+					}
+				} catch (e) {
+					console.warn('[weather_apis] radio health load failed', e)
+				}
+			}
+
+			const loadCurrentEmergency = async () => {
+				if (!radioEmergencyCurrentUrl || !radioEmergencyBanner) return
+				try {
+					const result = await performJsonRequest('GET', radioEmergencyCurrentUrl)
+					if (!result.parsed || !isOcsSuccess(result.data)) { return }
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					if (!data) return
+					if (data === null || (typeof data === 'object' && Object.keys(data).length === 0)) {
+						radioEmergencyBanner.hidden = true
+						return
+					}
+					const priority = (data.priority || 'low').toLowerCase()
+					const priorityClass = ['low', 'medium', 'high', 'critical'].includes(priority) ? priority : 'low'
+					radioEmergencyBanner.hidden = false
+					radioEmergencyBanner.classList.remove('low', 'medium', 'high', 'critical')
+					radioEmergencyBanner.classList.add(priorityClass)
+					if (radioEmergencyTitle) radioEmergencyTitle.textContent = data.title || 'Emergency broadcast'
+					if (radioEmergencyPriority) radioEmergencyPriority.textContent = (priority || 'low').toUpperCase()
+					if (radioEmergencyMessage) radioEmergencyMessage.textContent = data.message || ''
+					const windowText = `${formatDateTime(data.starts_at)} → ${formatDateTime(data.ends_at)}`
+					if (radioEmergencyWindow) radioEmergencyWindow.textContent = windowText
+				} catch (e) {
+					console.warn('[weather_apis] emergency load failed', e)
+				}
+			}
+
+			const loadEmergencyHistory = async () => {
+				if (!radioEmergencyHistoryUrl || !radioEmergencyHistoryBody) return
+				if (radioEmergencyHistoryLoading) radioEmergencyHistoryLoading.hidden = false
+				radioEmergencyHistoryBody.innerHTML = ''
+				try {
+					const result = await performJsonRequest('GET', `${radioEmergencyHistoryUrl}?limit=50`)
+					if (radioEmergencyHistoryLoading) radioEmergencyHistoryLoading.hidden = true
+					if (!result.parsed || !isOcsSuccess(result.data)) {
+						if (radioEmergencyHistoryEmpty) {
+							radioEmergencyHistoryEmpty.textContent = 'Unable to load emergency history.'
+							radioEmergencyHistoryEmpty.hidden = false
+						}
+						return
+					}
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					const rows = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : [])
+					if (rows.length === 0) {
+						if (radioEmergencyHistoryEmpty) radioEmergencyHistoryEmpty.hidden = false
+						return
+					}
+					if (radioEmergencyHistoryEmpty) radioEmergencyHistoryEmpty.hidden = true
+					rows.forEach(item => {
+						const tr = document.createElement('tr')
+						const tdTitle = document.createElement('td')
+						tdTitle.textContent = item.title || '—'
+						const tdPriority = document.createElement('td')
+						tdPriority.textContent = (item.priority || '—').toUpperCase()
+						const tdStarts = document.createElement('td')
+						tdStarts.textContent = formatDateTime(item.starts_at)
+						const tdEnds = document.createElement('td')
+						tdEnds.textContent = formatDateTime(item.ends_at)
+						const tdActive = document.createElement('td')
+						tdActive.textContent = item.is_active ? 'Yes' : 'No'
+						tr.append(tdTitle, tdPriority, tdStarts, tdEnds, tdActive)
+						radioEmergencyHistoryBody.appendChild(tr)
+					})
+				} catch (e) {
+					if (radioEmergencyHistoryLoading) radioEmergencyHistoryLoading.hidden = true
+					console.warn('[weather_apis] emergency history load failed', e)
+				}
+			}
+
+			const openEmergencyHistoryModal = () => {
+				if (!radioEmergencyHistoryModal) return
+				radioEmergencyHistoryModal.hidden = false
+				loadEmergencyHistory()
+			}
+
+			const closeEmergencyHistoryModal = () => {
+				if (radioEmergencyHistoryModal) radioEmergencyHistoryModal.hidden = true
+			}
+
+			const switchStationTab = (tab) => {
+				const tabs = [
+					{ btn: stationTabNowPlaying, panel: stationPanelNowPlaying, key: 'now-playing' },
+					{ btn: stationTabAnalytics, panel: stationPanelAnalytics, key: 'analytics' },
+					{ btn: stationTabHealth, panel: stationPanelHealth, key: 'health' },
+				]
+				tabs.forEach(t => {
+					if (!t.btn || !t.panel) return
+					const active = t.key === tab
+					t.btn.classList.toggle('primary', active)
+					t.panel.hidden = !active
+				})
+			}
+
+			const openStationModal = (station) => {
+				if (!stationModal || !station) return
+				stationModal.dataset.stationId = station.id
+				if (stationModalName) stationModalName.textContent = station.name || station.id
+				if (stationModalProvider) stationModalProvider.textContent = station.provider_name ? `· ${station.provider_name}` : ''
+				if (stationModalGenre) stationModalGenre.textContent = station.genre ? `· ${station.genre}` : ''
+				if (stationModalCountry) stationModalCountry.textContent = station.country ? `· ${station.country}` : ''
+				if (stationModalDescription) {
+					if (station.description) {
+						stationModalDescription.textContent = station.description
+						stationModalDescription.hidden = false
+					} else {
+						stationModalDescription.textContent = ''
+						stationModalDescription.hidden = true
+					}
+				}
+				const logoUrl = station.logo_url || station.provider_logo_url || ''
+				if (stationModalLogo) {
+					if (logoUrl) { stationModalLogo.src = logoUrl; stationModalLogo.hidden = false }
+					else { stationModalLogo.hidden = true }
+				}
+				stationModal.hidden = false
+				switchStationTab('now-playing')
+				loadStationNowPlaying(station.id)
+			}
+
+			const closeStationModal = () => {
+				if (stationModal) stationModal.hidden = true
+			}
+
+			const loadStationNowPlaying = async (stationId) => {
+				if (!radioNowPlayingUrl) return
+				setStationPanelError(null)
+				setStationPanelLoading(true)
+				try {
+					const url = radioNowPlayingUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const result = await performJsonRequest('GET', url)
+					setStationPanelLoading(false)
+					if (!result.parsed || !isOcsSuccess(result.data)) {
+						setStationPanelError('Unable to load now-playing.')
+						return
+					}
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					if (!data) {
+						if (stationNowPlayingEmpty) stationNowPlayingEmpty.hidden = false
+						if (stationNowPlayingTrack) stationNowPlayingTrack.textContent = '—'
+						if (stationNowPlayingArtist) stationNowPlayingArtist.textContent = '—'
+						if (stationNowPlayingAlbum) stationNowPlayingAlbum.textContent = '—'
+						if (stationNowPlayingUpdated) stationNowPlayingUpdated.textContent = ''
+						return
+					}
+					const track = data.track_title || data.title || ''
+					const artist = data.artist || ''
+					const album = data.album || ''
+					if (stationNowPlayingEmpty) stationNowPlayingEmpty.hidden = !!(track || artist || album)
+					if (stationNowPlayingTrack) stationNowPlayingTrack.textContent = track || '—'
+					if (stationNowPlayingArtist) stationNowPlayingArtist.textContent = artist || '—'
+					if (stationNowPlayingAlbum) stationNowPlayingAlbum.textContent = album || '—'
+					if (stationNowPlayingUpdated) stationNowPlayingUpdated.textContent = data.updated_at ? `Updated ${formatDateTime(data.updated_at)}` : ''
+					if (stationNowPlayingArt && data.artwork_url) {
+						const img = document.createElement('img')
+						img.src = data.artwork_url
+						img.alt = ''
+						img.className = 'weather-apis-radio__now-playing-img'
+						stationNowPlayingArt.innerHTML = ''
+						stationNowPlayingArt.appendChild(img)
+					}
+				} catch (e) {
+					setStationPanelLoading(false)
+					setStationPanelError('Failed to load now-playing.')
+				}
+			}
+
+			const loadStationAnalytics = async (stationId, days) => {
+				if (!radioAnalyticsUrl) return
+				setStationPanelError(null)
+				setStationPanelLoading(true)
+				try {
+					const url = radioAnalyticsUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const result = await performJsonRequest('GET', `${url}?days=${encodeURIComponent(days)}`)
+					setStationPanelLoading(false)
+					if (!result.parsed || !isOcsSuccess(result.data)) {
+						setStationPanelError('Unable to load analytics.')
+						return
+					}
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					const rows = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : [])
+					let totalListens = 0
+					let totalDuration = 0
+					let uniqueUsers = 0
+					rows.forEach(r => {
+						totalListens += Number(r.total_listens || 0)
+						totalDuration += Number(r.total_duration_seconds || 0)
+						uniqueUsers += Number(r.unique_users || 0)
+					})
+					if (stationAnalyticsTotalListens) stationAnalyticsTotalListens.textContent = totalListens.toLocaleString()
+					if (stationAnalyticsTotalDuration) stationAnalyticsTotalDuration.textContent = formatDuration(totalDuration)
+					if (stationAnalyticsUniqueUsers) stationAnalyticsUniqueUsers.textContent = uniqueUsers.toLocaleString()
+					if (stationAnalyticsBody) stationAnalyticsBody.innerHTML = ''
+					if (rows.length === 0) {
+						if (stationAnalyticsEmpty) stationAnalyticsEmpty.hidden = false
+						return
+					}
+					if (stationAnalyticsEmpty) stationAnalyticsEmpty.hidden = true
+					rows.forEach(r => {
+						const tr = document.createElement('tr')
+						const tdDate = document.createElement('td')
+						tdDate.textContent = r.date || '—'
+						const tdListens = document.createElement('td')
+						tdListens.textContent = (r.total_listens ?? 0).toLocaleString()
+						const tdDuration = document.createElement('td')
+						tdDuration.textContent = (r.total_duration_seconds ?? 0).toLocaleString()
+						const tdUsers = document.createElement('td')
+						tdUsers.textContent = (r.unique_users ?? 0).toLocaleString()
+						tr.append(tdDate, tdListens, tdDuration, tdUsers)
+						stationAnalyticsBody.appendChild(tr)
+					})
+				} catch (e) {
+					setStationPanelLoading(false)
+					setStationPanelError('Failed to load analytics.')
+				}
+			}
+
+			const loadStationHealth = async (stationId) => {
+				if (!radioStationHealthUrl) return
+				setStationPanelError(null)
+				setStationPanelLoading(true)
+				try {
+					const url = radioStationHealthUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const result = await performJsonRequest('GET', url)
+					setStationPanelLoading(false)
+					if (!result.parsed || !isOcsSuccess(result.data)) {
+						setStationPanelError('Unable to load station health.')
+						return
+					}
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					const healthy = data?.is_available ?? data?.available ?? data?.healthy
+					const reachable = data?.reachable ?? data?.is_reachable
+					const lastProbe = data?.last_probe_at ?? data?.last_checked_at ?? data?.checked_at
+					const latency = data?.latency_ms ?? data?.response_time_ms
+					const http = data?.http_status ?? data?.status_code
+					if (stationHealthStatus) {
+						const ok = healthy === true || reachable === true
+						stationHealthStatus.textContent = ok ? 'Reachable' : 'Unreachable'
+						stationHealthStatus.classList.toggle('ok', ok)
+						stationHealthStatus.classList.toggle('error', !ok)
+					}
+					if (stationHealthLastProbe) stationHealthLastProbe.textContent = formatDateTime(lastProbe)
+					if (stationHealthLatency) stationHealthLatency.textContent = latency != null ? `${Number(latency).toFixed(0)} ms` : '—'
+					if (stationHealthHttp) stationHealthHttp.textContent = http != null ? String(http) : '—'
+				} catch (e) {
+					setStationPanelLoading(false)
+					setStationPanelError('Failed to load station health.')
+				}
+			}
+
+			const loadStationHealthHistory = async (stationId) => {
+				if (!radioStationHealthHistoryUrl || !stationHealthHistoryBody) return
+				try {
+					const url = radioStationHealthHistoryUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const result = await performJsonRequest('GET', `${url}?limit=20`)
+					if (!result.parsed || !isOcsSuccess(result.data)) { return }
+					const payload = unwrapResponseData(result.data)
+					const data = payload?.data ?? payload
+					const rows = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : [])
+					stationHealthHistoryBody.innerHTML = ''
+					if (rows.length === 0) {
+						if (stationHealthHistoryEmpty) stationHealthHistoryEmpty.hidden = false
+						return
+					}
+					if (stationHealthHistoryEmpty) stationHealthHistoryEmpty.hidden = true
+					rows.forEach(r => {
+						const tr = document.createElement('tr')
+						const tdChecked = document.createElement('td')
+						tdChecked.textContent = formatDateTime(r.checked_at)
+						const tdReachable = document.createElement('td')
+						tdReachable.textContent = r.is_reachable ? 'Yes' : 'No'
+						const tdHttp = document.createElement('td')
+						tdHttp.textContent = r.http_status != null ? String(r.http_status) : '—'
+						const tdLatency = document.createElement('td')
+						tdLatency.textContent = r.latency_ms != null ? `${Number(r.latency_ms).toFixed(0)} ms` : '—'
+						const tdError = document.createElement('td')
+						tdError.textContent = r.error_message || '—'
+						tr.append(tdChecked, tdReachable, tdHttp, tdLatency, tdError)
+						stationHealthHistoryBody.appendChild(tr)
+					})
+				} catch (e) {
+					console.warn('[weather_apis] station health history load failed', e)
+				}
 			}
 
 			let hlsInstance = null
@@ -1419,12 +1846,51 @@
 				}
 			}
 
-			if (radioRefresh) radioRefresh.addEventListener('click', () => { loadStations(); loadProviders() })
+			if (radioRefresh) radioRefresh.addEventListener('click', () => { loadStations(); loadProviders(); loadRadioHealth(); loadCurrentEmergency() })
 			if (radioStationsTab) radioStationsTab.addEventListener('click', () => switchTab('stations'))
 			if (radioProvidersTab) radioProvidersTab.addEventListener('click', () => switchTab('providers'))
 			if (radioSearch) radioSearch.addEventListener('input', renderStations)
 			if (radioGenreFilter) radioGenreFilter.addEventListener('change', renderStations)
 			if (radioCountryFilter) radioCountryFilter.addEventListener('change', renderStations)
+			if (radioEmergencyHistoryBtn) radioEmergencyHistoryBtn.addEventListener('click', openEmergencyHistoryModal)
+			if (radioEmergencyHistoryModalClose) radioEmergencyHistoryModalClose.addEventListener('click', closeEmergencyHistoryModal)
+			if (radioEmergencyHistoryModal) {
+				radioEmergencyHistoryModal.addEventListener('click', (event) => {
+					if (event.target === radioEmergencyHistoryModal) closeEmergencyHistoryModal()
+				})
+			}
+			if (stationModalClose) stationModalClose.addEventListener('click', closeStationModal)
+			if (stationModal) {
+				stationModal.addEventListener('click', (event) => {
+					if (event.target === stationModal) closeStationModal()
+				})
+			}
+			if (stationTabNowPlaying) stationTabNowPlaying.addEventListener('click', () => {
+				switchStationTab('now-playing')
+				const id = stationModal?.dataset.stationId
+				if (id) loadStationNowPlaying(id)
+			})
+			if (stationTabAnalytics) stationTabAnalytics.addEventListener('click', () => {
+				switchStationTab('analytics')
+				const id = stationModal?.dataset.stationId
+				const days = stationAnalyticsDays?.value || '30'
+				if (id) loadStationAnalytics(id, days)
+			})
+			if (stationTabHealth) stationTabHealth.addEventListener('click', () => {
+				switchStationTab('health')
+				const id = stationModal?.dataset.stationId
+				if (id) { loadStationHealth(id); loadStationHealthHistory(id) }
+			})
+			if (stationAnalyticsRefresh) stationAnalyticsRefresh.addEventListener('click', () => {
+				const id = stationModal?.dataset.stationId
+				const days = stationAnalyticsDays?.value || '30'
+				if (id) loadStationAnalytics(id, days)
+			})
+			if (stationAnalyticsDays) stationAnalyticsDays.addEventListener('change', () => {
+				const id = stationModal?.dataset.stationId
+				const days = stationAnalyticsDays.value || '30'
+				if (id) loadStationAnalytics(id, days)
+			})
 			if (radioPlayerClose) radioPlayerClose.addEventListener('click', closePlayer)
 			if (radioPlayerMinimize) radioPlayerMinimize.addEventListener('click', minimizePlayer)
 			if (radioPlayerPlay) radioPlayerPlay.addEventListener('click', togglePlayPause)
@@ -1477,6 +1943,8 @@
 
 			loadStations()
 			loadProviders()
+			loadRadioHealth()
+			loadCurrentEmergency()
 		}
 
 		const setupFarms = () => {
