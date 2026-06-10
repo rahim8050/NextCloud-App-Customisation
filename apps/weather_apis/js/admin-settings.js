@@ -1372,7 +1372,7 @@
 					const total = data.total ?? data.stations_total ?? data.total_stations
 					const available = data.available ?? data.stations_available
 					const unavailable = data.unavailable ?? data.stations_unavailable
-					const lastProbe = data.last_probe_at ?? data.last_health_check_at
+					const lastProbe = data.timestamp ?? data.last_probe_at ?? data.last_health_check_at
 					const healthy = data.healthy ?? data.ok ?? (unavailable === 0)
 					if (radioHealthTotal) radioHealthTotal.textContent = total ?? '—'
 					if (radioHealthAvailable) radioHealthAvailable.textContent = available ?? '—'
@@ -1620,14 +1620,14 @@
 						return
 					}
 					const payload = unwrapResponseData(result.data)
-					const data = payload?.data ?? payload
-					const healthy = data?.is_available ?? data?.available ?? data?.healthy
-					const reachable = data?.reachable ?? data?.is_reachable
-					const lastProbe = data?.last_probe_at ?? data?.last_checked_at ?? data?.checked_at
-					const latency = data?.latency_ms ?? data?.response_time_ms
-					const http = data?.http_status ?? data?.status_code
+					const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : [])
+					const entry = list[0] || {}
+					const reachable = entry?.reachable ?? entry?.is_reachable
+					const lastProbe = entry?.checked_at ?? entry?.last_probe_at ?? entry?.last_checked_at
+					const latency = entry?.response_time_ms ?? entry?.latency_ms
+					const http = entry?.status_code ?? entry?.http_status
 					if (stationHealthStatus) {
-						const ok = healthy === true || reachable === true
+						const ok = reachable === true
 						stationHealthStatus.textContent = ok ? 'Reachable' : 'Unreachable'
 						stationHealthStatus.classList.toggle('ok', ok)
 						stationHealthStatus.classList.toggle('error', !ok)
@@ -1642,14 +1642,13 @@
 			}
 
 			const loadStationHealthHistory = async (stationId) => {
-				if (!radioStationHealthHistoryUrl || !stationHealthHistoryBody) return
+				if (!radioStationHealthUrl || !stationHealthHistoryBody) return
 				try {
-					const url = radioStationHealthHistoryUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const url = radioStationHealthUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
 					const result = await performJsonRequest('GET', `${url}?limit=20`)
 					if (!result.parsed || !isOcsSuccess(result.data)) { return }
 					const payload = unwrapResponseData(result.data)
-					const data = payload?.data ?? payload
-					const rows = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : [])
+					const rows = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : [])
 					stationHealthHistoryBody.innerHTML = ''
 					if (rows.length === 0) {
 						if (stationHealthHistoryEmpty) stationHealthHistoryEmpty.hidden = false
