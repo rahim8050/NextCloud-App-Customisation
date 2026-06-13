@@ -1642,10 +1642,10 @@
 			}
 
 			const loadStationHealthHistory = async (stationId) => {
-		if (!radioStationHealthHistoryUrl || !stationHealthHistoryBody) return
-			try {
-				const url = radioStationHealthHistoryUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
-				const result = await performJsonRequest('GET', `${url}?limit=20`)
+				if (!radioStationHealthHistoryUrl || !stationHealthHistoryBody) return
+				try {
+					const url = radioStationHealthHistoryUrl.replace('__STATION_ID__', encodeURIComponent(stationId))
+					const result = await performJsonRequest('GET', `${url}?limit=20`)
 					if (!result.parsed || !isOcsSuccess(result.data)) { return }
 					const payload = unwrapResponseData(result.data)
 					const rows = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : [])
