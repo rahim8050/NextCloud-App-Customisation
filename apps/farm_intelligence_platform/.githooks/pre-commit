@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block committing the phrase "baby servers" (case-insensitive) in staged changes.
+if git diff --cached -U0 | grep -i -n "baby servers" >/dev/null; then
+  echo "❌ Commit blocked: staged changes contain the phrase 'baby servers'."
+  echo "Fix: remove/replace it, then re-stage and commit again."
+  exit 1
+fi

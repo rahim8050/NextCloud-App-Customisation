@@ -1,0 +1,11 @@
+{
+  "name": "@nextcloud/farm_intelligence_platform",
+  "private": true,
+  "scripts": {
+    "test:js": "node tests/js/ndvi-latest.test.js",
+    "lint:js": "cd ../.. && ./node_modules/.bin/eslint apps/farm_intelligence_platform --no-error-on-unmatched-pattern",
+    "lint:css": "cd ../.. && ./node_modules/.bin/stylelint 'apps/farm_intelligence_platform/**/*.{scss,vue}' --allow-empty-input",
+    "format": "bash -lc 'cd ../..; if [ \"$1\" = \"--check\" ]; then ./node_modules/.bin/eslint apps/farm_intelligence_platform --no-error-on-unmatched-pattern; ./node_modules/.bin/stylelint \"apps/farm_intelligence_platform/**/*.{scss,vue}\" --allow-empty-input; else ./node_modules/.bin/eslint apps/farm_intelligence_platform --fix --no-error-on-unmatched-pattern; ./node_modules/.bin/stylelint \"apps/farm_intelligence_platform/**/*.{scss,vue}\" --fix --allow-empty-input; fi' --",
+    "build": "cd ../.. && npm run build"
+  }
+}

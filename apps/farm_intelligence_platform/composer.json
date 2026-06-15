@@ -1,0 +1,48 @@
+{
+  "name": "nextcloud/farm_intelligence_platform",
+  "description": "Nextcloud Farm Intelligence Platform app",
+  "type": "project",
+  "license": "AGPL-3.0-or-later",
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.65",
+    "nextcloud/coding-standard": "^1.3",
+    "nextcloud/ocp": "dev-stable32",
+    "phpunit/phpunit": "^9",
+    "vimeo/psalm": "^5.15"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "classmap-authoritative": true,
+    "platform": {
+      "php": "8.1"
+    },
+    "sort-packages": true
+  },
+  "autoload": {
+    "psr-4": {
+      "OCA\\FarmIntelligencePlatform\\": "lib/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OCP\\": "vendor/nextcloud/ocp/OCP"
+    }
+  },
+  "scripts": {
+    "lint:php": "find . -name \\*.php -not -path './vendor/*' -not -path './vendor-bin/*' -not -path './build/*' -print0 | xargs -0 -r -n1 php -l",
+    "lint": "@lint:php",
+    "cs:check": "php-cs-fixer fix --dry-run --diff",
+    "cs:fix": "php-cs-fixer fix",
+    "stan": "psalm --no-cache --threads=1 --config=psalm.xml",
+    "psalm": "php vendor/bin/psalm --no-cache --threads=1 --config=psalm.xml",
+    "test": "phpunit -c tests/phpunit.xml --colors=always",
+    "test:unit": "@test",
+    "lint:js": "bash -lc 'cd ../..; files=$(git ls-files \"apps/farm_intelligence_platform/**/*.js\" \"apps/farm_intelligence_platform/**/*.mjs\" \"apps/farm_intelligence_platform/**/*.cjs\" \"apps/farm_intelligence_platform/**/*.ts\" \"apps/farm_intelligence_platform/**/*.tsx\" \"apps/farm_intelligence_platform/**/*.vue\"); if [ -z \"$files\" ]; then echo \"No frontend files; skipping ESLint.\"; exit 0; fi; ./node_modules/.bin/eslint --config apps/farm_intelligence_platform/.eslintrc.cjs --ignore-path apps/farm_intelligence_platform/.eslintignore --no-error-on-unmatched-pattern $files'",
+    "lint:css": "bash -lc 'cd ../..; files=$(git ls-files \"apps/farm_intelligence_platform/**/*.scss\" \"apps/farm_intelligence_platform/**/*.vue\"); if [ -z \"$files\" ]; then echo \"No SCSS/Vue files; skipping Stylelint.\"; exit 0; fi; ./node_modules/.bin/stylelint --ignore-path apps/farm_intelligence_platform/.stylelintignore $files'",
+    "format": "bash -lc 'cd ../..; mode=\"$1\"; js=$(git ls-files \"apps/farm_intelligence_platform/**/*.js\" \"apps/farm_intelligence_platform/**/*.mjs\" \"apps/farm_intelligence_platform/**/*.cjs\" \"apps/farm_intelligence_platform/**/*.ts\" \"apps/farm_intelligence_platform/**/*.tsx\" \"apps/farm_intelligence_platform/**/*.vue\"); css=$(git ls-files \"apps/farm_intelligence_platform/**/*.scss\" \"apps/farm_intelligence_platform/**/*.vue\"); fix=\"--fix\"; [ \"$mode\" = \"--check\" ] && fix=\"\"; if [ -n \"$js\" ]; then ./node_modules/.bin/eslint --config apps/farm_intelligence_platform/.eslintrc.cjs --ignore-path apps/farm_intelligence_platform/.eslintignore --no-error-on-unmatched-pattern $fix $js; else echo \"No frontend files; skipping ESLint.\"; fi; if [ -n \"$css\" ]; then ./node_modules/.bin/stylelint --ignore-path apps/farm_intelligence_platform/.stylelintignore $fix $css; else echo \"No SCSS/Vue files; skipping Stylelint.\"; fi' --",
+    "gate": "composer run lint && composer run cs:check && composer run psalm && composer run test"
+  },
+  "require": {
+    "symfony/yaml": "^6.4"
+  }
+}

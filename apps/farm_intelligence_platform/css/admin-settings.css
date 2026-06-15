@@ -1,0 +1,2259 @@
+.farm-intelligence-platform-settings {
+	/* Allow the settings panel to use the full right pane width. */
+	width: 100%;
+	/* Make the settings area feel like a “panel” without fighting Nextcloud */
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: calc(var(--border-radius) + 2px);
+	background-color: var(--color-background-dark, var(--color-main-background)) !important;
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 10%, transparent);
+}
+
+.farm-intelligence-platform-settings__form {
+	display: grid;
+	gap: 18px;
+	margin-top: 12px;
+}
+
+/* Keep your structure, but make each group feel intentional */
+.farm-intelligence-platform-settings .form-group {
+	display: grid;
+	gap: 8px;
+}
+
+/* If your markup has labels, this will make them crisp */
+.farm-intelligence-platform-settings .form-group label {
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--color-main-text);
+	letter-spacing: 0.1px;
+}
+
+/* Inputs */
+.farm-intelligence-platform-settings .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+.farm-intelligence-platform-settings .form-group textarea {
+	width: 100%;
+	max-width: 100%;
+
+	padding: 10px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-darker, var(--color-background-dark, var(--color-main-background))) !important;
+	color: var(--color-main-text);
+
+	transition:
+		border-color 120ms ease,
+		box-shadow 120ms ease,
+		background-color 120ms ease;
+}
+
+/* Give textareas a nicer default */
+.farm-intelligence-platform-settings .form-group textarea {
+	min-height: 96px;
+	resize: vertical;
+	line-height: 1.35;
+}
+
+.farm-intelligence-platform-settings input[type="checkbox"] {
+	width: auto;
+	max-width: none;
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+}
+
+/* Hover helps discoverability */
+.farm-intelligence-platform-settings .form-group input:hover,
+.farm-intelligence-platform-settings .form-group textarea:hover {
+	border-color: color-mix(in srgb, var(--color-border) 65%, var(--color-main-text) 35%);
+}
+
+/* Focus state: clear but not obnoxious */
+.farm-intelligence-platform-settings .form-group input:focus-visible,
+.farm-intelligence-platform-settings .form-group textarea:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 25%, transparent);
+}
+
+/* Secret fields: “card within a card” */
+.farm-intelligence-platform-settings .form-group.secret-field {
+	background-color: var(--color-background-darker, var(--color-background-hover)) !important;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	padding: 12px;
+
+	/* subtle emphasis */
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-main-text) 20%, transparent);
+	position: relative;
+}
+
+/* Add an accent stripe without changing markup */
+.farm-intelligence-platform-settings .form-group.secret-field::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 10px;
+	bottom: 10px;
+	width: 3px;
+	border-radius: 3px;
+	background: var(--color-primary-element, var(--color-primary, #0082c9));
+	opacity: 0.55;
+}
+
+.farm-intelligence-platform-settings .form-group.secret-field .hint {
+	margin: 6px 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.farm-intelligence-platform-credentials__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-credentials {
+	display: grid;
+	gap: 12px;
+	padding: 12px;
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-credentials[hidden] {
+	display: none;
+}
+
+.farm-intelligence-platform-credentials__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.farm-intelligence-platform-credentials__row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.farm-intelligence-platform-credentials__row input {
+	flex: 1;
+	max-width: 100%;
+}
+
+.farm-intelligence-platform-credentials__row textarea.farm-intelligence-platform-credentials__snippet {
+	flex: 1;
+	max-width: 100%;
+	min-height: 72px;
+}
+
+.farm-intelligence-platform-credentials .warning {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+}
+
+.farm-intelligence-platform-connection__actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-connection__status {
+	min-height: 18px;
+	font-size: 13px;
+	line-height: 1.25;
+	padding: 6px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	background: transparent;
+}
+
+.farm-intelligence-platform-connection__status.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.farm-intelligence-platform-connection__status.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.farm-intelligence-platform-diagnostics__actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-diagnostics__summary {
+	min-height: 18px;
+	font-size: 13px;
+	line-height: 1.25;
+	padding: 6px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	background: transparent;
+}
+
+.farm-intelligence-platform-diagnostics__summary.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.farm-intelligence-platform-diagnostics__summary.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.farm-intelligence-platform-diagnostics__results {
+	display: grid;
+	gap: 8px;
+	padding: 10px;
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-diagnostics__row {
+	display: flex;
+	gap: 8px;
+	align-items: baseline;
+	padding: 6px 8px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+}
+
+.farm-intelligence-platform-diagnostics__label {
+	font-weight: 600;
+	font-size: 12px;
+	min-width: 96px;
+}
+
+.farm-intelligence-platform-diagnostics__value {
+	font-size: 12px;
+	color: var(--color-main-text);
+	word-break: break-word;
+}
+
+.farm-intelligence-platform-diagnostics__row.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.farm-intelligence-platform-diagnostics__row.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.farm-intelligence-platform-diagnostics__preview {
+	margin-top: 6px;
+}
+
+.farm-intelligence-platform-diagnostics__preview img {
+	width: 64px;
+	height: 64px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background, #fff);
+	image-rendering: pixelated;
+}
+
+/* --- FIX: checkbox/toggle rows stop floating and align nicely --- */
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) {
+	/* Two columns: label/text left, control right */
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	column-gap: 12px;
+	row-gap: 6px;
+}
+
+/* Put label on the left */
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) label {
+	grid-column: 1;
+	margin: 0;
+	line-height: 1.3;
+}
+
+/* Put checkbox on the right (no more center float) */
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) input[type="checkbox"] {
+	grid-column: 2;
+	justify-self: end;
+	margin: 0;
+	transform: translateY(1px);
+}
+
+/* Any helper text in checkbox groups should sit beneath, full width */
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) .hint,
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) small,
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) .description,
+.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) .dev-note {
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+/* Status: make it look like a tiny inline alert */
+.farm-intelligence-platform-settings__status {
+	min-height: 18px;
+	font-size: 13px;
+	line-height: 1.25;
+
+	padding: 8px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	background: transparent;
+
+	/* Don’t stretch a blank status block too much */
+	width: fit-content;
+	max-width: 100%;
+}
+
+.farm-intelligence-platform-settings__status.success {
+	color: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.farm-intelligence-platform-settings__status.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+@media (min-width: 1024px) {
+	.farm-intelligence-platform-settings__form {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	#farm-intelligence-platform-farms,
+	#farm-intelligence-platform-credentials-result,
+	.farm-intelligence-platform-diagnostics,
+	.farm-intelligence-platform-connection,
+	.farm-intelligence-platform-settings__form > input[type="submit"],
+	#farm-intelligence-platform-settings-status {
+		grid-column: 1 / -1;
+	}
+}
+
+/* Responsive: keep it comfy on small screens */
+@media (max-width: 720px) {
+	.farm-intelligence-platform-settings {
+		max-width: 100%;
+		padding: 12px;
+	}
+
+	.farm-intelligence-platform-settings .form-group input,
+	.farm-intelligence-platform-settings .form-group textarea {
+		max-width: 100%;
+	}
+
+	/* Checkbox groups stack on mobile */
+	.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) {
+		grid-template-columns: 1fr;
+	}
+
+	.farm-intelligence-platform-settings .form-group:has(input[type="checkbox"]) input[type="checkbox"] {
+		grid-column: 1;
+		justify-self: start;
+	}
+}
+/* Hide inline success message (use toast for success instead) */
+.farm-intelligence-platform-settings__status.success {
+	display: none;
+}
+
+/* Optional: only show the status block when it's an error */
+.farm-intelligence-platform-settings__status {
+	display: none;
+}
+
+.farm-intelligence-platform-settings__status.error {
+	display: inline-block; /* keeps it compact */
+}
+
+.farm-intelligence-platform-farms {
+	padding: 12px;
+	border: 1px dashed var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-farms__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__note {
+	padding: 8px 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid transparent;
+	font-size: 12px;
+}
+
+.farm-intelligence-platform-farms__note.warning {
+	color: var(--color-warning);
+	border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+	background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.farm-intelligence-platform-farms__note.error {
+	color: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+.farm-intelligence-platform-farms__table-wrap {
+	overflow-x: auto;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-farms__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+}
+
+.farm-intelligence-platform-farms__table th,
+.farm-intelligence-platform-farms__table td {
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--color-border);
+	vertical-align: top;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-farms__table th {
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__pagination {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__page {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__panels {
+	display: grid;
+	gap: 24px;
+	min-width: 0;
+}
+
+@media (min-width: 1100px) {
+	.farm-intelligence-platform-farms {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"header"
+			"warning"
+			"error"
+			"table"
+			"panels"
+			"pagination";
+		align-items: start;
+	}
+
+	.farm-intelligence-platform-farms__header {
+		grid-area: header;
+	}
+
+	#farm-intelligence-platform-farms-warning {
+		grid-area: warning;
+	}
+
+	#farm-intelligence-platform-farms-error {
+		grid-area: error;
+	}
+
+	.farm-intelligence-platform-farms__table-wrap {
+		grid-area: table;
+	}
+
+	.farm-intelligence-platform-farms__panels {
+		grid-area: panels;
+		grid-column: 1 / -1;
+	}
+
+	.farm-intelligence-platform-farms__pagination {
+		grid-area: pagination;
+		grid-column: 1 / -1;
+	}
+}
+
+.farm-intelligence-platform-farms__ndvi {
+	display: grid;
+	gap: 10px;
+	padding: 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	min-width: 0;
+	grid-column: 1 / -1;
+}
+
+.farm-intelligence-platform-farms__ndvi-header {
+	display: flex;
+	gap: 8px;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__ndvi-title {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__ndvi-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__ndvi-row {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.farm-intelligence-platform-farms__ndvi-row input {
+	min-width: 140px;
+}
+
+.farm-intelligence-platform-farms__ndvi-error {
+	margin-top: 4px;
+}
+
+.farm-intelligence-platform-farms__ndvi-output {
+	display: grid;
+	gap: 10px;
+	font-size: 12px;
+	color: var(--color-main-text);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result {
+	display: grid;
+	gap: 10px;
+	padding: 14px 14px 12px;
+	border-radius: calc(var(--border-radius) + 4px);
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background, #fff);
+	white-space: normal;
+	box-shadow:
+		0 1px 2px color-mix(in srgb, var(--color-main-text) 8%, transparent),
+		0 10px 24px color-mix(in srgb, var(--color-main-text) 5%, transparent);
+	position: relative;
+	overflow: hidden;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result::before {
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 4px;
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 65%, transparent);
+	opacity: 0.65;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result--success {
+	border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-success) 12%, var(--color-main-background, #fff));
+	--result-accent: var(--color-success);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result--warning {
+	border-color: color-mix(in srgb, var(--color-warning) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-warning) 12%, var(--color-main-background, #fff));
+	--result-accent: var(--color-warning);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result--error {
+	border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background, #fff));
+	--result-accent: var(--color-error);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result--info {
+	--result-accent: var(--color-primary-element, #0082c9);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__header {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__title {
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__summary {
+	margin: 0;
+	padding: 8px 10px;
+	border-radius: var(--border-radius);
+	background: color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 10%, transparent);
+	color: var(--color-main-text);
+	line-height: 1.45;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__body {
+	display: grid;
+	gap: 10px;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result.is-collapsed .farm-intelligence-platform-result__body {
+	display: none;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__callout {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	padding: 10px 12px;
+	border-radius: var(--border-radius);
+	border: 1px solid color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 30%, var(--color-border));
+	background: color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 16%, var(--color-main-background));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 10%, transparent);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__callout-label {
+	flex: 0 0 auto;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 22%, var(--color-background-hover));
+	border: 1px solid color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 35%, var(--color-border));
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__callout-value {
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.45;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__badges {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__badge {
+	padding: 3px 10px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--result-accent, var(--color-border)) 28%, var(--color-border));
+	background: color-mix(in srgb, var(--result-accent, var(--color-background-hover)) 14%, var(--color-background-hover));
+	color: var(--color-main-text);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 36px;
+	padding: 0 12px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--color-border) 72%, var(--color-main-text));
+	background: color-mix(in srgb, var(--color-background-hover) 82%, var(--color-main-background));
+	color: var(--color-main-text);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0.72;
+	transition:
+		opacity 120ms ease,
+		border-color 120ms ease,
+		background-color 120ms ease,
+		box-shadow 120ms ease,
+		transform 120ms ease;
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 8%, transparent);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close--secondary {
+	background: color-mix(in srgb, var(--color-background-hover) 70%, var(--color-main-background));
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close:hover,
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close:focus-visible {
+	opacity: 1;
+	border-color: color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 40%, var(--color-border));
+	background: color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 14%, var(--color-background-hover));
+	box-shadow:
+		0 0 0 3px color-mix(in srgb, var(--result-accent, var(--color-primary-element, #0082c9)) 18%, transparent),
+		0 2px 4px color-mix(in srgb, var(--color-main-text) 10%, transparent);
+	transform: translateY(-1px);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close:focus-visible {
+	outline: none;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__close-label {
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-left: auto;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__teaser {
+	display: flex;
+	align-items: center;
+	padding: 10px 12px;
+	border-radius: var(--border-radius);
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, var(--color-main-text));
+	background: color-mix(in srgb, var(--color-background-hover) 75%, var(--color-main-background));
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__teaser-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 8px 12px;
+	margin: 0;
+	padding: 10px 0 0;
+	border-top: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts dt {
+	font-weight: 700;
+	color: var(--color-main-text);
+	opacity: 0.72;
+	line-height: 1.3;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts dd {
+	margin: 0;
+	line-height: 1.3;
+	font-variant-numeric: tabular-nums;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__debug summary {
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--color-main-text);
+	opacity: 0.8;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__debug pre {
+	margin: 6px 0 0;
+	padding: 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	background: color-mix(in srgb, var(--color-background-hover) 86%, var(--color-main-background));
+	font-size: 11px;
+	white-space: pre-wrap;
+	line-height: 1.45;
+}
+
+.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts {
+	grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
+}
+
+@media (max-width: 720px) {
+	.farm-intelligence-platform-settings .farm-intelligence-platform-result__header {
+		align-items: flex-start;
+	}
+
+	.farm-intelligence-platform-settings .farm-intelligence-platform-result__close {
+		padding: 0 10px;
+	}
+
+	.farm-intelligence-platform-settings .farm-intelligence-platform-result__callout {
+		flex-direction: column;
+	}
+
+	.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts {
+		grid-template-columns: 1fr;
+		gap: 2px 0;
+	}
+
+	.farm-intelligence-platform-settings .farm-intelligence-platform-result__facts dt {
+		margin-top: 6px;
+	}
+}
+
+.farm-intelligence-platform-farms__ndvi-table {
+	font-size: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	padding: 8px;
+	overflow-x: auto;
+	max-width: 100%;
+}
+
+.farm-intelligence-platform-farms__ndvi-table table {
+	min-width: 100%;
+}
+
+.farm-intelligence-platform-farms__ndvi-calendar {
+	display: grid;
+	gap: 6px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	padding: 8px;
+	font-size: 12px;
+}
+
+.farm-intelligence-platform-farms__ndvi-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 4px;
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	text-align: center;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.farm-intelligence-platform-farms__ndvi-calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 4px;
+}
+
+.farm-intelligence-platform-farms__ndvi-day {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 28px;
+	padding: 4px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-background-hover);
+	font-variant-numeric: tabular-nums;
+}
+
+.farm-intelligence-platform-farms__ndvi-day.has-data {
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 10%, var(--color-background-hover));
+}
+
+.farm-intelligence-platform-farms__ndvi-preview img {
+	max-width: 220px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background, #fff);
+}
+
+.farm-intelligence-platform-farms__weather {
+	display: grid;
+	gap: 10px;
+	padding: 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background, #fff);
+	min-width: 0;
+	grid-column: 1 / -1;
+}
+
+.farm-intelligence-platform-farms__observations {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-farms__activities {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-farms__observations .farm-intelligence-platform-farms__table td {
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-farms__observations .farm-intelligence-platform-farms__table td.farm-intelligence-platform-farms__cell--metadata,
+.farm-intelligence-platform-farms__observations .farm-intelligence-platform-farms__table th.farm-intelligence-platform-farms__cell--metadata {
+	max-width: 320px;
+	white-space: normal;
+	word-break: break-word;
+	line-height: 1.3;
+}
+
+.farm-intelligence-platform-farms__weather-header {
+	display: flex;
+	gap: 8px;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__weather-title {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__weather-tabs {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-farms__weather-tabs .button.active {
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	box-shadow: inset 0 0 0 1px var(--color-primary-element, var(--color-primary, #0082c9));
+}
+
+.farm-intelligence-platform-farms__weather-panel[hidden] {
+	display: none;
+}
+
+.farm-intelligence-platform-farms__weather-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 10px;
+}
+
+.farm-intelligence-platform-farms__weather-card {
+	display: grid;
+	gap: 6px;
+	padding: 10px;
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-farms__weather-card-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__weather-card-value {
+	font-size: 14px;
+}
+
+.farm-intelligence-platform-farms__weather-table {
+	font-size: 12px;
+	overflow-x: auto;
+	max-width: 100%;
+	width: 100%;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-farms__weather-table table {
+	width: max-content;
+	min-width: 100%;
+}
+
+.farm-intelligence-platform-farms__table th {
+	background: var(--color-main-background, #fff);
+}
+
+.farm-intelligence-platform-farms__table--sticky th {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.farm-intelligence-platform-farms__table td.is-number,
+.farm-intelligence-platform-farms__table th.is-number {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.farm-intelligence-platform-farms__table td.is-date,
+.farm-intelligence-platform-farms__table th.is-date {
+	text-align: left;
+}
+
+.farm-intelligence-platform-farms__table tbody tr:nth-child(even) {
+	background: color-mix(in srgb, var(--color-background-hover) 70%, transparent);
+}
+
+.farm-intelligence-platform-farms__table tbody tr:hover {
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 12%, transparent);
+}
+
+.farm-intelligence-platform-farms__group-row td {
+	background: var(--color-background-hover);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.farm-intelligence-platform-farms__group-cell {
+	padding: 6px 8px;
+}
+
+.farm-intelligence-platform-farms__modal {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.35);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2000;
+	padding: 24px;
+}
+
+.farm-intelligence-platform-farms__modal[hidden] {
+	display: none;
+}
+
+.farm-intelligence-platform-farms__modal-card {
+	background: var(--color-main-background, #fff);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--color-border);
+	width: min(720px, calc(100vw - 48px));
+	max-height: calc(100vh - 96px);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.farm-intelligence-platform-farms__modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	padding: 16px;
+}
+
+.farm-intelligence-platform-farms__modal-body {
+	overflow: auto;
+	max-height: calc(100vh - 180px);
+	padding: 16px;
+}
+
+.farm-intelligence-platform-farms__modal-fields {
+	display: grid;
+	gap: 10px;
+}
+
+.farm-intelligence-platform-farms__modal-fields label {
+	font-weight: 600;
+	font-size: 12px;
+}
+
+.farm-intelligence-platform-farms__sync-description {
+	margin-bottom: 16px;
+	color: var(--color-text-maxcontrast, #666);
+}
+
+.farm-intelligence-platform-farms__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+.farm-intelligence-platform-farms__field label {
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast, #666);
+}
+
+.farm-intelligence-platform-farms__field-group-title {
+	margin: 6px 0 2px;
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.farm-intelligence-platform-farms__field-group {
+	display: grid;
+	gap: 10px;
+	padding: 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-farms__field input[readonly] {
+	background: var(--color-background-hover, #f5f5f5);
+	cursor: not-allowed;
+}
+
+.farm-intelligence-platform-farms__modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	padding: 16px;
+}
+
+.farm-intelligence-platform-farms__modal-body input,
+.farm-intelligence-platform-farms__modal-body select,
+.farm-intelligence-platform-farms__modal-body textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Activities Section */
+.farm-intelligence-platform-activities {
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 1px solid var(--color-border);
+	min-width: 0;
+	grid-column: 1 / -1;
+}
+
+.farm-intelligence-platform-activities__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 16px;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-activities__header > div:first-child {
+	flex: 1;
+	min-width: 200px;
+}
+
+.farm-intelligence-platform-activities__header strong {
+	display: block;
+	font-size: 15px;
+	color: var(--color-main-text);
+	margin-bottom: 4px;
+}
+
+.farm-intelligence-platform-activities__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.farm-intelligence-platform-activities__note {
+	padding: 10px 14px;
+	border-radius: var(--border-radius);
+	margin-bottom: 12px;
+	font-size: 13px;
+}
+
+.farm-intelligence-platform-activities__note.warning {
+	background-color: color-mix(in srgb, #f59e0b 15%, transparent);
+	border: 1px solid #f59e0b;
+	color: #92400e;
+}
+
+.farm-intelligence-platform-activities__note.error {
+	background-color: color-mix(in srgb, #ef4444 15%, transparent);
+	border: 1px solid #ef4444;
+	color: #991b1b;
+}
+
+.farm-intelligence-platform-activities__table-wrap {
+	overflow-x: auto;
+	margin-bottom: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-activities__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-activities__table th,
+.farm-intelligence-platform-activities__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-activities__table th {
+	font-weight: 600;
+	background-color: var(--color-background-darker, var(--color-background-hover));
+	color: var(--color-main-text);
+	position: sticky;
+	top: 0;
+}
+
+.farm-intelligence-platform-activities__table tbody tr:hover {
+	background-color: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-activities__empty {
+	text-align: center;
+	padding: 32px 16px;
+	color: var(--color-main-text, #888);
+	font-size: 14px;
+}
+
+.farm-intelligence-platform-activities__pagination {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 12px;
+	margin-top: 16px;
+}
+
+.farm-intelligence-platform-activities__page {
+	font-size: 13px;
+	color: var(--color-main-text);
+}
+
+/* Status Badge */
+.farm-intelligence-platform-activities__status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+	background-color: color-mix(in srgb, var(--status-color, #888) 20%, transparent);
+	color: var(--status-color, #888);
+}
+
+/* Type Badge */
+.farm-intelligence-platform-activities__type-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	background-color: color-mix(in srgb, var(--type-color, #888) 15%, transparent);
+	color: var(--type-color, #888);
+}
+
+/* Modal */
+.farm-intelligence-platform-activities__modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 16px;
+}
+
+.farm-intelligence-platform-activities__modal[hidden] {
+	display: none;
+}
+
+.farm-intelligence-platform-activities__modal-card {
+	background-color: var(--color-background-dark, var(--color-main-background));
+	border-radius: var(--border-radius);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	max-width: 500px;
+	width: 100%;
+	max-height: 90vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.farm-intelligence-platform-activities__modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--color-border);
+	background-color: var(--color-background-darker, var(--color-background-hover));
+}
+
+.farm-intelligence-platform-activities__modal-header strong {
+	font-size: 16px;
+	color: var(--color-main-text);
+}
+
+.farm-intelligence-platform-activities__modal-body {
+	padding: 20px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+.farm-intelligence-platform-activities__modal-errors {
+	margin-top: 12px;
+	padding: 10px 14px;
+	border-radius: var(--border-radius);
+	background-color: color-mix(in srgb, #ef4444 15%, transparent);
+	border: 1px solid #ef4444;
+	color: #991b1b;
+	font-size: 13px;
+}
+
+.farm-intelligence-platform-activities__field {
+	margin-bottom: 16px;
+}
+
+.farm-intelligence-platform-activities__field label {
+	display: block;
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--color-main-text);
+	margin-bottom: 6px;
+}
+
+.farm-intelligence-platform-activities__field input,
+.farm-intelligence-platform-activities__field select,
+.farm-intelligence-platform-activities__field textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-background-darker, var(--color-background-dark, var(--color-main-background))) !important;
+	color: var(--color-main-text);
+	font-size: 13px;
+	box-sizing: border-box;
+}
+
+.farm-intelligence-platform-activities__field input:focus,
+.farm-intelligence-platform-activities__field select:focus,
+.farm-intelligence-platform-activities__field textarea:focus {
+	outline: none;
+	border-color: var(--color-primary-element, var(--color-primary, #0082c9));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 25%, transparent);
+}
+
+.farm-intelligence-platform-activities__modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 16px 20px;
+	border-top: 1px solid var(--color-border);
+	background-color: var(--color-background-darker, var(--color-background-hover));
+}
+
+.farm-intelligence-platform-activities__modal-actions .button.error {
+	background-color: #ef4444;
+	color: white;
+	border-color: #ef4444;
+}
+
+.farm-intelligence-platform-activities__modal-actions .button.error:hover {
+	background-color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.farm-intelligence-platform-activities__header {
+		flex-direction: column;
+	}
+
+	.farm-intelligence-platform-activities__actions {
+		width: 100%;
+		justify-content: flex-start;
+	}
+
+	.farm-intelligence-platform-activities__table {
+		font-size: 12px;
+	}
+
+	.farm-intelligence-platform-activities__table th,
+	.farm-intelligence-platform-activities__table td {
+		padding: 8px;
+		max-width: 120px;
+	}
+}
+
+/* Radio section — matches farm-intelligence-platform-farms__observations containment */
+.farm-intelligence-platform-radio {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-radio__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.farm-intelligence-platform-radio__header .hint {
+	margin: 0;
+}
+
+.farm-intelligence-platform-radio__tabs {
+	display: flex;
+	gap: 8px;
+}
+
+.farm-intelligence-platform-radio__note {
+	padding: 8px 12px;
+	border-radius: 4px;
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-radio__note.error {
+	background: var(--color-error);
+	color: var(--color-error-text);
+}
+
+.farm-intelligence-platform-radio__panel {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-radio__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.farm-intelligence-platform-radio__filters label {
+	font-weight: 600;
+}
+
+.farm-intelligence-platform-radio__filters input[type="text"] {
+	flex: 1;
+	min-width: 200px;
+}
+
+.farm-intelligence-platform-radio__filters select {
+	min-width: 150px;
+}
+
+.farm-intelligence-platform-radio__table-wrap {
+	overflow-x: auto;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-radio__table {
+	width: 100%;
+	border-collapse: collapse;
+	min-width: 0;
+}
+
+.farm-intelligence-platform-radio__table th,
+.farm-intelligence-platform-radio__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-radio__table th {
+	background: var(--color-background-hover);
+	font-weight: 600;
+	position: sticky;
+	top: 0;
+}
+
+.farm-intelligence-platform-radio__table tbody tr:hover {
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-radio__player {
+	position: fixed !important;
+	z-index: 1000001 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	padding-bottom: env(safe-area-inset-bottom);
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+.farm-intelligence-platform-radio__player[hidden] {
+	display: none !important;
+}
+
+.farm-intelligence-platform-radio__player-bar {
+	background: var(--color-main-background) !important;
+	border-top: 1px solid var(--color-border) !important;
+	padding: 8px 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.farm-intelligence-platform-radio__bar-logo {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	object-fit: cover;
+}
+
+.farm-intelligence-platform-radio__bar-title {
+	flex: 1;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-text-main);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-radio__bar-time {
+	font-size: 12px;
+	color: var(--color-text-lighter);
+	font-variant-numeric: tabular-nums;
+	min-width: 36px;
+	text-align: center;
+}
+
+.farm-intelligence-platform-radio__bar-live {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 10px;
+	margin-left: 4px;
+	border-radius: 999px;
+	background: rgba(255, 122, 0, 0.12);
+	color: #ff7a00;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.farm-intelligence-platform-radio__bar-live::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.18);
+}
+
+.farm-intelligence-platform-radio__progress-bar {
+	background: var(--color-main-background) !important;
+	padding: 0 16px !important;
+	border-top: 1px solid var(--color-border) !important;
+}
+
+.farm-intelligence-platform-radio__progress-track {
+	width: 100%;
+	height: 4px;
+	background: var(--color-border) !important;
+	border-radius: 2px;
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+}
+
+.farm-intelligence-platform-radio__progress-fill {
+	height: 100%;
+	background: var(--color-primary-element) !important;
+	border-radius: 2px;
+	width: 0;
+	transition: width 0.1s linear;
+	position: relative;
+	min-width: 6px;
+	transform-origin: left center;
+}
+
+.farm-intelligence-platform-radio__progress-track--live .farm-intelligence-platform-radio__progress-fill {
+	animation: farm-intelligence-platform-live-sweep 2.4s ease-in-out infinite;
+}
+
+.farm-intelligence-platform-radio__progress-track--live::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+	transform: translateX(-100%);
+	animation: farm-intelligence-platform-live-glint 2.8s linear infinite;
+	pointer-events: none;
+}
+
+.farm-intelligence-platform-radio__player-time {
+	display: block;
+	font-size: 13px;
+	color: var(--color-text-lighter);
+	margin-top: 4px;
+	font-variant-numeric: tabular-nums;
+}
+
+.farm-intelligence-platform-radio__player-live {
+	display: inline-flex;
+	margin-top: 8px;
+}
+
+.farm-intelligence-platform-radio__player-progress {
+	margin-top: 12px;
+}
+
+@keyframes farm-intelligence-platform-live-sweep {
+	0%, 100% { opacity: 0.85; transform: scaleX(0.72); }
+	50% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes farm-intelligence-platform-live-glint {
+	0% { transform: translateX(-100%); }
+	100% { transform: translateX(100%); }
+}
+
+.farm-intelligence-platform-radio__skip-btn {
+	width: 36px;
+	height: 36px;
+	border: none;
+	background: transparent;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+	flex-shrink: 0;
+}
+
+.farm-intelligence-platform-radio__skip-btn:hover {
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-radio__bar-btn {
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: transparent;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+	flex-shrink: 0;
+}
+
+.farm-intelligence-platform-radio__bar-btn:hover {
+	background: var(--color-background-hover);
+}
+
+.farm-intelligence-platform-radio__player-bar .farm-intelligence-platform-radio__bar-btn:first-of-type {
+	background: var(--color-primary-element);
+	color: white;
+}
+
+.farm-intelligence-platform-radio__player-bar .farm-intelligence-platform-radio__bar-btn:first-of-type:hover {
+	background: var(--color-primary-element-hover);
+}
+
+.farm-intelligence-platform-radio__modal {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	background: rgba(0, 0, 0, 0.7) !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	z-index: 999999 !important;
+	backdrop-filter: blur(4px);
+}
+
+.farm-intelligence-platform-radio__modal[hidden] {
+	display: none !important;
+}
+
+.farm-intelligence-platform-radio__modal-card {
+	background: var(--color-main-background);
+	border-radius: 16px;
+	padding: 32px 28px 24px;
+	max-width: 380px;
+	width: 90%;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	position: relative;
+}
+
+.farm-intelligence-platform-radio__modal-close {
+	position: absolute;
+	top: 12px;
+	right: 48px;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: var(--color-background-hover);
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+}
+
+.farm-intelligence-platform-radio__modal-minimize {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: var(--color-background-hover);
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-main);
+	transition: background 0.15s;
+}
+
+.farm-intelligence-platform-radio__modal-close:hover,
+.farm-intelligence-platform-radio__modal-minimize:hover {
+	background: var(--color-background-dark);
+}
+
+.farm-intelligence-platform-radio__modal-body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+.farm-intelligence-platform-radio__player-art {
+	width: 120px;
+	height: 120px;
+	border-radius: 16px;
+	background: linear-gradient(135deg, var(--color-primary-element-light), var(--color-primary-element));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.farm-intelligence-platform-radio__player-art img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 16px;
+}
+
+.farm-intelligence-platform-radio__player-icon {
+	color: white;
+	opacity: 0.9;
+}
+
+.farm-intelligence-platform-radio__player-meta {
+	text-align: center;
+}
+
+.farm-intelligence-platform-radio__player-meta strong {
+	display: block;
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--color-text-main);
+	margin-bottom: 4px;
+}
+
+.farm-intelligence-platform-radio__player-subtitle {
+	font-size: 13px;
+	color: var(--color-text-lighter);
+}
+
+.farm-intelligence-platform-radio__player-controls {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	width: 100%;
+	justify-content: center;
+}
+
+.farm-intelligence-platform-radio__play-btn {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	border: none;
+	background: var(--color-primary-element);
+	color: white;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.15s, background 0.15s;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.farm-intelligence-platform-radio__play-btn:hover {
+	background: var(--color-primary-element-hover);
+	transform: scale(1.05);
+}
+
+.farm-intelligence-platform-radio__play-btn:active {
+	transform: scale(0.95);
+}
+
+.farm-intelligence-platform-radio__volume {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-text-lighter);
+}
+
+.farm-intelligence-platform-radio__volume-slider {
+	width: 100px;
+	height: 4px;
+	-webkit-appearance: none;
+	appearance: none;
+	background: var(--color-border);
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+}
+
+.farm-intelligence-platform-radio__volume-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+	cursor: pointer;
+}
+
+.farm-intelligence-platform-radio__volume-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+	cursor: pointer;
+	border: none;
+}
+
+.farm-intelligence-platform-radio__player-info p {
+	margin: 4px 0;
+}
+
+@media (max-width: 768px) {
+	.farm-intelligence-platform-farms {
+		padding: 8px;
+		overflow-x: hidden;
+	}
+
+	.farm-intelligence-platform-farms__panels {
+		display: block;
+		gap: 16px;
+	}
+
+	.farm-intelligence-platform-farms__ndvi,
+	.farm-intelligence-platform-farms__weather,
+	.farm-intelligence-platform-farms__observations,
+	.farm-intelligence-platform-farms__activities {
+		display: block;
+		overflow-x: hidden;
+	}
+
+	.farm-intelligence-platform-farms__ndvi-row {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.farm-intelligence-platform-farms__ndvi-row input {
+		width: 100%;
+	}
+
+	.farm-intelligence-platform-farms__ndvi-actions {
+		flex-wrap: wrap;
+	}
+
+	.farm-intelligence-platform-farms__weather-tabs {
+		flex-wrap: wrap;
+	}
+
+	.farm-intelligence-platform-farms__weather-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.farm-intelligence-platform-radio__header {
+		flex-direction: column;
+	}
+
+	.farm-intelligence-platform-radio__filters {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.farm-intelligence-platform-radio__filters input[type="text"],
+	.farm-intelligence-platform-radio__filters select {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.farm-intelligence-platform-radio__table th,
+	.farm-intelligence-platform-radio__table td {
+		max-width: 120px;
+		padding: 8px;
+		font-size: 12px;
+	}
+
+	.farm-intelligence-platform-activities__table th,
+	.farm-intelligence-platform-activities__table td {
+		max-width: 120px;
+	}
+
+	.farm-intelligence-platform-radio__modal-card {
+		padding: 24px 20px 20px;
+		width: 95%;
+	}
+
+	.farm-intelligence-platform-radio__player-art {
+		width: 100px;
+		height: 100px;
+	}
+
+	.farm-intelligence-platform-radio__play-btn {
+		width: 56px;
+		height: 56px;
+	}
+
+	.farm-intelligence-platform-radio__volume-slider {
+		width: 80px;
+	}
+
+	.farm-intelligence-platform-radio__player-bar {
+		padding: 6px 12px;
+		gap: 8px;
+	}
+
+	.farm-intelligence-platform-radio__bar-logo {
+		width: 28px;
+		height: 28px;
+	}
+
+	.farm-intelligence-platform-radio__bar-title {
+		font-size: 13px;
+	}
+
+	.farm-intelligence-platform-radio__bar-btn {
+		width: 28px;
+		height: 28px;
+	}
+
+	.farm-intelligence-platform-radio__player {
+		bottom: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		transform: none !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+	}
+
+	.farm-intelligence-platform-radio__player-bar {
+		display: flex !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.farm-intelligence-platform-radio__player-art {
+		width: 80px;
+		height: 80px;
+	}
+
+	.farm-intelligence-platform-radio__play-btn {
+		width: 48px;
+		height: 48px;
+	}
+
+	.farm-intelligence-platform-radio__volume {
+		display: none;
+	}
+}
+
+/* Radio section — emergency broadcast banner, health summary, station detail modal */
+
+.farm-intelligence-platform-radio__emergency {
+	border: 1px solid var(--color-border, #ddd);
+	border-left: 4px solid var(--color-warning, #e8a33d);
+	border-radius: 4px;
+	padding: 12px 16px;
+	margin: 12px 0;
+	background: var(--color-background-hover, #f8f8f8);
+}
+
+.farm-intelligence-platform-radio__emergency.low {
+	border-left-color: var(--color-text-maxcontrast, #888);
+}
+
+.farm-intelligence-platform-radio__emergency.medium {
+	border-left-color: var(--color-warning, #e8a33d);
+}
+
+.farm-intelligence-platform-radio__emergency.high {
+	border-left-color: var(--color-error, #e9322d);
+}
+
+.farm-intelligence-platform-radio__emergency.critical {
+	border-left-color: var(--color-error, #e9322d);
+	background: var(--color-background-hover, #f8e8e7);
+	font-weight: bold;
+}
+
+.farm-intelligence-platform-radio__emergency-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+.farm-intelligence-platform-radio__priority {
+	font-size: 0.75em;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: var(--color-text-maxcontrast, #555);
+	color: #fff;
+	text-transform: uppercase;
+}
+
+.farm-intelligence-platform-radio__emergency-message {
+	margin: 4px 0;
+}
+
+.farm-intelligence-platform-radio__emergency-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.85em;
+	color: var(--color-text-maxcontrast, #555);
+}
+
+.farm-intelligence-platform-radio__health {
+	border: 1px solid var(--color-border, #ddd);
+	border-radius: 4px;
+	padding: 12px 16px;
+	margin: 12px 0;
+	background: var(--color-background-hover, #f8f8f8);
+}
+
+.farm-intelligence-platform-radio__health-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.farm-intelligence-platform-radio__health-status {
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 0.85em;
+}
+
+.farm-intelligence-platform-radio__health-status.ok {
+	background: var(--color-success, #46ba61);
+	color: #fff;
+}
+
+.farm-intelligence-platform-radio__health-status.error {
+	background: var(--color-error, #e9322d);
+	color: #fff;
+}
+
+.farm-intelligence-platform-radio__health-grid,
+.farm-intelligence-platform-radio__analytics-grid,
+.farm-intelligence-platform-radio__health-current {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 8px;
+}
+
+.farm-intelligence-platform-radio__health-card,
+.farm-intelligence-platform-radio__analytics-card {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 8px 10px;
+	border-radius: 4px;
+	background: var(--color-main-background, #fff);
+	border: 1px solid var(--color-border, #ddd);
+}
+
+.farm-intelligence-platform-radio__health-label,
+.farm-intelligence-platform-radio__analytics-label {
+	font-size: 0.75em;
+	color: var(--color-text-maxcontrast, #555);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.farm-intelligence-platform-radio__name-link {
+	background: none !important;
+	border: none !important;
+	padding: 0 !important;
+	color: var(--color-primary-element, #006aa3) !important;
+	text-decoration: underline !important;
+	cursor: pointer !important;
+}
+
+.farm-intelligence-platform-radio__modal-card--wide {
+	max-width: 720px;
+	width: 90vw;
+}
+
+.farm-intelligence-platform-radio__modal-title {
+	display: block;
+	margin-bottom: 12px;
+}
+
+.farm-intelligence-platform-radio__station-header {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	margin-bottom: 12px;
+}
+
+.farm-intelligence-platform-radio__station-logo {
+	width: 64px;
+	height: 64px;
+	border-radius: 8px;
+	object-fit: cover;
+}
+
+.farm-intelligence-platform-radio__station-meta {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	color: var(--color-text-maxcontrast, #555);
+	font-size: 0.85em;
+	margin-top: 4px;
+}
+
+.farm-intelligence-platform-radio__station-description {
+	margin: 6px 0 0;
+	color: var(--color-text-maxcontrast, #555);
+	font-size: 0.9em;
+}
+
+.farm-intelligence-platform-radio__station-tabs {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 12px;
+	border-bottom: 1px solid var(--color-border, #ddd);
+}
+
+.farm-intelligence-platform-radio__station-tabs .button {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.farm-intelligence-platform-radio__station-panel {
+	margin-top: 12px;
+}
+
+.farm-intelligence-platform-radio__now-playing {
+	display: flex;
+	gap: 16px;
+	align-items: center;
+}
+
+.farm-intelligence-platform-radio__now-playing-art {
+	width: 96px;
+	height: 96px;
+	border-radius: 8px;
+	background: var(--color-background-hover, #eee);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.farm-intelligence-platform-radio__now-playing-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.farm-intelligence-platform-radio__now-playing-icon {
+	color: var(--color-text-maxcontrast, #888);
+}
+
+.farm-intelligence-platform-radio__now-playing-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.farm-intelligence-platform-radio__now-playing-updated {
+	color: var(--color-text-maxcontrast, #555);
+	font-size: 0.8em;
+	margin-top: 4px;
+}
+
+.farm-intelligence-platform-radio__analytics-controls {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 12px;
+}
+}
