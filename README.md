@@ -8,11 +8,11 @@ Most of the code here is upstream Nextcloud (core + bundled apps). The custom wo
 
 Custom / local apps you currently have in `apps/`:
 
-- `apps/weather_apis` — custom Nextcloud app that integrates with an external Weather APIs backend (Django/DRF). Admin-only integration foundations are implemented (settings UI, config/validation, HMAC signing/service layer, diagnostics + test connection) plus admin proxy endpoints for farms/NDVI/weather. Docs: `apps/weather_apis/README.md`. Contributing: `apps/weather_apis/CONTRIBUTING.md`. Agent rules (for Codex/LLMs): `apps/weather_apis/AGENTS.md`.
+- `apps/farm_intelligence_platform` — custom Nextcloud app that integrates with a Django Farm Intelligence Platform (DRF). Admin-only integration foundations are implemented (settings UI, config/validation, HMAC signing/service layer, diagnostics + test connection) plus admin proxy endpoints for farms/NDVI/weather. Docs: `apps/farm_intelligence_platform/README.md`. Contributing: `apps/farm_intelligence_platform/CONTRIBUTING.md`. Agent rules (for Codex/LLMs): `apps/farm_intelligence_platform/AGENTS.md`.
 
 - `apps/context_chat` — upstream Nextcloud Assistant Context Chat app present in this tree. See `apps/context_chat/README.md` for its dependencies (AppAPI, Assistant, Context Chat Backend) and setup details.
 
-> Note: This repository is **not** a standalone “farm management suite”. Current farm/NDVI/weather admin tooling lives inside the `weather_apis` app; any additional workflows should be implemented as apps and documented inside their own folders.
+> Note: This repository is **not** a standalone “farm management suite”. Current farm/NDVI/weather admin tooling lives inside the `farm_intelligence_platform` app; any additional workflows should be implemented as apps and documented inside their own folders.
 
 ## Repo layout (high level)
 
@@ -32,11 +32,11 @@ sudo -u www-data php occ app:list
 ```
 ### Enable the custom app
 ```bash
-sudo -u www-data php occ app:enable weather_apis
+sudo -u www-data php occ app:enable farm_intelligence_platform
 ```
 ### Configure the app
-Use the Nextcloud Admin settings UI for weather_apis (and/or follow the app-level README):
-- `apps/weather_apis/README.md`
+Use the Nextcloud Admin settings UI for farm_intelligence_platform (and/or follow the app-level README):
+- `apps/farm_intelligence_platform/README.md`
 
 ### Development notes (local)
 This checkout is typically located at:
