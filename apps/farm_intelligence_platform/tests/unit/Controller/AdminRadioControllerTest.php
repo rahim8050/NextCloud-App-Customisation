@@ -195,6 +195,92 @@ final class AdminRadioControllerTest extends TestCase {
 		$this->assertSame('ok', $data['status']);
 	}
 
+	public function testCreateEmergencyForwardsBody(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('POST');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+		$request->method('getParams')->willReturn(['title' => 'Storm warning', 'severity' => 'high']);
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/radio/emergency/', [], ['title' => 'Storm warning', 'severity' => 'high'], 'request-id')
+			->willReturn(['payload' => ['id' => 1, 'title' => 'Storm warning'], 'statusCode' => 201]);
+
+		$controller = $this->createController($request, $client);
+		$response = $controller->createEmergency();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('Storm warning', $data['data']['title']);
+	}
+
+	public function testUpdateEmergencyForwardsBody(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('PATCH');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+		$request->method('getParams')->willReturn(['title' => 'Updated']);
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('PATCH', '/api/v1/radio/emergency/5/', [], ['title' => 'Updated'], 'request-id')
+			->willReturn(['payload' => ['id' => 5, 'title' => 'Updated'], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $client);
+		$response = $controller->updateEmergency(5);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('Updated', $data['data']['title']);
+	}
+
+	public function testDeleteEmergencyHitsCorrectEndpoint(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('DELETE');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('DELETE', '/api/v1/radio/emergency/5/', [], null, 'request-id')
+			->willReturn(['payload' => null, 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $client);
+		$response = $controller->deleteEmergency(5);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testSynthesizeTtsForwardsBody(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('POST');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+		$request->method('getParams')->willReturn(['text' => 'Hello world', 'voice' => 'en-US']);
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/radio/tts/', [], ['text' => 'Hello world', 'voice' => 'en-US'], 'request-id')
+			->willReturn(['payload' => ['mime_type' => 'audio/wav', 'duration_ms' => 1500, 'audio_base64' => 'AAAA'], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $client);
+		$response = $controller->synthesizeTts();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('audio/wav', $data['data']['mime_type']);
+	}
+
 	public function testWeatherApiExceptionSurfacesAsErrorResponse(): void {
 		$request = $this->createMock(IRequest::class);
 		$this->stubRequestHeaders($request);

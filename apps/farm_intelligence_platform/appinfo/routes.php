@@ -270,7 +270,63 @@ return [
 			'url' => '/api/v1/admin/radio/emergency/history',
 			'verb' => 'GET',
 		],
-	
+		[
+			'name' => 'adminRadio#createEmergency',
+			'url' => '/api/v1/admin/radio/emergency',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminRadio#updateEmergency',
+			'url' => '/api/v1/admin/radio/emergency/{pk}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminRadio#deleteEmergency',
+			'url' => '/api/v1/admin/radio/emergency/{pk}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminRadio#synthesizeTts',
+			'url' => '/api/v1/admin/radio/tts',
+			'verb' => 'POST',
+		],
+		// Radio user endpoints (authenticated, non-admin)
+		[
+			'name' => 'radioUser#listFavorites',
+			'url' => '/api/v1/radio/favorites',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'radioUser#addFavorite',
+			'url' => '/api/v1/radio/favorites',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'radioUser#removeFavorite',
+			'url' => '/api/v1/radio/favorites/{stationId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'radioUser#listHistory',
+			'url' => '/api/v1/radio/history',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'radioUser#getRecentHistory',
+			'url' => '/api/v1/radio/history/recent',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'radioUser#stopSession',
+			'url' => '/api/v1/radio/history/{sessionId}/stop',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'radioUser#getSignedStream',
+			'url' => '/api/v1/radio/stations/{stationId}/stream/signed',
+			'verb' => 'GET',
+		],
+
 	],
 	'ocs' => [
 		[

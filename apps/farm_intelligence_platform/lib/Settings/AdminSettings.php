@@ -32,8 +32,10 @@ final class AdminSettings implements IDelegatedSettings {
 	}
 
 	public function getForm(): TemplateResponse {
-		Util::addScript('farm_intelligence_platform', 'ndvi-latest');
-		Util::addScript('farm_intelligence_platform', 'admin-settings');
+		if (class_exists('OC')) {
+			Util::addScript('farm_intelligence_platform', 'ndvi-latest');
+			Util::addScript('farm_intelligence_platform', 'admin-settings');
+		}
 
 		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
 		$hmacSecretSet = $this->integrationConfig->getSecretB64OrNull() !== null;

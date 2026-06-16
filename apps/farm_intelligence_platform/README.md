@@ -120,6 +120,63 @@ All endpoints below are admin-only. Mutating requests require CSRF. The farm sch
   - Admin-only.
   - Proxies DRF farm weather daily endpoint; query param `days` (default 7).
 
+### Admin radio proxy endpoints (CRUD)
+
+All endpoints below are admin-only (`#[AdminRequired]`). Mutating requests require CSRF.
+
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/providers`
+  - Proxies DRF radio provider list endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations`
+  - Proxies DRF station list endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations/{stationId}`
+  - Proxies DRF station detail endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations/{stationId}/stream`
+  - Proxies DRF station stream URL endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations/{stationId}/now-playing`
+  - Proxies DRF now-playing metadata endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations/{stationId}/analytics`
+  - Proxies DRF station analytics endpoint; query param `days` (1–90, default 7).
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/stations/{stationId}/health`
+  - Proxies DRF station health-check history endpoint; query param `limit` (1–100, default 20).
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/health`
+  - Proxies DRF aggregate radio health endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/emergency/current`
+  - Proxies DRF current emergency broadcast endpoint.
+- `GET /apps/farm_intelligence_platform/api/v1/admin/radio/emergency/history`
+  - Proxies DRF emergency broadcast history endpoint; query param `limit` (1–200, default 50).
+- `POST /apps/farm_intelligence_platform/api/v1/admin/radio/emergency`
+  - Creates a new emergency broadcast (admin-only).
+- `PATCH /apps/farm_intelligence_platform/api/v1/admin/radio/emergency/{pk}`
+  - Updates an emergency broadcast (admin-only).
+- `DELETE /apps/farm_intelligence_platform/api/v1/admin/radio/emergency/{pk}`
+  - Deletes an emergency broadcast, idempotent (admin-only).
+- `POST /apps/farm_intelligence_platform/api/v1/admin/radio/tts`
+  - Proxies DRF TTS synthesis endpoint (admin-only). Body: `{ "text": "...", "voice": "..." }`.
+
+### User radio proxy endpoints (authenticated, non-admin)
+
+All endpoints below require an authenticated Nextcloud session (not admin). Mutating requests require CSRF.
+
+#### Favorites
+- `GET /apps/farm_intelligence_platform/api/v1/radio/favorites`
+  - Lists the authenticated user's favorite stations. Query params: `page`, `page_size`.
+- `POST /apps/farm_intelligence_platform/api/v1/radio/favorites`
+  - Adds a station to favorites. Body: `{ "station_id": "..." }`.
+- `DELETE /apps/farm_intelligence_platform/api/v1/radio/favorites/{stationId}`
+  - Removes a station from favorites, idempotent.
+
+#### Listening history
+- `GET /apps/farm_intelligence_platform/api/v1/radio/history`
+  - Lists the authenticated user's listening history (paginated). Query params: `page`, `page_size`.
+- `GET /apps/farm_intelligence_platform/api/v1/radio/history/recent`
+  - Returns the most recent N history rows. Query param: `limit` (1–100, default 20).
+- `POST /apps/farm_intelligence_platform/api/v1/radio/history/{sessionId}/stop`
+  - Stops a listening session (sets `ended_at`). Idempotent.
+
+#### Signed stream
+- `GET /apps/farm_intelligence_platform/api/v1/radio/stations/{stationId}/stream/signed`
+  - Returns a JWT-signed stream URL for the authenticated user. Response includes `token`, `stream_url`, `expires_at`, `format`, `bitrate`, `station_name`.
+
 ### Connectivity test
 
 Direct app route:

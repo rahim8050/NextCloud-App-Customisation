@@ -269,6 +269,69 @@ final class AdminRadioController extends Controller {
 		return $this->buildSuccessResponse($payload, 'Emergency history loaded.');
 	}
 
+	#[AdminRequired]
+	public function createEmergency(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('create emergency', $requestId);
+		$body = $this->request->getParams();
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus('POST', '/api/v1/radio/emergency/', [], $body, $requestId);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'create emergency');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'create emergency');
+		}
+		return $this->buildSuccessResponse($payload, 'Emergency broadcast created.', Http::STATUS_CREATED);
+	}
+
+	#[AdminRequired]
+	public function updateEmergency(int $pk): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('update emergency', $requestId);
+		$body = $this->request->getParams();
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus('PATCH', '/api/v1/radio/emergency/' . $pk . '/', [], $body, $requestId);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'update emergency');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'update emergency');
+		}
+		return $this->buildSuccessResponse($payload, 'Emergency broadcast updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteEmergency(int $pk): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('delete emergency', $requestId);
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus('DELETE', '/api/v1/radio/emergency/' . $pk . '/', [], null, $requestId);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'delete emergency');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'delete emergency');
+		}
+		return $this->buildSuccessResponse($payload, 'Emergency broadcast removed.');
+	}
+
+	#[AdminRequired]
+	public function synthesizeTts(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('synthesize TTS', $requestId);
+		$body = $this->request->getParams();
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus('POST', '/api/v1/radio/tts/', [], $body, $requestId);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'synthesize TTS');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'synthesize TTS');
+		}
+		return $this->buildSuccessResponse($payload, 'TTS synthesis complete.');
+	}
+
 	private function logEndpointEntry(string $action, string $requestId): void {
 		$path = $this->request->getPathInfo();
 		if ($path === '') {

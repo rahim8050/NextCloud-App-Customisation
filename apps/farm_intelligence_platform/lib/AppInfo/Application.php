@@ -49,7 +49,9 @@ final class Application extends App implements IBootstrap {
 	public const APP_ID = 'farm_intelligence_platform';
 
 	public function __construct(array $urlParams = []) {
-		parent::__construct(self::APP_ID, $urlParams);
+		if (class_exists('OC')) {
+			parent::__construct(self::APP_ID, $urlParams);
+		}
 	}
 
 	public function register(IRegistrationContext $context): void {
