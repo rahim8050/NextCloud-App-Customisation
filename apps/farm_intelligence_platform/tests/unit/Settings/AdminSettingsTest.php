@@ -131,7 +131,7 @@ final class AdminSettingsTest extends TestCase {
 				['farm_intelligence_platform.adminRadio.getStreamUrl', ['stationId' => '__STATION_ID__']],
 				['farm_intelligence_platform.adminRadio.getStationNowPlaying', ['stationId' => '__STATION_ID__']],
 				['farm_intelligence_platform.adminRadio.getStationAnalytics', ['stationId' => '__STATION_ID__']],
-				['farm_intelligence_platform.adminRadio.getStationHealth', ['stationId' => '__STATION_ID__']],
+				['farm_intelligence_platform.adminRadio.getStationHealthHistory', ['stationId' => '__STATION_ID__']],
 				['farm_intelligence_platform.adminRadio.getStationHealthHistory', ['stationId' => '__STATION_ID__']],
 				['farm_intelligence_platform.adminRadio.getRadioHealth'],
 				['farm_intelligence_platform.adminRadio.getCurrentEmergency'],

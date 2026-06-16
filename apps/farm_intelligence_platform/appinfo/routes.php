@@ -251,13 +251,8 @@ return [
 			'verb' => 'GET',
 		],
 		[
-			'name' => 'adminRadio#getStationHealth',
-			'url' => '/api/v1/admin/radio/stations/{stationId}/health',
-			'verb' => 'GET',
-		],
-		[
 			'name' => 'adminRadio#getStationHealthHistory',
-			'url' => '/api/v1/admin/radio/stations/{stationId}/health/history',
+			'url' => '/api/v1/admin/radio/stations/{stationId}/health',
 			'verb' => 'GET',
 		],
 		[

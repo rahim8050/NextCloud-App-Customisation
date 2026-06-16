@@ -106,7 +106,7 @@ final class AdminRadioControllerTest extends TestCase {
 			->willReturn(['payload' => ['is_available' => true], 'statusCode' => 200]);
 
 		$controller = $this->createController($request, $client);
-		$response = $controller->getStationHealth('bbc_1xtra');
+		$response = $controller->getStationHealthHistory('bbc_1xtra');
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('ok', $data['status']);
@@ -123,7 +123,7 @@ final class AdminRadioControllerTest extends TestCase {
 		$client = $this->createMock(WeatherApiClientInterface::class);
 		$client->expects($this->once())
 			->method('requestJsonWithStatus')
-			->with('GET', '/api/v1/radio/stations/x/health/history/', ['limit' => 5], null, 'request-id')
+			->with('GET', '/api/v1/radio/stations/x/health/', ['limit' => 5], null, 'request-id')
 			->willReturn(['payload' => ['results' => []], 'statusCode' => 200]);
 
 		$controller = $this->createController($request, $client);

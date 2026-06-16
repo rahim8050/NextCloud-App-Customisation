@@ -168,29 +168,6 @@ final class AdminRadioController extends Controller {
 	}
 
 	#[AdminRequired]
-	public function getStationHealth(string $stationId): JSONResponse {
-		$requestId = $this->resolveRequestId();
-		$this->logEndpointEntry('get radio station health', $requestId);
-
-		try {
-			$result = $this->weatherApiClient->requestJsonWithStatus(
-				'GET',
-				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/health/',
-				[],
-				null,
-				$requestId,
-			);
-			$payload = $result['payload'];
-		} catch (WeatherApiException $exception) {
-			return $this->handleWeatherApiException($exception, $requestId, 'get radio station health');
-		} catch (\Throwable $throwable) {
-			return $this->handleUnexpectedError($throwable, $requestId, 'get radio station health');
-		}
-
-		return $this->buildSuccessResponse($payload, 'Station health loaded.');
-	}
-
-	#[AdminRequired]
 	public function getStationHealthHistory(string $stationId, ?int $limit = null): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$this->logEndpointEntry('get radio station health history', $requestId);
@@ -203,7 +180,7 @@ final class AdminRadioController extends Controller {
 		try {
 			$result = $this->weatherApiClient->requestJsonWithStatus(
 				'GET',
-				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/health/history/',
+				'/api/v1/radio/stations/' . rawurlencode($stationId) . '/health/',
 				$queryParams,
 				null,
 				$requestId,
