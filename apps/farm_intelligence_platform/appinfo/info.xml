@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+  <id>farm_intelligence_platform</id>
+  <name>Farm Intelligence Platform</name>
+  <summary>Admin-only integration with a Django Farm Intelligence Platform (DRF)</summary>
+  <description>Admin-only integration with a Django Farm Intelligence Platform backend: farm CRUD, NDVI analytics, weather data, HMAC auth, and diagnostics proxy.</description>
+  <licence>AGPL-3.0-or-later</licence>
+  <version>0.0.3</version>
+  <namespace>FarmIntelligencePlatform</namespace>
+  <type>app</type>
+
+  <dependencies>
+    <nextcloud min-version="32.0.0" max-version="32.99.99"/>
+  </dependencies>
+
+  <settings>
+    <admin>OCA\FarmIntelligencePlatform\Settings\AdminSettings</admin>
+    <admin-section>OCA\FarmIntelligencePlatform\Sections\AdminSection</admin-section>
+  </settings>
+
+
+</info>
