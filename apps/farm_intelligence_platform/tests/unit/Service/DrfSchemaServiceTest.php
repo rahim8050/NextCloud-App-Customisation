@@ -276,6 +276,24 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
 				],
+				'/api/v1/farms/{farm_id}/ndwi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndwi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
+				],
 				'/api/v1/farm-state/{farm_id}/' => [
 					'get' => ['operationId' => 'v1_farm_state_retrieve'],
 				],
@@ -296,6 +314,27 @@ final class DrfSchemaServiceTest extends TestCase {
 					'get' => ['operationId' => 'v1_farms_activities_retrieve'],
 					'put' => ['operationId' => 'v1_farms_activities_update'],
 					'delete' => ['operationId' => 'v1_farms_activities_delete'],
+				],
+				'/api/v1/farms/{farm_id}/weather/current/' => [
+					'get' => ['operationId' => 'v1_farms_weather_current_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/weather/hourly/' => [
+					'get' => ['operationId' => 'v1_farms_weather_hourly_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/weather/daily/' => [
+					'get' => ['operationId' => 'v1_farms_weather_daily_retrieve'],
+				],
+				'/api/v1/ndvi/jobs/{id}/' => [
+					'get' => ['operationId' => 'v1_ndvi_jobs_retrieve'],
+				],
+				'/api/v1/ndvi' => [
+					'post' => ['operationId' => 'v1_ndvi_ingest_create'],
+				],
+				'/api/v1/ndvi/circuit-breaker/reset/' => [
+					'post' => ['operationId' => 'v1_ndvi_circuit_breaker_reset_create'],
+				],
+				'/api/v1/ndvi/health/upstream/' => [
+					'get' => ['operationId' => 'v1_ndvi_health_upstream_retrieve'],
 				],
 			],
 		];
@@ -395,6 +434,24 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndvi/refresh' => [
 					'post' => ['operationId' => 'v1_farms_ndvi_refresh_create'],
 				],
+				'/api/v1/farms/{farm_id}/ndwi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndwi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
+				],
 				'/api/v1/farm-state/{farm_id}/' => [
 					'get' => ['operationId' => 'v1_farm_state_retrieve'],
 				],
@@ -415,6 +472,27 @@ final class DrfSchemaServiceTest extends TestCase {
 					'get' => ['operationId' => 'v1_farms_activities_retrieve'],
 					'put' => ['operationId' => 'v1_farms_activities_update'],
 					'delete' => ['operationId' => 'v1_farms_activities_delete'],
+				],
+				'/api/v1/farms/{farm_id}/weather/current/' => [
+					'get' => ['operationId' => 'v1_farms_weather_current_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/weather/hourly/' => [
+					'get' => ['operationId' => 'v1_farms_weather_hourly_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/weather/daily/' => [
+					'get' => ['operationId' => 'v1_farms_weather_daily_retrieve'],
+				],
+				'/api/v1/ndvi/jobs/{id}/' => [
+					'get' => ['operationId' => 'v1_ndvi_jobs_retrieve'],
+				],
+				'/api/v1/ndvi' => [
+					'post' => ['operationId' => 'v1_ndvi_ingest_create'],
+				],
+				'/api/v1/ndvi/circuit-breaker/reset/' => [
+					'post' => ['operationId' => 'v1_ndvi_circuit_breaker_reset_create'],
+				],
+				'/api/v1/ndvi/health/upstream/' => [
+					'get' => ['operationId' => 'v1_ndvi_health_upstream_retrieve'],
 				],
 			],
 		];

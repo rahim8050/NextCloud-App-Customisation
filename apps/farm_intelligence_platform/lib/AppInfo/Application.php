@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace OCA\FarmIntelligencePlatform\AppInfo;
 
 use OCA\FarmIntelligencePlatform\Controller\AdminActivitiesController;
+use OCA\FarmIntelligencePlatform\Controller\AdminAlertsController;
+use OCA\FarmIntelligencePlatform\Controller\AdminApiKeysController;
 use OCA\FarmIntelligencePlatform\Controller\AdminConfigController;
 use OCA\FarmIntelligencePlatform\Controller\AdminFarmsController;
 use OCA\FarmIntelligencePlatform\Controller\AdminRadioController;
 use OCA\FarmIntelligencePlatform\Controller\ApiController;
 use OCA\FarmIntelligencePlatform\Controller\OcsApiController;
+use OCA\FarmIntelligencePlatform\Controller\PodcastsController;
 use OCA\FarmIntelligencePlatform\Controller\SettingsController;
+use OCA\FarmIntelligencePlatform\Controller\UserAlertsController;
 use OCA\FarmIntelligencePlatform\Listeners\CSPListener;
 use OCA\FarmIntelligencePlatform\Sections\AdminSection;
 use OCA\FarmIntelligencePlatform\Service\AppConfig;
@@ -217,6 +221,51 @@ final class Application extends App implements IBootstrap {
 				$c->get('AppName'),
 				$c->get(IRequest::class),
 				$c->get(WeatherApiClientInterface::class),
+				$c->get(DrfSchemaService::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(AdminApiKeysController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new AdminApiKeysController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(DrfSchemaService::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(PodcastsController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new PodcastsController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(DrfSchemaService::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(UserAlertsController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new UserAlertsController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(DrfSchemaService::class),
+				$logger,
+			);
+		});
+
+		$context->registerService(AdminAlertsController::class, function (ContainerInterface $c) {
+			$logger = $c->get(LoggerInterface::class);
+			return new AdminAlertsController(
+				$c->get('AppName'),
+				$c->get(IRequest::class),
+				$c->get(WeatherApiClientInterface::class),
+				$c->get(DrfSchemaService::class),
 				$logger,
 			);
 		});

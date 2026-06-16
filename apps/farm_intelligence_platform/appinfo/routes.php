@@ -129,6 +129,36 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdwiLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdwiTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdwiRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueNdwiRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshNdwi',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNdwiFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/state',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getFarmState',
 			'url' => '/api/v1/admin/farms/{farmId}/state',
 			'verb' => 'GET',
@@ -182,6 +212,27 @@ return [
 			'name' => 'adminFarms#deleteFarmActivity',
 			'url' => '/api/v1/admin/farms/{farmId}/activities/{activityId}',
 			'verb' => 'DELETE',
+		],
+		// NDVI utility endpoints
+		[
+			'name' => 'adminFarms#getNdviJobStatus',
+			'url' => '/api/v1/admin/ndvi/jobs/{jobId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#ndviIngest',
+			'url' => '/api/v1/admin/ndvi/ingest',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#resetNdviCircuitBreaker',
+			'url' => '/api/v1/admin/ndvi/circuit-breaker/reset',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNdviUpstreamHealth',
+			'url' => '/api/v1/admin/ndvi/health/upstream',
+			'verb' => 'GET',
 		],
 		// Activity endpoints
 		[
@@ -324,6 +375,101 @@ return [
 		[
 			'name' => 'radioUser#getSignedStream',
 			'url' => '/api/v1/radio/stations/{stationId}/stream/signed',
+			'verb' => 'GET',
+		],
+		// Admin API keys endpoints
+		[
+			'name' => 'adminApiKeys#listKeys',
+			'url' => '/api/v1/admin/keys',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminApiKeys#createKey',
+			'url' => '/api/v1/admin/keys',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminApiKeys#revokeKey',
+			'url' => '/api/v1/admin/keys/{pk}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminApiKeys#rotateKey',
+			'url' => '/api/v1/admin/keys/{pk}/rotate',
+			'verb' => 'POST',
+		],
+		// Podcasts endpoints
+		[
+			'name' => 'podcasts#list',
+			'url' => '/api/v1/podcasts',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'podcasts#get',
+			'url' => '/api/v1/podcasts/{podcastId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'podcasts#listEpisodes',
+			'url' => '/api/v1/podcasts/{podcastId}/episodes',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'podcasts#refresh',
+			'url' => '/api/v1/podcasts/{podcastId}/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'podcasts#getStreamUrl',
+			'url' => '/api/v1/podcasts/episodes/{episodeId}/stream',
+			'verb' => 'GET',
+		],
+		// User alerts endpoints
+		[
+			'name' => 'userAlerts#listSubscriptions',
+			'url' => '/api/v1/alerts/subscriptions',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'userAlerts#createSubscription',
+			'url' => '/api/v1/alerts/subscriptions',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'userAlerts#getSubscription',
+			'url' => '/api/v1/alerts/subscriptions/{subId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'userAlerts#updateSubscription',
+			'url' => '/api/v1/alerts/subscriptions/{subId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'userAlerts#deleteSubscription',
+			'url' => '/api/v1/alerts/subscriptions/{subId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'userAlerts#listAlerts',
+			'url' => '/api/v1/alerts/alerts',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'userAlerts#getAlert',
+			'url' => '/api/v1/alerts/alerts/{alertId}',
+			'verb' => 'GET',
+		],
+		// Admin alerts endpoints
+		[
+			'name' => 'adminAlerts#broadcast',
+			'url' => '/api/v1/admin/alerts/broadcast',
+			'verb' => 'POST',
+		],
+		// Activities health endpoint
+		[
+			'name' => 'adminActivities#getHealth',
+			'url' => '/api/v1/admin/activities/health',
 			'verb' => 'GET',
 		],
 

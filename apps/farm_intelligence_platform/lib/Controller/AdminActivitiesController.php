@@ -281,6 +281,21 @@ final class AdminActivitiesController extends Controller {
 
 
 	#[AdminRequired]
+	public function getHealth(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('activities health', $requestId);
+		try {
+			$result = $this->weatherApiClient->requestJsonWithStatus('GET', '/api/v1/activities/health/', [], null, $requestId);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'activities health');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'activities health');
+		}
+		return new JSONResponse($payload, HttpStatus::normalize($result['statusCode']));
+	}
+
+	#[AdminRequired]
 	public function deleteActivity(string $id): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$this->logEndpointEntry('delete activity', $requestId);

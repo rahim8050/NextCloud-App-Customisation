@@ -9,7 +9,7 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
-final class DrfSchemaService {
+class DrfSchemaService {
 	private const CACHE_KEY = 'drf_openapi_schema_json';
 	private const CACHE_TTL_SECONDS = 3600;
 
@@ -36,6 +36,19 @@ final class DrfSchemaService {
 		'ndvi_raster_queue' => 'v1_farms_ndvi_raster_queue_create',
 		'ndvi_refresh' => 'v1_farms_ndvi_refresh_create',
 		'farm_state' => 'v1_farm_state_retrieve',
+		'ndwi_latest' => 'v1_farms_ndwi_latest_retrieve',
+		'ndwi_timeseries' => 'v1_farms_ndwi_timeseries_retrieve',
+		'ndwi_raster' => 'v1_farms_ndwi_raster.png_retrieve',
+		'ndwi_raster_queue' => 'v1_farms_ndwi_raster_queue_create',
+		'ndwi_refresh' => 'v1_farms_ndwi_refresh_create',
+		'ndwi_farm_state' => 'v1_farms_ndwi_farm_state_retrieve',
+		'weather_current' => 'v1_farms_weather_current_retrieve',
+		'weather_hourly' => 'v1_farms_weather_hourly_retrieve',
+		'weather_daily' => 'v1_farms_weather_daily_retrieve',
+		'ndvi_job_status' => 'v1_ndvi_jobs_retrieve',
+		'ndvi_ingest' => 'v1_ndvi_ingest_create',
+		'ndvi_circuit_breaker_reset' => 'v1_ndvi_circuit_breaker_reset_create',
+		'ndvi_upstream_health' => 'v1_ndvi_health_upstream_retrieve',
 	];
 
 	private const ACTIVITY_OPERATION_IDS = [
@@ -113,6 +126,22 @@ final class DrfSchemaService {
 		}
 
 		return $operations[$operationKey];
+	}
+
+	/**
+	 * Generic operation lookup by DRF operationId.
+	 *
+	 * Loads the schema and extracts the path, method, queryParams, and bodyFields
+	 * for the given DRF operationId (e.g. "v1_radio_providers_list").
+	 *
+	 * @return array{operationId: string, method: string, path: string, queryParams: list<array{name: string, type: string, format: string|null, required: bool}>, bodyFields: array<string, array{type: string, format: string|null, required: bool, readOnly: bool, enum?: list<mixed>}>}
+	 * @throws WeatherApiException
+	 */
+	public function getOperation(string $operationId, string $correlationId): array {
+		[$schema, $warning] = $this->loadSchema($correlationId);
+		$schema = $this->normalizeSchema($schema);
+
+		return $this->extractOperation($schema, $operationId);
 	}
 
 	/**

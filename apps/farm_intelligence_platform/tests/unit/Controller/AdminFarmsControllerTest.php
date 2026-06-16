@@ -500,6 +500,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/42/weather/current/', [], null, 'request-id')
 			->willReturn([
@@ -511,8 +514,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$response = $controller->getWeatherCurrent('42');
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame(0, $data['status']);
-		$this->assertEquals(22.0, $data['data']['temperature_c']);
+		$this->assertSame('ok', $data['status']);
+		$this->assertEquals(22.0, $data['data']['data']['temperature_c']);
 	}
 
 	public function testWeatherCurrentMapsUpstreamFailure(): void {
@@ -522,6 +525,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
 
@@ -530,8 +536,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('error', $data['status']);
-		$this->assertSame('upstream_error', $data['code']);
-		$this->assertSame(502, $response->getStatus());
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
 	}
 
 	public function testWeatherHourlyReturnsPayload(): void {
@@ -542,6 +548,9 @@ final class AdminFarmsControllerTest extends TestCase {
 		]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
 		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/7/weather/hourly/', ['hours' => 24], null, 'request-id')
@@ -554,8 +563,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$response = $controller->getWeatherHourly('7');
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame(0, $data['status']);
-		$this->assertSame([], $data['data']['hours']);
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame([], $data['data']['data']['hours']);
 	}
 
 	public function testWeatherHourlyMapsUpstreamFailure(): void {
@@ -567,6 +576,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->willThrowException(new WeatherApiException('backend_timeout', 'Timeout'));
 
@@ -575,8 +587,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('error', $data['status']);
-		$this->assertSame('upstream_error', $data['code']);
-		$this->assertSame(502, $response->getStatus());
+		$this->assertSame('backend_timeout', $data['error']['code']);
+		$this->assertSame(504, $response->getStatus());
 	}
 
 	public function testWeatherDailyReturnsPayload(): void {
@@ -587,6 +599,9 @@ final class AdminFarmsControllerTest extends TestCase {
 		]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
 		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farms/8/weather/daily/', ['days' => 5], null, 'request-id')
@@ -599,8 +614,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$response = $controller->getWeatherDaily('8');
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame(0, $data['status']);
-		$this->assertSame([], $data['data']['forecasts']);
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame([], $data['data']['data']['forecasts']);
 	}
 
 	public function testWeatherDailyMapsUpstreamFailure(): void {
@@ -612,6 +627,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
 
@@ -620,8 +638,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('error', $data['status']);
-		$this->assertSame('upstream_error', $data['code']);
-		$this->assertSame(502, $response->getStatus());
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
 	}
 
 	public function testFarmStateReturnsPayload(): void {
@@ -630,6 +648,9 @@ final class AdminFarmsControllerTest extends TestCase {
 		$request->method('getParams')->willReturn([]);
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
 		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->with('GET', '/api/v1/farm-state/9/', [], null, 'request-id')
@@ -651,9 +672,9 @@ final class AdminFarmsControllerTest extends TestCase {
 		$response = $controller->getFarmState('9');
 		$data = $this->decodeResponse($response);
 
-		$this->assertSame(0, $data['success']);
-		$this->assertSame('full_canopy', $data['data']['state']);
-		$this->assertSame(0.45, $data['data']['mean_ndvi']);
+		$this->assertSame(0, $data['data']['success']);
+		$this->assertSame('full_canopy', $data['data']['data']['state']);
+		$this->assertSame(0.45, $data['data']['data']['mean_ndvi']);
 	}
 
 	public function testFarmStateMapsUpstreamFailure(): void {
@@ -663,6 +684,9 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
 		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
 			->method('requestJsonWithStatus')
 			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
 
@@ -671,8 +695,8 @@ final class AdminFarmsControllerTest extends TestCase {
 		$data = $this->decodeResponse($response);
 
 		$this->assertSame('error', $data['status']);
-		$this->assertSame('upstream_error', $data['code']);
-		$this->assertSame(502, $response->getStatus());
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
 	}
 
 	public function testListFarmObservationsPassesPagination(): void {
@@ -825,6 +849,399 @@ final class AdminFarmsControllerTest extends TestCase {
 
 		$this->assertSame('ok', $data['status']);
 		$this->assertNull($data['data']);
+	}
+
+	public function testNdwiLatestStripsFarmIdFromQuery(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'farmId' => '42',
+			'date' => '2024-06-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getNdwiLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/42/ndwi/latest/', ['date' => '2024-06-01'], null, 'request-id')
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testNdwiLatestRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiLatest('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdwiLatestMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testNdwiTimeseriesRequiresStartEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getNdwiTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiTimeseries('7');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNdwiTimeseriesRejectsStartAfterEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'start' => '2024-02-10',
+			'end' => '2024-02-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getNdwiTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiTimeseries('7');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testRefreshNdwiCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/farms/42/ndwi/refresh/', [], null, 'request-id')
+			->willReturn(['payload' => ['data' => ['status' => 'queued']], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->refreshNdwi('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('queued', $data['data']['data']['status']);
+	}
+
+	public function testGetNdwiRasterPngRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getNdwiRasterPng',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestBinary');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiRasterPng('55');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetNdwiRasterPngReturnsBinary(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'date' => '2024-06-01',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestBinary')
+			->with('GET', '/api/v1/farms/55/ndwi/raster.png', ['date' => '2024-06-01'], 'request-id')
+			->willReturn([
+				'body' => 'png-bytes',
+				'contentType' => 'image/png',
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiRasterPng('55');
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+		$this->assertSame('png-bytes', $response->getData());
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testQueueNdwiRasterRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.queueNdwiRaster',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueNdwiRaster('55');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetNdwiFarmStateReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/ndwi/farm-state/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['success' => 0, 'data' => ['mean_ndwi' => -0.15, 'state' => 'water_body']],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(-0.15, $data['data']['data']['mean_ndwi']);
+		$this->assertSame('water_body', $data['data']['data']['state']);
+	}
+
+	public function testGetNdwiFarmStateMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testNdwiLatestLogsQueryKeysWithoutFarmId(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'farmId' => '19',
+			'date' => '2024-02-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getNdwiLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/19/ndwi/latest/', ['date' => '2024-02-01'], null, 'request-id')
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdwiLatest('19');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testGetNdviJobStatusReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('GET');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/ndvi/jobs/42/', [], null, 'request-id')
+			->willReturn(['payload' => ['success' => 0, 'data' => ['id' => 42, 'status' => 'completed']], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviJobStatus(42);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('completed', $data['data']['data']['status']);
+	}
+
+	public function testNdviIngestCallsBackend(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('POST');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+		$request->method('getParams')->willReturn(['scene_id' => 'L8-123']);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/ndvi', [], $this->anything(), 'request-id')
+			->willReturn(['payload' => ['success' => 0, 'data' => ['status' => 'queued']], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->ndviIngest();
+		$rendered = json_decode($response->render(), true, 512, JSON_THROW_ON_ERROR);
+
+		$this->assertSame('queued', $rendered['data']['data']['status']);
+	}
+
+	public function testResetNdviCircuitBreakerCallsBackend(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('POST');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/ndvi/circuit-breaker/reset/', [], null, 'request-id')
+			->willReturn(['payload' => ['success' => 0, 'message' => 'Circuit breaker reset'], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->resetNdviCircuitBreaker();
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('Circuit breaker reset', $data['data']['message']);
+	}
+
+	public function testGetNdviUpstreamHealthReturnsPayload(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getMethod')->willReturn('GET');
+		$request->method('getPathInfo')->willReturn('');
+		$request->method('getRequestUri')->willReturn('');
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($this->createSchema());
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/ndvi/health/upstream/', [], null, 'request-id')
+			->willReturn(['payload' => ['success' => 0, 'data' => ['healthy' => true]], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNdviUpstreamHealth();
+		$data = $this->decodeResponse($response);
+
+		$this->assertTrue($data['data']['data']['healthy']);
 	}
 
 	public function testMethodsRequireAdmin(): void {
@@ -1021,6 +1438,90 @@ final class AdminFarmsControllerTest extends TestCase {
 						'operationId' => 'v1_farm_state_retrieve',
 					],
 				],
+				'/api/v1/farms/{farm_id}/ndwi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndwi_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndwi_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndwi_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndwi_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndwi_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndwi_farm_state_retrieve',
+					],
+				],
 				'/api/v1/farms/{farm_id}/observations/' => [
 					'get' => [
 						'operationId' => 'v1_farms_observations_list',
@@ -1113,6 +1614,67 @@ final class AdminFarmsControllerTest extends TestCase {
 					],
 					'delete' => [
 						'operationId' => 'v1_farms_activities_delete',
+					],
+				],
+				'/api/v1/farms/{farm_id}/weather/current/' => [
+					'get' => [
+						'operationId' => 'v1_farms_weather_current_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/weather/hourly/' => [
+					'get' => [
+						'operationId' => 'v1_farms_weather_hourly_retrieve',
+						'parameters' => [
+							[
+								'name' => 'hours',
+								'in' => 'query',
+								'schema' => ['type' => 'integer'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/weather/daily/' => [
+					'get' => [
+						'operationId' => 'v1_farms_weather_daily_retrieve',
+						'parameters' => [
+							[
+								'name' => 'days',
+								'in' => 'query',
+								'schema' => ['type' => 'integer'],
+							],
+						],
+					],
+				],
+				'/api/v1/ndvi/jobs/{id}/' => [
+					'get' => [
+						'operationId' => 'v1_ndvi_jobs_retrieve',
+					],
+				],
+				'/api/v1/ndvi' => [
+					'post' => [
+						'operationId' => 'v1_ndvi_ingest_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'scene_id' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/ndvi/circuit-breaker/reset/' => [
+					'post' => [
+						'operationId' => 'v1_ndvi_circuit_breaker_reset_create',
+					],
+				],
+				'/api/v1/ndvi/health/upstream/' => [
+					'get' => [
+						'operationId' => 'v1_ndvi_health_upstream_retrieve',
 					],
 				],
 			],

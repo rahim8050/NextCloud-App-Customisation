@@ -604,45 +604,38 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
-		$operation = [
-			'method' => 'GET',
-			'path' => '/api/v1/farms/{farm_id}/weather/current/',
-		];
-		$pathTemplate = $operation['path'];
-		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
-		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
-		$externalFarmId = $this->pullExternalFarmId($params);
-		$query = $this->filterQueryParams($params, []);
-		$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+		$operation = [];
+		$path = '';
 
 		try {
+			$operation = $this->schemaService->getFarmOperation('weather_current', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->logProxyRequest('weather current', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
-				'GET',
+				(string)($operation['method'] ?? 'GET'),
 				$path,
 				$query,
 				null,
 				$requestId,
 			);
 			$this->logProxyResponse('weather current', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
 		} catch (WeatherApiException $exception) {
 			$this->logProxyError('weather current', $operation, $path, $query, $requestId, $exception);
-			if ($exception->getErrorCode() === 'invalid_argument') {
-				return $this->handleWeatherApiException($exception, $requestId, 'weather current');
-			}
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleWeatherApiException($exception, $requestId, 'weather current');
 		} catch (\Throwable $throwable) {
-			$this->logger->warning(
-				'Weather API farm weather current failed',
-				LogSanitizer::sanitizeContext([
-					'requestId' => $requestId,
-					'error' => $throwable->getMessage(),
-				]),
-			);
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleUnexpectedError($throwable, $requestId, 'weather current');
 		}
 
-		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
+		return $this->buildSuccessResponse($payload);
 	}
 
 
@@ -655,45 +648,36 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
-		$operation = [
-			'method' => 'GET',
-			'path' => '/api/v1/farms/{farm_id}/weather/hourly/',
-		];
-		$pathTemplate = $operation['path'];
-		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
-		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
-		$query = $this->filterQueryParams($params, [
-			['name' => 'hours', 'type' => 'integer', 'format' => null, 'required' => false],
-		]);
+		$operation = [];
+		$path = '';
 
 		try {
+			$operation = $this->schemaService->getFarmOperation('weather_hourly', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
 			$this->logProxyRequest('weather hourly', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
-				'GET',
+				(string)($operation['method'] ?? 'GET'),
 				$path,
 				$query,
 				null,
 				$requestId,
 			);
 			$this->logProxyResponse('weather hourly', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
 		} catch (WeatherApiException $exception) {
 			$this->logProxyError('weather hourly', $operation, $path, $query, $requestId, $exception);
-			if ($exception->getErrorCode() === 'invalid_argument') {
-				return $this->handleWeatherApiException($exception, $requestId, 'weather hourly');
-			}
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleWeatherApiException($exception, $requestId, 'weather hourly');
 		} catch (\Throwable $throwable) {
-			$this->logger->warning(
-				'Weather API farm weather hourly failed',
-				LogSanitizer::sanitizeContext([
-					'requestId' => $requestId,
-					'error' => $throwable->getMessage(),
-				]),
-			);
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleUnexpectedError($throwable, $requestId, 'weather hourly');
 		}
 
-		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
+		return $this->buildSuccessResponse($payload);
 	}
 
 
@@ -706,45 +690,36 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
-		$operation = [
-			'method' => 'GET',
-			'path' => '/api/v1/farms/{farm_id}/weather/daily/',
-		];
-		$pathTemplate = $operation['path'];
-		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
-		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
-		$query = $this->filterQueryParams($params, [
-			['name' => 'days', 'type' => 'integer', 'format' => null, 'required' => false],
-		]);
+		$operation = [];
+		$path = '';
 
 		try {
+			$operation = $this->schemaService->getFarmOperation('weather_daily', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
 			$this->logProxyRequest('weather daily', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
-				'GET',
+				(string)($operation['method'] ?? 'GET'),
 				$path,
 				$query,
 				null,
 				$requestId,
 			);
 			$this->logProxyResponse('weather daily', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
 		} catch (WeatherApiException $exception) {
 			$this->logProxyError('weather daily', $operation, $path, $query, $requestId, $exception);
-			if ($exception->getErrorCode() === 'invalid_argument') {
-				return $this->handleWeatherApiException($exception, $requestId, 'weather daily');
-			}
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleWeatherApiException($exception, $requestId, 'weather daily');
 		} catch (\Throwable $throwable) {
-			$this->logger->warning(
-				'Weather API farm weather daily failed',
-				LogSanitizer::sanitizeContext([
-					'requestId' => $requestId,
-					'error' => $throwable->getMessage(),
-				]),
-			);
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleUnexpectedError($throwable, $requestId, 'weather daily');
 		}
 
-		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
+		return $this->buildSuccessResponse($payload);
 	}
 
 
@@ -757,45 +732,321 @@ final class AdminFarmsController extends Controller {
 			return $invalid;
 		}
 
-		$operation = [
-			'method' => 'GET',
-			'path' => '/api/v1/farm-state/{farm_id}/',
-		];
-		$pathTemplate = $operation['path'];
-		$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
-		$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
-		$externalFarmId = $this->pullExternalFarmId($params);
-		$query = $this->filterQueryParams($params, []);
-		$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+		$operation = [];
+		$path = '';
 
 		try {
+			$operation = $this->schemaService->getFarmOperation('farm_state', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
 			$this->logProxyRequest('farm state', $operation, $path, $query, $requestId);
 			$result = $this->weatherApiClient->requestJsonWithStatus(
-				'GET',
+				(string)($operation['method'] ?? 'GET'),
 				$path,
 				$query,
 				null,
 				$requestId,
 			);
 			$this->logProxyResponse('farm state', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
 		} catch (WeatherApiException $exception) {
 			$this->logProxyError('farm state', $operation, $path, $query, $requestId, $exception);
-			if ($exception->getErrorCode() === 'invalid_argument') {
-				return $this->handleWeatherApiException($exception, $requestId, 'farm state');
-			}
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleWeatherApiException($exception, $requestId, 'farm state');
 		} catch (\Throwable $throwable) {
-			$this->logger->warning(
-				'Weather API farm state failed',
-				LogSanitizer::sanitizeContext([
-					'requestId' => $requestId,
-					'error' => $throwable->getMessage(),
-				]),
-			);
-			return $this->buildUpstreamErrorResponse();
+			return $this->handleUnexpectedError($throwable, $requestId, 'farm state');
 		}
 
-		return new JSONResponse($result['payload'], HttpStatus::normalize($result['statusCode']));
+		return $this->buildSuccessResponse($payload);
+	}
+
+	// ── NDWI endpoints ─────────────────────────────────────────
+
+	#[AdminRequired]
+	public function getNdwiLatest(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi latest', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_latest', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('ndwi latest', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi latest', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi latest', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'ndwi latest');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi latest');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NDWI latest loaded.');
+	}
+
+	#[AdminRequired]
+	public function getNdwiTimeseries(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi timeseries', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_timeseries', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$startName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'start');
+			$endName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'end');
+			$this->ensureDateOrder($query, $startName, $endName);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('ndwi timeseries', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi timeseries', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi timeseries', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'ndwi timeseries');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi timeseries');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NDWI timeseries loaded.');
+	}
+
+	#[AdminRequired]
+	public function refreshNdwi(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi refresh', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_refresh', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('ndwi refresh', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi refresh', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi refresh', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'ndwi refresh');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi refresh');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NDWI refresh queued.');
+	}
+
+	#[AdminRequired]
+	public function getNdwiRasterPng(string $farmId): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi raster', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_raster', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('ndwi raster', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi raster', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi raster', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi raster');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+	#[AdminRequired]
+	public function queueNdwiRaster(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi raster queue', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_raster_queue', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = [];
+			$body = null;
+			$bodyFields = $operation['bodyFields'] ?? [];
+			if ($bodyFields !== []) {
+				$body = $this->filterBodyParams($params, $bodyFields, true);
+				$dateField = $this->resolveBodyFieldName($bodyFields, 'date');
+				if ($dateField !== null && array_key_exists($dateField, $body)) {
+					$this->parseIsoDateValue($body[$dateField], $dateField);
+				}
+			} else {
+				$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+				$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('ndwi raster queue', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				$query,
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi raster queue', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi raster queue', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'ndwi raster queue');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi raster queue');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NDWI raster queued.');
+	}
+
+	#[AdminRequired]
+	public function getNdwiFarmState(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndwi farm state', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndwi_farm_state', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('ndwi farm state', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndwi farm state', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('ndwi farm state', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'ndwi farm state');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'ndwi farm state');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NDWI farm state loaded.');
 	}
 
 	#[AdminRequired]
@@ -1114,6 +1365,123 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $this->buildSuccessResponse($payload, 'Farm activity deleted.');
+	}
+
+	// ── NDVI utility endpoints (admin, no farmId) ──────────────
+
+	#[AdminRequired]
+	public function getNdviJobStatus(int $jobId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndvi job status', $requestId);
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndvi_job_status', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['id' => (string)$jobId]);
+			$this->logProxyRequest('ndvi job status', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndvi job status', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'ndvi job status');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'ndvi job status');
+		}
+		return $this->buildSuccessResponse($payload);
+	}
+
+	#[AdminRequired]
+	public function ndviIngest(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndvi ingest', $requestId);
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndvi_ingest', $requestId);
+			$path = (string)($operation['path'] ?? '');
+			$params = $this->stripPathParams($this->request->getParams(), $path);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('ndvi ingest', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('ndvi ingest', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'ndvi ingest');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'ndvi ingest');
+		}
+		return $this->buildSuccessResponse($payload);
+	}
+
+	#[AdminRequired]
+	public function resetNdviCircuitBreaker(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndvi circuit breaker reset', $requestId);
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndvi_circuit_breaker_reset', $requestId);
+			$path = (string)($operation['path'] ?? '');
+			$this->logProxyRequest('ndvi circuit breaker reset', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndvi circuit breaker reset', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'ndvi circuit breaker reset');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'ndvi circuit breaker reset');
+		}
+		return $this->buildSuccessResponse($payload);
+	}
+
+	#[AdminRequired]
+	public function getNdviUpstreamHealth(): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('ndvi upstream health', $requestId);
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('ndvi_upstream_health', $requestId);
+			$path = (string)($operation['path'] ?? '');
+			$this->logProxyRequest('ndvi upstream health', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				[],
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('ndvi upstream health', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $e) {
+			return $this->handleWeatherApiException($e, $requestId, 'ndvi upstream health');
+		} catch (\Throwable $t) {
+			return $this->handleUnexpectedError($t, $requestId, 'ndvi upstream health');
+		}
+		return $this->buildSuccessResponse($payload);
 	}
 
 
@@ -1612,7 +1980,7 @@ final class AdminFarmsController extends Controller {
 	/**
 	 * @param array<array-key, mixed>|null $data
 	 */
-	private function buildSuccessResponse(?array $data, string $message, int $status = Http::STATUS_OK): JSONResponse {
+	private function buildSuccessResponse(?array $data, string $message = '', int $status = Http::STATUS_OK): JSONResponse {
 		return new JSONResponse([
 			'status' => 'ok',
 			'ok' => true,
