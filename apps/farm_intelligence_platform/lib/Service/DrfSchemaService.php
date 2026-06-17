@@ -46,7 +46,7 @@ class DrfSchemaService {
 		'weather_hourly' => 'v1_farms_weather_hourly_retrieve',
 		'weather_daily' => 'v1_farms_weather_daily_retrieve',
 		'ndvi_job_status' => 'v1_ndvi_jobs_retrieve',
-		'ndvi_ingest' => 'v1_ndvi_ingest_create',
+		'ndvi_ingest' => 'v1_ndvi_create',
 		'ndvi_circuit_breaker_reset' => 'v1_ndvi_circuit_breaker_reset_create',
 		'ndvi_upstream_health' => 'v1_ndvi_health_upstream_retrieve',
 	];

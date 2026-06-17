@@ -138,7 +138,7 @@ final class PodcastsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_podcasts_episodes_stream_retrieve', 'request-id')
+			->with('v1_podcasts_episode_stream', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_podcasts_episodes_stream_retrieve',
 				'method' => 'GET',
@@ -168,7 +168,7 @@ final class PodcastsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_podcasts_refresh_create', 'request-id')
+			->with('v1_podcasts_refresh', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_podcasts_refresh_create',
 				'method' => 'POST',

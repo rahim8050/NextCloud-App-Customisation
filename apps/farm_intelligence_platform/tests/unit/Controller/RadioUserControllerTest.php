@@ -118,7 +118,7 @@ final class RadioUserControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_favorites_destroy', 'request-id')
+			->with('v1_radio_favorites_delete', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_favorites_destroy',
 				'method' => 'DELETE',
@@ -177,7 +177,7 @@ final class RadioUserControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_history_recent_list', 'request-id')
+			->with('v1_radio_history_recent', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_history_recent_list',
 				'method' => 'GET',
@@ -208,7 +208,7 @@ final class RadioUserControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_history_stop_create', 'request-id')
+			->with('v1_radio_history_stop', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_history_stop_create',
 				'method' => 'POST',
@@ -237,7 +237,7 @@ final class RadioUserControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_signed_stream_retrieve', 'request-id')
+			->with('v1_radio_stations_stream_signed', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_signed_stream_retrieve',
 				'method' => 'GET',
@@ -297,7 +297,7 @@ final class RadioUserControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_history_recent_list', 'request-id')
+			->with('v1_radio_history_recent', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_history_recent_list',
 				'method' => 'GET',

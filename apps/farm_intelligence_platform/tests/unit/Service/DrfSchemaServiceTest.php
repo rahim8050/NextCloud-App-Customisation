@@ -328,7 +328,7 @@ final class DrfSchemaServiceTest extends TestCase {
 					'get' => ['operationId' => 'v1_ndvi_jobs_retrieve'],
 				],
 				'/api/v1/ndvi' => [
-					'post' => ['operationId' => 'v1_ndvi_ingest_create'],
+					'post' => ['operationId' => 'v1_ndvi_create'],
 				],
 				'/api/v1/ndvi/circuit-breaker/reset/' => [
 					'post' => ['operationId' => 'v1_ndvi_circuit_breaker_reset_create'],
@@ -486,7 +486,7 @@ final class DrfSchemaServiceTest extends TestCase {
 					'get' => ['operationId' => 'v1_ndvi_jobs_retrieve'],
 				],
 				'/api/v1/ndvi' => [
-					'post' => ['operationId' => 'v1_ndvi_ingest_create'],
+					'post' => ['operationId' => 'v1_ndvi_create'],
 				],
 				'/api/v1/ndvi/circuit-breaker/reset/' => [
 					'post' => ['operationId' => 'v1_ndvi_circuit_breaker_reset_create'],

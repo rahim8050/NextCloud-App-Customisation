@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 
 final class AdminApiKeysController extends Controller {
 	private const OPERATION_IDS = [
-		'list' => 'v1_keys_list',
+		'list' => 'v1_keys_retrieve',
 		'create' => 'v1_keys_create',
 		'revoke' => 'v1_keys_destroy',
 		'rotate' => 'v1_keys_rotate_create',

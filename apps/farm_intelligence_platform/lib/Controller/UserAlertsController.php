@@ -22,9 +22,9 @@ final class UserAlertsController extends Controller {
 		'subscriptions_create' => 'v1_alerts_subscriptions_create',
 		'subscriptions_retrieve' => 'v1_alerts_subscriptions_retrieve',
 		'subscriptions_update' => 'v1_alerts_subscriptions_update',
-		'subscriptions_destroy' => 'v1_alerts_subscriptions_destroy',
-		'alerts_list' => 'v1_alerts_alerts_list',
-		'alerts_retrieve' => 'v1_alerts_alerts_retrieve',
+		'subscriptions_destroy' => 'v1_alerts_subscriptions_delete',
+		'alerts_list' => 'v1_alerts_list',
+		'alerts_retrieve' => 'v1_alerts_retrieve',
 	];
 
 	public function __construct(

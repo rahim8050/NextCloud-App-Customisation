@@ -21,8 +21,8 @@ final class PodcastsController extends Controller {
 		'list' => 'v1_podcasts_list',
 		'retrieve' => 'v1_podcasts_retrieve',
 		'episodes_list' => 'v1_podcasts_episodes_list',
-		'episodes_stream_retrieve' => 'v1_podcasts_episodes_stream_retrieve',
-		'refresh_create' => 'v1_podcasts_refresh_create',
+		'episodes_stream_retrieve' => 'v1_podcasts_episode_stream',
+		'refresh_create' => 'v1_podcasts_refresh',
 	];
 
 	public function __construct(

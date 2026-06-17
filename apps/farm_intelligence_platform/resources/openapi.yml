@@ -3,8 +3,550 @@ info:
   title: Farm Intelligence Platform
   version: 1.0.0
   description: REST API for user authentication and API key lifecycle management.
-# NOTE: /api/v1/integration/* paths are deprecated aliases; prefer /api/v1/integrations/*.
 paths:
+  /api/v1/activities/:
+    get:
+      operationId: v1_activities_list
+      description: |-
+        List activities.
+
+        Returns all activities accessible to the authenticated user.
+        Integration tokens require 'read' scope.
+      tags:
+      - v1
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityListEnvelope'
+          description: ''
+    post:
+      operationId: v1_activities_create
+      description: |-
+        Create a new activity.
+
+        Input: type, scheduled_at, optional recurrence_type,
+               interval_days, farm, metadata.
+        Output: Created activity with generated next_due_at.
+        Integration tokens require 'write' scope.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+        required: true
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityEnvelope'
+          description: ''
+  /api/v1/activities/{id}/:
+    get:
+      operationId: v1_activities_retrieve
+      description: |-
+        Retrieve a single activity by ID.
+
+        Returns activity details for the authenticated user.
+        Integration tokens require 'read' scope.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activity.
+        required: true
+      tags:
+      - v1
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityEnvelope'
+          description: ''
+    put:
+      operationId: v1_activities_update
+      description: |-
+        Activity CRUD operations.
+
+        Auth: API key, user JWT, or integration JWT.
+        Permissions: IsAuthenticated; owner-only for user/API key requests.
+        Integration access: allow-listed per farm via FarmIntegrationAccess.
+        Integration scope: read for GET, write for POST/PATCH/DELETE.
+        Response: envelope with `data` = ActivitySerializer output.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activity.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Activity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Activity'
+        required: true
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+    patch:
+      operationId: v1_activities_partial_update
+      description: |-
+        Update an activity (partial).
+
+        Input: Any subset of activity fields.
+        Output: Updated activity.
+        Integration tokens require 'write' scope.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activity.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityEnvelope'
+          description: ''
+    delete:
+      operationId: v1_activities_destroy
+      description: |-
+        Delete an activity.
+
+        Output: 204 No Content on success.
+        Integration tokens require 'write' scope.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activity.
+        required: true
+      tags:
+      - v1
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NullEnvelope'
+          description: ''
+  /api/v1/activities/health/:
+    get:
+      operationId: v1_activities_health_retrieve
+      description: Return a lightweight health snapshot for activities.
+      tags:
+      - v1
+      security:
+      - FarmObservationAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityHealthEnvelope'
+          description: ''
+  /api/v1/alerts/:
+    get:
+      operationId: v1_alerts_list
+      description: Returns the caller's audio alerts, newest first. Paginated; supports
+        `page` and `page_size` query params (default 20, max 100). Optional `unread=true`
+        filter to limit to unacknowledged rows.
+      summary: List audio alerts
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: 1-based page number. Defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page. Defaults to 20, max 100.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+  /api/v1/alerts/{alert_id}/:
+    get:
+      operationId: v1_alerts_retrieve
+      description: |-
+        Retrieve or acknowledge a single audio alert.
+
+        Auth: IsAuthenticated
+        GET response data: :class:`AudioAlertSerializer`.
+        POST response data: ``null`` (acknowledge is a side-effect call).
+      summary: Get one audio alert
+      parameters:
+      - in: path
+        name: alert_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+    post:
+      operationId: v1_alerts_acknowledge
+      description: |-
+        Retrieve or acknowledge a single audio alert.
+
+        Auth: IsAuthenticated
+        GET response data: :class:`AudioAlertSerializer`.
+        POST response data: ``null`` (acknowledge is a side-effect call).
+      summary: Acknowledge an audio alert
+      parameters:
+      - in: path
+        name: alert_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAckEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+  /api/v1/alerts/admin/send/:
+    post:
+      operationId: v1_alerts_admin_send
+      description: |-
+        Send a manual audio broadcast to a list of users (admin only).
+
+        Auth: IsAdminUser
+        Throttle: ``alerts_admin: 30/min``.
+        Body: :class:`AdminBroadcastSerializer` (``user_ids``, ``title``,
+        ``message``, optional ``farm_id``).
+      summary: Send a manual audio alert (admin)
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminBroadcast'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminBroadcast'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminBroadcast'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAdminSendEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+  /api/v1/alerts/subscriptions/:
+    get:
+      operationId: v1_alerts_subscriptions_list
+      description: Returns the caller's audio alert subscriptions, newest first. Paginated;
+        supports `page` and `page_size` query params (default 20, max 100).
+      summary: List audio alert subscriptions
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: 1-based page number. Defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page. Defaults to 20, max 100.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertSubscriptionListEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+    post:
+      operationId: v1_alerts_subscriptions_create
+      description: |-
+        List or create the caller's audio-alert subscriptions.
+
+        Auth: IsAuthenticated
+        Throttle: inherits the global user throttle (no app-specific scope).
+        Response data: a list of :class:`AudioAlertSubscriptionSerializer`
+        (for ``GET``) or a single instance (for ``POST``).
+      summary: Create or update a subscription
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AudioAlertSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AudioAlertSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AudioAlertSubscription'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertSubscriptionEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+  /api/v1/alerts/subscriptions/{sub_id}/:
+    patch:
+      operationId: v1_alerts_subscriptions_update
+      description: |-
+        Update or delete a single subscription.
+
+        Auth: IsAuthenticated
+        Response data: the updated subscription (PATCH) or ``null`` (DELETE).
+      summary: Update a subscription
+      parameters:
+      - in: path
+        name: sub_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAudioAlertSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAudioAlertSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAudioAlertSubscription'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertSubscriptionEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+    delete:
+      operationId: v1_alerts_subscriptions_delete
+      description: |-
+        Update or delete a single subscription.
+
+        Auth: IsAuthenticated
+        Response data: the updated subscription (PATCH) or ``null`` (DELETE).
+      summary: Delete a subscription
+      parameters:
+      - in: path
+        name: sub_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAckEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertErrorEnvelope'
+          description: ''
   /api/v1/auth/login/:
     post:
       operationId: v1_auth_login_create
@@ -240,12 +782,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorResponse'
           description: ''
+  /api/v1/farm-state/{farm_id}/:
+    get:
+      operationId: v1_farm_state_retrieve
+      description: |-
+        Return the derived farm state for the requested farm.
+
+        Inputs: path param farm_id.
+        Query params: optional representation.
+        Output: success envelope with NDVI metrics + classification.
+        When representation=v2, payload includes v2_observation.
+        Side effects: none.
+      parameters:
+      - in: query
+        name: external_farm_id
+        schema:
+          type: string
+          format: uuid
+        description: Resolve farm by external_farm_id (integration tokens).
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: representation
+        schema:
+          type: string
+        description: Response representation version (v1 or v2).
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmStateSuccess'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
   /api/v1/farms/:
     get:
       operationId: v1_farms_list
       tags:
       - v1
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
@@ -274,6 +875,7 @@ paths:
               $ref: '#/components/schemas/Farm'
         required: true
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
@@ -283,16 +885,328 @@ paths:
               schema:
                 $ref: '#/components/schemas/Farm'
           description: ''
+  /api/v1/farms/{farm_id}/activities/:
+    get:
+      operationId: v1_farms_activities_list
+      description: |-
+        List activities for the requested farm.
+
+        Inputs: optional query params status, type, limit, offset.
+        Output: success envelope with a list of activities.
+        Side effects: none.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max activities to return (default 100, max 500).
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of activities to skip (default 0).
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter activities by status.
+      - in: query
+        name: type
+        schema:
+          type: string
+        description: Filter activities by type.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityListSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+    post:
+      operationId: v1_farms_activities_create
+      description: |-
+        Create a new activity for the farm.
+
+        Inputs: ActivityCreateSerializer body.
+        Output: success envelope with the created activity.
+        Side effects: creates an Activity row.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivitySuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+  /api/v1/farms/{farm_id}/activities/{activity_id}/:
+    get:
+      operationId: v1_farms_activities_retrieve
+      description: |-
+        Return the requested activity entry.
+
+        Inputs: path params farm_id, activity_id.
+        Output: success envelope with the activity.
+        Side effects: none.
+      parameters:
+      - in: path
+        name: activity_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivitySuccess'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+    patch:
+      operationId: v1_farms_activities_update
+      description: |-
+        Update fields on the activity entry.
+
+        Inputs: path params farm_id, activity_id; body fields to update.
+        Output: success envelope with the updated activity.
+        Side effects: updates the Activity row.
+      parameters:
+      - in: path
+        name: activity_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityCreate'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivitySuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+    delete:
+      operationId: v1_farms_activities_delete
+      description: |-
+        Delete the activity entry.
+
+        Inputs: path params farm_id, activity_id.
+        Output: success envelope with data null.
+        Side effects: deletes the Activity row.
+      parameters:
+      - in: path
+        name: activity_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityDeleteSuccess'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmActivityErrorResponse'
+          description: ''
   /api/v1/farms/{farm_id}/ndvi/latest/:
     get:
       operationId: v1_farms_ndvi_latest_retrieve
       description: |-
         Return the most recent NDVI observation if present.
 
-        Query params: lookback_days (optional), max_cloud (optional).
+        Query params: lookback_days (optional), max_cloud (optional),
+        engine (optional), representation (optional).
         Success: envelope with `observation` or null, plus stale flag.
+        When representation=v2, payload includes v2_observation
+        and representation fields.
         Side effects: enqueues refresh_latest job when missing/stale.
       parameters:
+      - in: query
+        name: engine
+        schema:
+          type: string
+        description: Override NDVI engine (sentinelhub or stac).
+      - in: query
+        name: external_farm_id
+        schema:
+          type: string
+          format: uuid
+        description: Resolve farm by external_farm_id (integration tokens).
       - in: path
         name: farm_id
         schema:
@@ -306,11 +1220,16 @@ paths:
         name: max_cloud
         schema:
           type: integer
+      - in: query
+        name: representation
+        schema:
+          type: string
+        description: Response representation version (v1 or v2).
       tags:
       - v1
       security:
-      - jwtAuth: []
-      - ApiKeyAuth: []
+      - FarmObservationAuth: []
+      - IntegrationJWTAuth: []
       responses:
         '200':
           content:
@@ -336,7 +1255,8 @@ paths:
       description: |-
         Return a cached NDVI raster PNG or 404 if missing.
 
-        Query params: date (required), optional size and max_cloud.
+        Query params: date (required), optional size, max_cloud, engine,
+        external_farm_id (integration tokens).
         Success: binary image/png with ETag + Cache-Control.
         Errors: standard error envelope.
       parameters:
@@ -346,6 +1266,17 @@ paths:
           type: string
           format: date
         required: true
+      - in: query
+        name: engine
+        schema:
+          type: string
+        description: Override NDVI engine (sentinelhub or stac).
+      - in: query
+        name: external_farm_id
+        schema:
+          type: string
+          format: uuid
+        description: Resolve farm by external_farm_id (integration tokens).
       - in: path
         name: farm_id
         schema:
@@ -362,20 +1293,35 @@ paths:
       tags:
       - v1
       security:
-      - jwtAuth: []
+      - BearerAuth: []
       - ApiKeyAuth: []
       responses:
         '200':
           content:
-            application/json:
+            image/png:
               schema:
                 type: string
                 format: binary
           description: ''
         '304':
+          description: Not Modified
+        '400':
           content:
             application/json:
-              schema: null
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviErrorResponse'
           description: ''
         '404':
           content:
@@ -386,8 +1332,22 @@ paths:
   /api/v1/farms/{farm_id}/ndvi/raster/queue:
     post:
       operationId: v1_farms_ndvi_raster_queue_create
-      description: Enqueue a raster render job for the specified date.
+      description: |-
+        Enqueue a raster render job for the specified date.
+
+        Query params: optional engine override, external_farm_id (integration).
       parameters:
+      - in: query
+        name: engine
+        schema:
+          type: string
+        description: Override NDVI engine (sentinelhub or stac).
+      - in: query
+        name: external_farm_id
+        schema:
+          type: string
+          format: uuid
+        description: Resolve farm by external_farm_id (integration tokens).
       - in: path
         name: farm_id
         schema:
@@ -408,7 +1368,7 @@ paths:
               $ref: '#/components/schemas/RasterPngRequest'
         required: true
       security:
-      - jwtAuth: []
+      - BearerAuth: []
       - ApiKeyAuth: []
       responses:
         '202':
@@ -448,8 +1408,8 @@ paths:
       tags:
       - v1
       security:
-      - jwtAuth: []
-      - ApiKeyAuth: []
+      - FarmObservationAuth: []
+      - IntegrationJWTAuth: []
       responses:
         '202':
           content:
@@ -481,9 +1441,11 @@ paths:
       description: |-
         Return NDVI observations for the requested range.
 
-        Query params: start, end, optional step_days, optional max_cloud.
+        Query params: start, end, optional step_days, optional max_cloud,
+        optional engine, optional representation.
         Success: envelope containing observations + metadata
-        (is_partial, missing_buckets_count).
+        (is_partial, missing_buckets_count). When representation=v2,
+        payload includes v2_observations and representation.
         Side effects: schedules gap-fill job when buckets are missing.
       parameters:
       - in: query
@@ -492,6 +1454,17 @@ paths:
           type: string
           format: date
         required: true
+      - in: query
+        name: engine
+        schema:
+          type: string
+        description: Override NDVI engine (sentinelhub or stac).
+      - in: query
+        name: external_farm_id
+        schema:
+          type: string
+          format: uuid
+        description: Resolve farm by external_farm_id (integration tokens).
       - in: path
         name: farm_id
         schema:
@@ -502,6 +1475,11 @@ paths:
         schema:
           type: integer
         description: Maximum cloud coverage percent (0-100)
+      - in: query
+        name: representation
+        schema:
+          type: string
+        description: Response representation version (v1 or v2).
       - in: query
         name: start
         schema:
@@ -516,8 +1494,8 @@ paths:
       tags:
       - v1
       security:
-      - jwtAuth: []
-      - ApiKeyAuth: []
+      - FarmObservationAuth: []
+      - IntegrationJWTAuth: []
       responses:
         '200':
           content:
@@ -536,6 +1514,311 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+  /api/v1/farms/{farm_id}/observations/:
+    get:
+      operationId: v1_farms_observations_list
+      description: |-
+        List observations for the requested farm.
+
+        Inputs: optional query params start, end, event_type, limit, offset.
+        Output: success envelope with a list of observations.
+        Side effects: none.
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date-time
+        description: Filter observations with observed_at <= end.
+      - in: query
+        name: event_type
+        schema:
+          type: string
+        description: Filter observations by event_type.
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max observations to return (default 100, max 500).
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of observations to skip (default 0).
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date-time
+        description: Filter observations with observed_at >= start.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationListSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+    post:
+      operationId: v1_farms_observations_create
+      description: |-
+        Create a new observation for the farm.
+
+        Inputs: FarmObservationWriteSerializer body.
+        Output: success envelope with the created observation.
+        Side effects: creates a FarmObservation row.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmObservationWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FarmObservationWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FarmObservationWrite'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+  /api/v1/farms/{farm_id}/observations/{observation_id}/:
+    get:
+      operationId: v1_farms_observations_retrieve
+      description: |-
+        Return the requested observation entry.
+
+        Inputs: path params farm_id, observation_id.
+        Output: success envelope with the observation.
+        Side effects: none.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: observation_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationSuccess'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+    patch:
+      operationId: v1_farms_observations_update
+      description: |-
+        Update fields on the observation entry.
+
+        Inputs: path params farm_id, observation_id; body fields to update.
+        Output: success envelope with the updated observation.
+        Side effects: updates the FarmObservation row.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: observation_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFarmObservationWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFarmObservationWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFarmObservationWrite'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+    delete:
+      operationId: v1_farms_observations_delete
+      description: |-
+        Delete the observation entry.
+
+        Inputs: path params farm_id, observation_id.
+        Output: success envelope with data null.
+        Side effects: deletes the FarmObservation row.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: observation_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationDeleteSuccess'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmObservationErrorResponse'
           description: ''
   /api/v1/farms/{farm_id}/weather/current/:
     get:
@@ -713,6 +1996,7 @@ paths:
       tags:
       - v1
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
@@ -746,6 +2030,7 @@ paths:
               $ref: '#/components/schemas/Farm'
         required: true
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
@@ -778,6 +2063,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedFarm'
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
@@ -799,435 +2085,43 @@ paths:
       tags:
       - v1
       security:
+      - IntegrationJWTAuth: []
       - jwtAuth: []
       - ApiKeyAuth: []
       responses:
         '204':
           description: No response body
-  /api/v1/integration/clients/:
-    get:
-      operationId: v1_integration_clients_list
-      description: List IntegrationClients (no secret fields).
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/IntegrationClientListSuccessResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
+  /api/v1/farms/sync:
     post:
-      operationId: v1_integration_clients_create
-      description: Create an IntegrationClient and return its secret once.
+      operationId: v1_farms_sync_create
+      description: |-
+        Sync a farm using external identifiers.
+
+        Inputs: external_farm_id, external_user_id, name, bbox, centroid.
+        Optional header: `Idempotency-Key`.
+        Output: success envelope with farm metadata.
+        Side effects: creates/updates Farm + FarmIntegrationAccess.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+        description: Client-generated key (trimmed to 191 chars) to deduplicate retry
+          attempts.
       tags:
       - v1
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IntegrationClientCreate'
+              $ref: '#/components/schemas/FarmSync'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/IntegrationClientCreate'
+              $ref: '#/components/schemas/FarmSync'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/IntegrationClientCreate'
+              $ref: '#/components/schemas/FarmSync'
         required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientCreateSuccessResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-  /api/v1/integration/clients/{id}/:
-    get:
-      operationId: v1_integration_clients_retrieve
-      description: Retrieve an IntegrationClient (no secret fields).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this integration client.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientRetrieveSuccessResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-    patch:
-      operationId: v1_integration_clients_partial_update
-      description: Update `name`/`is_active` (secrets cannot be changed here).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this integration client.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedIntegrationClientUpdate'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedIntegrationClientUpdate'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedIntegrationClientUpdate'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientUpdateSuccessResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-  /api/v1/integration/clients/{id}/rotate-secret/:
-    post:
-      operationId: v1_integration_clients_rotate_secret_create
-      description: Rotate the client's secret and return the new secret once.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this integration client.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientRotateSecretSuccessResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientConflictResponse'
-          description: ''
-  /api/v1/integration/integrations/nextcloud/ping/:
-    get:
-      operationId: v1_integration_integrations_nextcloud_ping_retrieve
-      description: |-
-        Return `ok` + verified `client_id` if HMAC validation succeeds.
-
-        Inputs: signature headers (X-Client-Id or X-NC-CLIENT-ID,
-        X-NC-TIMESTAMP, X-NC-NONCE, X-NC-SIGNATURE).
-        Output: success envelope with `data.ok` and `data.client_id`.
-        Side effects: stores the nonce in the configured cache for replay
-        protection.
-      parameters:
-      - in: header
-        name: X-Client-Id
-        schema:
-          type: string
-        description: Integration client identifier (UUID).
-        required: true
-      - in: header
-        name: X-NC-CLIENT-ID
-        schema:
-          type: string
-        description: Deprecated alias for X-Client-Id.
-        deprecated: true
-      - in: header
-        name: X-NC-NONCE
-        schema:
-          type: string
-        description: Unique per-request nonce.
-        required: true
-      - in: header
-        name: X-NC-SIGNATURE
-        schema:
-          type: string
-        description: Hex HMAC-SHA256 of canonical request string.
-        required: true
-      - in: header
-        name: X-NC-TIMESTAMP
-        schema:
-          type: integer
-        description: Unix timestamp (seconds).
-        required: true
-      tags:
-      - v1
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NextcloudPingSuccessResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NextcloudPingErrorResponse'
-          description: ''
-  /api/v1/integration/nextcloud/ping/:
-    get:
-      operationId: v1_integration_nextcloud_ping_retrieve
-      description: |-
-        Return `ok` + verified `client_id` if HMAC validation succeeds.
-
-        Inputs: signature headers (X-Client-Id or X-NC-CLIENT-ID,
-        X-NC-TIMESTAMP, X-NC-NONCE, X-NC-SIGNATURE).
-        Output: success envelope with `data.ok` and `data.client_id`.
-        Side effects: stores the nonce in the configured cache for replay
-        protection.
-      parameters:
-      - in: header
-        name: X-Client-Id
-        schema:
-          type: string
-        description: Integration client identifier (UUID).
-        required: true
-      - in: header
-        name: X-NC-CLIENT-ID
-        schema:
-          type: string
-        description: Deprecated alias for X-Client-Id.
-        deprecated: true
-      - in: header
-        name: X-NC-NONCE
-        schema:
-          type: string
-        description: Unique per-request nonce.
-        required: true
-      - in: header
-        name: X-NC-SIGNATURE
-        schema:
-          type: string
-        description: Hex HMAC-SHA256 of canonical request string.
-        required: true
-      - in: header
-        name: X-NC-TIMESTAMP
-        schema:
-          type: integer
-        description: Unix timestamp (seconds).
-        required: true
-      tags:
-      - v1
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NextcloudPingSuccessResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NextcloudPingErrorResponse'
-          description: ''
-  /api/v1/integration/ping/:
-    get:
-      operationId: v1_integration_ping_retrieve
-      description: Return `pong` with API key-authenticated metadata.
-      tags:
-      - v1
-      security:
-      - ApiKeyAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationPingSuccessResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationClientErrorResponse'
-          description: ''
-  /api/v1/integration/token/:
-    post:
-      operationId: v1_integration_token_create
-      description: |-
-        Validate API key + HMAC headers, mint a JWT, and return it.
-
-        Inputs: `X-API-Key` plus HMAC headers (`X-Client-Id`, `X-Timestamp`,
-        `X-Nonce`, `X-Signature`).
-        Output: success envelope with `data.access`, `data.token_type`,
-        `data.expires_in`.
-        Side effects: stores the nonce in cache for replay protection.
-      parameters:
-      - in: header
-        name: X-Client-Id
-        schema:
-          type: string
-        description: Integration client identifier (UUID).
-        required: true
-      - in: header
-        name: X-Nonce
-        schema:
-          type: string
-        description: Unique per-request nonce.
-        required: true
-      - in: header
-        name: X-Signature
-        schema:
-          type: string
-        description: Hex HMAC-SHA256 of canonical request string.
-        required: true
-      - in: header
-        name: X-Timestamp
-        schema:
-          type: integer
-        description: Unix timestamp (seconds).
-        required: true
-      tags:
-      - v1
-      security:
-      - ApiKeyAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationTokenSuccessResponse'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
-          description: ''
-  /api/v1/integration/whoami/:
-    get:
-      operationId: v1_integration_whoami_retrieve
-      description: |-
-        Return JWT claims and server time for the integration session.
-
-        Inputs: `Authorization: Bearer <integration_jwt>`.
-        Output: success envelope with `data.sub`, `data.scope`,
-        `data.server_time`.
-        Side effects: none.
-      tags:
-      - v1
       security:
       - BearerAuth: []
       responses:
@@ -1235,13 +2129,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntegrationWhoamiSuccessResponse'
+                $ref: '#/components/schemas/FarmSyncSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmSyncErrorResponse'
           description: ''
         '401':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
+                $ref: '#/components/schemas/FarmSyncErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmSyncErrorResponse'
           description: ''
   /api/v1/integrations/clients/:
     get:
@@ -1461,62 +2367,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntegrationClientConflictResponse'
           description: ''
-  /api/v1/integrations/integrations/nextcloud/ping/:
+  /api/v1/integrations/health/:
     get:
-      operationId: v1_integrations_integrations_nextcloud_ping_retrieve
-      description: |-
-        Return `ok` + verified `client_id` if HMAC validation succeeds.
-
-        Inputs: signature headers (X-Client-Id or X-NC-CLIENT-ID,
-        X-NC-TIMESTAMP, X-NC-NONCE, X-NC-SIGNATURE).
-        Output: success envelope with `data.ok` and `data.client_id`.
-        Side effects: stores the nonce in the configured cache for replay
-        protection.
-      parameters:
-      - in: header
-        name: X-Client-Id
-        schema:
-          type: string
-        description: Integration client identifier (UUID).
-        required: true
-      - in: header
-        name: X-NC-CLIENT-ID
-        schema:
-          type: string
-        description: Deprecated alias for X-Client-Id.
-        deprecated: true
-      - in: header
-        name: X-NC-NONCE
-        schema:
-          type: string
-        description: Unique per-request nonce.
-        required: true
-      - in: header
-        name: X-NC-SIGNATURE
-        schema:
-          type: string
-        description: Hex HMAC-SHA256 of canonical request string.
-        required: true
-      - in: header
-        name: X-NC-TIMESTAMP
-        schema:
-          type: integer
-        description: Unix timestamp (seconds).
-        required: true
+      operationId: v1_integrations_health_retrieve
+      description: Return an OK envelope for automated probes.
       tags:
       - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NextcloudPingSuccessResponse'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NextcloudPingErrorResponse'
+                $ref: '#/components/schemas/IntegrationHealthSuccessResponse'
           description: ''
   /api/v1/integrations/nextcloud/ping/:
     get:
@@ -1574,6 +2440,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NextcloudPingErrorResponse'
+          description: ''
+  /api/v1/integrations/nextcloud/preview.png:
+    get:
+      operationId: v1_integrations_nextcloud_preview.png_retrieve
+      description: |-
+        Inputs: Authorization header (Bearer token).
+
+        Output: image/png response with Cache-Control: no-store.
+        Side effects: none.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
+          description: ''
+  /api/v1/integrations/nextcloud/status/:
+    get:
+      operationId: v1_integrations_nextcloud_status_retrieve
+      description: |-
+        Inputs: Authorization header (Bearer token).
+
+        Output: success envelope with status metadata for diagnostics.
+        Side effects: none.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextcloudStatusSuccessResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationAuthErrorResponse'
           description: ''
   /api/v1/integrations/ping/:
     get:
@@ -1659,12 +2588,12 @@ paths:
     get:
       operationId: v1_integrations_whoami_retrieve
       description: |-
-        Return JWT claims and server time for the integration session.
+        Return the integration JWT identity claims.
 
-        Inputs: `Authorization: Bearer <integration_jwt>`.
-        Output: success envelope with `data.sub`, `data.scope`,
-        `data.server_time`.
-        Side effects: none.
+        Authentication: BearerAuth (integration JWT).
+        Permissions: IsAuthenticated.
+        Request body: none.
+        Response data: `sub`, `scope`, and `server_time`.
       tags:
       - v1
       security:
@@ -1832,6 +2761,153 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiKeysErrorResponse'
           description: ''
+  /api/v1/ndvi:
+    get:
+      operationId: v1_ndvi_retrieve
+      description: Return the NDVI ingest info from the upstream service.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviIngestInfo'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+    post:
+      operationId: v1_ndvi_create
+      description: Validate input and forward to the NDVI service.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NdviIngest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NdviIngest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NdviIngest'
+        required: true
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviIngestSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NdviProxyError'
+          description: ''
+  /api/v1/ndvi/circuit-breaker/reset/:
+    post:
+      operationId: v1_ndvi_circuit_breaker_reset_create
+      description: Reset a circuit breaker to CLOSED state.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CircuitBreakerResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CircuitBreakerResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CircuitBreakerResetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitBreakerResetResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitBreakerResetBadRequest'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitBreakerResetForbidden'
+          description: ''
+  /api/v1/ndvi/health/upstream/:
+    get:
+      operationId: v1_ndvi_health_upstream_retrieve
+      description: Return circuit breaker status for all NDVI engines.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpstreamHealthResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpstreamHealthUnauthorized'
+          description: ''
   /api/v1/ndvi/jobs/{job_id}/:
     get:
       operationId: v1_ndvi_jobs_retrieve
@@ -1859,6 +2935,758 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NdviErrorResponse'
+          description: ''
+  /api/v1/podcasts/:
+    get:
+      operationId: v1_podcasts_list
+      description: Returns all active podcasts.
+      summary: List podcasts
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastListEnvelope'
+          description: ''
+  /api/v1/podcasts/{podcast_id}/:
+    get:
+      operationId: v1_podcasts_retrieve
+      description: Returns details for a specific podcast.
+      summary: Get podcast details
+      parameters:
+      - in: path
+        name: podcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastDetailEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+  /api/v1/podcasts/{podcast_id}/episodes/:
+    get:
+      operationId: v1_podcasts_episodes_list
+      description: Returns the most recent ``limit`` episodes for a podcast (default
+        100, max 500).
+      summary: List podcast episodes
+      parameters:
+      - in: path
+        name: podcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastEpisodeListEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+  /api/v1/podcasts/{podcast_id}/refresh/:
+    post:
+      operationId: v1_podcasts_refresh
+      description: Triggers an immediate ingestion of the podcast's upstream feed.
+        Auth required.
+      summary: Refresh a podcast feed
+      parameters:
+      - in: path
+        name: podcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastRefreshReportEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+  /api/v1/podcasts/episodes/{episode_id}/stream/:
+    get:
+      operationId: v1_podcasts_episode_stream
+      description: Returns the audio URL, format hint, and episode metadata for playback.
+      summary: Get episode stream URL
+      parameters:
+      - in: path
+        name: episode_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastEpisodeStreamEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodcastsErrorResponse'
+          description: ''
+  /api/v1/radio/emergency/:
+    post:
+      operationId: v1_radio_emergency_create
+      description: Create a new emergency broadcast. The creator is recorded as `created_by`
+        for audit.
+      summary: Create an emergency broadcast (admin)
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyBroadcastCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmergencyBroadcastCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmergencyBroadcastCreate'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioEmergencyBroadcastEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/emergency/{id}/:
+    patch:
+      operationId: v1_radio_emergency_update
+      description: Apply a partial update to one ``EmergencyBroadcast`` row.
+      summary: Update an emergency broadcast (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmergencyBroadcastUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmergencyBroadcastUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmergencyBroadcastUpdate'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioEmergencyBroadcastEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+    delete:
+      operationId: v1_radio_emergency_delete
+      description: 'Idempotent: returns 200 whether or not the row existed.'
+      summary: Delete an emergency broadcast (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioNullEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/emergency/current/:
+    get:
+      operationId: v1_radio_emergency_current
+      description: 'Returns the highest-priority active emergency broadcast, or `data:
+        null` when no broadcast is currently active.'
+      summary: Current emergency broadcast
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioEmergencyBroadcastEnvelope'
+          description: ''
+  /api/v1/radio/emergency/history/:
+    get:
+      operationId: v1_radio_emergency_history
+      description: Returns emergency broadcasts ordered by `starts_at` descending.
+        Supports `limit` (1..200, default 50) and `offset` (>=0, default 0) query
+        parameters.
+      summary: Emergency broadcast history
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioEmergencyBroadcastListEnvelope'
+          description: ''
+  /api/v1/radio/favorites/:
+    get:
+      operationId: v1_radio_favorites_list
+      description: Returns the current user's favorite stations, newest first. Paginated;
+        supports `page` and `page_size` query params (default 20, max 100).
+      summary: List favorite stations
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: 1-based page number. Defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page. Defaults to 20, max 100.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioFavoriteListEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+    post:
+      operationId: v1_radio_favorites_create
+      description: 'Idempotent: re-favoriting the same station returns the existing
+        row. 404 if the station id is unknown or inactive.'
+      summary: Add a favorite station
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioFavoriteCreateEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/favorites/{station_id}/:
+    delete:
+      operationId: v1_radio_favorites_delete
+      description: 'Idempotent: returns 204 whether or not the row existed.'
+      summary: Remove a favorite station
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioNullEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/health/:
+    get:
+      operationId: v1_radio_health
+      description: 'Returns aggregate station availability: total active stations,
+        available, unavailable, and unchecked counts, with a status flag of ''healthy'',
+        ''degraded'', or ''unhealthy''.'
+      summary: Radio service health
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioHealthEnvelope'
+          description: ''
+  /api/v1/radio/history/:
+    get:
+      operationId: v1_radio_history_list
+      description: Returns the current user's listening history, newest first. Paginated;
+        supports `page` and `page_size` query params (default 20, max 100).
+      summary: List listening history
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: 1-based page number. Defaults to 1.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page. Defaults to 20, max 100.
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioListeningHistoryListEnvelope'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/history/recent/:
+    get:
+      operationId: v1_radio_history_recent
+      description: Returns the most recent listening-history rows for the current
+        user. Query param ``limit`` (1..100, default 20) caps the number of rows returned.
+        Response ``data`` is a DRF page dict with ``count``, ``next``, ``previous``,
+        and ``results`` (at most ``limit`` items).
+      summary: Recent listening history
+      tags:
+      - v1
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioListeningHistoryListEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/providers/:
+    get:
+      operationId: v1_radio_providers_list
+      description: Returns all active radio providers.
+      summary: List providers
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderListEnvelope'
+          description: ''
+  /api/v1/radio/stations/:
+    get:
+      operationId: v1_radio_stations_list
+      description: Returns all active radio stations.
+      summary: List radio stations
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationListEnvelope'
+          description: ''
+  /api/v1/radio/stations/{station_id}/:
+    get:
+      operationId: v1_radio_stations_retrieve
+      description: Returns details for a specific radio station.
+      summary: Get station details
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDetailEnvelope'
+          description: ''
+  /api/v1/radio/stations/{station_id}/analytics/:
+    get:
+      operationId: v1_radio_station_analytics
+      description: Returns up to `days` (1..90, default 7) of daily analytics rows
+        for a station, newest first. A row contains `total_listens`, `total_duration_seconds`,
+        and `unique_users`.
+      summary: Per-station analytics
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioStationAnalyticsListEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/stations/{station_id}/health/:
+    get:
+      operationId: v1_radio_station_health_history
+      description: Returns the most recent health-check rows for a single station,
+        newest first. `limit` is 1..100, default 20. Returns 404 if the station does
+        not exist.
+      summary: Per-station health-check history
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioStationHealthHistoryEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/stations/{station_id}/now-playing/:
+    get:
+      operationId: v1_radio_station_now_playing
+      description: 'Returns the cached now-playing metadata for a single station,
+        or `data: null` if the station has no `metadata_url` configured or no successful
+        poll has occurred yet.'
+      summary: Per-station now-playing metadata
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioNowPlayingEnvelope'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+  /api/v1/radio/stations/{station_id}/stream/:
+    get:
+      operationId: v1_radio_stations_stream
+      description: Returns the stream URL and metadata for playback. Returns 503 if
+        the station's most recent health check marked it unavailable.
+      summary: Get stream URL
+      parameters:
+      - in: path
+        name: station_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - ApiKeyAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamUrlEnvelope'
+          description: ''
+  /api/v1/radio/tts/:
+    post:
+      operationId: v1_radio_tts_synthesize
+      description: Synthesises the provided text into audio using the configured TTS
+        engine (see `settings.TTS_ENGINE`). The audio bytes are returned base64-encoded
+        under `data.audio_base64`.
+      summary: Synthesise text to audio
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSSynthesizeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TTSSynthesizeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TTSSynthesizeRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioTTSSynthesizeEnvelope'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioErrorResponse'
           description: ''
   /api/v1/weather/current/:
     get:
@@ -2072,6 +3900,445 @@ paths:
           description: ''
 components:
   schemas:
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          enum:
+          - vaccination
+          - fertilizer
+          - irrigation
+          - ndvi_trigger
+          type: string
+          description: |-
+            * `vaccination` - Vaccination
+            * `fertilizer` - Fertilizer
+            * `irrigation` - Irrigation
+            * `ndvi_trigger` - NDVI Trigger
+          x-spec-enum-id: 1ce88b7606ecd946
+        status:
+          enum:
+          - created
+          - pending
+          - dispatched
+          - running
+          - success
+          - failed
+          - retry
+          type: string
+          description: |-
+            * `created` - Created
+            * `pending` - Pending
+            * `dispatched` - Dispatched
+            * `running` - Running
+            * `success` - Success
+            * `failed` - Failed
+            * `retry` - Retry
+          x-spec-enum-id: 3fa333c52e693e13
+          readOnly: true
+        scheduled_at:
+          type: string
+          format: date-time
+        next_due_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_executed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        recurrence_type:
+          enum:
+          - none
+          - interval
+          - cron
+          type: string
+          description: |-
+            * `none` - One-time
+            * `interval` - Interval
+            * `cron` - Cron
+          x-spec-enum-id: 5d0ec82f8777f131
+        interval_days:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        cron_expression:
+          type: string
+          nullable: true
+          maxLength: 100
+        farm:
+          type: integer
+          nullable: true
+        metadata: {}
+        execution_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        execution_started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        execution_completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        retry_count:
+          type: integer
+          readOnly: true
+        max_retries:
+          type: integer
+          readOnly: true
+        last_error:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - execution_completed_at
+      - execution_id
+      - execution_started_at
+      - id
+      - last_error
+      - last_executed_at
+      - max_retries
+      - next_due_at
+      - retry_count
+      - scheduled_at
+      - status
+      - type
+      - updated_at
+    ActivityCreate:
+      type: object
+      properties:
+        type:
+          enum:
+          - vaccination
+          - fertilizer
+          - irrigation
+          - ndvi_trigger
+          type: string
+          description: |-
+            * `vaccination` - Vaccination
+            * `fertilizer` - Fertilizer
+            * `irrigation` - Irrigation
+            * `ndvi_trigger` - NDVI Trigger
+          x-spec-enum-id: 1ce88b7606ecd946
+        scheduled_at:
+          type: string
+          format: date-time
+        recurrence_type:
+          enum:
+          - none
+          - interval
+          - cron
+          type: string
+          description: |-
+            * `none` - One-time
+            * `interval` - Interval
+            * `cron` - Cron
+          x-spec-enum-id: 5d0ec82f8777f131
+        interval_days:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        cron_expression:
+          type: string
+          nullable: true
+          maxLength: 100
+        farm:
+          type: integer
+          nullable: true
+        metadata: {}
+      required:
+      - scheduled_at
+      - type
+    ActivityEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Activity'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    ActivityHealthData:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        total_activities:
+          type: integer
+        due_activities:
+          type: integer
+        running_activities:
+          type: integer
+        stale_candidates:
+          type: integer
+      required:
+      - due_activities
+      - running_activities
+      - stale_candidates
+      - status
+      - timestamp
+      - total_activities
+    ActivityHealthEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ActivityHealthData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    ActivityListEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/_ActivityList'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    AdminBroadcast:
+      type: object
+      description: Input serializer for ``POST /api/v1/alerts/admin/send/``.
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          maxItems: 500
+        title:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        farm_id:
+          type: integer
+          nullable: true
+      required:
+      - message
+      - title
+      - user_ids
+    AlertAckEnvelope:
+      type: object
+      properties:
+        data:
+          nullable: true
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertAdminSendEnvelope:
+      type: object
+      properties:
+        data:
+          nullable: true
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertDetailEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AudioAlert'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertErrorEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    AlertListEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AlertListEnvelopeData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertListEnvelopeData:
+      type: object
+      properties:
+        results:
+          $ref: '#/components/schemas/AudioAlert'
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+      required:
+      - count
+      - next
+      - previous
+      - results
+    AlertSubscriptionEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AudioAlertSubscription'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertSubscriptionListEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AlertSubscriptionListEnvelopeData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    AlertSubscriptionListEnvelopeData:
+      type: object
+      properties:
+        results:
+          $ref: '#/components/schemas/AudioAlertSubscription'
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+      required:
+      - count
+      - next
+      - previous
+      - results
     ApiKeyCreate:
       type: object
       properties:
@@ -2083,7 +4350,16 @@ components:
           type: string
           maxLength: 128
         scope:
-          $ref: '#/components/schemas/ApiKeyScopeEnum'
+          enum:
+          - read
+          - write
+          - admin
+          type: string
+          description: |-
+            * `read` - Read
+            * `write` - Write
+            * `admin` - Admin
+          x-spec-enum-id: aa4336765517f102
         prefix:
           type: string
           readOnly: true
@@ -2115,10 +4391,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     ApiKeyList:
       type: object
@@ -2131,8 +4411,16 @@ components:
           type: string
           readOnly: true
         scope:
-          allOf:
-          - $ref: '#/components/schemas/ApiKeyScopeEnum'
+          enum:
+          - read
+          - write
+          - admin
+          type: string
+          description: |-
+            * `read` - Read
+            * `write` - Write
+            * `admin` - Admin
+          x-spec-enum-id: aa4336765517f102
           readOnly: true
         prefix:
           type: string
@@ -2176,10 +4464,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     ApiKeyRevokeSuccessResponse:
       type: object
@@ -2192,10 +4484,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     ApiKeyRotateData:
       type: object
@@ -2206,7 +4502,16 @@ components:
         name:
           type: string
         scope:
-          $ref: '#/components/schemas/ApiKeyScopeValueEnum'
+          enum:
+          - read
+          - write
+          - admin
+          type: string
+          description: |-
+            * `read` - read
+            * `write` - write
+            * `admin` - admin
+          x-spec-enum-id: 1d5817b392218d88
         prefix:
           type: string
         last4:
@@ -2246,31 +4551,15 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
-    ApiKeyScopeEnum:
-      enum:
-      - read
-      - write
-      - admin
-      type: string
-      description: |-
-        * `read` - Read
-        * `write` - Write
-        * `admin` - Admin
-    ApiKeyScopeValueEnum:
-      enum:
-      - read
-      - write
-      - admin
-      type: string
-      description: |-
-        * `read` - read
-        * `write` - write
-        * `admin` - admin
     ApiKeysErrorResponse:
       type: object
       properties:
@@ -2280,10 +4569,140 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
+    AudioAlert:
+      type: object
+      description: Read serializer for :class:`AudioAlert`.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        farm:
+          type: integer
+          readOnly: true
+          nullable: true
+        alert_type:
+          enum:
+          - ndvi_decline
+          - ndvi_low
+          - activity_completed
+          - admin_broadcast
+          type: string
+          description: |-
+            * `ndvi_decline` - NDVI decline
+            * `ndvi_low` - NDVI low absolute
+            * `activity_completed` - Activity completed
+            * `admin_broadcast` - Admin broadcast
+          x-spec-enum-id: d0462f480c565518
+          readOnly: true
+        trigger_source:
+          enum:
+          - ndvi_task
+          - activity_task
+          - admin_view
+          type: string
+          description: |-
+            * `ndvi_task` - NDVI task
+            * `activity_task` - Activity task
+            * `admin_view` - Admin view
+          x-spec-enum-id: 7b8bb2acc02c967f
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        audio_url:
+          type: string
+          readOnly: true
+        duration_ms:
+          type: integer
+          readOnly: true
+        mime_type:
+          type: string
+          readOnly: true
+        source_object_id:
+          type: string
+          readOnly: true
+        is_delivered:
+          type: boolean
+          readOnly: true
+          description: True once a WebSocket push has been confirmed.
+        is_acknowledged:
+          type: boolean
+          readOnly: true
+          description: True once the user has marked the alert as read.
+        delivered_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        acknowledged_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - acknowledged_at
+      - alert_type
+      - audio_url
+      - created_at
+      - delivered_at
+      - duration_ms
+      - farm
+      - id
+      - is_acknowledged
+      - is_delivered
+      - message
+      - mime_type
+      - source_object_id
+      - title
+      - trigger_source
+    AudioAlertSubscription:
+      type: object
+      description: Read/write serializer for :class:`AudioAlertSubscription`.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        farm:
+          type: integer
+        farm_name:
+          type: string
+          readOnly: true
+        alert_types:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - alert_types
+      - created_at
+      - farm
+      - farm_name
+      - id
+      - updated_at
     AuthErrorResponse:
       type: object
       properties:
@@ -2293,9 +4712,13 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
     AuthSuccessResponse:
       type: object
@@ -2308,10 +4731,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     AuthTokens:
       type: object
@@ -2333,6 +4760,82 @@ components:
       required:
       - tokens
       - user
+    CircuitBreakerResetBadRequest:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    CircuitBreakerResetData:
+      type: object
+      properties:
+        engine:
+          type: string
+        previous_state:
+          type: string
+        new_state:
+          type: string
+      required:
+      - engine
+      - new_state
+      - previous_state
+    CircuitBreakerResetForbidden:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    CircuitBreakerResetRequest:
+      type: object
+      properties:
+        engine:
+          enum:
+          - stac
+          - sentinelhub
+          - sentinelhub_raster
+          type: string
+          description: |-
+            * `stac` - stac
+            * `sentinelhub` - sentinelhub
+            * `sentinelhub_raster` - sentinelhub_raster
+          x-spec-enum-id: 36cc72c29a1659b7
+      required:
+      - engine
+    CircuitBreakerResetResponse:
+      type: object
+      properties:
+        success:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CircuitBreakerResetData'
+      required:
+      - data
+      - message
+      - success
     CurrentWeather:
       type: object
       properties:
@@ -2372,14 +4875,29 @@ components:
           type: number
           format: double
           nullable: true
+        wind_speed_max_mps:
+          type: number
+          format: double
+          nullable: true
+        is_partial:
+          type: boolean
+          readOnly: true
+        missing_fields:
+          type: array
+          items:
+            type: string
+          readOnly: true
         source:
           type: string
       required:
       - day
+      - is_partial
+      - missing_fields
       - precipitation_mm
       - source
       - t_max_c
       - t_min_c
+      - wind_speed_max_mps
     DailySummary:
       type: object
       properties:
@@ -2411,37 +4929,97 @@ components:
       - t_max_c
       - t_min_c
       - wind_speed_max_mps
-    HourlyForecast:
+    EmergencyBroadcast:
       type: object
+      description: Output serializer for an :class:`EmergencyBroadcast` row.
       properties:
-        timestamp:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        priority:
+          enum:
+          - low
+          - medium
+          - high
+          - critical
+          type: string
+          description: |-
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `critical` - Critical
+          x-spec-enum-id: e88e28221543c897
+          readOnly: true
+        starts_at:
           type: string
           format: date-time
-        temperature_c:
-          type: number
-          format: double
-          nullable: true
-        precipitation_mm:
-          type: number
-          format: double
-          nullable: true
-        wind_speed_mps:
-          type: number
-          format: double
-          nullable: true
-        cloud_cover_pct:
-          type: number
-          format: double
-          nullable: true
-        source:
+          readOnly: true
+        ends_at:
           type: string
+          format: date-time
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
       required:
-      - cloud_cover_pct
-      - precipitation_mm
-      - source
-      - temperature_c
-      - timestamp
-      - wind_speed_mps
+      - created_at
+      - ends_at
+      - id
+      - is_active
+      - message
+      - priority
+      - starts_at
+      - title
+      - updated_at
+    EmergencyBroadcastCreate:
+      type: object
+      description: Input serializer for ``POST /api/v1/radio/emergency/`` (admin only).
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        priority:
+          enum:
+          - low
+          - medium
+          - high
+          - critical
+          type: string
+          description: |-
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `critical` - Critical
+          x-spec-enum-id: e88e28221543c897
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+      required:
+      - ends_at
+      - message
+      - starts_at
+      - title
     Farm:
       type: object
       properties:
@@ -2488,7 +5066,7 @@ components:
         area_ha:
           type: string
           format: decimal
-          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,4})?$
           nullable: true
         is_active:
           type: boolean
@@ -2506,6 +5084,567 @@ components:
       - name
       - slug
       - updated_at
+    FarmActivityDeleteSuccess:
+      type: object
+      properties:
+        data:
+          nullable: true
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmActivityErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    FarmActivityListSuccess:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmActivitySuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Activity'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmObservation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        farm_id:
+          type: integer
+          readOnly: true
+        observed_at:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+          maxLength: 120
+        note:
+          type: string
+        metadata:
+          nullable: true
+        created_by_id:
+          type: integer
+          readOnly: true
+        created_by_client_id:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by_client_id
+      - created_by_id
+      - event_type
+      - farm_id
+      - id
+      - observed_at
+      - updated_at
+    FarmObservationDeleteSuccess:
+      type: object
+      properties:
+        data:
+          nullable: true
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmObservationErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    FarmObservationListSuccess:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FarmObservation'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmObservationSuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FarmObservation'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmObservationWrite:
+      type: object
+      properties:
+        observed_at:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+          maxLength: 120
+        note:
+          type: string
+        metadata:
+          nullable: true
+      required:
+      - event_type
+      - observed_at
+    FarmState:
+      type: object
+      properties:
+        farm_id:
+          type: integer
+        mean_ndvi:
+          type: number
+          format: double
+          nullable: true
+        max_ndvi:
+          type: number
+          format: double
+          nullable: true
+        coverage_pct:
+          type: number
+          format: double
+          nullable: true
+        trend:
+          type: number
+          format: double
+          nullable: true
+        state:
+          type: string
+        interpretation:
+          type: string
+        action:
+          type: string
+      required:
+      - action
+      - coverage_pct
+      - farm_id
+      - interpretation
+      - max_ndvi
+      - mean_ndvi
+      - state
+      - trend
+    FarmStateSuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FarmState'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmSync:
+      type: object
+      properties:
+        external_farm_id:
+          type: string
+          format: uuid
+        external_user_id:
+          type: string
+          maxLength: 255
+        name:
+          type: string
+          maxLength: 120
+        bbox:
+          $ref: '#/components/schemas/FarmSyncBBox'
+        centroid:
+          allOf:
+          - $ref: '#/components/schemas/FarmSyncCentroid'
+          nullable: true
+      required:
+      - bbox
+      - external_farm_id
+      - external_user_id
+      - name
+    FarmSyncBBox:
+      type: object
+      properties:
+        south:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,5})?$
+        west:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,5})?$
+        north:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,5})?$
+        east:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,5})?$
+      required:
+      - east
+      - north
+      - south
+      - west
+    FarmSyncCentroid:
+      type: object
+      properties:
+        lat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,5})?$
+        lon:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,5})?$
+      required:
+      - lat
+      - lon
+    FarmSyncData:
+      type: object
+      properties:
+        id:
+          type: integer
+        external_farm_id:
+          type: string
+          format: uuid
+        external_user_id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        bbox:
+          $ref: '#/components/schemas/FarmSyncBBox'
+        centroid:
+          allOf:
+          - $ref: '#/components/schemas/FarmSyncCentroid'
+          nullable: true
+      required:
+      - bbox
+      - centroid
+      - external_farm_id
+      - external_user_id
+      - id
+      - name
+      - slug
+    FarmSyncErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    FarmSyncSuccessResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FarmSyncData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmWeatherCurrentSuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CurrentWeather'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmWeatherDailyData:
+      type: object
+      properties:
+        forecasts:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailySummary'
+      required:
+      - forecasts
+    FarmWeatherDailySuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FarmWeatherDailyData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    FarmWeatherErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    FarmWeatherHourlyData:
+      type: object
+      properties:
+        hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/HourlyForecast'
+      required:
+      - hours
+    FarmWeatherHourlySuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/FarmWeatherHourlyData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    Favorite:
+      type: object
+      description: |-
+        Output serializer for a favorite row.
+
+        Embeds the full :class:`StationSerializer` payload so the client
+        can render a list of favorites without a second round-trip.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        station_id:
+          type: string
+          readOnly: true
+        station:
+          allOf:
+          - $ref: '#/components/schemas/Station'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - station
+      - station_id
+    FavoriteCreate:
+      type: object
+      description: Input serializer for ``POST /api/v1/radio/favorites/``.
+      properties:
+        station_id:
+          type: string
+          maxLength: 50
+      required:
+      - station_id
+    HourlyForecast:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        temperature_c:
+          type: number
+          format: double
+          nullable: true
+        precipitation_mm:
+          type: number
+          format: double
+          nullable: true
+        wind_speed_mps:
+          type: number
+          format: double
+          nullable: true
+        cloud_cover_pct:
+          type: number
+          format: double
+          nullable: true
+        source:
+          type: string
+      required:
+      - cloud_cover_pct
+      - precipitation_mm
+      - source
+      - temperature_c
+      - timestamp
+      - wind_speed_mps
     IntegrationAuthErrorResponse:
       type: object
       properties:
@@ -2515,9 +5654,13 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
     IntegrationClient:
       type: object
@@ -2614,10 +5757,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationClientErrorResponse:
       type: object
@@ -2628,9 +5775,13 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
     IntegrationClientListSuccessResponse:
       type: object
@@ -2645,10 +5796,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationClientRetrieveSuccessResponse:
       type: object
@@ -2661,10 +5816,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationClientRotateSecretData:
       type: object
@@ -2693,10 +5852,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationClientUpdateSuccessResponse:
       type: object
@@ -2709,10 +5872,45 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
+      - status
+    IntegrationHealthData:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        server_time:
+          type: string
+          format: date-time
+      required:
+      - ok
+      - server_time
+    IntegrationHealthSuccessResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/IntegrationHealthData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
       - status
     IntegrationPingData:
       type: object
@@ -2750,10 +5948,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationTokenData:
       type: object
@@ -2779,10 +5981,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     IntegrationWhoamiData:
       type: object
@@ -2809,23 +6015,59 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
-    JobTypeEnum:
-      enum:
-      - refresh_latest
-      - gap_fill
-      - backfill
-      - raster_png
-      type: string
+    ListeningHistory:
+      type: object
       description: |-
-        * `refresh_latest` - Refresh latest
-        * `gap_fill` - Gap fill
-        * `backfill` - Backfill
-        * `raster_png` - Raster PNG
+        Output serializer for a single listening-history row.
+
+        Read-only: rows are created internally by ``StationStreamView`` or
+        by future client-driven start/stop events.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        station_id:
+          type: string
+          readOnly: true
+        station:
+          allOf:
+          - $ref: '#/components/schemas/Station'
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ended_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: Reserved for a future client-driven stop event. Currently always
+            NULL.
+        ip_address:
+          type: string
+          readOnly: true
+          nullable: true
+        user_agent:
+          type: string
+          readOnly: true
+      required:
+      - ended_at
+      - id
+      - ip_address
+      - started_at
+      - station
+      - station_id
+      - user_agent
     Login:
       type: object
       properties:
@@ -2871,11 +6113,37 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
+    NdviDerivedObservation:
+      type: object
+      properties:
+        smoothed_ndvi:
+          type: number
+          format: double
+          nullable: true
+          description: Temporally smoothed NDVI value
+        confidence:
+          type: number
+          format: double
+          description: Confidence score in [0, 1]
+        source:
+          type: string
+          description: Source engine that produced this V2 observation
+          maxLength: 32
+        quality_flags:
+          description: 'Quality flags: cloud_heavy, low_confidence, outlier_removed,
+            etc.'
+      required:
+      - confidence
+      - source
     NdviErrorResponse:
       type: object
       properties:
@@ -2885,9 +6153,96 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
+      - status
+    NdviIngest:
+      type: object
+      properties:
+        farm_id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        mean:
+          type: number
+          format: double
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+        source:
+          type: string
+          nullable: true
+        geometry:
+          nullable: true
+      required:
+      - farm_id
+      - max
+      - mean
+      - min
+      - timestamp
+    NdviIngestData:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    NdviIngestInfo:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/NdviIngestInfoData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    NdviIngestInfoData:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    NdviIngestSuccess:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/NdviIngestData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
       - status
     NdviJob:
       type: object
@@ -2896,12 +6251,32 @@ components:
           type: integer
           readOnly: true
         job_type:
-          allOf:
-          - $ref: '#/components/schemas/JobTypeEnum'
+          enum:
+          - refresh_latest
+          - gap_fill
+          - backfill
+          - raster_png
+          type: string
+          description: |-
+            * `refresh_latest` - Refresh latest
+            * `gap_fill` - Gap fill
+            * `backfill` - Backfill
+            * `raster_png` - Raster PNG
+          x-spec-enum-id: 211e6cd0a91e8f4d
           readOnly: true
         status:
-          allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          enum:
+          - queued
+          - running
+          - success
+          - failed
+          type: string
+          description: |-
+            * `queued` - Queued
+            * `running` - Running
+            * `success` - Success
+            * `failed` - Failed
+          x-spec-enum-id: 86032057092c9e9d
           readOnly: true
         start:
           type: string
@@ -2971,10 +6346,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     NdviLatestData:
       type: object
@@ -2991,6 +6370,13 @@ components:
           type: integer
         stale:
           type: boolean
+        v2_observation:
+          allOf:
+          - $ref: '#/components/schemas/NdviDerivedObservation'
+          nullable: true
+        representation:
+          type: string
+          nullable: true
       required:
       - engine
       - lookback_days
@@ -3008,10 +6394,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     NdviObservation:
       type: object
@@ -3042,6 +6432,23 @@ components:
       required:
       - bucket_date
       - mean
+    NdviProxyError:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
     NdviRasterQueueData:
       type: object
       properties:
@@ -3060,10 +6467,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     NdviRefreshData:
       type: object
@@ -3083,10 +6494,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     NdviTimeseriesData:
       type: object
@@ -3111,6 +6526,14 @@ components:
           type: boolean
         missing_buckets_count:
           type: integer
+        v2_observations:
+          type: array
+          items:
+            $ref: '#/components/schemas/NdviDerivedObservation'
+          nullable: true
+        representation:
+          type: string
+          nullable: true
       required:
       - end
       - engine
@@ -3131,10 +6554,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     NextcloudPingData:
       type: object
@@ -3155,9 +6582,13 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
     NextcloudPingSuccessResponse:
       type: object
@@ -3168,6 +6599,101 @@ components:
           type: integer
         message:
           type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    NextcloudStatusCapabilities:
+      type: object
+      properties:
+        png_preview:
+          type: boolean
+      required:
+      - png_preview
+    NextcloudStatusData:
+      type: object
+      properties:
+        capabilities:
+          $ref: '#/components/schemas/NextcloudStatusCapabilities'
+        ok:
+          type: boolean
+        server_time:
+          type: string
+          format: date-time
+        version:
+          type: string
+      required:
+      - capabilities
+      - ok
+      - server_time
+      - version
+    NextcloudStatusSuccessResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/NextcloudStatusData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    NowPlaying:
+      type: object
+      description: Output serializer for a :class:`NowPlaying` row.
+      properties:
+        station_id:
+          type: string
+          readOnly: true
+        track_title:
+          type: string
+          readOnly: true
+        artist:
+          type: string
+          readOnly: true
+        album:
+          type: string
+          readOnly: true
+        artwork_url:
+          type: string
+          format: uri
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - album
+      - artist
+      - artwork_url
+      - station_id
+      - track_title
+      - updated_at
+    NullEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          nullable: true
         errors:
           nullable: true
       required:
@@ -3202,10 +6728,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     PasswordResetConfirm:
       type: object
@@ -3232,10 +6762,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     PasswordResetErrorResponse:
       type: object
@@ -3272,11 +6806,168 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
+    PatchedActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          enum:
+          - vaccination
+          - fertilizer
+          - irrigation
+          - ndvi_trigger
+          type: string
+          description: |-
+            * `vaccination` - Vaccination
+            * `fertilizer` - Fertilizer
+            * `irrigation` - Irrigation
+            * `ndvi_trigger` - NDVI Trigger
+          x-spec-enum-id: 1ce88b7606ecd946
+        status:
+          enum:
+          - created
+          - pending
+          - dispatched
+          - running
+          - success
+          - failed
+          - retry
+          type: string
+          description: |-
+            * `created` - Created
+            * `pending` - Pending
+            * `dispatched` - Dispatched
+            * `running` - Running
+            * `success` - Success
+            * `failed` - Failed
+            * `retry` - Retry
+          x-spec-enum-id: 3fa333c52e693e13
+          readOnly: true
+        scheduled_at:
+          type: string
+          format: date-time
+        next_due_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_executed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        recurrence_type:
+          enum:
+          - none
+          - interval
+          - cron
+          type: string
+          description: |-
+            * `none` - One-time
+            * `interval` - Interval
+            * `cron` - Cron
+          x-spec-enum-id: 5d0ec82f8777f131
+        interval_days:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        cron_expression:
+          type: string
+          nullable: true
+          maxLength: 100
+        farm:
+          type: integer
+          nullable: true
+        metadata: {}
+        execution_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        execution_started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        execution_completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        retry_count:
+          type: integer
+          readOnly: true
+        max_retries:
+          type: integer
+          readOnly: true
+        last_error:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedActivityCreate:
+      type: object
+      properties:
+        type:
+          enum:
+          - vaccination
+          - fertilizer
+          - irrigation
+          - ndvi_trigger
+          type: string
+          description: |-
+            * `vaccination` - Vaccination
+            * `fertilizer` - Fertilizer
+            * `irrigation` - Irrigation
+            * `ndvi_trigger` - NDVI Trigger
+          x-spec-enum-id: 1ce88b7606ecd946
+        scheduled_at:
+          type: string
+          format: date-time
+        recurrence_type:
+          enum:
+          - none
+          - interval
+          - cron
+          type: string
+          description: |-
+            * `none` - One-time
+            * `interval` - Interval
+            * `cron` - Cron
+          x-spec-enum-id: 5d0ec82f8777f131
+        interval_days:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        cron_expression:
+          type: string
+          nullable: true
+          maxLength: 100
+        farm:
+          type: integer
+          nullable: true
+        metadata: {}
     PatchedApiKeyCreate:
       type: object
       properties:
@@ -3288,7 +6979,16 @@ components:
           type: string
           maxLength: 128
         scope:
-          $ref: '#/components/schemas/ApiKeyScopeEnum'
+          enum:
+          - read
+          - write
+          - admin
+          type: string
+          description: |-
+            * `read` - Read
+            * `write` - Write
+            * `admin` - Admin
+          x-spec-enum-id: aa4336765517f102
         prefix:
           type: string
           readOnly: true
@@ -3303,6 +7003,61 @@ components:
           type: string
           format: date-time
           nullable: true
+    PatchedAudioAlertSubscription:
+      type: object
+      description: Read/write serializer for :class:`AudioAlertSubscription`.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        farm:
+          type: integer
+        farm_name:
+          type: string
+          readOnly: true
+        alert_types:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedEmergencyBroadcastUpdate:
+      type: object
+      description: Input serializer for ``PATCH /api/v1/radio/emergency/<id>/``.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        priority:
+          enum:
+          - low
+          - medium
+          - high
+          - critical
+          type: string
+          description: |-
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `critical` - Critical
+          x-spec-enum-id: e88e28221543c897
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
     PatchedFarm:
       type: object
       properties:
@@ -3349,7 +7104,7 @@ components:
         area_ha:
           type: string
           format: decimal
-          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,4})?$
           nullable: true
         is_active:
           type: boolean
@@ -3361,6 +7116,19 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedFarmObservationWrite:
+      type: object
+      properties:
+        observed_at:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+          maxLength: 120
+        note:
+          type: string
+        metadata:
+          nullable: true
     PatchedIntegrationClientUpdate:
       type: object
       description: Update serializer for IntegrationClient (no secret fields).
@@ -3370,6 +7138,653 @@ components:
           maxLength: 128
         is_active:
           type: boolean
+    Podcast:
+      type: object
+      description: Public-facing serializer for a :class:`Podcast` row.
+      properties:
+        id:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        feed_url:
+          type: string
+          format: uri
+          readOnly: true
+        image_url:
+          type: string
+          format: uri
+          readOnly: true
+        language:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        last_refreshed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_refresh_status:
+          type: string
+          readOnly: true
+          description: 'Outcome of the most recent ingestion: "ok", "error", or ""
+            (never refreshed).'
+      required:
+      - author
+      - description
+      - feed_url
+      - id
+      - image_url
+      - is_active
+      - language
+      - last_refresh_status
+      - last_refreshed_at
+      - title
+    PodcastDetailEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Podcast'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    PodcastEpisode:
+      type: object
+      description: Public-facing serializer for a :class:`PodcastEpisode` row.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        podcast_id:
+          type: string
+          readOnly: true
+        guid:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        audio_url:
+          type: string
+          format: uri
+          readOnly: true
+        audio_mime_type:
+          type: string
+          readOnly: true
+        duration_seconds:
+          type: integer
+          readOnly: true
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          readOnly: true
+      required:
+      - audio_mime_type
+      - audio_url
+      - description
+      - duration_seconds
+      - guid
+      - id
+      - image_url
+      - podcast_id
+      - published_at
+      - title
+    PodcastEpisodeListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PodcastEpisode'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    PodcastEpisodeStream:
+      type: object
+      description: Output for the ``GET /podcasts/episodes/<id>/stream/`` endpoint.
+      properties:
+        audio_url:
+          type: string
+          format: uri
+        format:
+          type: string
+        duration_seconds:
+          type: integer
+          nullable: true
+        episode_title:
+          type: string
+        podcast_title:
+          type: string
+        podcast_id:
+          type: string
+      required:
+      - audio_url
+      - duration_seconds
+      - episode_title
+      - format
+      - podcast_id
+      - podcast_title
+    PodcastEpisodeStreamEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PodcastEpisodeStream'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    PodcastListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Podcast'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    PodcastRefreshReport:
+      type: object
+      properties:
+        podcast_id:
+          type: string
+        episodes_seen:
+          type: integer
+        episodes_created:
+          type: integer
+        episodes_updated:
+          type: integer
+        error:
+          type: string
+      required:
+      - episodes_created
+      - episodes_seen
+      - episodes_updated
+      - error
+      - podcast_id
+    PodcastRefreshReportEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PodcastRefreshReport'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    PodcastsErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    Provider:
+      type: object
+      description: Serialize provider for API responses.
+      properties:
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 200
+        website_url:
+          type: string
+          format: uri
+          maxLength: 200
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 200
+        is_active:
+          type: boolean
+      required:
+      - name
+      - slug
+    ProviderListEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    RadioEmergencyBroadcastEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EmergencyBroadcast'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioEmergencyBroadcastListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmergencyBroadcast'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - errors
+      - message
+      - request_id
+      - status
+    RadioFavoriteCreateEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Favorite'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioFavoriteListEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RadioFavoriteListEnvelopeData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioFavoriteListEnvelopeData:
+      type: object
+      properties:
+        results:
+          $ref: '#/components/schemas/Favorite'
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+      required:
+      - count
+      - next
+      - previous
+      - results
+    RadioHealthData:
+      type: object
+      properties:
+        status:
+          type: string
+          description: '"healthy", "degraded", or "unhealthy"'
+        timestamp:
+          type: string
+          format: date-time
+        stations_total:
+          type: integer
+        stations_available:
+          type: integer
+        stations_unavailable:
+          type: integer
+        stations_unchecked:
+          type: integer
+      required:
+      - stations_available
+      - stations_total
+      - stations_unavailable
+      - stations_unchecked
+      - status
+      - timestamp
+    RadioHealthEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RadioHealthData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    RadioListeningHistoryListEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RadioListeningHistoryListEnvelopeData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioListeningHistoryListEnvelopeData:
+      type: object
+      properties:
+        results:
+          $ref: '#/components/schemas/ListeningHistory'
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+      required:
+      - count
+      - next
+      - previous
+      - results
+    RadioNowPlayingEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/NowPlaying'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioNullEnvelope:
+      type: object
+      properties:
+        data:
+          nullable: true
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioStationAnalyticsListEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationAnalytics'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioStationHealthCheckData:
+      type: object
+      properties:
+        station_id:
+          type: string
+        is_reachable:
+          type: boolean
+        checked_at:
+          type: string
+          format: date-time
+        status_code:
+          type: integer
+          nullable: true
+        response_time_ms:
+          type: integer
+          nullable: true
+        error_message:
+          type: string
+      required:
+      - checked_at
+      - error_message
+      - is_reachable
+      - response_time_ms
+      - station_id
+      - status_code
+    RadioStationHealthHistoryEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RadioStationHealthCheckData'
+          description: List of health-check rows, newest first.
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
+    RadioTTSSynthesizeData:
+      type: object
+      properties:
+        mime_type:
+          type: string
+        duration_ms:
+          type: integer
+        audio_base64:
+          type: string
+          description: Base64-encoded audio bytes.
+      required:
+      - audio_base64
+      - duration_ms
+      - mime_type
+    RadioTTSSynthesizeEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RadioTTSSynthesizeData'
+        status:
+          type: integer
+        message:
+          type: string
+        errors:
+          nullable: true
+        request_id:
+          type: string
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - request_id
+      - status
     RasterPngRequest:
       type: object
       properties:
@@ -3404,18 +7819,226 @@ components:
       - password
       - password2
       - username
-    StatusEnum:
-      enum:
-      - queued
-      - running
-      - success
-      - failed
-      type: string
+    Station:
+      type: object
+      description: Serialize station metadata for API responses.
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 200
+        provider:
+          type: string
+        provider_name:
+          type: string
+          readOnly: true
+        provider_logo_url:
+          type: string
+          nullable: true
+          readOnly: true
+        description:
+          type: string
+          description: Free-form station description surfaced in detail views.
+        genre:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+        language:
+          type: string
+          maxLength: 100
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 200
+        is_active:
+          type: boolean
+      required:
+      - country
+      - id
+      - language
+      - name
+      - provider
+      - provider_logo_url
+      - provider_name
+    StationAnalytics:
+      type: object
+      description: Output serializer for a :class:`StationAnalytics` row.
+      properties:
+        station_id:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+          readOnly: true
+        total_listens:
+          type: integer
+          readOnly: true
+        total_duration_seconds:
+          type: integer
+          readOnly: true
+        unique_users:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date
+      - station_id
+      - total_duration_seconds
+      - total_listens
+      - unique_users
+      - updated_at
+    StationDetail:
+      type: object
+      description: Extended serializer with stream URL.
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 200
+        provider:
+          type: string
+        provider_name:
+          type: string
+          readOnly: true
+        provider_logo_url:
+          type: string
+          nullable: true
+          readOnly: true
+        description:
+          type: string
+          description: Free-form station description surfaced in detail views.
+        genre:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+        language:
+          type: string
+          maxLength: 100
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 200
+        is_active:
+          type: boolean
+        stream_url:
+          type: string
+          format: uri
+          readOnly: true
+        format:
+          type: string
+          readOnly: true
+        bitrate:
+          type: integer
+          readOnly: true
+        website_url:
+          type: string
+          format: uri
+          readOnly: true
+      required:
+      - bitrate
+      - country
+      - format
+      - id
+      - language
+      - name
+      - provider
+      - provider_logo_url
+      - provider_name
+      - stream_url
+      - website_url
+    StationDetailEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/StationDetail'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    StationListEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    StreamUrlData:
+      type: object
+      properties:
+        stream_url:
+          type: string
+          format: uri
+        format:
+          type: string
+        bitrate:
+          type: integer
+        station_name:
+          type: string
+      required:
+      - bitrate
+      - format
+      - station_name
+      - stream_url
+    StreamUrlEnvelope:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/StreamUrlData'
+        errors:
+          nullable: true
+      required:
+      - data
+      - errors
+      - message
+      - status
+    TTSSynthesizeRequest:
+      type: object
       description: |-
-        * `queued` - Queued
-        * `running` - Running
-        * `success` - Success
-        * `failed` - Failed
+        Input serializer for ``POST /api/v1/radio/tts/``.
+
+        The text length is capped by the server-side ``TTS_MAX_TEXT_CHARS``
+        setting (default 500).
+      properties:
+        text:
+          type: string
+        voice:
+          type: string
+      required:
+      - text
     TokenRefresh:
       type: object
       properties:
@@ -3446,53 +8069,39 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
-    FarmWeatherCurrentSuccess:
+    UpstreamHealthData:
       type: object
       properties:
+        engines:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {}
+      required:
+      - engines
+    UpstreamHealthResponse:
+      type: object
+      properties:
+        success:
+          type: integer
+        message:
+          type: string
         data:
-          $ref: '#/components/schemas/CurrentWeather'
-        status:
-          type: integer
-        message:
-          type: string
-        errors:
-          nullable: true
+          $ref: '#/components/schemas/UpstreamHealthData'
       required:
       - data
-      - errors
       - message
-      - status
-    FarmWeatherDailyData:
-      type: object
-      properties:
-        forecasts:
-          type: array
-          items:
-            $ref: '#/components/schemas/DailySummary'
-      required:
-      - forecasts
-    FarmWeatherDailySuccess:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/FarmWeatherDailyData'
-        status:
-          type: integer
-        message:
-          type: string
-        errors:
-          nullable: true
-      required:
-      - data
-      - errors
-      - message
-      - status
-    FarmWeatherErrorResponse:
+      - success
+    UpstreamHealthUnauthorized:
       type: object
       properties:
         status:
@@ -3501,34 +8110,13 @@ components:
           type: string
         errors:
           nullable: true
-      required:
-      - errors
-      - message
-      - status
-    FarmWeatherHourlyData:
-      type: object
-      properties:
-        hours:
-          type: array
-          items:
-            $ref: '#/components/schemas/HourlyForecast'
-      required:
-      - hours
-    FarmWeatherHourlySuccess:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/FarmWeatherHourlyData'
-        status:
-          type: integer
-        message:
+        request_id:
           type: string
-        errors:
           nullable: true
       required:
-      - data
       - errors
       - message
+      - request_id
       - status
     WeatherCurrentSuccess:
       type: object
@@ -3541,10 +8129,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     WeatherDailyData:
       type: object
@@ -3566,10 +8158,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     WeatherErrorResponse:
       type: object
@@ -3580,9 +8176,13 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - errors
       - message
+      - request_id
       - status
     WeatherWeeklyData:
       type: object
@@ -3604,10 +8204,14 @@ components:
           type: string
         errors:
           nullable: true
+        request_id:
+          type: string
+          nullable: true
       required:
       - data
       - errors
       - message
+      - request_id
       - status
     WeeklyReport:
       type: object
@@ -3634,22 +8238,84 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DailyForecast'
+        is_partial:
+          type: boolean
+          readOnly: true
+        missing_days_count:
+          type: integer
+          readOnly: true
         source:
           type: string
       required:
       - days
+      - is_partial
+      - missing_days_count
       - precipitation_sum_mm
       - source
       - t_max_avg_c
       - t_min_avg_c
       - week_end
       - week_start
+    _ActivityList:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        status:
+          type: string
+        scheduled_at:
+          type: string
+          format: date-time
+        next_due_at:
+          type: string
+          format: date-time
+          nullable: true
+        recurrence_type:
+          type: string
+          nullable: true
+        interval_days:
+          type: integer
+          nullable: true
+        cron_expression:
+          type: string
+          nullable: true
+        farm:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - cron_expression
+      - farm
+      - id
+      - interval_days
+      - next_due_at
+      - recurrence_type
+      - scheduled_at
+      - status
+      - type
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
     BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    FarmObservationAuth:
+      oneOf:
+      - type: apiKey
+        in: header
+        name: X-API-Key
+      - type: http
+        scheme: bearer
+        bearerFormat: JWT
+    IntegrationJWTAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT

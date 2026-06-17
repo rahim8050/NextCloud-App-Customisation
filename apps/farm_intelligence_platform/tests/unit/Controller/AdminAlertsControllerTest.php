@@ -22,7 +22,7 @@ final class AdminAlertsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_alerts_alerts_admin_send_create', 'request-id')
+			->with('v1_alerts_admin_send', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_alerts_alerts_admin_send_create',
 				'method' => 'POST',
@@ -58,7 +58,7 @@ final class AdminAlertsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_alerts_alerts_admin_send_create', 'request-id')
+			->with('v1_alerts_admin_send', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_alerts_alerts_admin_send_create',
 				'method' => 'POST',

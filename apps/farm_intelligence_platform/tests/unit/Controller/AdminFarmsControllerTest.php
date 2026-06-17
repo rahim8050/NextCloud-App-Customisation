@@ -1652,7 +1652,7 @@ final class AdminFarmsControllerTest extends TestCase {
 				],
 				'/api/v1/ndvi' => [
 					'post' => [
-						'operationId' => 'v1_ndvi_ingest_create',
+						'operationId' => 'v1_ndvi_create',
 						'requestBody' => [
 							'content' => [
 								'application/json' => [

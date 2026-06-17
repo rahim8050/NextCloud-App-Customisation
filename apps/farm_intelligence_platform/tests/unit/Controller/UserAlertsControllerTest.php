@@ -140,7 +140,7 @@ final class UserAlertsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_alerts_subscriptions_destroy', 'request-id')
+			->with('v1_alerts_subscriptions_delete', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_alerts_subscriptions_destroy',
 				'method' => 'DELETE',
@@ -169,7 +169,7 @@ final class UserAlertsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_alerts_alerts_list', 'request-id')
+			->with('v1_alerts_list', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_alerts_alerts_list',
 				'method' => 'GET',
@@ -198,7 +198,7 @@ final class UserAlertsControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_alerts_alerts_retrieve', 'request-id')
+			->with('v1_alerts_retrieve', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_alerts_alerts_retrieve',
 				'method' => 'GET',

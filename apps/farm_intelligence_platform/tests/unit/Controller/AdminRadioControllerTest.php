@@ -51,7 +51,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_now_playing_retrieve', 'request-id')
+			->with('v1_radio_station_now_playing', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_now_playing_retrieve',
 				'method' => 'GET',
@@ -82,7 +82,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_analytics_retrieve', 'request-id')
+			->with('v1_radio_station_analytics', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_analytics_retrieve',
 				'method' => 'GET',
@@ -113,7 +113,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_analytics_retrieve', 'request-id')
+			->with('v1_radio_station_analytics', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_analytics_retrieve',
 				'method' => 'GET',
@@ -141,7 +141,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_health_list', 'request-id')
+			->with('v1_radio_station_health_history', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_health_list',
 				'method' => 'GET',
@@ -172,7 +172,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_stations_health_list', 'request-id')
+			->with('v1_radio_station_health_history', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_stations_health_list',
 				'method' => 'GET',
@@ -203,7 +203,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_health_retrieve', 'request-id')
+			->with('v1_radio_health', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_health_retrieve',
 				'method' => 'GET',
@@ -233,7 +233,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_emergency_current_retrieve', 'request-id')
+			->with('v1_radio_emergency_current', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_emergency_current_retrieve',
 				'method' => 'GET',
@@ -264,7 +264,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_emergency_history_list', 'request-id')
+			->with('v1_radio_emergency_history', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_emergency_history_list',
 				'method' => 'GET',
@@ -330,7 +330,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_emergency_partial_update', 'request-id')
+			->with('v1_radio_emergency_update', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_emergency_partial_update',
 				'method' => 'PATCH',
@@ -362,7 +362,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_emergency_destroy', 'request-id')
+			->with('v1_radio_emergency_delete', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_emergency_destroy',
 				'method' => 'DELETE',
@@ -392,7 +392,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_tts_create', 'request-id')
+			->with('v1_radio_tts_synthesize', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_tts_create',
 				'method' => 'POST',
@@ -425,7 +425,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_health_retrieve', 'request-id')
+			->with('v1_radio_health', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_health_retrieve',
 				'method' => 'GET',
@@ -455,7 +455,7 @@ final class AdminRadioControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_radio_emergency_current_retrieve', 'request-id')
+			->with('v1_radio_emergency_current', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_radio_emergency_current_retrieve',
 				'method' => 'GET',

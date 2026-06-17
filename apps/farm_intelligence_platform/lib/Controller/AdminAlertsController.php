@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 
 final class AdminAlertsController extends Controller {
 	private const OPERATION_IDS = [
-		'broadcast' => 'v1_alerts_alerts_admin_send_create',
+		'broadcast' => 'v1_alerts_admin_send',
 	];
 
 	public function __construct(

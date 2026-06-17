@@ -20,11 +20,11 @@ final class RadioUserController extends Controller {
 	private const OPERATION_IDS = [
 		'favorites_list' => 'v1_radio_favorites_list',
 		'favorites_create' => 'v1_radio_favorites_create',
-		'favorites_destroy' => 'v1_radio_favorites_destroy',
+		'favorites_destroy' => 'v1_radio_favorites_delete',
 		'history_list' => 'v1_radio_history_list',
-		'history_recent_list' => 'v1_radio_history_recent_list',
-		'history_stop_create' => 'v1_radio_history_stop_create',
-		'stations_signed_stream_retrieve' => 'v1_radio_stations_signed_stream_retrieve',
+		'history_recent_list' => 'v1_radio_history_recent',
+		'history_stop_create' => 'v1_radio_history_stop',
+		'stations_signed_stream_retrieve' => 'v1_radio_stations_stream_signed',
 	];
 
 	public function __construct(

@@ -20,7 +20,7 @@ final class AdminApiKeysControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_keys_list', 'request-id')
+			->with('v1_keys_retrieve', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_keys_list',
 				'method' => 'GET',
@@ -195,7 +195,7 @@ final class AdminApiKeysControllerTest extends TestCase {
 
 		$schemaService = $this->createMock(DrfSchemaService::class);
 		$schemaService->method('getOperation')
-			->with('v1_keys_list', 'request-id')
+			->with('v1_keys_retrieve', 'request-id')
 			->willReturn([
 				'operationId' => 'v1_keys_list',
 				'method' => 'GET',
