@@ -961,6 +961,10 @@
 			const radioHealthUrl = form.dataset.radioHealthUrl || ''
 			const radioEmergencyCurrentUrl = form.dataset.radioEmergencyCurrentUrl || ''
 			const radioEmergencyHistoryUrl = form.dataset.radioEmergencyHistoryUrl || ''
+			const radioEmergencyCreateUrl = form.dataset.radioEmergencyCreateUrl || ''
+			const radioEmergencyUpdateUrl = form.dataset.radioEmergencyUpdateUrl || ''
+			const radioEmergencyDeleteUrl = form.dataset.radioEmergencyDeleteUrl || ''
+			const radioTtsUrl = form.dataset.radioTtsUrl || ''
 
 			const radioRefresh = document.getElementById('farm-intelligence-platform-radio-refresh')
 			const radioStationsTab = document.getElementById('farm-intelligence-platform-radio-stations-tab')
@@ -990,6 +994,30 @@
 			const radioEmergencyHistoryBody = document.getElementById('farm-intelligence-platform-radio-emergency-history-body')
 			const radioEmergencyHistoryEmpty = document.getElementById('farm-intelligence-platform-radio-emergency-history-empty')
 			const radioEmergencyHistoryLoading = document.getElementById('farm-intelligence-platform-radio-emergency-history-loading')
+
+			const radioEmergencyCreateBtn = document.getElementById('farm-intelligence-platform-radio-emergency-create-btn')
+			const radioEmergencyMgmtRefresh = document.getElementById('farm-intelligence-platform-radio-emergency-mgmt-refresh')
+			const radioEmergencyMgmtBody = document.getElementById('farm-intelligence-platform-radio-emergency-mgmt-body')
+			const radioEmergencyMgmtEmpty = document.getElementById('farm-intelligence-platform-radio-emergency-mgmt-empty')
+			const radioEmergencyModal = document.getElementById('farm-intelligence-platform-radio-emergency-modal')
+			const radioEmergencyModalClose = document.getElementById('farm-intelligence-platform-radio-emergency-modal-close')
+			const radioEmergencyModalTitle = document.getElementById('farm-intelligence-platform-radio-emergency-modal-title')
+			const radioEmergencyModalTitleInput = document.getElementById('farm-intelligence-platform-radio-emergency-modal-title-input')
+			const radioEmergencyModalMessageInput = document.getElementById('farm-intelligence-platform-radio-emergency-modal-message-input')
+			const radioEmergencyModalPrioritySelect = document.getElementById('farm-intelligence-platform-radio-emergency-modal-priority-select')
+			const radioEmergencyModalStartsInput = document.getElementById('farm-intelligence-platform-radio-emergency-modal-starts-input')
+			const radioEmergencyModalEndsInput = document.getElementById('farm-intelligence-platform-radio-emergency-modal-ends-input')
+			const radioEmergencyModalSave = document.getElementById('farm-intelligence-platform-radio-emergency-modal-save')
+			const radioEmergencyModalCancel = document.getElementById('farm-intelligence-platform-radio-emergency-modal-cancel')
+			const radioEmergencyModalError = document.getElementById('farm-intelligence-platform-radio-emergency-modal-error')
+
+			const radioTtsText = document.getElementById('farm-intelligence-platform-radio-tts-text')
+			const radioTtsVoice = document.getElementById('farm-intelligence-platform-radio-tts-voice')
+			const radioTtsSynthesizeBtn = document.getElementById('farm-intelligence-platform-radio-tts-synthesize-btn')
+			const radioTtsDownloadBtn = document.getElementById('farm-intelligence-platform-radio-tts-download-btn')
+			const radioTtsAudio = document.getElementById('farm-intelligence-platform-radio-tts-audio')
+			const radioTtsDuration = document.getElementById('farm-intelligence-platform-radio-tts-duration')
+			const radioTtsError = document.getElementById('farm-intelligence-platform-radio-tts-error')
 
 			const radioHealthBox = document.getElementById('farm-intelligence-platform-radio-health')
 			const radioHealthStatus = document.getElementById('farm-intelligence-platform-radio-health-status')
@@ -1468,6 +1496,199 @@
 				if (radioEmergencyHistoryModal) radioEmergencyHistoryModal.hidden = true
 			}
 
+			let editingEmergencyPk = null
+
+			const loadEmergencyBroadcasts = async () => {
+				if (!radioEmergencyMgmtBody || !radioEmergencyMgmtEmpty) return
+				try {
+					const resp = await performJsonRequest('GET', radioEmergencyHistoryUrl)
+					const list = resp?.data ?? []
+					if (list.length === 0) {
+						radioEmergencyMgmtBody.innerHTML = ''
+						radioEmergencyMgmtBody.closest('.farm-intelligence-platform-radio__table-wrap')?.querySelector('table')?.setAttribute('hidden', '')
+						radioEmergencyMgmtEmpty.hidden = false
+						return
+					}
+					radioEmergencyMgmtEmpty.hidden = true
+					radioEmergencyMgmtBody.closest('.farm-intelligence-platform-radio__table-wrap')?.querySelector('table')?.removeAttribute('hidden')
+					radioEmergencyMgmtBody.innerHTML = list.map(item => {
+						const pk = item.id ?? item.pk ?? ''
+						const starts = item.starts_at || item.start_time || item.starts || ''
+						const ends = item.ends_at || item.end_time || item.ends || ''
+						return `<tr>
+							<td>${OC.Util.escapeHTML(String(pk))}</td>
+							<td>${OC.Util.escapeHTML(item.title || '')}</td>
+							<td>${OC.Util.escapeHTML(item.priority || '')}</td>
+							<td>${item.is_active || item.active ? 'Yes' : 'No'}</td>
+							<td>${OC.Util.escapeHTML(starts)}</td>
+							<td>${OC.Util.escapeHTML(ends)}</td>
+							<td>
+								<button type="button" class="button" data-action="edit" data-pk="${OC.Util.escapeHTML(String(pk))}">Edit</button>
+								<button type="button" class="button" data-action="delete" data-pk="${OC.Util.escapeHTML(String(pk))}">Delete</button>
+							</td>
+						</tr>`
+					}).join('')
+					radioEmergencyMgmtBody.querySelectorAll('[data-action="edit"]').forEach(btn => {
+						btn.addEventListener('click', () => editEmergency(btn.dataset.pk))
+					})
+					radioEmergencyMgmtBody.querySelectorAll('[data-action="delete"]').forEach(btn => {
+						btn.addEventListener('click', () => deleteEmergency(btn.dataset.pk))
+					})
+				} catch (e) {
+					console.warn('[farm_intelligence_platform] Failed to load emergency broadcasts', e)
+				}
+			}
+
+			const openEmergencyModal = (title = '') => {
+				if (!radioEmergencyModal) return
+				editingEmergencyPk = null
+				radioEmergencyModalTitleInput.value = ''
+				radioEmergencyModalMessageInput.value = ''
+				radioEmergencyModalPrioritySelect.value = 'high'
+				radioEmergencyModalStartsInput.value = ''
+				radioEmergencyModalEndsInput.value = ''
+				radioEmergencyModalError.hidden = true
+				radioEmergencyModalError.textContent = ''
+				radioEmergencyModalTitle.textContent = title || t('farm_intelligence_platform', 'Create Emergency Broadcast')
+				radioEmergencyModalSave.textContent = t('farm_intelligence_platform', 'Create')
+				radioEmergencyModal.hidden = false
+			}
+
+			const closeEmergencyModal = () => {
+				if (radioEmergencyModal) radioEmergencyModal.hidden = true
+				editingEmergencyPk = null
+			}
+
+			const editEmergency = async (pk) => {
+				if (!pk) return
+				try {
+					const resp = await performJsonRequest('GET', radioEmergencyHistoryUrl)
+					const list = resp?.data ?? []
+					const item = list.find(i => String(i.id ?? i.pk ?? '') === String(pk))
+					if (!item) {
+						OC.Notification.showTemporary(t('farm_intelligence_platform', 'Emergency broadcast not found'))
+						return
+					}
+					editingEmergencyPk = pk
+					radioEmergencyModalTitleInput.value = item.title || ''
+					radioEmergencyModalMessageInput.value = item.message || item.description || ''
+					radioEmergencyModalPrioritySelect.value = item.priority || 'high'
+					if (item.starts_at || item.start_time || item.starts) {
+						const d = new Date(item.starts_at || item.start_time || item.starts)
+						if (!isNaN(d.getTime())) radioEmergencyModalStartsInput.value = d.toISOString().slice(0, 16)
+					}
+					if (item.ends_at || item.end_time || item.ends) {
+						const d = new Date(item.ends_at || item.end_time || item.ends)
+						if (!isNaN(d.getTime())) radioEmergencyModalEndsInput.value = d.toISOString().slice(0, 16)
+					}
+					radioEmergencyModalError.hidden = true
+					radioEmergencyModalError.textContent = ''
+					radioEmergencyModalTitle.textContent = t('farm_intelligence_platform', 'Edit Emergency Broadcast')
+					radioEmergencyModalSave.textContent = t('farm_intelligence_platform', 'Update')
+					radioEmergencyModal.hidden = false
+				} catch (e) {
+					console.warn('[farm_intelligence_platform] Failed to load emergency for editing', e)
+				}
+			}
+
+			const saveEmergency = async () => {
+				if (!radioEmergencyModalTitleInput || !radioEmergencyModalSave) return
+				const title = radioEmergencyModalTitleInput.value.trim()
+				if (!title) {
+					radioEmergencyModalError.hidden = false
+					radioEmergencyModalError.textContent = t('farm_intelligence_platform', 'Title is required')
+					return
+				}
+				radioEmergencyModalSave.disabled = true
+				radioEmergencyModalError.hidden = true
+				radioEmergencyModalError.textContent = ''
+				const body = {
+					title,
+					message: radioEmergencyModalMessageInput?.value?.trim() || '',
+					priority: radioEmergencyModalPrioritySelect?.value || 'high',
+					starts_at: radioEmergencyModalStartsInput?.value || null,
+					ends_at: radioEmergencyModalEndsInput?.value || null,
+				}
+				try {
+					let resp
+					if (editingEmergencyPk) {
+						const url = radioEmergencyUpdateUrl.replace('__PK__', editingEmergencyPk)
+						resp = await performJsonRequest('PATCH', url, { body })
+					} else {
+						resp = await performJsonRequest('POST', radioEmergencyCreateUrl, { body })
+					}
+					closeEmergencyModal()
+					await loadEmergencyBroadcasts()
+					OC.Notification.showTemporary(t('farm_intelligence_platform', editingEmergencyPk ? 'Emergency broadcast updated' : 'Emergency broadcast created'))
+				} catch (e) {
+					const msg = e?.response?.data?.error?.message || e?.message || t('farm_intelligence_platform', 'Failed to save emergency broadcast')
+					radioEmergencyModalError.hidden = false
+					radioEmergencyModalError.textContent = msg
+				} finally {
+					radioEmergencyModalSave.disabled = false
+				}
+			}
+
+			const deleteEmergency = async (pk) => {
+				if (!pk) return
+				if (!confirm(t('farm_intelligence_platform', 'Are you sure you want to delete this emergency broadcast?'))) return
+				try {
+					const url = radioEmergencyDeleteUrl.replace('__PK__', pk)
+					await performJsonRequest('DELETE', url)
+					await loadEmergencyBroadcasts()
+					OC.Notification.showTemporary(t('farm_intelligence_platform', 'Emergency broadcast deleted'))
+				} catch (e) {
+					const msg = e?.response?.data?.error?.message || e?.message || t('farm_intelligence_platform', 'Failed to delete emergency broadcast')
+					OC.Notification.showTemporary(msg)
+				}
+			}
+
+			const synthesizeTts = async () => {
+				if (!radioTtsText || !radioTtsSynthesizeBtn) return
+				const text = radioTtsText.value.trim()
+				if (!text) {
+					radioTtsError.hidden = false
+					radioTtsError.textContent = t('farm_intelligence_platform', 'Please enter text to synthesize')
+					return
+				}
+				radioTtsSynthesizeBtn.disabled = true
+				radioTtsError.hidden = true
+				radioTtsError.textContent = ''
+				if (radioTtsAudio) radioTtsAudio.hidden = true
+				if (radioTtsDownloadBtn) radioTtsDownloadBtn.hidden = true
+				if (radioTtsDuration) radioTtsDuration.hidden = true
+				try {
+					const voice = radioTtsVoice?.value || 'en-US'
+					const resp = await performJsonRequest('POST', radioTtsUrl, { body: { text, voice } })
+					const audioUrl = resp?.data?.url || resp?.data?.audio_url || resp?.url || ''
+					const duration = resp?.data?.duration_seconds || resp?.duration || 0
+					if (!audioUrl) {
+						radioTtsError.hidden = false
+						radioTtsError.textContent = t('farm_intelligence_platform', 'No audio URL returned')
+						return
+					}
+					if (radioTtsAudio) {
+						radioTtsAudio.src = audioUrl
+						radioTtsAudio.hidden = false
+						radioTtsAudio.play().catch(() => {})
+					}
+					if (radioTtsDuration && duration) {
+						radioTtsDuration.textContent = t('farm_intelligence_platform', 'Duration: {seconds}s', { seconds: duration })
+						radioTtsDuration.hidden = false
+					}
+					if (radioTtsDownloadBtn) {
+						radioTtsDownloadBtn.href = audioUrl
+						radioTtsDownloadBtn.hidden = false
+					}
+				} catch (e) {
+					const msg = e?.response?.data?.error?.message || e?.message || t('farm_intelligence_platform', 'Failed to synthesize speech')
+					radioTtsError.hidden = false
+					radioTtsError.textContent = msg
+				} finally {
+					radioTtsSynthesizeBtn.disabled = false
+				}
+			}
+
 			const switchStationTab = (tab) => {
 				const tabs = [
 					{ btn: stationTabNowPlaying, panel: stationPanelNowPlaying, key: 'now-playing' },
@@ -1858,6 +2079,17 @@
 					if (event.target === radioEmergencyHistoryModal) closeEmergencyHistoryModal()
 				})
 			}
+			if (radioEmergencyCreateBtn) radioEmergencyCreateBtn.addEventListener('click', () => openEmergencyModal())
+			if (radioEmergencyMgmtRefresh) radioEmergencyMgmtRefresh.addEventListener('click', loadEmergencyBroadcasts)
+			if (radioEmergencyModalClose) radioEmergencyModalClose.addEventListener('click', closeEmergencyModal)
+			if (radioEmergencyModal) {
+				radioEmergencyModal.addEventListener('click', (event) => {
+					if (event.target === radioEmergencyModal) closeEmergencyModal()
+				})
+			}
+			if (radioEmergencyModalSave) radioEmergencyModalSave.addEventListener('click', saveEmergency)
+			if (radioEmergencyModalCancel) radioEmergencyModalCancel.addEventListener('click', closeEmergencyModal)
+			if (radioTtsSynthesizeBtn) radioTtsSynthesizeBtn.addEventListener('click', synthesizeTts)
 			if (stationModalClose) stationModalClose.addEventListener('click', closeStationModal)
 			if (stationModal) {
 				stationModal.addEventListener('click', (event) => {
@@ -1944,6 +2176,7 @@
 			loadProviders()
 			loadRadioHealth()
 			loadCurrentEmergency()
+			loadEmergencyBroadcasts()
 		}
 
 		const setupFarms = () => {
@@ -5078,11 +5311,12 @@
 					showWeatherError(snippet || 'Unable to parse weather response.')
 					return null
 				}
-				if (result.data?.status !== 0) {
-					showWeatherError(pickMessage(result.data, fallbackMessage))
+				const weatherPayload = unwrapResponseData(result.data)
+				if (weatherPayload?.status !== 0) {
+					showWeatherError(pickMessage(weatherPayload, fallbackMessage))
 					return null
 				}
-				return result.data?.data ?? result.data
+				return weatherPayload?.data ?? weatherPayload
 			}
 
 			const openWeatherPanel = (farmId, farm) => {
