@@ -1660,13 +1660,16 @@
 				try {
 					const voice = radioTtsVoice?.value || 'en-US'
 					const resp = await performJsonRequest('POST', radioTtsUrl, { body: { text, voice } })
-					const djangoData = unwrapResponseData(resp?.data)?.data || {}
+					const phpEnvelope = resp?.data || {}
+					const djangoEnvelope = phpEnvelope?.data || {}
+					const djangoData = djangoEnvelope?.data || {}
 					const audioBase64 = djangoData.audio_base64 || ''
 					const durationMs = djangoData.duration_ms || 0
 					const mimeType = djangoData.mime_type || 'audio/wav'
 					if (!audioBase64) {
+						const errMsg = djangoEnvelope?.message || djangoEnvelope?.errors?.detail || phpEnvelope?.message || ''
 						radioTtsError.hidden = false
-						radioTtsError.textContent = t('farm_intelligence_platform', 'No audio URL returned')
+						radioTtsError.textContent = errMsg || t('farm_intelligence_platform', 'No audio data returned')
 						return
 					}
 					const byteChars = atob(audioBase64)
