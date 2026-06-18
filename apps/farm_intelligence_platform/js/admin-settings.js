@@ -1660,20 +1660,30 @@
 				try {
 					const voice = radioTtsVoice?.value || 'en-US'
 					const resp = await performJsonRequest('POST', radioTtsUrl, { body: { text, voice } })
-					const audioUrl = resp?.data?.url || resp?.data?.audio_url || resp?.url || ''
-					const duration = resp?.data?.duration_seconds || resp?.duration || 0
-					if (!audioUrl) {
+					const djangoData = unwrapResponseData(resp?.data)?.data || {}
+					const audioBase64 = djangoData.audio_base64 || ''
+					const durationMs = djangoData.duration_ms || 0
+					const mimeType = djangoData.mime_type || 'audio/wav'
+					if (!audioBase64) {
 						radioTtsError.hidden = false
 						radioTtsError.textContent = t('farm_intelligence_platform', 'No audio URL returned')
 						return
 					}
+					const byteChars = atob(audioBase64)
+					const byteNumbers = new Array(byteChars.length)
+					for (let i = 0; i < byteChars.length; i++) {
+						byteNumbers[i] = byteChars.charCodeAt(i)
+					}
+					const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType })
+					const audioUrl = URL.createObjectURL(blob)
 					if (radioTtsAudio) {
 						radioTtsAudio.src = audioUrl
 						radioTtsAudio.hidden = false
 						radioTtsAudio.play().catch(() => {})
 					}
-					if (radioTtsDuration && duration) {
-						radioTtsDuration.textContent = t('farm_intelligence_platform', 'Duration: {seconds}s', { seconds: duration })
+					if (radioTtsDuration && durationMs) {
+						const seconds = Math.round(durationMs / 1000)
+						radioTtsDuration.textContent = t('farm_intelligence_platform', 'Duration: {seconds}s', { seconds: seconds })
 						radioTtsDuration.hidden = false
 					}
 					if (radioTtsDownloadBtn) {
