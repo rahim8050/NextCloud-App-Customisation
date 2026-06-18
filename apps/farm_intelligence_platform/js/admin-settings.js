@@ -1668,8 +1668,9 @@
 					const mimeType = djangoData.mime_type || 'audio/wav'
 					if (!audioBase64) {
 						const errMsg = djangoEnvelope?.message || djangoEnvelope?.errors?.detail || phpEnvelope?.message || ''
+						const debugInfo = 'phpKeys:' + Object.keys(phpEnvelope).join(',') + '|djKeys:' + Object.keys(djangoEnvelope).join(',') + '|dataKeys:' + Object.keys(djangoData).join(',') + '|djStatus:' + djangoEnvelope?.status
 						radioTtsError.hidden = false
-						radioTtsError.textContent = errMsg || t('farm_intelligence_platform', 'No audio data returned')
+						radioTtsError.textContent = errMsg || ('No audio – ' + debugInfo)
 						return
 					}
 					const byteChars = atob(audioBase64)
