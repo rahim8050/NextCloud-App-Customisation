@@ -47,6 +47,10 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/state', $response->getParams()['farmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations', $response->getParams()['farmObservationsUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__', $response->getParams()['farmObservationUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/radio/emergency', $response->getParams()['radioEmergencyCreateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/__PK__', $response->getParams()['radioEmergencyUpdateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/__PK__', $response->getParams()['radioEmergencyDeleteUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/radio/tts', $response->getParams()['radioTtsUrl']);
 	}
 
 	public function testAdminUrlsRemainRoutePaths(): void {
@@ -87,7 +91,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(46))
+		$urlGenerator->expects($this->exactly(50))
 			->method('linkToRoute')
 			->withConsecutive(
 				['farm_intelligence_platform.settings.saveAdmin'],
@@ -136,6 +140,10 @@ final class AdminSettingsTest extends TestCase {
 				['farm_intelligence_platform.adminRadio.getRadioHealth'],
 				['farm_intelligence_platform.adminRadio.getCurrentEmergency'],
 				['farm_intelligence_platform.adminRadio.getEmergencyHistory'],
+				['farm_intelligence_platform.adminRadio.createEmergency'],
+				['farm_intelligence_platform.adminRadio.updateEmergency', ['pk' => '__PK__']],
+				['farm_intelligence_platform.adminRadio.deleteEmergency', ['pk' => '__PK__']],
+				['farm_intelligence_platform.adminRadio.synthesizeTts'],
 			)
 			->willReturnOnConsecutiveCalls(
 				'/apps/farm_intelligence_platform/settings/admin',
@@ -184,6 +192,10 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/farm_intelligence_platform/api/v1/admin/radio/health',
 				'/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/current',
 				'/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/history',
+				'/apps/farm_intelligence_platform/api/v1/admin/radio/emergency',
+				'/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/__PK__',
+				'/apps/farm_intelligence_platform/api/v1/admin/radio/emergency/__PK__',
+				'/apps/farm_intelligence_platform/api/v1/admin/radio/tts',
 			);
 
 		$settings = new AdminSettings('farm_intelligence_platform', $l10n, $appConfig, $integrationConfig, $urlGenerator);

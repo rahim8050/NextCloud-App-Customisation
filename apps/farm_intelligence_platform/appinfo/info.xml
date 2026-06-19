@@ -6,7 +6,7 @@
   <summary>Admin-only integration with a Django Farm Intelligence Platform (DRF)</summary>
   <description>Admin-only integration with a Django Farm Intelligence Platform backend: farm CRUD, NDVI analytics, weather data, HMAC auth, and diagnostics proxy.</description>
   <licence>AGPL-3.0-or-later</licence>
-  <version>0.0.3</version>
+  <version>0.0.5</version>
   <namespace>FarmIntelligencePlatform</namespace>
   <type>app</type>
 

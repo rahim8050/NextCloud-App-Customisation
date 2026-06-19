@@ -4,7 +4,7 @@ style('farm_intelligence_platform', 'admin-settings');
 <div id="farm-intelligence-platform-settings-root" class="section farm-intelligence-platform-settings">
 	<h1><?php p($l->t('Farm Intelligence Platform')); ?></h1>
 
-	<form id="farm-intelligence-platform-settings-form" class="farm-intelligence-platform-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>" data-farm-state-url="<?php p($_['farmStateUrl']); ?>" data-farm-observations-url="<?php p($_['farmObservationsUrl']); ?>" data-farm-observation-url="<?php p($_['farmObservationUrl']); ?>" data-farm-activities-url="<?php p($_['farmActivitiesUrl']); ?>" data-farm-activity-url="<?php p($_['farmActivityUrl']); ?>" data-activity-schema-url="<?php p($_['activitySchemaUrl']); ?>" data-activity-list-url="<?php p($_['activityListUrl']); ?>" data-activity-create-url="<?php p($_['activityCreateUrl']); ?>" data-activity-get-url="<?php p($_['activityGetUrl']); ?>" data-activity-update-url="<?php p($_['activityUpdateUrl']); ?>" data-activity-patch-url="<?php p($_['activityPatchUrl']); ?>" data-activity-delete-url="<?php p($_['activityDeleteUrl']); ?>" data-radio-providers-url="<?php p($_['radioProvidersUrl']); ?>" data-radio-stations-url="<?php p($_['radioStationsUrl']); ?>" data-radio-station-url="<?php p($_['radioStationUrl']); ?>" data-radio-stream-url="<?php p($_['radioStreamUrl']); ?>" data-radio-now-playing-url="<?php p($_['radioNowPlayingUrl']); ?>" data-radio-analytics-url="<?php p($_['radioAnalyticsUrl']); ?>" data-radio-station-health-url="<?php p($_['radioStationHealthUrl']); ?>" data-radio-station-health-history-url="<?php p($_['radioStationHealthHistoryUrl']); ?>" data-radio-health-url="<?php p($_['radioHealthUrl']); ?>" data-radio-emergency-current-url="<?php p($_['radioEmergencyCurrentUrl']); ?>" data-radio-emergency-history-url="<?php p($_['radioEmergencyHistoryUrl']); ?>">
+	<form id="farm-intelligence-platform-settings-form" class="farm-intelligence-platform-settings__form" method="post" action="<?php p($_['saveUrl']); ?>" data-generate-url="<?php p($_['generateCredentialsUrl']); ?>" data-rotate-url="<?php p($_['rotateHmacUrl']); ?>" data-config-url="<?php p($_['configUrl']); ?>" data-test-connection-url="<?php p($_['testConnectionUrl']); ?>" data-diagnostics-url="<?php p($_['diagnosticsUrl']); ?>" data-preview-url="<?php p($_['previewUrl']); ?>" data-farm-schema-url="<?php p($_['farmSchemaUrl']); ?>" data-farm-list-url="<?php p($_['farmListUrl']); ?>" data-farm-create-url="<?php p($_['farmCreateUrl']); ?>" data-farm-get-url="<?php p($_['farmGetUrl']); ?>" data-farm-update-url="<?php p($_['farmUpdateUrl']); ?>" data-farm-patch-url="<?php p($_['farmPatchUrl']); ?>" data-farm-delete-url="<?php p($_['farmDeleteUrl']); ?>" data-farm-sync-url="<?php p($_['farmSyncUrl']); ?>" data-farm-ndvi-latest-url="<?php p($_['farmNdviLatestUrl']); ?>" data-farm-ndvi-timeseries-url="<?php p($_['farmNdviTimeseriesUrl']); ?>" data-farm-ndvi-raster-url="<?php p($_['farmNdviRasterUrl']); ?>" data-farm-ndvi-raster-queue-url="<?php p($_['farmNdviRasterQueueUrl']); ?>" data-farm-ndvi-refresh-url="<?php p($_['farmNdviRefreshUrl']); ?>" data-farm-ndwi-latest-url="<?php p($_['farmNdwiLatestUrl']); ?>" data-farm-ndwi-timeseries-url="<?php p($_['farmNdwiTimeseriesUrl']); ?>" data-farm-ndwi-raster-url="<?php p($_['farmNdwiRasterUrl']); ?>" data-farm-ndwi-raster-queue-url="<?php p($_['farmNdwiRasterQueueUrl']); ?>" data-farm-ndwi-refresh-url="<?php p($_['farmNdwiRefreshUrl']); ?>" data-farm-ndwi-farm-state-url="<?php p($_['farmNdwiFarmStateUrl']); ?>" data-farm-weather-current-url="<?php p($_['farmWeatherCurrentUrl']); ?>" data-farm-weather-hourly-url="<?php p($_['farmWeatherHourlyUrl']); ?>" data-farm-weather-daily-url="<?php p($_['farmWeatherDailyUrl']); ?>" data-farm-state-url="<?php p($_['farmStateUrl']); ?>" data-farm-observations-url="<?php p($_['farmObservationsUrl']); ?>" data-farm-observation-url="<?php p($_['farmObservationUrl']); ?>" data-farm-activities-url="<?php p($_['farmActivitiesUrl']); ?>" data-farm-activity-url="<?php p($_['farmActivityUrl']); ?>" data-activity-schema-url="<?php p($_['activitySchemaUrl']); ?>" data-activity-list-url="<?php p($_['activityListUrl']); ?>" data-activity-create-url="<?php p($_['activityCreateUrl']); ?>" data-activity-get-url="<?php p($_['activityGetUrl']); ?>" data-activity-update-url="<?php p($_['activityUpdateUrl']); ?>" data-activity-patch-url="<?php p($_['activityPatchUrl']); ?>" data-activity-delete-url="<?php p($_['activityDeleteUrl']); ?>" data-radio-providers-url="<?php p($_['radioProvidersUrl']); ?>" data-radio-stations-url="<?php p($_['radioStationsUrl']); ?>" data-radio-station-url="<?php p($_['radioStationUrl']); ?>" data-radio-stream-url="<?php p($_['radioStreamUrl']); ?>" data-radio-now-playing-url="<?php p($_['radioNowPlayingUrl']); ?>" data-radio-analytics-url="<?php p($_['radioAnalyticsUrl']); ?>" data-radio-station-health-url="<?php p($_['radioStationHealthUrl']); ?>" data-radio-station-health-history-url="<?php p($_['radioStationHealthHistoryUrl']); ?>" data-radio-health-url="<?php p($_['radioHealthUrl']); ?>" data-radio-emergency-current-url="<?php p($_['radioEmergencyCurrentUrl']); ?>" data-radio-emergency-history-url="<?php p($_['radioEmergencyHistoryUrl']); ?>" data-radio-emergency-create-url="<?php p($_['radioEmergencyCreateUrl']); ?>" data-radio-emergency-update-url="<?php p($_['radioEmergencyUpdateUrl']); ?>" data-radio-emergency-delete-url="<?php p($_['radioEmergencyDeleteUrl']); ?>" data-radio-tts-url="<?php p($_['radioTtsUrl']); ?>">
 		<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken'] ?? \OC::$server->getRequest()->getParam('requesttoken', '') ?? ''); ?>" />
 		<input type="hidden" name="format" value="json" />
 		<div class="form-group">
@@ -141,6 +141,14 @@ style('farm_intelligence_platform', 'admin-settings');
 						<button id="farm-intelligence-platform-ndvi-queue" type="button" class="button"><?php p($l->t('Queue raster')); ?></button>
 						<button id="farm-intelligence-platform-ndvi-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
 						<button id="farm-intelligence-platform-farm-state" type="button" class="button"><?php p($l->t('Farm State')); ?></button>
+					</div>
+					<div class="farm-intelligence-platform-farms__ndvi-actions">
+						<button id="farm-intelligence-platform-ndwi-latest" type="button" class="button"><?php p($l->t('Latest NDWI')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-timeseries" type="button" class="button"><?php p($l->t('NDWI Timeseries')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-queue" type="button" class="button"><?php p($l->t('Queue NDWI raster')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-refresh" type="button" class="button"><?php p($l->t('Refresh NDWI')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-raster" type="button" class="button"><?php p($l->t('NDWI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-state" type="button" class="button"><?php p($l->t('NDWI State')); ?></button>
 					</div>
 					<div class="farm-intelligence-platform-farms__ndvi-row">
 						<label for="farm-intelligence-platform-ndvi-start"><?php p($l->t('Start')); ?></label>
@@ -702,6 +710,105 @@ style('farm_intelligence_platform', 'admin-settings');
 					</div>
 				</div>
 			</div>
+			<div id="farm-intelligence-platform-radio-emergency-modal" class="farm-intelligence-platform-radio__modal" hidden>
+				<div class="farm-intelligence-platform-radio__modal-card">
+					<button id="farm-intelligence-platform-radio-emergency-modal-close" type="button" class="farm-intelligence-platform-radio__modal-close" aria-label="<?php p($l->t('Close')); ?>">
+						<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+					</button>
+					<strong class="farm-intelligence-platform-radio__modal-title" id="farm-intelligence-platform-radio-emergency-modal-title"><?php p($l->t('Create Emergency Broadcast')); ?></strong>
+					<div class="farm-intelligence-platform-radio__modal-form">
+						<div class="farm-intelligence-platform-radio__form-group">
+							<label for="farm-intelligence-platform-radio-emergency-modal-title-input"><?php p($l->t('Title')); ?></label>
+							<input id="farm-intelligence-platform-radio-emergency-modal-title-input" type="text" required />
+						</div>
+						<div class="farm-intelligence-platform-radio__form-group">
+							<label for="farm-intelligence-platform-radio-emergency-modal-message-input"><?php p($l->t('Message')); ?></label>
+							<textarea id="farm-intelligence-platform-radio-emergency-modal-message-input" rows="3"></textarea>
+						</div>
+						<div class="farm-intelligence-platform-radio__form-group">
+							<label for="farm-intelligence-platform-radio-emergency-modal-priority-select"><?php p($l->t('Priority')); ?></label>
+							<select id="farm-intelligence-platform-radio-emergency-modal-priority-select">
+								<option value="low"><?php p($l->t('Low')); ?></option>
+								<option value="medium"><?php p($l->t('Medium')); ?></option>
+								<option value="high" selected><?php p($l->t('High')); ?></option>
+								<option value="critical"><?php p($l->t('Critical')); ?></option>
+							</select>
+						</div>
+						<div class="farm-intelligence-platform-radio__form-group">
+							<label for="farm-intelligence-platform-radio-emergency-modal-starts-input"><?php p($l->t('Starts at')); ?></label>
+							<input id="farm-intelligence-platform-radio-emergency-modal-starts-input" type="datetime-local" />
+						</div>
+						<div class="farm-intelligence-platform-radio__form-group">
+							<label for="farm-intelligence-platform-radio-emergency-modal-ends-input"><?php p($l->t('Ends at')); ?></label>
+							<input id="farm-intelligence-platform-radio-emergency-modal-ends-input" type="datetime-local" />
+						</div>
+					</div>
+					<div class="farm-intelligence-platform-radio__modal-actions">
+						<button id="farm-intelligence-platform-radio-emergency-modal-save" type="button" class="button primary"><?php p($l->t('Save')); ?></button>
+						<button id="farm-intelligence-platform-radio-emergency-modal-cancel" type="button" class="button"><?php p($l->t('Cancel')); ?></button>
+					</div>
+					<div id="farm-intelligence-platform-radio-emergency-modal-error" class="farm-intelligence-platform-radio__note error" hidden></div>
+				</div>
+			</div>
+
+			<div id="farm-intelligence-platform-radio-emergency-mgmt" class="farm-intelligence-platform-radio__section">
+				<div class="farm-intelligence-platform-radio__section-header">
+					<strong><?php p($l->t('Emergency Broadcasts')); ?></strong>
+					<div class="farm-intelligence-platform-radio__actions">
+						<button id="farm-intelligence-platform-radio-emergency-create-btn" type="button" class="button"><?php p($l->t('Create Broadcast')); ?></button>
+						<button id="farm-intelligence-platform-radio-emergency-mgmt-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
+					</div>
+				</div>
+				<div class="farm-intelligence-platform-radio__table-wrap">
+					<table class="farm-intelligence-platform-radio__table">
+						<thead>
+							<tr>
+								<th><?php p($l->t('ID')); ?></th>
+								<th><?php p($l->t('Title')); ?></th>
+								<th><?php p($l->t('Priority')); ?></th>
+								<th><?php p($l->t('Active')); ?></th>
+								<th><?php p($l->t('Starts')); ?></th>
+								<th><?php p($l->t('Ends')); ?></th>
+								<th><?php p($l->t('Actions')); ?></th>
+							</tr>
+						</thead>
+						<tbody id="farm-intelligence-platform-radio-emergency-mgmt-body"></tbody>
+					</table>
+				</div>
+				<div id="farm-intelligence-platform-radio-emergency-mgmt-empty" class="farm-intelligence-platform-radio__note" hidden>
+					<p><?php p($l->t('No emergency broadcasts yet.')); ?></p>
+				</div>
+			</div>
+
+			<div id="farm-intelligence-platform-radio-tts" class="farm-intelligence-platform-radio__section">
+				<div class="farm-intelligence-platform-radio__section-header">
+					<strong><?php p($l->t('Text-to-Speech')); ?></strong>
+				</div>
+				<div class="farm-intelligence-platform-radio__tts-form">
+					<div class="farm-intelligence-platform-radio__tts-row">
+						<label for="farm-intelligence-platform-radio-tts-text"><?php p($l->t('Text')); ?></label>
+						<textarea id="farm-intelligence-platform-radio-tts-text" rows="3" placeholder="<?php p($l->t('Enter text to synthesize...')); ?>"></textarea>
+					</div>
+					<div class="farm-intelligence-platform-radio__tts-row">
+						<label for="farm-intelligence-platform-radio-tts-voice"><?php p($l->t('Voice')); ?></label>
+						<select id="farm-intelligence-platform-radio-tts-voice">
+							<option value="en-US">en-US</option>
+							<option value="en-GB">en-GB</option>
+							<option value="fr-FR">fr-FR</option>
+							<option value="de-DE">de-DE</option>
+							<option value="es-ES">es-ES</option>
+						</select>
+					</div>
+					<div class="farm-intelligence-platform-radio__tts-actions">
+						<button id="farm-intelligence-platform-radio-tts-synthesize-btn" type="button" class="button primary"><?php p($l->t('Synthesize')); ?></button>
+						<button id="farm-intelligence-platform-radio-tts-download-btn" type="button" class="button" hidden><?php p($l->t('Download WAV')); ?></button>
+					</div>
+					<div id="farm-intelligence-platform-radio-tts-duration" class="farm-intelligence-platform-radio__tts-duration" hidden></div>
+					<audio id="farm-intelligence-platform-radio-tts-audio" controls hidden></audio>
+					<div id="farm-intelligence-platform-radio-tts-error" class="farm-intelligence-platform-radio__note error" hidden></div>
+				</div>
+			</div>
+
 			<div id="farm-intelligence-platform-radio-providers" class="farm-intelligence-platform-radio__panel" hidden>
 				<div class="farm-intelligence-platform-radio__table-wrap">
 					<table class="farm-intelligence-platform-radio__table">

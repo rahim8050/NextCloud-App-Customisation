@@ -456,9 +456,9 @@
 		return `${formatted} (${daysAgo} day${daysAgo === 1 ? '' : 's'} ago)`
 	}
 
-	const buildLatestCardModel = (state) => {
+	const buildLatestCardModel = (state, label) => {
 		const model = {
-			title: 'Latest NDVI',
+			title: label ?? 'Latest NDVI',
 			level: 'info',
 			summary: '',
 			badges: [],
@@ -470,19 +470,19 @@
 		}
 		switch (state.status) {
 		case NDVI_LATEST_STATE.loading:
-			return { ...model, summary: 'Loading latest NDVI...' }
+			return { ...model, summary: `Loading ${label ?? 'latest NDVI'}...` }
 		case NDVI_LATEST_STATE.error:
 			return {
 				...model,
 				level: 'error',
-				summary: state.message || 'Unable to load latest NDVI.',
+				summary: state.message || `Unable to load ${label ?? 'latest NDVI'}.`,
 				showRetry: true,
 			}
 		case NDVI_LATEST_STATE.no_data:
 			return {
 				...model,
 				level: 'warning',
-				summary: 'No latest NDVI observation available.',
+				summary: `No ${label ?? 'latest NDVI'} observation available.`,
 			}
 		case NDVI_LATEST_STATE.stale:
 		case NDVI_LATEST_STATE.fresh: {
@@ -518,9 +518,9 @@
 		}
 	}
 
-	const buildTimeseriesCardModel = (state) => {
+	const buildTimeseriesCardModel = (state, label) => {
 		const model = {
-			title: 'NDVI timeseries',
+			title: label ?? 'NDVI timeseries',
 			level: 'info',
 			summary: '',
 			badges: [],
@@ -550,7 +550,7 @@
 			return {
 				...model,
 				level: 'error',
-				summary: state.message || 'Unable to load NDVI timeseries.',
+				summary: state.message || `Unable to load ${label ?? 'NDVI timeseries'}.`,
 				facts,
 				showRetry: true,
 			}
@@ -567,7 +567,7 @@
 				level: 'warning',
 				summary,
 				facts,
-				emptyMessage: 'No NDVI observations in the selected range.',
+				emptyMessage: `No ${label ?? 'NDVI'} observations in the selected range.`,
 			}
 		}
 		return {

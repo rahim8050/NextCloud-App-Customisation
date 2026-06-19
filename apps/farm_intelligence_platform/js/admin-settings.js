@@ -44,6 +44,12 @@
 		const farmNdviRasterUrl = form.dataset.farmNdviRasterUrl || ''
 		const farmNdviRasterQueueUrl = form.dataset.farmNdviRasterQueueUrl || ''
 		const farmNdviRefreshUrl = form.dataset.farmNdviRefreshUrl || ''
+		const farmNdwiLatestUrl = form.dataset.farmNdwiLatestUrl || ''
+		const farmNdwiTimeseriesUrl = form.dataset.farmNdwiTimeseriesUrl || ''
+		const farmNdwiRasterUrl = form.dataset.farmNdwiRasterUrl || ''
+		const farmNdwiRasterQueueUrl = form.dataset.farmNdwiRasterQueueUrl || ''
+		const farmNdwiRefreshUrl = form.dataset.farmNdwiRefreshUrl || ''
+		const farmNdwiFarmStateUrl = form.dataset.farmNdwiFarmStateUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -107,6 +113,12 @@
 		const ndviTable = document.getElementById('farm-intelligence-platform-ndvi-table')
 		const ndviRasterPreview = document.getElementById('farm-intelligence-platform-ndvi-raster-preview')
 		const ndviRasterImg = document.getElementById('farm-intelligence-platform-ndvi-raster-img')
+		const ndwiLatestButton = document.getElementById('farm-intelligence-platform-ndwi-latest')
+		const ndwiTimeseriesButton = document.getElementById('farm-intelligence-platform-ndwi-timeseries')
+		const ndwiRasterButton = document.getElementById('farm-intelligence-platform-ndwi-raster')
+		const ndwiQueueButton = document.getElementById('farm-intelligence-platform-ndwi-queue')
+		const ndwiRefreshButton = document.getElementById('farm-intelligence-platform-ndwi-refresh')
+		const ndwiStateButton = document.getElementById('farm-intelligence-platform-ndwi-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2233,6 +2245,8 @@
 			let ndviRasterObjectUrl = null
 			let latestNdviState = null
 			let timeseriesNdviState = null
+			let latestNdwiState = null
+			let timeseriesNdwiState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2306,6 +2320,8 @@
 				}
 				if (ndviLatestButton) ndviLatestButton.disabled = !enabled
 				if (ndviRefreshButton) ndviRefreshButton.disabled = !enabled
+				if (ndwiLatestButton) ndwiLatestButton.disabled = !enabled
+				if (ndwiRefreshButton) ndwiRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2313,6 +2329,9 @@
 					if (ndviTimeseriesButton) ndviTimeseriesButton.disabled = true
 					if (ndviQueueButton) ndviQueueButton.disabled = true
 					if (ndviRasterButton) ndviRasterButton.disabled = true
+					if (ndwiTimeseriesButton) ndwiTimeseriesButton.disabled = true
+					if (ndwiQueueButton) ndwiQueueButton.disabled = true
+					if (ndwiRasterButton) ndwiRasterButton.disabled = true
 				}
 			}
 
@@ -3259,6 +3278,11 @@
 					if (ndviQueueButton) ndviQueueButton.disabled = true
 					if (ndviRasterButton) ndviRasterButton.disabled = true
 					if (ndviRefreshButton) ndviRefreshButton.disabled = true
+					if (ndwiLatestButton) ndwiLatestButton.disabled = true
+					if (ndwiTimeseriesButton) ndwiTimeseriesButton.disabled = true
+					if (ndwiQueueButton) ndwiQueueButton.disabled = true
+					if (ndwiRasterButton) ndwiRasterButton.disabled = true
+					if (ndwiRefreshButton) ndwiRefreshButton.disabled = true
 					clearNdviError()
 					return
 				}
@@ -3274,6 +3298,15 @@
 				}
 				if (ndviRasterButton) {
 					ndviRasterButton.disabled = !rasterValidation.ok
+				}
+				if (ndwiTimeseriesButton) {
+					ndwiTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (ndwiQueueButton) {
+					ndwiQueueButton.disabled = !rasterValidation.ok
+				}
+				if (ndwiRasterButton) {
+					ndwiRasterButton.disabled = !rasterValidation.ok
 				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
@@ -3296,6 +3329,8 @@
 				ndviTouched = { start: false, end: false, raster: false }
 				latestNdviState = reduceLatestState(null, { type: 'reset' })
 				timeseriesNdviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestNdwiState = reduceLatestState(null, { type: 'reset' })
+				timeseriesNdwiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -3641,16 +3676,16 @@
 				payload: action?.payload ?? null,
 				message: action?.message ?? '',
 			}))
-			const buildLatestCardModel = ndviUi.buildLatestCardModel ?? ((state) => ({
-				title: 'Latest NDVI',
+			const buildLatestCardModel = ndviUi.buildLatestCardModel ?? ((state, label) => ({
+				title: label ?? 'Latest NDVI',
 				level: 'info',
 				summary: '',
 				badges: [],
 				facts: [],
 				showRetry: false,
 			}))
-			const buildTimeseriesCardModel = ndviUi.buildTimeseriesCardModel ?? ((state) => ({
-				title: 'NDVI timeseries',
+			const buildTimeseriesCardModel = ndviUi.buildTimeseriesCardModel ?? ((state, label) => ({
+				title: label ?? 'NDVI timeseries',
 				level: 'info',
 				summary: '',
 				badges: [],
@@ -3723,8 +3758,8 @@
 				card.appendChild(actions)
 			}
 
-			const renderLatestCard = (state, retryHandler) => {
-				const model = buildLatestCardModel(state)
+			const renderLatestCard = (state, retryHandler, label) => {
+				const model = buildLatestCardModel(state, label)
 				const card = renderResultCard({
 					title: model.title,
 					level: model.level,
@@ -3740,8 +3775,8 @@
 				hideNdviCalendar()
 			}
 
-			const renderTimeseriesCard = (state, retryHandler) => {
-				const model = buildTimeseriesCardModel(state)
+			const renderTimeseriesCard = (state, retryHandler, label) => {
+				const model = buildTimeseriesCardModel(state, label)
 				const card = renderResultCard({
 					title: model.title,
 					level: model.level,
@@ -5513,7 +5548,7 @@
 			}
 			const loadLatestNdvi = async () => {
 				latestNdviState = reduceLatestState(latestNdviState, { type: 'request' })
-				renderLatestCard(latestNdviState, loadLatestNdvi)
+				renderLatestCard(latestNdviState, loadLatestNdvi, 'Latest NDVI')
 				const payload = await runNdviRequest('latest NDVI', farmNdviLatestUrl, {
 					method: 'GET',
 					query: buildNdviQuery('ndvi_latest'),
@@ -5524,14 +5559,14 @@
 						type: 'failure',
 						message: 'Unable to load latest NDVI.',
 					})
-					renderLatestCard(latestNdviState, loadLatestNdvi)
+					renderLatestCard(latestNdviState, loadLatestNdvi, 'Latest NDVI')
 					return
 				}
 				latestNdviState = reduceLatestState(latestNdviState, { type: 'success', payload }, new Date())
 				if (ndviTable) {
 					ndviTable.textContent = ''
 				}
-				renderLatestCard(latestNdviState, loadLatestNdvi)
+				renderLatestCard(latestNdviState, loadLatestNdvi, 'Latest NDVI')
 			}
 			if (ndviLatestButton) {
 				ndviLatestButton.addEventListener('click', loadLatestNdvi)
@@ -5549,7 +5584,7 @@
 					validation.start,
 					validation.end,
 				)
-				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries, 'NDVI timeseries')
 				renderNdviCalendar(timeseriesNdviState)
 				const payload = await runNdviRequest('timeseries', farmNdviTimeseriesUrl, {
 					method: 'GET',
@@ -5566,7 +5601,7 @@
 						validation.start,
 						validation.end,
 					)
-					renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+					renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries, 'NDVI timeseries')
 					renderNdviCalendar(timeseriesNdviState)
 					if (ndviTable) {
 						ndviTable.textContent = ''
@@ -5579,7 +5614,7 @@
 					validation.start,
 					validation.end,
 				)
-				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries)
+				renderTimeseriesCard(timeseriesNdviState, loadNdviTimeseries, 'NDVI timeseries')
 				renderNdviCalendar(timeseriesNdviState)
 				if (timeseriesNdviState.status === NDVI_SERIES_STATE.has_data) {
 					renderNdviTable(timeseriesNdviState.vm?.points ?? [])
@@ -5815,6 +5850,318 @@
 						console.error('[farm_intelligence_platform] farm state error', error)
 						if (farmStateContent) {
 							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load farm state.</div>'
+						}
+					}
+				})
+			}
+			if (ndwiLatestButton) {
+				ndwiLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest NDWI...</div>'
+					}
+					latestNdwiState = reduceLatestState(latestNdwiState, { type: 'request' })
+					renderLatestCard(latestNdwiState, () => {}, 'Latest NDWI')
+					const payload = await runNdviRequest('latest NDWI', farmNdwiLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestNdwiState = reduceLatestState(latestNdwiState, {
+							type: 'failure',
+							message: 'Unable to load latest NDWI.',
+						})
+						renderLatestCard(latestNdwiState, () => {}, 'Latest NDWI')
+						return
+					}
+					latestNdwiState = reduceLatestState(latestNdwiState, { type: 'success', payload }, new Date())
+					if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+					renderLatestCard(latestNdwiState, () => {}, 'Latest NDWI')
+				})
+			}
+			if (ndwiTimeseriesButton) {
+				ndwiTimeseriesButton.addEventListener('click', async () => {
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesNdwiState = reduceTimeseriesState(
+						timeseriesNdwiState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNdwiState, () => {}, 'NDWI timeseries')
+					renderNdviCalendar(timeseriesNdwiState)
+					const payload = await runNdviRequest('ndwi_timeseries', farmNdwiTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('ndwi_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesNdwiState = reduceTimeseriesState(
+							timeseriesNdwiState,
+							{ type: 'failure', message: 'Unable to load NDWI timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesNdwiState, () => {}, 'NDWI timeseries')
+						renderNdviCalendar(timeseriesNdwiState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesNdwiState = reduceTimeseriesState(
+						timeseriesNdwiState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNdwiState, () => {}, 'NDWI timeseries')
+					renderNdviCalendar(timeseriesNdwiState)
+					if (timeseriesNdwiState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesNdwiState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (ndwiRasterButton) {
+				ndwiRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmNdwiRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('ndwi_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					const resolvedUrl = ncGenerateUrl(finalUrl)
+					const token = resolveRequestToken()
+					const headers = {
+						Accept: 'image/png',
+						'OCS-APIRequest': 'true',
+						'X-Requested-With': 'XMLHttpRequest',
+					}
+					if (token) {
+						headers.requesttoken = token
+					}
+
+					try {
+						const response = await fetch(resolvedUrl, {
+							method: 'GET',
+							credentials: 'same-origin',
+							headers,
+						})
+						const contentType = response.headers.get('content-type') || ''
+						if (!response.ok) {
+							const result = await readJsonResponse(response)
+							const message = buildNdviErrorMessage(
+								response,
+								result.data,
+								`Unable to load NDWI raster preview (HTTP ${response.status}).`,
+								result.text,
+							)
+							showNdviError(message)
+							if (shouldToastNdviError(message)) {
+								toast(message)
+							}
+							return
+						}
+						if (contentType && !contentType.includes('image/png')) {
+							const result = await readJsonResponse(response)
+							const message = buildNdviErrorMessage(
+								response,
+								result.data,
+								'NDWI raster preview did not return an image.',
+								result.text,
+							)
+							showNdviError(message)
+							if (shouldToastNdviError(message)) {
+								toast(message)
+							}
+							return
+						}
+						const blob = await response.blob()
+						if (blob.size === 0) {
+							showNdviError('NDWI raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						if (ndviRasterImg) {
+							ndviRasterImg.src = ndviRasterObjectUrl
+						}
+						if (ndviRasterPreview) {
+							ndviRasterPreview.hidden = false
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load NDWI raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ndwiQueueButton) {
+				ndwiQueueButton.addEventListener('click', async () => {
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('ndwi_raster_queue')
+					const bodyDateField = resolveBodyFieldName(queueOperation?.bodyFields ?? {}, 'date')
+					const queryDateField = resolveParamName(queueOperation?.queryParams ?? [], 'date')
+					const data = await runNdviRequest('queue NDWI raster', farmNdwiRasterQueueUrl, {
+						method: 'POST',
+						body: bodyDateField ? buildNdviBody('ndwi_raster_queue', { date: validation.date }) : null,
+						query: !bodyDateField && queryDateField
+							? buildNdviQuery('ndwi_raster_queue', { date: validation.date })
+							: undefined,
+					})
+					if (data) {
+						const jobId = data?.job_id ?? data?.jobId ?? data?.id ?? null
+						const toastMessage = jobId
+							? `Queued NDWI raster job #${jobId}`
+							: 'Queued NDWI raster job'
+						toast(toastMessage)
+						const facts = []
+						pushFact(facts, 'Raster date', validation.date)
+						pushFact(facts, 'Job ID', jobId)
+						const card = renderResultCard({
+							title: 'NDWI raster queue',
+							level: 'success',
+							summary: `${toastMessage}.`,
+							facts,
+							debug: data,
+						})
+						replaceNdviOutput(card)
+					}
+				})
+			}
+			if (ndwiRefreshButton) {
+				ndwiRefreshButton.addEventListener('click', async () => {
+					const data = await runNdviRequest('refresh NDWI', farmNdwiRefreshUrl, {
+						method: 'POST',
+						body: buildNdviBody('ndwi_refresh'),
+					})
+					if (data) {
+						const jobId = data?.job_id ?? data?.jobId ?? data?.id ?? null
+						const toastMessage = jobId
+							? `Queued NDWI refresh job #${jobId}`
+							: 'Queued NDWI refresh job'
+						toast(toastMessage)
+						const facts = []
+						pushFact(facts, 'Job ID', jobId)
+						const card = renderResultCard({
+							title: 'NDWI refresh',
+							level: 'success',
+							summary: `${toastMessage}.`,
+							facts,
+							debug: data,
+						})
+						replaceNdviOutput(card)
+					}
+				})
+			}
+			if (ndwiStateButton) {
+				ndwiStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading NDWI farm state...</div>'
+					}
+					const url = farmNdwiFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('ndwi farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load NDWI farm state.</div>'
+							}
+							return
+						}
+						const data = payload?.data ?? payload
+						const state = data?.state ?? 'unknown'
+						const meanNdwi = data?.mean_ndwi ?? null
+						const maxNdwi = data?.max_ndwi ?? null
+						const coveragePct = data?.coverage_pct ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+						const formatPercent = typeof ndviUi.formatPercent === 'function' ? ndviUi.formatPercent : (v) => String(v * 100) + '%'
+
+						const stateLabels = {
+							water: 'Water',
+							moist: 'Moist',
+							dry: 'Dry',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							water: 'success',
+							moist: 'info',
+							dry: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean NDWI', meanNdwi !== null ? formatNumber(meanNdwi, 3) : '-')
+						pushFact(facts, 'Max NDWI', maxNdwi !== null ? formatNumber(maxNdwi, 3) : '-')
+						pushFact(facts, 'Coverage', coveragePct !== null ? formatPercent(coveragePct / 100, 1) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'NDWI Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `NDWI farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] NDWI farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load NDWI farm state.</div>'
 						}
 					}
 				})

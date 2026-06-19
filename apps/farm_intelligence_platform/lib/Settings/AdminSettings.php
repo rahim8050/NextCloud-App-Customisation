@@ -69,6 +69,12 @@ final class AdminSettings implements IDelegatedSettings {
 			'farmNdviRasterUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']),
 			'farmNdviRasterQueueUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.queueNdviRaster', ['farmId' => '__FARM_ID__']),
 			'farmNdviRefreshUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.refreshNdvi', ['farmId' => '__FARM_ID__']),
+			'farmNdwiLatestUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdwiLatest', ['farmId' => '__FARM_ID__']),
+			'farmNdwiTimeseriesUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdwiTimeseries', ['farmId' => '__FARM_ID__']),
+			'farmNdwiRasterUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdwiRasterPng', ['farmId' => '__FARM_ID__']),
+			'farmNdwiRasterQueueUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.queueNdwiRaster', ['farmId' => '__FARM_ID__']),
+			'farmNdwiRefreshUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.refreshNdwi', ['farmId' => '__FARM_ID__']),
+			'farmNdwiFarmStateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdwiFarmState', ['farmId' => '__FARM_ID__']),
 			'farmWeatherCurrentUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']),
 			'farmWeatherHourlyUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']),
 			'farmWeatherDailyUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']),
@@ -101,6 +107,10 @@ final class AdminSettings implements IDelegatedSettings {
 			'radioHealthUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.getRadioHealth'),
 			'radioEmergencyCurrentUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.getCurrentEmergency'),
 			'radioEmergencyHistoryUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.getEmergencyHistory'),
+			'radioEmergencyCreateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.createEmergency'),
+			'radioEmergencyUpdateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.updateEmergency', ['pk' => '__PK__']),
+			'radioEmergencyDeleteUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.deleteEmergency', ['pk' => '__PK__']),
+			'radioTtsUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminRadio.synthesizeTts'),
 		]);
 
 		$csp = new ContentSecurityPolicy();
