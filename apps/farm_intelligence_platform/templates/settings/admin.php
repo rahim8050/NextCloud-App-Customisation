@@ -897,12 +897,14 @@ style('farm_intelligence_platform', 'admin-settings');
 					</div>
 				</div>
 			</div>
+
+			<div class="form-group" style="margin-top:8px">
+				<label for="farm-intelligence-platform-timeout"><?php p($l->t('Timeout seconds')); ?></label>
+				<input id="farm-intelligence-platform-timeout" type="number" name="timeoutSeconds" min="1" max="30" value="<?php p($_['timeoutSeconds']); ?>" required />
+			</div>
 		</div>
 
-		<div class="form-group">
-			<label for="farm-intelligence-platform-timeout"><?php p($l->t('Timeout seconds')); ?></label>
-			<input id="farm-intelligence-platform-timeout" type="number" name="timeoutSeconds" min="1" max="30" value="<?php p($_['timeoutSeconds']); ?>" required />
-		</div>
+		<hr>
 
 		<div class="form-group">
 			<label for="farm-intelligence-platform-dev-allow-http">

@@ -2137,6 +2137,8 @@
 	border-radius: 4px;
 	background: var(--color-main-background, #fff);
 	border: 1px solid var(--color-border, #ddd);
+	overflow: hidden;
+	word-break: break-word;
 }
 
 .farm-intelligence-platform-radio__health-label,
