@@ -327,15 +327,22 @@
 
 		const formatHttp = (value) => Number.isFinite(value) ? `HTTP ${value}` : ''
 
-		const pickMessage = (data, fallback) => toText(
-			data?.message
-			?? data?.error?.message
-			?? data?.error?.details?.drfMessage
-			?? data?.error?.details?.message
-			?? data?.errors?.detail
-			?? fallback,
-			fallback,
-		)
+		const pickMessage = (data, fallback) => {
+			const errorsArray = Array.isArray(data?.errors) ? data.errors : null
+			const firstError = errorsArray && errorsArray.length > 0
+				? (typeof errorsArray[0] === 'string' ? errorsArray[0] : null)
+				: null
+			return toText(
+				data?.message
+				?? data?.error?.message
+				?? data?.error?.details?.drfMessage
+				?? data?.error?.details?.message
+				?? data?.errors?.detail
+				?? firstError
+				?? fallback,
+				fallback,
+			)
+		}
 
 		const readObject = (value) => (
 			value && typeof value === 'object' && !Array.isArray(value)
@@ -403,11 +410,16 @@
 			const errorCode = typeof error?.code === 'string'
 				? error.code
 				: (typeof data?.code === 'string' ? data.code : '')
+			const errorsArray = Array.isArray(data?.errors) ? data.errors : null
+			const firstError = errorsArray && errorsArray.length > 0
+				? (typeof errorsArray[0] === 'string' ? errorsArray[0] : null)
+				: null
 			const detailMessage = toText(
 				details?.detail
 				?? nestedErrors?.detail
 				?? upstreamErrors?.detail
 				?? data?.errors?.detail
+				?? firstError
 				?? '',
 				'',
 			)
