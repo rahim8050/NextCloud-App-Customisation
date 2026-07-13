@@ -1522,6 +1522,83 @@ final class AdminFarmsControllerTest extends TestCase {
 						'operationId' => 'v1_farms_ndwi_farm_state_retrieve',
 					],
 				],
+				'/api/v1/farms/{farm_id}/ndmi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndmi_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndmi_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndmi_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndmi_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndmi_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndmi_farm_state_retrieve',
+					],
+				],
 				'/api/v1/farms/{farm_id}/observations/' => [
 					'get' => [
 						'operationId' => 'v1_farms_observations_list',

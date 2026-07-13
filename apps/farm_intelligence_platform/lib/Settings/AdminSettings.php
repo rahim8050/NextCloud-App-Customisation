@@ -34,7 +34,9 @@ final class AdminSettings implements IDelegatedSettings {
 	public function getForm(): TemplateResponse {
 		if (class_exists('OC')) {
 			Util::addScript('farm_intelligence_platform', 'ndvi-latest');
+			Util::addScript('farm_intelligence_platform', 'leaflet');
 			Util::addScript('farm_intelligence_platform', 'admin-settings');
+			Util::addStyle('farm_intelligence_platform', 'leaflet');
 		}
 
 		$clientId = $this->integrationConfig->getClientIdOrNull() ?? '';
@@ -75,6 +77,12 @@ final class AdminSettings implements IDelegatedSettings {
 			'farmNdwiRasterQueueUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.queueNdwiRaster', ['farmId' => '__FARM_ID__']),
 			'farmNdwiRefreshUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.refreshNdwi', ['farmId' => '__FARM_ID__']),
 			'farmNdwiFarmStateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdwiFarmState', ['farmId' => '__FARM_ID__']),
+			'farmNdmiLatestUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdmiLatest', ['farmId' => '__FARM_ID__']),
+			'farmNdmiTimeseriesUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdmiTimeseries', ['farmId' => '__FARM_ID__']),
+			'farmNdmiRasterUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdmiRasterPng', ['farmId' => '__FARM_ID__']),
+			'farmNdmiRasterQueueUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.queueNdmiRaster', ['farmId' => '__FARM_ID__']),
+			'farmNdmiRefreshUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.refreshNdmi', ['farmId' => '__FARM_ID__']),
+			'farmNdmiFarmStateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getNdmiFarmState', ['farmId' => '__FARM_ID__']),
 			'farmWeatherCurrentUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']),
 			'farmWeatherHourlyUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']),
 			'farmWeatherDailyUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']),
@@ -116,6 +124,10 @@ final class AdminSettings implements IDelegatedSettings {
 		$csp = new ContentSecurityPolicy();
 		$csp->addAllowedMediaDomain('*');
 		$csp->addAllowedConnectDomain('*');
+		$csp->addAllowedImageDomain('*.tile.openstreetmap.org');
+		$csp->addAllowedImageDomain('*.tile.osm.org');
+		$csp->addAllowedImageDomain('unpkg.com');
+		$csp->addAllowedImageDomain('cdn.jsdelivr.net');
 		$response->setContentSecurityPolicy($csp);
 
 		return $response;

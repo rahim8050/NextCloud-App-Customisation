@@ -159,6 +159,36 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdmiLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueNdmiRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshNdmi',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNdmiFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/state',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getFarmState',
 			'url' => '/api/v1/admin/farms/{farmId}/state',
 			'verb' => 'GET',

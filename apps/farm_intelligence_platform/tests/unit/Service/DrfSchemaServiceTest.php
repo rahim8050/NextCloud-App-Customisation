@@ -291,7 +291,25 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndwi/refresh/' => [
 					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
 				],
-				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+				'/api/v1/farms/{farm_id}/ndmi/latest/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
+				'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
+				'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
 				],
 				'/api/v1/farm-state/{farm_id}/' => [
@@ -449,7 +467,25 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndwi/refresh/' => [
 					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
 				],
-				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+				'/api/v1/farms/{farm_id}/ndmi/latest/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
+				'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
+				'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
+			],
+			'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
+				'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
+			],
+			'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
 				],
 				'/api/v1/farm-state/{farm_id}/' => [
