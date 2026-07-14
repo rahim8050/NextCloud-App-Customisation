@@ -181,6 +181,17 @@ style('farm_intelligence_platform', 'admin-settings');
 				<div id="farm-intelligence-platform-ndvi-raster-preview" class="farm-intelligence-platform-farms__ndvi-preview" hidden>
 					<img id="farm-intelligence-platform-ndvi-raster-img" alt="<?php p($l->t('NDVI raster preview')); ?>" />
 				</div>
+				<div id="farm-intelligence-platform-raster-controls" class="farm-intelligence-platform-farms__raster-controls" hidden>
+					<label for="farm-intelligence-platform-raster-colormap"><?php p($l->t('Colormap')); ?></label>
+					<select id="farm-intelligence-platform-raster-colormap">
+						<option value="rdylgn">RdYlGn (vegetation)</option>
+						<option value="brbg">BrBG (moisture)</option>
+						<option value="viridis">Viridis</option>
+					</select>
+					<label for="farm-intelligence-platform-raster-date-slider"><?php p($l->t('Date')); ?></label>
+					<input type="range" id="farm-intelligence-platform-raster-date-slider" min="0" max="0" value="0" disabled>
+					<span id="farm-intelligence-platform-raster-date-label"></span>
+				</div>
 				<div id="farm-intelligence-platform-raster-map" class="farm-intelligence-platform-farms__raster-map" hidden></div>
 					<div id="farm-intelligence-platform-farm-state-output" class="farm-intelligence-platform-farms__ndvi-output" hidden>
 						<div id="farm-intelligence-platform-farm-state-content" class="farm-intelligence-platform-farms__farm-state-content"></div>

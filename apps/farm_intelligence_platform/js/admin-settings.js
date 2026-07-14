@@ -5694,6 +5694,10 @@
 					const queryString = buildQueryString(query)
 					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 					const resolvedUrl = ncGenerateUrl(finalUrl)
+					// Build tile URL template for XYZ tiles
+					const tileUrl = url.replace('/raster.png', '/tiles')
+					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'rdylgn'
+					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -5748,7 +5752,7 @@
 						URL.revokeObjectURL(ndviRasterObjectUrl)
 					}
 					ndviRasterObjectUrl = URL.createObjectURL(blob)
-					showRasterMap(ndviRasterObjectUrl, selectedFarm)
+					showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NDVI')
 				} catch (error) {
 					const message = error instanceof Error ? error.message : 'Unable to load raster preview.'
 						showNdviError(message)
@@ -6003,6 +6007,10 @@
 					const queryString = buildQueryString(query)
 					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 					const resolvedUrl = ncGenerateUrl(finalUrl)
+					// Build tile URL template for XYZ tiles
+					const tileUrl = url.replace('/raster.png', '/tiles')
+					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'brbg'
+					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -6057,7 +6065,7 @@
 							URL.revokeObjectURL(ndviRasterObjectUrl)
 						}
 						ndviRasterObjectUrl = URL.createObjectURL(blob)
-						showRasterMap(ndviRasterObjectUrl, selectedFarm)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NDWI')
 					} catch (error) {
 						const message = error instanceof Error ? error.message : 'Unable to load NDWI raster preview.'
 						showNdviError(message)
@@ -6291,7 +6299,24 @@
 					}
 				})
 			}
+			let currentTileUrlTemplate = ''
+			let rasterTileLayer = null
+
 			const destroyRasterMap = () => {
+				rasterTileLayer = null
+				currentTileUrlTemplate = ''
+				rasterAvailableDates = []
+				rasterCurrentIndexType = ''
+				rasterCurrentFarmId = ''
+				if (rasterDateSlider) {
+					rasterDateSlider.disabled = true
+					rasterDateSlider.min = '0'
+					rasterDateSlider.max = '0'
+					rasterDateSlider.value = '0'
+				}
+				if (rasterDateLabel) {
+					rasterDateLabel.textContent = ''
+				}
 				if (rasterMap) {
 					rasterMap.remove()
 					rasterMap = null
@@ -6299,11 +6324,15 @@
 				if (rasterMapContainer) {
 					rasterMapContainer.hidden = true
 				}
+				if (rasterControls) {
+					rasterControls.hidden = true
+				}
 				if (ndviRasterPreview) {
 					ndviRasterPreview.hidden = true
 				}
 			}
-			const showRasterMap = (blobUrl, farm) => {
+
+			const showRasterMap = (blobUrl, farm, tileUrlTemplate, indexType) => {
 				const f = farm?.data ?? farm
 				const rawSouth = f?.bbox_south
 				const rawWest = f?.bbox_west
@@ -6339,6 +6368,9 @@
 				const centerLat = (south + north) / 2
 				const centerLng = (west + east) / 2
 				rasterMapContainer.hidden = false
+				if (rasterControls) {
+					rasterControls.hidden = false
+				}
 				rasterMap = L.map(rasterMapContainer, {
 					center: [centerLat, centerLng],
 					zoom: 14,
@@ -6353,11 +6385,124 @@
 					[south, west],
 					[north, east],
 				)
-				L.imageOverlay(blobUrl, bounds, { opacity: 0.8 }).addTo(rasterMap)
+				// Store state for date slider
+				rasterCurrentIndexType = indexType || ''
+				rasterCurrentFarmId = farm?.id || (farm?.data?.id ?? '')
+				if (tileUrlTemplate) {
+					currentTileUrlTemplate = tileUrlTemplate
+					rasterTileLayer = L.tileLayer(tileUrlTemplate, {
+						opacity: 0.8,
+						maxZoom: 18,
+						maxNativeZoom: 16,
+						tms: false,
+					}).addTo(rasterMap)
+					// Load available dates for slider
+					loadRasterDates(rasterCurrentFarmId, rasterCurrentIndexType)
+				} else {
+					L.imageOverlay(blobUrl, bounds, { opacity: 0.8 }).addTo(rasterMap)
+				}
 				rasterMap.fitBounds(bounds, { padding: [20, 20], maxZoom: 17 })
 				setTimeout(() => {
 					rasterMap.invalidateSize()
 				}, 100)
+			}
+
+			const rasterColormapSelect = document.getElementById('farm-intelligence-platform-raster-colormap')
+			const rasterControls = document.getElementById('farm-intelligence-platform-raster-controls')
+			const rasterDateSlider = document.getElementById('farm-intelligence-platform-raster-date-slider')
+			const rasterDateLabel = document.getElementById('farm-intelligence-platform-raster-date-label')
+			let rasterAvailableDates = []
+			let rasterCurrentIndexType = ''
+			let rasterCurrentFarmId = ''
+
+			const updateRasterColormap = () => {
+				if (!rasterMap || !currentTileUrlTemplate || !rasterTileLayer || !rasterColormapSelect) {
+					return
+				}
+				const cmap = rasterColormapSelect.value
+				// Build new URL with updated colormap param
+				const base = currentTileUrlTemplate.replace(/&colormap=[^&]*/g, '').replace(/\?colormap=[^&]*&/, '?')
+				const separator = base.includes('?') ? '&' : '?'
+				const newUrl = `${base}${separator}colormap=${cmap}`
+				rasterMap.removeLayer(rasterTileLayer)
+				rasterTileLayer = L.tileLayer(newUrl, {
+					opacity: 0.8,
+					maxZoom: 18,
+					maxNativeZoom: 16,
+					tms: false,
+				}).addTo(rasterMap)
+				currentTileUrlTemplate = newUrl
+			}
+			if (rasterColormapSelect) {
+				rasterColormapSelect.addEventListener('change', updateRasterColormap)
+			}
+
+			const loadRasterDates = async (farmId, indexType) => {
+				if (!farmId || !indexType || !rasterDateSlider || !rasterDateLabel) {
+					return
+				}
+				const indexLower = indexType.toLowerCase()
+				// Pick the correct base URL for this index type
+				let baseUrl = ''
+				if (indexLower === 'ndvi') baseUrl = farmNdviRasterUrl
+				else if (indexLower === 'ndwi') baseUrl = farmNdwiRasterUrl
+				else if (indexLower === 'ndmi') baseUrl = farmNdmiRasterUrl
+				else return
+				const datesUrl = baseUrl
+					.replace('__FARM_ID__', encodeURIComponent(farmId))
+					.replace('/raster.png', '/raster-dates')
+				try {
+					const token = resolveRequestToken()
+					const headers = { 'OCS-APIRequest': 'true', 'X-Requested-With': 'XMLHttpRequest' }
+					if (token) headers.requesttoken = token
+					const response = await fetch(ncGenerateUrl(datesUrl), { credentials: 'same-origin', headers })
+					if (!response.ok) {
+						rasterDateSlider.disabled = true
+						rasterDateLabel.textContent = ''
+						return
+					}
+					const result = await response.json()
+					const dates = result?.data ?? []
+					rasterAvailableDates = dates
+					if (dates.length <= 1) {
+						rasterDateSlider.disabled = true
+						rasterDateLabel.textContent = dates.length === 1 ? dates[0] : ''
+						return
+					}
+					rasterDateSlider.min = '0'
+					rasterDateSlider.max = String(dates.length - 1)
+					rasterDateSlider.value = String(dates.length - 1)
+					rasterDateSlider.disabled = false
+					rasterDateLabel.textContent = dates[dates.length - 1]
+				} catch {
+					rasterDateSlider.disabled = true
+					rasterDateLabel.textContent = ''
+				}
+			}
+
+			const updateRasterDate = () => {
+				if (!rasterMap || !rasterDateSlider || !currentTileUrlTemplate || !rasterTileLayer || rasterAvailableDates.length === 0) {
+					return
+				}
+				const idx = parseInt(rasterDateSlider.value, 10)
+				const selectedDate = rasterAvailableDates[idx]
+				if (!selectedDate) return
+				if (rasterDateLabel) rasterDateLabel.textContent = selectedDate
+				// Replace date in tile URL
+				const newUrl = currentTileUrlTemplate.replace(/date=[^&]+/, `date=${selectedDate}`)
+				rasterMap.removeLayer(rasterTileLayer)
+				rasterTileLayer = L.tileLayer(newUrl, {
+					opacity: 0.8,
+					maxZoom: 18,
+					maxNativeZoom: 16,
+					tms: false,
+				}).addTo(rasterMap)
+				currentTileUrlTemplate = newUrl
+			}
+
+			if (rasterDateSlider) {
+				rasterDateSlider.addEventListener('input', updateRasterDate)
+				rasterDateSlider.disabled = true
 			}
 			if (ndmiRasterButton) {
 				ndmiRasterButton.addEventListener('click', async () => {
@@ -6378,6 +6523,10 @@
 					const queryString = buildQueryString(query)
 					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 					const resolvedUrl = ncGenerateUrl(finalUrl)
+					// Build tile URL template for XYZ tiles
+					const tileUrl = url.replace('/raster.png', '/tiles')
+					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'brbg'
+					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -6432,7 +6581,7 @@
 							URL.revokeObjectURL(ndviRasterObjectUrl)
 						}
 						ndviRasterObjectUrl = URL.createObjectURL(blob)
-						showRasterMap(ndviRasterObjectUrl, selectedFarm)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NDMI')
 					} catch (error) {
 						const message = error instanceof Error ? error.message : 'Unable to load NDMI raster preview.'
 						showNdviError(message)

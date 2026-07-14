@@ -55,6 +55,8 @@ class DrfSchemaService {
 		'ndvi_ingest' => 'v1_ndvi_create',
 		'ndvi_circuit_breaker_reset' => 'v1_ndvi_circuit_breaker_reset_create',
 		'ndvi_upstream_health' => 'v1_ndvi_health_upstream_retrieve',
+		'raster_tiles' => 'v1_farms_tiles_.png_retrieve',
+		'raster_dates' => 'v1_farms_raster_dates_retrieve',
 	];
 
 	private const ACTIVITY_OPERATION_IDS = [

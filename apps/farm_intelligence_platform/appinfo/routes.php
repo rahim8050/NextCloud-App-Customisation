@@ -189,6 +189,36 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdviRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdwiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdviRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndvi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdwiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getFarmState',
 			'url' => '/api/v1/admin/farms/{farmId}/state',
 			'verb' => 'GET',

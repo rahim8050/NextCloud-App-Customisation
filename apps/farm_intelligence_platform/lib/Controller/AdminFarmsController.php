@@ -500,6 +500,21 @@ final class AdminFarmsController extends Controller {
 
 
 	#[AdminRequired]
+	public function getNdviRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'ndvi', $z, $x, $y);
+	}
+
+
+	#[AdminRequired]
+	public function getNdviRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'ndvi');
+	}
+
+
+	#[AdminRequired]
 	public function queueNdviRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$this->logEndpointEntry('ndvi raster queue', $requestId);
@@ -953,6 +968,22 @@ final class AdminFarmsController extends Controller {
 		return $response;
 	}
 
+
+	#[AdminRequired]
+	public function getNdwiRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'ndwi', $z, $x, $y);
+	}
+
+
+	#[AdminRequired]
+	public function getNdwiRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'ndwi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdwiRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1276,6 +1307,21 @@ final class AdminFarmsController extends Controller {
 		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
 		$response->addHeader('Cache-Control', 'no-store');
 		return $response;
+	}
+
+
+	#[AdminRequired]
+	public function getNdmiRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'ndmi', $z, $x, $y);
+	}
+
+
+	#[AdminRequired]
+	public function getNdmiRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'ndmi');
 	}
 
 	#[AdminRequired]
@@ -2177,6 +2223,129 @@ final class AdminFarmsController extends Controller {
 
 		return $first . implode('', $parts);
 	}
+
+	/**
+	 * Proxy a raster tile request to the Django backend.
+	 */
+	private function proxyRasterTile(
+		string $farmId,
+		string $index,
+		string $z,
+		string $x,
+		string $y,
+	): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry($index . ' raster tile', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('raster_tiles', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, [
+				'farm_id' => $farmId,
+				'index' => $index,
+				'z' => $z,
+				'x' => $x,
+				'y' => $y,
+			]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest($index . ' raster tile', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse($index . ' raster tile', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError($index . ' raster tile', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, $index . ' raster tile');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+
+	/**
+	 * Proxy a raster-dates request to the Django backend.
+	 */
+	private function proxyRasterDates(string $farmId, string $index): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry($index . ' raster dates', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('raster_dates', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, [
+				'farm_id' => $farmId,
+				'index' => $index,
+			]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest($index . ' raster dates', $operation, $path, $query, $requestId);
+			$json = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse($index . ' raster dates', $operation, $path, $requestId, $json['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError($index . ' raster dates', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, $index . ' raster dates');
+		}
+
+		return $this->buildSuccessResponse($json['payload'] ?? null, $index . ' raster dates loaded.');
+	}
+
 
 	private function validateFarmId(string $farmId, string $requestId): ?JSONResponse {
 		$trimmed = trim($farmId);
