@@ -10,7 +10,7 @@ use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 class DrfSchemaService {
-	private const CACHE_KEY = 'drf_openapi_schema_json';
+	private const CACHE_KEY = 'drf_openapi_schema_json_v2';
 	private const CACHE_TTL_SECONDS = 3600;
 
 	private const FARM_OPERATION_IDS = [
