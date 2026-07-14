@@ -189,17 +189,17 @@ return [
 			'verb' => 'GET',
 		],
 		[
-			'name' => 'adminFarms#getNdviRasterDates',
+			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',
 			'verb' => 'GET',
 		],
 		[
-			'name' => 'adminFarms#getNdwiRasterDates',
+			'name' => 'adminFarms#getNdwiRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndwi/tiles',
 			'verb' => 'GET',
 		],
 		[
-			'name' => 'adminFarms#getNdmiRasterDates',
+			'name' => 'adminFarms#getNdmiRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndmi/tiles',
 			'verb' => 'GET',
 		],

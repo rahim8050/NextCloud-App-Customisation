@@ -13,6 +13,8 @@ use OCA\FarmIntelligencePlatform\Service\WeatherApiException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -499,7 +501,8 @@ final class AdminFarmsController extends Controller {
 	}
 
 
-	#[AdminRequired]
+	#[PublicPage]
+	#[NoCSRFRequired]
 	public function getNdviRasterTile(string $farmId): Response {
 		$z = $this->request->getParam('z', '');
 		$x = $this->request->getParam('x', '');
@@ -508,6 +511,7 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
 	#[AdminRequired]
 	public function getNdviRasterDates(string $farmId): Response {
 		return $this->proxyRasterDates($farmId, 'ndvi');
@@ -969,6 +973,7 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
 	#[AdminRequired]
 	public function getNdwiRasterTile(string $farmId): Response {
 		$z = $this->request->getParam('z', '');
@@ -978,6 +983,7 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
 	#[AdminRequired]
 	public function getNdwiRasterDates(string $farmId): Response {
 		return $this->proxyRasterDates($farmId, 'ndwi');
@@ -1310,6 +1316,7 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
 	#[AdminRequired]
 	public function getNdmiRasterTile(string $farmId): Response {
 		$z = $this->request->getParam('z', '');
@@ -1319,6 +1326,7 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
 	#[AdminRequired]
 	public function getNdmiRasterDates(string $farmId): Response {
 		return $this->proxyRasterDates($farmId, 'ndmi');
@@ -2327,6 +2335,7 @@ final class AdminFarmsController extends Controller {
 				(string)($operation['method'] ?? 'GET'),
 				$path,
 				$query,
+				null,
 				$requestId,
 			);
 			$this->logProxyResponse($index . ' raster dates', $operation, $path, $requestId, $json['statusCode']);

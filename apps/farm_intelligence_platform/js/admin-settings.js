@@ -5697,7 +5697,7 @@
 					// Build tile URL template for XYZ tiles
 					const tileUrl = url.replace('/raster.png', '/tiles')
 					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'rdylgn'
-					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
+					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&date=${encodeURIComponent(validation.date)}&colormap=${colormap}`)
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -6395,6 +6395,7 @@
 						maxZoom: 18,
 						maxNativeZoom: 16,
 						tms: false,
+						bounds: bounds,
 					}).addTo(rasterMap)
 					// Load available dates for slider
 					loadRasterDates(rasterCurrentFarmId, rasterCurrentIndexType)
@@ -6424,12 +6425,14 @@
 				const base = currentTileUrlTemplate.replace(/&colormap=[^&]*/g, '').replace(/\?colormap=[^&]*&/, '?')
 				const separator = base.includes('?') ? '&' : '?'
 				const newUrl = `${base}${separator}colormap=${cmap}`
+				const currentBounds = rasterTileLayer.options.bounds || null
 				rasterMap.removeLayer(rasterTileLayer)
 				rasterTileLayer = L.tileLayer(newUrl, {
 					opacity: 0.8,
 					maxZoom: 18,
 					maxNativeZoom: 16,
 					tms: false,
+					bounds: currentBounds,
 				}).addTo(rasterMap)
 				currentTileUrlTemplate = newUrl
 			}
@@ -6490,12 +6493,14 @@
 				if (rasterDateLabel) rasterDateLabel.textContent = selectedDate
 				// Replace date in tile URL
 				const newUrl = currentTileUrlTemplate.replace(/date=[^&]+/, `date=${selectedDate}`)
+				const currentBounds = rasterTileLayer.options.bounds || null
 				rasterMap.removeLayer(rasterTileLayer)
 				rasterTileLayer = L.tileLayer(newUrl, {
 					opacity: 0.8,
 					maxZoom: 18,
 					maxNativeZoom: 16,
 					tms: false,
+					bounds: currentBounds,
 				}).addTo(rasterMap)
 				currentTileUrlTemplate = newUrl
 			}
