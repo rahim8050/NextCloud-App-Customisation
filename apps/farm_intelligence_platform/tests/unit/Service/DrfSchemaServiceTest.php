@@ -109,7 +109,7 @@ final class DrfSchemaServiceTest extends TestCase {
 		$cache = $this->createMock(ICache::class);
 		$cache->expects($this->once())
 			->method('get')
-			->with('drf_openapi_schema_json')
+			->with('drf_openapi_schema_json_v2')
 			->willReturn($cached);
 
 		$service = $this->createServiceWithCache($client, $cache);
@@ -131,12 +131,12 @@ final class DrfSchemaServiceTest extends TestCase {
 		$cache = $this->createMock(ICache::class);
 		$cache->expects($this->once())
 			->method('get')
-			->with('drf_openapi_schema_json')
+			->with('drf_openapi_schema_json_v2')
 			->willReturn(null);
 		$cache->expects($this->once())
 			->method('set')
 			->with(
-				'drf_openapi_schema_json',
+				'drf_openapi_schema_json_v2',
 				$this->isType('string'),
 				3600,
 			)
@@ -292,24 +292,24 @@ final class DrfSchemaServiceTest extends TestCase {
 					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
 				],
 				'/api/v1/farms/{farm_id}/ndmi/latest/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
-				'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
-				'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
 				],
 				'/api/v1/farm-state/{farm_id}/' => [
@@ -353,6 +353,12 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/ndvi/health/upstream/' => [
 					'get' => ['operationId' => 'v1_ndvi_health_upstream_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/{index}/tiles/{z}/{x}/{y}.png' => [
+					'get' => ['operationId' => 'v1_farms_tiles_.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/{index}/raster-dates' => [
+					'get' => ['operationId' => 'v1_farms_raster_dates_retrieve'],
 				],
 			],
 		];
@@ -468,24 +474,24 @@ final class DrfSchemaServiceTest extends TestCase {
 					'post' => ['operationId' => 'v1_farms_ndwi_refresh_create'],
 				],
 				'/api/v1/farms/{farm_id}/ndmi/latest/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
-				'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
-				'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
-			],
-			'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
-				'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
-			],
-			'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndmi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndmi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndmi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
 				],
 				'/api/v1/farm-state/{farm_id}/' => [
@@ -508,6 +514,12 @@ final class DrfSchemaServiceTest extends TestCase {
 					'get' => ['operationId' => 'v1_farms_activities_retrieve'],
 					'put' => ['operationId' => 'v1_farms_activities_update'],
 					'delete' => ['operationId' => 'v1_farms_activities_delete'],
+				],
+				'/api/v1/farms/{farm_id}/{index}/tiles/{z}/{x}/{y}.png' => [
+					'get' => ['operationId' => 'v1_farms_tiles_.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/{index}/raster-dates' => [
+					'get' => ['operationId' => 'v1_farms_raster_dates_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/weather/current/' => [
 					'get' => ['operationId' => 'v1_farms_weather_current_retrieve'],

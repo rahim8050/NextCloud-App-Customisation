@@ -5697,7 +5697,8 @@
 					// Build tile URL template for XYZ tiles
 					const tileUrl = url.replace('/raster.png', '/tiles')
 					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'rdylgn'
-					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&date=${encodeURIComponent(validation.date)}&colormap=${colormap}`)
+					const baseTileUrl = ncGenerateUrl(tileUrl)
+					const tileUrlTemplate = `${baseTileUrl}?z={z}&x={x}&y={y}&date=${encodeURIComponent(validation.date)}&colormap=${colormap}`
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -5714,6 +5715,7 @@
 							credentials: 'same-origin',
 							headers,
 						})
+
 						const contentType = response.headers.get('content-type') || ''
 						if (!response.ok) {
 							const result = await readJsonResponse(response)
@@ -6010,7 +6012,8 @@
 					// Build tile URL template for XYZ tiles
 					const tileUrl = url.replace('/raster.png', '/tiles')
 					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'brbg'
-					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
+					const baseTileUrl = ncGenerateUrl(tileUrl)
+					const tileUrlTemplate = `${baseTileUrl}?z={z}&x={x}&y={y}&date=${encodeURIComponent(validation.date)}&colormap=${colormap}`
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',
@@ -6367,45 +6370,58 @@
 				const east = Number(rawEast)
 				const centerLat = (south + north) / 2
 				const centerLng = (west + east) / 2
-				rasterMapContainer.hidden = false
-				if (rasterControls) {
-					rasterControls.hidden = false
-				}
-				rasterMap = L.map(rasterMapContainer, {
-					center: [centerLat, centerLng],
-					zoom: 14,
-					zoomControl: true,
-					attributionControl: true,
-				})
-				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-					maxZoom: 19,
-					attribution: '&copy; OpenStreetMap contributors',
-				}).addTo(rasterMap)
 				const bounds = L.latLngBounds(
 					[south, west],
 					[north, east],
 				)
-				// Store state for date slider
 				rasterCurrentIndexType = indexType || ''
 				rasterCurrentFarmId = farm?.id || (farm?.data?.id ?? '')
-				if (tileUrlTemplate) {
-					currentTileUrlTemplate = tileUrlTemplate
-					rasterTileLayer = L.tileLayer(tileUrlTemplate, {
-						opacity: 0.8,
-						maxZoom: 18,
-						maxNativeZoom: 16,
-						tms: false,
-						bounds: bounds,
-					}).addTo(rasterMap)
-					// Load available dates for slider
-					loadRasterDates(rasterCurrentFarmId, rasterCurrentIndexType)
-				} else {
-					L.imageOverlay(blobUrl, bounds, { opacity: 0.8 }).addTo(rasterMap)
+				const tileTemplate = tileUrlTemplate || null
+				rasterMapContainer.hidden = false
+				if (rasterControls) {
+					rasterControls.hidden = false
 				}
-				rasterMap.fitBounds(bounds, { padding: [20, 20], maxZoom: 17 })
-				setTimeout(() => {
+				const initMap = () => {
+					const rect = rasterMapContainer.getBoundingClientRect()
+					if (rect.width === 0 || rect.height === 0) {
+						// Container not laid out yet, retry
+						setTimeout(initMap, 100)
+						return
+					}
+					rasterMap = L.map(rasterMapContainer, {
+						center: [centerLat, centerLng],
+						zoom: 12,
+						zoomControl: true,
+						attributionControl: true,
+					})
+					L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+						maxZoom: 19,
+						attribution: '&copy; OpenStreetMap contributors',
+					}).addTo(rasterMap)
+					if (tileTemplate) {
+						currentTileUrlTemplate = tileTemplate
+						rasterTileLayer = L.tileLayer(tileTemplate, {
+							opacity: 0.8,
+							maxZoom: 18,
+							maxNativeZoom: 16,
+							tms: false,
+							bounds: bounds,
+						}).addTo(rasterMap)
+						loadRasterDates(rasterCurrentFarmId, rasterCurrentIndexType)
+					} else {
+						L.imageOverlay(blobUrl, bounds, { opacity: 0.8 }).addTo(rasterMap)
+					}
 					rasterMap.invalidateSize()
-				}, 100)
+					rasterMap.fitBounds(bounds, {
+						padding: [20, 20],
+						maxZoom: 14,
+						animate: false,
+					})
+					setTimeout(() => {
+						if (rasterMap) rasterMap.invalidateSize()
+					}, 250)
+				}
+				setTimeout(initMap, 200)
 			}
 
 			const rasterColormapSelect = document.getElementById('farm-intelligence-platform-raster-colormap')
@@ -6531,7 +6547,8 @@
 					// Build tile URL template for XYZ tiles
 					const tileUrl = url.replace('/raster.png', '/tiles')
 					const colormap = rasterColormapSelect ? rasterColormapSelect.value : 'brbg'
-					const tileUrlTemplate = ncGenerateUrl(`${tileUrl}?z={z}&x={x}&y={y}&${queryString}&colormap=${colormap}`)
+					const baseTileUrl = ncGenerateUrl(tileUrl)
+					const tileUrlTemplate = `${baseTileUrl}?z={z}&x={x}&y={y}&date=${encodeURIComponent(validation.date)}&colormap=${colormap}`
 					const token = resolveRequestToken()
 					const headers = {
 						Accept: 'image/png',

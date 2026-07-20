@@ -1754,6 +1754,16 @@ final class AdminFarmsControllerTest extends TestCase {
 						'operationId' => 'v1_ndvi_health_upstream_retrieve',
 					],
 				],
+				'/api/v1/farms/{farm_id}/{index}/tiles/{z}/{x}/{y}.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_tiles_.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/{index}/raster-dates' => [
+					'get' => [
+						'operationId' => 'v1_farms_raster_dates_retrieve',
+					],
+				],
 			],
 		];
 	}

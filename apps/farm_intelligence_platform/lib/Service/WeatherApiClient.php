@@ -57,7 +57,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			return $this->fetchWhoami($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
 		} catch (WeatherApiException $exception) {
-			if ($exception->getErrorCode() === 'unauthorized') {
+			if (in_array($exception->getErrorCode(), ['unauthorized', 'forbidden'], true)) {
 				$this->clearCachedToken();
 				$token = $this->mintToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
 
@@ -593,7 +593,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 		try {
 			return $callback($context['baseUrl'], $token, $context['allowLocalAddress'], $correlationId);
 		} catch (WeatherApiException $exception) {
-			if ($exception->getErrorCode() === 'unauthorized') {
+			if (in_array($exception->getErrorCode(), ['unauthorized', 'forbidden'], true)) {
 				$this->clearCachedToken();
 				$token = $this->mintToken($context['baseUrl'], $context['allowLocalAddress'], $correlationId);
 

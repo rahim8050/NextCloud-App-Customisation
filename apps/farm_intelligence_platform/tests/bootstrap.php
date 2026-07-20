@@ -34,6 +34,22 @@ namespace {
 		}
 	}
 
+	if (!class_exists(\OC_Util::class)) {
+		final class OC_Util {
+			public static function addStyle(string $application, ?string $file = null, bool $prepend = false): void {
+			}
+
+			public static function addScript(string $application, ?string $file = null, bool $prepend = false): void {
+			}
+
+			public static function setupFS(?string $userId = null): void {
+			}
+
+			public static function obEnd(): void {
+			}
+		}
+	}
+
 	if (!class_exists(FakeServer::class)) {
 		final class FakeServer {
 			private readonly object $config;

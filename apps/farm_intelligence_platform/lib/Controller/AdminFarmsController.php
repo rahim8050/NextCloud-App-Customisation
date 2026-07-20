@@ -625,6 +625,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('weather_current', $requestId);
@@ -669,6 +670,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('weather_hourly', $requestId);
@@ -711,6 +713,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('weather_daily', $requestId);
@@ -753,6 +756,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('farm_state', $requestId);
@@ -1001,6 +1005,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndwi_raster_queue', $requestId);
@@ -1008,7 +1013,6 @@ final class AdminFarmsController extends Controller {
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
 			$externalFarmId = $this->pullExternalFarmId($params);
-			$query = [];
 			$body = null;
 			$bodyFields = $operation['bodyFields'] ?? [];
 			if ($bodyFields !== []) {
@@ -1343,6 +1347,7 @@ final class AdminFarmsController extends Controller {
 
 		$operation = [];
 		$path = '';
+		$query = [];
 
 		try {
 			$operation = $this->schemaService->getFarmOperation('ndmi_raster_queue', $requestId);
@@ -1350,7 +1355,6 @@ final class AdminFarmsController extends Controller {
 			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
 			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
 			$externalFarmId = $this->pullExternalFarmId($params);
-			$query = [];
 			$body = null;
 			$bodyFields = $operation['bodyFields'] ?? [];
 			if ($bodyFields !== []) {
