@@ -189,6 +189,86 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getRviLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getRviTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getRviRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueRviRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshRvi',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getRviFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getRviRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getRviRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueS1SmiRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshS1Smi',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',
 			'verb' => 'GET',

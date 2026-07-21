@@ -53,6 +53,18 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster/queue', $response->getParams()['farmNdmiRasterQueueUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/refresh', $response->getParams()['farmNdmiRefreshUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/farm-state', $response->getParams()['farmNdmiFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/latest', $response->getParams()['farmRviLatestUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/timeseries', $response->getParams()['farmRviTimeseriesUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster.png', $response->getParams()['farmRviRasterUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster/queue', $response->getParams()['farmRviRasterQueueUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/refresh', $response->getParams()['farmRviRefreshUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/farm-state', $response->getParams()['farmRviFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/latest', $response->getParams()['farmS1SmiLatestUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/timeseries', $response->getParams()['farmS1SmiTimeseriesUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster.png', $response->getParams()['farmS1SmiRasterUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster/queue', $response->getParams()['farmS1SmiRasterQueueUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/refresh', $response->getParams()['farmS1SmiRefreshUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/farm-state', $response->getParams()['farmS1SmiFarmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
@@ -103,7 +115,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(62))
+		$urlGenerator->expects($this->exactly(74))
 			->method('linkToRoute')
 			->withConsecutive(
 				['farm_intelligence_platform.settings.saveAdmin'],
@@ -138,6 +150,18 @@ final class AdminSettingsTest extends TestCase {
 				['farm_intelligence_platform.adminFarms.queueNdmiRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshNdmi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdmiFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getRviLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getRviTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getRviRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueRviRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshRvi', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getRviFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS1SmiLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS1SmiTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS1SmiRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueS1SmiRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshS1Smi', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS1SmiFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']],
@@ -202,6 +226,18 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/refresh',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/farm-state',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/current',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily',
