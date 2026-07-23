@@ -301,7 +301,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				$options = $this->buildBaseOptions($resolvedId, $allowLocalAddress);
 
 				$options['headers'] = array_merge($options['headers'], [
-					'Accept' => 'image/png',
+					'Accept' => 'image/png, image/tiff, */*',
 					'Authorization' => 'Bearer ' . $token,
 				]);
 
@@ -329,8 +329,8 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				$this->ensureSuccessResponse($response, $body);
 
 				$contentType = strtolower($response->getHeader('Content-Type'));
-				if ($contentType !== '' && !str_contains($contentType, 'image/png')) {
-					throw new WeatherApiException('backend_error', 'Binary response is not PNG.');
+				if ($contentType !== '' && !str_contains($contentType, 'image/png') && !str_contains($contentType, 'image/tiff')) {
+					throw new WeatherApiException('backend_error', 'Binary response is not a supported image type.');
 				}
 
 				$body = $this->bodyToString($response->getBody());

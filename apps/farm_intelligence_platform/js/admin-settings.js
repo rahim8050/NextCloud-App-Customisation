@@ -5765,7 +5765,7 @@
 						return
 					}
 					const url = farmNdviRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-					const query = buildNdviQuery('ndvi_raster', { date: validation.date })
+			const query = buildNdviQuery('geotiff_download', { date: validation.date })
 					const queryString = buildQueryString(query)
 					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 					const resolvedUrl = ncGenerateUrl(finalUrl)
@@ -7465,7 +7465,7 @@
 					return
 				}
 				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-				const query = buildNdviQuery('ndvi_raster', { date: validation.date })
+				const query = buildNdviQuery('geotiff_download', { date: validation.date })
 				const queryString = buildQueryString(query)
 				const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
 				const resolvedUrl = ncGenerateUrl(finalUrl)
