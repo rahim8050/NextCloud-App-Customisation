@@ -1,0 +1,136 @@
+<?php
+
+namespace OCA\Cookbook\Controller;
+
+use OCA\Cookbook\Controller\Implementation\RecipeImplementation;
+use OCP\AppFramework\ApiController;
+use OCP\AppFramework\Http\Attribute\CORS;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDisplayResponse;
+use OCP\AppFramework\Http\FileDisplayResponse;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
+
+class RecipeApiController extends ApiController {
+	/** @var RecipeImplementation */
+	private $impl;
+
+	public function __construct(
+		string $AppName,
+		IRequest $request,
+		RecipeImplementation $recipeImplementation,
+	) {
+		parent::__construct($AppName, $request);
+
+		$this->impl = $recipeImplementation;
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function index() {
+		return $this->impl->index();
+	}
+
+	/**
+	 * @param int $id
+	 * @return JSONResponse
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function show($id) {
+		return $this->impl->show($id);
+	}
+
+	/**
+	 * Update an existing recipe.
+	 *
+	 * @param $id
+	 * @return JSONResponse
+	 * @todo Parameter id is never used. Fix that
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function update($id) {
+		return $this->impl->update($id);
+	}
+
+	/**
+	 * Create a new recipe.
+	 *
+	 * @return JSONResponse
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function create() {
+		return $this->impl->create();
+	}
+
+	/**
+	 * @param int $id
+	 * @return JSONResponse
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function destroy($id) {
+		return $this->impl->destroy($id);
+	}
+
+	/**
+	 * @param $id
+	 * @return JSONResponse|FileDisplayResponse|DataDisplayResponse
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[CORS]
+	public function image($id) {
+		return $this->impl->image($id);
+	}
+
+	#[NoCSRFRequired]
+	#[NoAdminRequired]
+	#[CORS]
+	public function import() {
+		return $this->impl->import();
+	}
+
+	/**
+	 * @param string $query
+	 * @return JSONResponse
+	 */
+	#[NoCSRFRequired]
+	#[NoAdminRequired]
+	#[CORS]
+	public function search($query) {
+		return $this->impl->search($query);
+	}
+
+	/**
+	 * @param string $category
+	 * @return JSONResponse
+	 */
+	#[NoCSRFRequired]
+	#[NoAdminRequired]
+	#[CORS]
+	public function category($category) {
+		return $this->impl->getAllInCategory($category);
+	}
+
+
+
+	/**
+	 * @param string $keywords
+	 * @return JSONResponse
+	 */
+	#[NoCSRFRequired]
+	#[NoAdminRequired]
+	#[CORS]
+	public function tags($keywords) {
+		return $this->impl->getAllWithTags($keywords);
+	}
+}

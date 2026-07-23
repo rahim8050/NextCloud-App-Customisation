@@ -229,6 +229,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getRviGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/geotiff',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getS1SmiLatest',
 			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/latest',
 			'verb' => 'GET',
@@ -269,6 +274,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getS1SmiGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/geotiff',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',
 			'verb' => 'GET',
@@ -289,13 +299,28 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdviGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/ndvi/geotiff',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdwiRasterDates',
 			'url' => '/api/v1/admin/farms/{farmId}/ndwi/raster-dates',
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdwiGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/geotiff',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdmiRasterDates',
 			'url' => '/api/v1/admin/farms/{farmId}/ndmi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/geotiff',
 			'verb' => 'GET',
 		],
 		[

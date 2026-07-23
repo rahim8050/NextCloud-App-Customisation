@@ -1,0 +1,18 @@
+OC.L10N.register(
+    "cookbook",
+    {
+    "in %s" : "ভেতর %s",
+    "Tags" : "ট্যাগ",
+    "None" : "কোনটিই নয়",
+    "Edit" : "সম্পাদনা",
+    "Save" : "সংরক্ষণ",
+    "Search" : "Search",
+    "Rename" : "পূনঃনামকরণ",
+    "Add" : "যোগ কর",
+    "Name" : "নাম",
+    "Cancel" : "Cancel",
+    "OK" : "OK",
+    "Description" : "বিবরণ",
+    "URL" : "URL"
+},
+"nplurals=2; plural=(n != 1);");

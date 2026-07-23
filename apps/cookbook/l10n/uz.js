@@ -1,0 +1,28 @@
+OC.L10N.register(
+    "cookbook",
+    {
+    "Recipes" : "Retseptlar",
+    "in %s" : " %s da",
+    "Category" : "Kategoriya",
+    "Tags" : "Tags",
+    "None" : "Yo'q",
+    "Page not found" : "Sahifa topilmadi",
+    "Edit" : "Tahrirlash",
+    "Save" : "Saqlash",
+    "Search" : "Qidirish",
+    "Filter" : "Filtr",
+    "Categories" : "Kategoriyalar",
+    "Rename" : "Nomini o'zgartirish",
+    "Add" : "Qo'shish",
+    "Name" : "Name",
+    "Order" : "Buyurtma",
+    "Clear" : "Toza",
+    "Dismiss" : "Rad etish",
+    "Cancel" : "Bekor qilish",
+    "OK" : "OK",
+    "Description" : "Tavsif",
+    "URL" : "URL",
+    "Instructions" : "Ko'rsatmalar",
+    "Loading…" : "Yuklanmoqda..."
+},
+"nplurals=1; plural=0;");

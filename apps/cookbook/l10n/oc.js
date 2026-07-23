@@ -1,0 +1,27 @@
+OC.L10N.register(
+    "cookbook",
+    {
+    "in %s" : "dins %s",
+    "Category" : "Categoria",
+    "Tags" : "Etiquetas",
+    "None" : "Cap",
+    "Page not found" : "Pagina pas trobada",
+    "Edit" : "Modificar",
+    "Save" : "Enregistrar",
+    "Search" : "Search",
+    "Categories" : "Categorias",
+    "Rename" : "Tornar nommar",
+    "Add" : "Apondre",
+    "Name" : "Nom",
+    "Clear" : "Escafar",
+    "Apply" : "Aplicar",
+    "Tools" : "Aisinas",
+    "Dismiss" : "Regetar",
+    "Cancel" : "Cancel",
+    "OK" : "OK",
+    "Calories" : "Calorias",
+    "Description" : "Descripcion",
+    "URL" : "URL",
+    "Loading…" : "Telecargament…"
+},
+"nplurals=2; plural=(n > 1);");

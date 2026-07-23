@@ -115,6 +115,7 @@
 		const ndviLatestButton = document.getElementById('farm-intelligence-platform-ndvi-latest')
 		const ndviTimeseriesButton = document.getElementById('farm-intelligence-platform-ndvi-timeseries')
 		const ndviRasterButton = document.getElementById('farm-intelligence-platform-ndvi-raster')
+		const ndviGeotiffButton = document.getElementById('farm-intelligence-platform-ndvi-geotiff')
 		const ndviQueueButton = document.getElementById('farm-intelligence-platform-ndvi-queue')
 		const ndviRefreshButton = document.getElementById('farm-intelligence-platform-ndvi-refresh')
 		const farmStateButton = document.getElementById('farm-intelligence-platform-farm-state')
@@ -135,24 +136,28 @@
 		const ndwiLatestButton = document.getElementById('farm-intelligence-platform-ndwi-latest')
 		const ndwiTimeseriesButton = document.getElementById('farm-intelligence-platform-ndwi-timeseries')
 		const ndwiRasterButton = document.getElementById('farm-intelligence-platform-ndwi-raster')
+		const ndwiGeotiffButton = document.getElementById('farm-intelligence-platform-ndwi-geotiff')
 		const ndwiQueueButton = document.getElementById('farm-intelligence-platform-ndwi-queue')
 		const ndwiRefreshButton = document.getElementById('farm-intelligence-platform-ndwi-refresh')
 		const ndwiStateButton = document.getElementById('farm-intelligence-platform-ndwi-state')
 		const ndmiLatestButton = document.getElementById('farm-intelligence-platform-ndmi-latest')
 		const ndmiTimeseriesButton = document.getElementById('farm-intelligence-platform-ndmi-timeseries')
 		const ndmiRasterButton = document.getElementById('farm-intelligence-platform-ndmi-raster')
+		const ndmiGeotiffButton = document.getElementById('farm-intelligence-platform-ndmi-geotiff')
 		const ndmiQueueButton = document.getElementById('farm-intelligence-platform-ndmi-queue')
 		const ndmiRefreshButton = document.getElementById('farm-intelligence-platform-ndmi-refresh')
 		const ndmiStateButton = document.getElementById('farm-intelligence-platform-ndmi-state')
 		const rviLatestButton = document.getElementById('farm-intelligence-platform-rvi-latest')
 		const rviTimeseriesButton = document.getElementById('farm-intelligence-platform-rvi-timeseries')
 		const rviRasterButton = document.getElementById('farm-intelligence-platform-rvi-raster')
+		const rviGeotiffButton = document.getElementById('farm-intelligence-platform-rvi-geotiff')
 		const rviQueueButton = document.getElementById('farm-intelligence-platform-rvi-queue')
 		const rviRefreshButton = document.getElementById('farm-intelligence-platform-rvi-refresh')
 		const rviStateButton = document.getElementById('farm-intelligence-platform-rvi-state')
 		const s1SmiLatestButton = document.getElementById('farm-intelligence-platform-s1-smi-latest')
 		const s1SmiTimeseriesButton = document.getElementById('farm-intelligence-platform-s1-smi-timeseries')
 		const s1SmiRasterButton = document.getElementById('farm-intelligence-platform-s1-smi-raster')
+		const s1SmiGeotiffButton = document.getElementById('farm-intelligence-platform-s1-smi-geotiff')
 		const s1SmiQueueButton = document.getElementById('farm-intelligence-platform-s1-smi-queue')
 		const s1SmiRefreshButton = document.getElementById('farm-intelligence-platform-s1-smi-refresh')
 		const s1SmiStateButton = document.getElementById('farm-intelligence-platform-s1-smi-state')
@@ -7445,6 +7450,74 @@
 						}
 					}
 				})
+			}
+			const downloadGeotiff = async (urlTemplate, label) => {
+				clearFarmsNotes()
+				clearNdviError()
+				if (!selectedFarm) {
+					showNdviError('Select a farm first.')
+					return
+				}
+				const state = readNdviDateState()
+				const validation = validateRasterInput(state)
+				if (!validation.ok) {
+					showNdviError(validation.message)
+					return
+				}
+				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const query = buildNdviQuery('ndvi_raster', { date: validation.date })
+				const queryString = buildQueryString(query)
+				const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+				const resolvedUrl = ncGenerateUrl(finalUrl)
+				try {
+					const response = await fetch(resolvedUrl, {
+						method: 'GET',
+						credentials: 'same-origin',
+						headers: {
+							Accept: 'image/tiff',
+							'OCS-APIRequest': 'true',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+					})
+					if (!response.ok) {
+						const result = await readJsonResponse(response)
+						const message = buildNdviErrorMessage(response, result.data, `Unable to download ${label} GeoTIFF.`, result.text)
+						showNdviError(message)
+						if (shouldToastNdviError(message)) toast(message)
+						return
+					}
+					const blob = await response.blob()
+					if (blob.size === 0) {
+						showNdviError(`${label} GeoTIFF response was empty.`)
+						return
+					}
+					const link = document.createElement('a')
+					link.href = URL.createObjectURL(blob)
+					const filename = `${label.toLowerCase()}_${selectedFarm.id}_${validation.date}.tif`
+					link.download = filename
+					document.body.appendChild(link)
+					link.click()
+					document.body.removeChild(link)
+					URL.revokeObjectURL(link.href)
+				} catch (error) {
+					const message = error instanceof Error ? error.message : `Unable to download ${label} GeoTIFF.`
+					showNdviError(message)
+				}
+			}
+			if (ndviGeotiffButton) {
+				ndviGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNdviGeotiffUrl, 'NDVI'))
+			}
+			if (ndwiGeotiffButton) {
+				ndwiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNdwiGeotiffUrl, 'NDWI'))
+			}
+			if (ndmiGeotiffButton) {
+				ndmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNdmiGeotiffUrl, 'NDMI'))
+			}
+			if (rviGeotiffButton) {
+				rviGeotiffButton.addEventListener('click', () => downloadGeotiff(farmRviGeotiffUrl, 'RVI'))
+			}
+			if (s1SmiGeotiffButton) {
+				s1SmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmS1SmiGeotiffUrl, 'S1_SMI'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {

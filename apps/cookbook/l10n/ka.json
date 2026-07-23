@@ -1,0 +1,27 @@
+{ "translations": {
+    "Recipes" : "Recipes",
+    "in %s" : "in %s",
+    "Category" : "Category",
+    "Tags" : "Tags",
+    "None" : "None",
+    "Page not found" : "Page not found",
+    "Edit" : "Edit",
+    "Save" : "Save",
+    "Search" : "Search",
+    "Filter" : "Filter",
+    "Categories" : "Categories",
+    "Rename" : "Rename",
+    "Add" : "დამატება",
+    "Name" : "Name",
+    "Clear" : "Clear",
+    "Tools" : "Tools",
+    "Dismiss" : "Dismiss",
+    "Cancel" : "Cancel",
+    "OK" : "OK",
+    "Description" : "Description",
+    "URL" : "URL",
+    "Image" : "Image",
+    "Loading…" : "Loading…",
+    "Last modified" : "Last modified"
+},"pluralForm" :"nplurals=2; plural=(n!=1);"
+}

@@ -145,6 +145,7 @@ style('farm_intelligence_platform', 'admin-settings');
 						<button id="farm-intelligence-platform-ndvi-timeseries" type="button" class="button"><?php p($l->t('Timeseries')); ?></button>
 						<button id="farm-intelligence-platform-ndvi-queue" type="button" class="button"><?php p($l->t('Queue raster')); ?></button>
 						<button id="farm-intelligence-platform-ndvi-raster" type="button" class="button"><?php p($l->t('NDVI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-ndvi-geotiff" type="button" class="button"><?php p($l->t('NDVI GeoTIFF')); ?></button>
 						<button id="farm-intelligence-platform-ndvi-refresh" type="button" class="button"><?php p($l->t('Refresh')); ?></button>
 						<button id="farm-intelligence-platform-farm-state" type="button" class="button"><?php p($l->t('Farm State')); ?></button>
 					</div>
@@ -154,12 +155,14 @@ style('farm_intelligence_platform', 'admin-settings');
 						<button id="farm-intelligence-platform-ndwi-queue" type="button" class="button"><?php p($l->t('Queue NDWI raster')); ?></button>
 						<button id="farm-intelligence-platform-ndwi-refresh" type="button" class="button"><?php p($l->t('Refresh NDWI')); ?></button>
 						<button id="farm-intelligence-platform-ndwi-raster" type="button" class="button"><?php p($l->t('NDWI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-ndwi-geotiff" type="button" class="button"><?php p($l->t('NDWI GeoTIFF')); ?></button>
 						<button id="farm-intelligence-platform-ndwi-state" type="button" class="button"><?php p($l->t('NDWI State')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-latest" type="button" class="button"><?php p($l->t('Latest NDMI')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-timeseries" type="button" class="button"><?php p($l->t('NDMI Timeseries')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-queue" type="button" class="button"><?php p($l->t('Queue NDMI raster')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-refresh" type="button" class="button"><?php p($l->t('Refresh NDMI')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-raster" type="button" class="button"><?php p($l->t('NDMI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-ndmi-geotiff" type="button" class="button"><?php p($l->t('NDMI GeoTIFF')); ?></button>
 						<button id="farm-intelligence-platform-ndmi-state" type="button" class="button"><?php p($l->t('NDMI State')); ?></button>
 					</div>
 					<div class="farm-intelligence-platform-farms__ndvi-actions">
@@ -168,6 +171,7 @@ style('farm_intelligence_platform', 'admin-settings');
 						<button id="farm-intelligence-platform-rvi-queue" type="button" class="button"><?php p($l->t('Queue RVI raster')); ?></button>
 						<button id="farm-intelligence-platform-rvi-refresh" type="button" class="button"><?php p($l->t('Refresh RVI')); ?></button>
 						<button id="farm-intelligence-platform-rvi-raster" type="button" class="button"><?php p($l->t('RVI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-rvi-geotiff" type="button" class="button"><?php p($l->t('RVI GeoTIFF')); ?></button>
 						<button id="farm-intelligence-platform-rvi-state" type="button" class="button"><?php p($l->t('RVI State')); ?></button>
 					</div>
 					<div class="farm-intelligence-platform-farms__ndvi-actions">
@@ -176,6 +180,7 @@ style('farm_intelligence_platform', 'admin-settings');
 						<button id="farm-intelligence-platform-s1-smi-queue" type="button" class="button"><?php p($l->t('Queue S1_SMI raster')); ?></button>
 						<button id="farm-intelligence-platform-s1-smi-refresh" type="button" class="button"><?php p($l->t('Refresh S1_SMI')); ?></button>
 						<button id="farm-intelligence-platform-s1-smi-raster" type="button" class="button"><?php p($l->t('S1_SMI Raster PNG')); ?></button>
+						<button id="farm-intelligence-platform-s1-smi-geotiff" type="button" class="button"><?php p($l->t('S1_SMI GeoTIFF')); ?></button>
 						<button id="farm-intelligence-platform-s1-smi-state" type="button" class="button"><?php p($l->t('S1_SMI State')); ?></button>
 					</div>
 					<div class="farm-intelligence-platform-farms__ndvi-row">

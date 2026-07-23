@@ -518,6 +518,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdviGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'ndvi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdviRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -994,6 +1001,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdwiGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'ndwi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdwiRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1336,6 +1350,14 @@ final class AdminFarmsController extends Controller {
 		return $this->proxyRasterDates($farmId, 'ndmi');
 	}
 
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdmiGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'ndmi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdmiRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1591,6 +1613,14 @@ final class AdminFarmsController extends Controller {
 	public function getRviRasterDates(string $farmId): Response {
 		return $this->proxyRasterDates($farmId, 'rvi');
 	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getRviGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'rvi');
+	}
+
 
 	#[AdminRequired]
 	public function queueRviRaster(string $farmId): JSONResponse {
@@ -1891,6 +1921,14 @@ final class AdminFarmsController extends Controller {
 	public function getS1SmiRasterDates(string $farmId): Response {
 		return $this->proxyRasterDates($farmId, 's1_smi');
 	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getS1SmiGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 's1_smi');
+	}
+
 
 	#[AdminRequired]
 	public function queueS1SmiRaster(string $farmId): JSONResponse {
@@ -2957,6 +2995,66 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $this->buildSuccessResponse($json['payload'] ?? null, $index . ' raster dates loaded.');
+	}
+
+
+	/**
+	 * Proxy a geotiff download request to the Django backend.
+	 */
+	private function proxyGeotiff(string $farmId, string $index): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry($index . ' geotiff', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('geotiff_download', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, [
+				'farm_id' => $farmId,
+				'index' => $index,
+			]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest($index . ' geotiff', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse($index . ' geotiff', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError($index . ' geotiff', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, $index . ' geotiff');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/tiff']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
 	}
 
 
