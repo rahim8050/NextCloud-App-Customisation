@@ -278,6 +278,52 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/geotiff',
 			'verb' => 'GET',
 		],
+		// S3_LST endpoints
+		[
+			'name' => 'adminFarms#getS3LstLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS3LstTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS3LstRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueS3LstRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshS3Lst',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getS3LstFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS3LstRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS3LstRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS3LstGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/geotiff',
+			'verb' => 'GET',
+		],
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',

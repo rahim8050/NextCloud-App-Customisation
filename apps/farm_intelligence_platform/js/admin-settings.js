@@ -68,6 +68,13 @@
 		const farmS1SmiRasterQueueUrl = form.dataset.farmS1SmiRasterQueueUrl || ''
 		const farmS1SmiRefreshUrl = form.dataset.farmS1SmiRefreshUrl || ''
 		const farmS1SmiFarmStateUrl = form.dataset.farmS1SmiFarmStateUrl || ''
+		const farmS3LstLatestUrl = form.dataset.farmS3LstLatestUrl || ''
+		const farmS3LstTimeseriesUrl = form.dataset.farmS3LstTimeseriesUrl || ''
+		const farmS3LstRasterUrl = form.dataset.farmS3LstRasterUrl || ''
+		const farmS3LstRasterQueueUrl = form.dataset.farmS3LstRasterQueueUrl || ''
+		const farmS3LstRefreshUrl = form.dataset.farmS3LstRefreshUrl || ''
+		const farmS3LstFarmStateUrl = form.dataset.farmS3LstFarmStateUrl || ''
+		const farmS3LstGeotiffUrl = form.dataset.farmS3LstGeotiffUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -161,6 +168,13 @@
 		const s1SmiQueueButton = document.getElementById('farm-intelligence-platform-s1-smi-queue')
 		const s1SmiRefreshButton = document.getElementById('farm-intelligence-platform-s1-smi-refresh')
 		const s1SmiStateButton = document.getElementById('farm-intelligence-platform-s1-smi-state')
+		const s3LstLatestButton = document.getElementById('farm-intelligence-platform-s3-lst-latest')
+		const s3LstTimeseriesButton = document.getElementById('farm-intelligence-platform-s3-lst-timeseries')
+		const s3LstRasterButton = document.getElementById('farm-intelligence-platform-s3-lst-raster')
+		const s3LstGeotiffButton = document.getElementById('farm-intelligence-platform-s3-lst-geotiff')
+		const s3LstQueueButton = document.getElementById('farm-intelligence-platform-s3-lst-queue')
+		const s3LstRefreshButton = document.getElementById('farm-intelligence-platform-s3-lst-refresh')
+		const s3LstStateButton = document.getElementById('farm-intelligence-platform-s3-lst-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2389,6 +2403,8 @@
 				if (rviRefreshButton) rviRefreshButton.disabled = !enabled
 				if (s1SmiLatestButton) s1SmiLatestButton.disabled = !enabled
 				if (s1SmiRefreshButton) s1SmiRefreshButton.disabled = !enabled
+				if (s3LstLatestButton) s3LstLatestButton.disabled = !enabled
+				if (s3LstRefreshButton) s3LstRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2408,6 +2424,9 @@
 					if (s1SmiTimeseriesButton) s1SmiTimeseriesButton.disabled = true
 					if (s1SmiQueueButton) s1SmiQueueButton.disabled = true
 					if (s1SmiRasterButton) s1SmiRasterButton.disabled = true
+					if (s3LstTimeseriesButton) s3LstTimeseriesButton.disabled = true
+					if (s3LstQueueButton) s3LstQueueButton.disabled = true
+					if (s3LstRasterButton) s3LstRasterButton.disabled = true
 				}
 			}
 
@@ -3426,6 +3445,15 @@
 				}
 				if (s1SmiRasterButton) {
 					s1SmiRasterButton.disabled = !rasterValidation.ok
+				}
+				if (s3LstTimeseriesButton) {
+					s3LstTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (s3LstQueueButton) {
+					s3LstQueueButton.disabled = !rasterValidation.ok
+				}
+				if (s3LstRasterButton) {
+					s3LstRasterButton.disabled = !rasterValidation.ok
 				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
@@ -6543,6 +6571,7 @@
 				else if (indexLower === 'ndmi') baseUrl = farmNdmiRasterUrl
 				else if (indexLower === 'rvi') baseUrl = farmRviRasterUrl
 				else if (indexLower === 's1_smi') baseUrl = farmS1SmiRasterUrl
+				else if (indexLower === 's3_lst') baseUrl = farmS3LstRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -7451,6 +7480,312 @@
 					}
 				})
 			}
+
+			if (s3LstLatestButton) {
+				s3LstLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.hidden = false
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest S3_LST...</div>'
+					}
+					const url = farmS3LstLatestUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('latest S3_LST', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (ndviOutput) {
+								ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load latest S3_LST.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const card = renderLatestCard(data, () => {}, 'Latest S3_LST')
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] S3_LST latest error', error)
+						if (ndviOutput) {
+							ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load latest S3_LST.</div>'
+						}
+					}
+				})
+			}
+			if (s3LstTimeseriesButton) {
+				s3LstTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.hidden = false
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading S3_LST timeseries...</div>'
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmS3LstTimeseriesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('s3_lst_timeseries', url, {
+							method: 'GET',
+							query: buildNdviQuery('s3_lst_timeseries', {
+								start: state.start.value,
+								end: state.end.value,
+							}),
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (ndviOutput) {
+								ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load S3_LST timeseries.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const card = renderTimeseriesCard(data, () => {}, 'S3_LST timeseries')
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] S3_LST timeseries error', error)
+						if (ndviOutput) {
+							ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load S3_LST timeseries.</div>'
+						}
+					}
+				})
+			}
+			if (s3LstRasterButton) {
+				s3LstRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmS3LstRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('s3_lst_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					const operation = resolveOperation('s3_lst_raster')
+					const isBinary = operation?.method !== 'GET' || operation?.responseType === 'binary'
+					try {
+						const tileUrlTemplate = farmS3LstRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load S3_LST raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'S3_LST raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('S3_LST raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'S3_LST')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load S3_LST raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (s3LstQueueButton) {
+				s3LstQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('s3_lst_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue S3_LST raster', farmS3LstRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('s3_lst_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('s3_lst_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued S3_LST raster job #${jobId}`
+							: 'Queued S3_LST raster job'
+						showNdviSuccess(message)
+						const card = renderResultCard({
+							title: 'S3_LST raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue S3_LST raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (s3LstRefreshButton) {
+				s3LstRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh S3_LST', farmS3LstRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('s3_lst_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued S3_LST refresh job #${jobId}`
+							: 'Queued S3_LST refresh job'
+						showNdviSuccess(message)
+						const card = renderResultCard({
+							title: 'S3_LST refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh S3_LST.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (s3LstStateButton) {
+				s3LstStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading S3_LST farm state...</div>'
+					}
+					const url = farmS3LstFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('s3_lst farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load S3_LST farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanS3Lst = data?.mean_lst ?? null
+						const maxS3Lst = data?.max_lst ?? null
+						const minS3Lst = data?.min_lst ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+						const formatPercent = typeof ndviUi.formatPercent === 'function' ? ndviUi.formatPercent : (v) => String(v * 100) + '%'
+
+						const stateLabels = {
+							cold: 'Cold',
+							moderate: 'Moderate',
+							hot: 'Hot',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							cold: 'info',
+							moderate: 'success',
+							hot: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean S3_LST', meanS3Lst !== null ? formatNumber(meanS3Lst, 3) : '-')
+						pushFact(facts, 'Max S3_LST', maxS3Lst !== null ? formatNumber(maxS3Lst, 3) : '-')
+						pushFact(facts, 'Min S3_LST', minS3Lst !== null ? formatNumber(minS3Lst, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'S3_LST Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `S3_LST farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] S3_LST farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load S3_LST farm state.</div>'
+						}
+					}
+				})
+			}
+
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
 				clearNdviError()
@@ -7518,6 +7853,9 @@
 			}
 			if (s1SmiGeotiffButton) {
 				s1SmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmS1SmiGeotiffUrl, 'S1_SMI'))
+			}
+			if (s3LstGeotiffButton) {
+				s3LstGeotiffButton.addEventListener('click', () => downloadGeotiff(farmS3LstGeotiffUrl, 'S3_LST'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {
