@@ -2322,6 +2322,8 @@
 			let timeseriesRviState = null
 			let latestS1SmiState = null
 			let timeseriesS1SmiState = null
+			let latestS3LstState = null
+			let timeseriesS3LstState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -7484,88 +7486,88 @@
 			if (s3LstLatestButton) {
 				s3LstLatestButton.addEventListener('click', async () => {
 					clearFarmsNotes()
+					clearNdviError()
 					if (!selectedFarm) {
 						showNdviError('Select a farm first.')
 						return
 					}
 					if (ndviOutput) {
-						ndviOutput.hidden = false
-					}
-					if (ndviOutput) {
 						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest S3_LST...</div>'
 					}
-					const url = farmS3LstLatestUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-					try {
-						const payload = await runNdviRequest('latest S3_LST', url, {
-							method: 'GET',
-							returnRaw: true,
+					latestS3LstState = reduceLatestState(latestS3LstState, { type: 'request' })
+					renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
+					const payload = await runNdviRequest('latest S3_LST', farmS3LstLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestS3LstState = reduceLatestState(latestS3LstState, {
+							type: 'failure',
+							message: 'Unable to load latest S3_LST.',
 						})
-						if (!payload) {
-							if (ndviOutput) {
-								ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load latest S3_LST.</div>'
-							}
-							return
-						}
-						const data = unwrapResponseData(payload?.data ?? payload)
-						const card = renderLatestCard(data, () => {}, 'Latest S3_LST')
-						if (ndviOutput) {
-							ndviOutput.innerHTML = ''
-							ndviOutput.appendChild(card)
-						}
-					} catch (error) {
-						console.error('[farm_intelligence_platform] S3_LST latest error', error)
-						if (ndviOutput) {
-							ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load latest S3_LST.</div>'
-						}
+						renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
+						return
 					}
+					latestS3LstState = reduceLatestState(latestS3LstState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
 				})
 			}
 			if (s3LstTimeseriesButton) {
 				s3LstTimeseriesButton.addEventListener('click', async () => {
 					clearFarmsNotes()
+					clearNdviError()
 					if (!selectedFarm) {
 						showNdviError('Select a farm first.')
 						return
 					}
-					if (ndviOutput) {
-						ndviOutput.hidden = false
-					}
-					if (ndviOutput) {
-						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading S3_LST timeseries...</div>'
-					}
 					const state = readNdviDateState()
-					const validation = validateTimeseriesInput(state)
+					const validation = validateTimeseriesInputs(state)
 					if (!validation.ok) {
 						showNdviError(validation.message)
 						return
 					}
-					const url = farmS3LstTimeseriesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-					try {
-						const payload = await runNdviRequest('s3_lst_timeseries', url, {
-							method: 'GET',
-							query: buildNdviQuery('s3_lst_timeseries', {
-								start: state.start.value,
-								end: state.end.value,
-							}),
-							returnRaw: true,
-						})
-						if (!payload) {
-							if (ndviOutput) {
-								ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load S3_LST timeseries.</div>'
-							}
-							return
+					timeseriesS3LstState = reduceTimeseriesState(
+						timeseriesS3LstState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesS3LstState, () => {}, 'S3_LST timeseries')
+					renderNdviCalendar(timeseriesS3LstState)
+					const payload = await runNdviRequest('s3_lst_timeseries', farmS3LstTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('s3_lst_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesS3LstState = reduceTimeseriesState(
+							timeseriesS3LstState,
+							{ type: 'failure', message: 'Unable to load S3_LST timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesS3LstState, () => {}, 'S3_LST timeseries')
+						renderNdviCalendar(timeseriesS3LstState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
 						}
-						const data = unwrapResponseData(payload?.data ?? payload)
-						const card = renderTimeseriesCard(data, () => {}, 'S3_LST timeseries')
-						if (ndviOutput) {
-							ndviOutput.innerHTML = ''
-							ndviOutput.appendChild(card)
-						}
-					} catch (error) {
-						console.error('[farm_intelligence_platform] S3_LST timeseries error', error)
-						if (ndviOutput) {
-							ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load S3_LST timeseries.</div>'
-						}
+						return
+					}
+					timeseriesS3LstState = reduceTimeseriesState(
+						timeseriesS3LstState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesS3LstState, () => {}, 'S3_LST timeseries')
+					renderNdviCalendar(timeseriesS3LstState)
+					if (timeseriesS3LstState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesS3LstState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
 					}
 				})
 			}
