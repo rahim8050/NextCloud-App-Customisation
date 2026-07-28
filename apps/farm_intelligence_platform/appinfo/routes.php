@@ -324,6 +324,52 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/geotiff',
 			'verb' => 'GET',
 		],
+		// LANDSAT_LST endpoints
+		[
+			'name' => 'adminFarms#getLandsatLstLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueLandsatLstRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshLandsatLst',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/geotiff',
+			'verb' => 'GET',
+		],
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',

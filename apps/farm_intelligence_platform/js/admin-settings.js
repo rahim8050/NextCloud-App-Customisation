@@ -75,6 +75,13 @@
 		const farmS3LstRefreshUrl = form.dataset.farmS3LstRefreshUrl || ''
 		const farmS3LstFarmStateUrl = form.dataset.farmS3LstFarmStateUrl || ''
 		const farmS3LstGeotiffUrl = form.dataset.farmS3LstGeotiffUrl || ''
+		const farmLandsatLstLatestUrl = form.dataset.farmLandsatLstLatestUrl || ''
+		const farmLandsatLstTimeseriesUrl = form.dataset.farmLandsatLstTimeseriesUrl || ''
+		const farmLandsatLstRasterUrl = form.dataset.farmLandsatLstRasterUrl || ''
+		const farmLandsatLstRasterQueueUrl = form.dataset.farmLandsatLstRasterQueueUrl || ''
+		const farmLandsatLstRefreshUrl = form.dataset.farmLandsatLstRefreshUrl || ''
+		const farmLandsatLstFarmStateUrl = form.dataset.farmLandsatLstFarmStateUrl || ''
+		const farmLandsatLstGeotiffUrl = form.dataset.farmLandsatLstGeotiffUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -175,6 +182,13 @@
 		const s3LstQueueButton = document.getElementById('farm-intelligence-platform-s3-lst-queue')
 		const s3LstRefreshButton = document.getElementById('farm-intelligence-platform-s3-lst-refresh')
 		const s3LstStateButton = document.getElementById('farm-intelligence-platform-s3-lst-state')
+		const landsatLstLatestButton = document.getElementById('farm-intelligence-platform-landsat-lst-latest')
+		const landsatLstTimeseriesButton = document.getElementById('farm-intelligence-platform-landsat-lst-timeseries')
+		const landsatLstRasterButton = document.getElementById('farm-intelligence-platform-landsat-lst-raster')
+		const landsatLstGeotiffButton = document.getElementById('farm-intelligence-platform-landsat-lst-geotiff')
+		const landsatLstQueueButton = document.getElementById('farm-intelligence-platform-landsat-lst-queue')
+		const landsatLstRefreshButton = document.getElementById('farm-intelligence-platform-landsat-lst-refresh')
+		const landsatLstStateButton = document.getElementById('farm-intelligence-platform-landsat-lst-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2324,6 +2338,8 @@
 			let timeseriesS1SmiState = null
 			let latestS3LstState = null
 			let timeseriesS3LstState = null
+			let latestLandsatLstState = null
+			let timeseriesLandsatLstState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2407,6 +2423,8 @@
 				if (s1SmiRefreshButton) s1SmiRefreshButton.disabled = !enabled
 				if (s3LstLatestButton) s3LstLatestButton.disabled = !enabled
 				if (s3LstRefreshButton) s3LstRefreshButton.disabled = !enabled
+				if (landsatLstLatestButton) landsatLstLatestButton.disabled = !enabled
+				if (landsatLstRefreshButton) landsatLstRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2429,6 +2447,9 @@
 					if (s3LstTimeseriesButton) s3LstTimeseriesButton.disabled = true
 					if (s3LstQueueButton) s3LstQueueButton.disabled = true
 					if (s3LstRasterButton) s3LstRasterButton.disabled = true
+					if (landsatLstTimeseriesButton) landsatLstTimeseriesButton.disabled = true
+					if (landsatLstQueueButton) landsatLstQueueButton.disabled = true
+					if (landsatLstRasterButton) landsatLstRasterButton.disabled = true
 				}
 			}
 
@@ -3457,6 +3478,15 @@
 				if (s3LstRasterButton) {
 					s3LstRasterButton.disabled = !rasterValidation.ok
 				}
+				if (landsatLstTimeseriesButton) {
+					landsatLstTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (landsatLstQueueButton) {
+					landsatLstQueueButton.disabled = !rasterValidation.ok
+				}
+				if (landsatLstRasterButton) {
+					landsatLstRasterButton.disabled = !rasterValidation.ok
+				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
 				const showRasterError = (ndviTouched.raster || state.raster.raw)
@@ -3486,6 +3516,8 @@
 				timeseriesRviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestS1SmiState = reduceLatestState(null, { type: 'reset' })
 				timeseriesS1SmiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestLandsatLstState = reduceLatestState(null, { type: 'reset' })
+				timeseriesLandsatLstState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -6574,6 +6606,7 @@
 				else if (indexLower === 'rvi') baseUrl = farmRviRasterUrl
 				else if (indexLower === 's1_smi') baseUrl = farmS1SmiRasterUrl
 				else if (indexLower === 's3_lst') baseUrl = farmS3LstRasterUrl
+				else if (indexLower === 'landsat_lst') baseUrl = farmLandsatLstRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -7787,6 +7820,310 @@
 					}
 				})
 			}
+			if (landsatLstLatestButton) {
+				landsatLstLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest LANDSAT_LST...</div>'
+					}
+					latestLandsatLstState = reduceLatestState(latestLandsatLstState, { type: 'request' })
+					renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
+					const payload = await runNdviRequest('latest LANDSAT_LST', farmLandsatLstLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestLandsatLstState = reduceLatestState(latestLandsatLstState, {
+							type: 'failure',
+							message: 'Unable to load latest LANDSAT_LST.',
+						})
+						renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
+						return
+					}
+					latestLandsatLstState = reduceLatestState(latestLandsatLstState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
+				})
+			}
+			if (landsatLstTimeseriesButton) {
+				landsatLstTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesLandsatLstState = reduceTimeseriesState(
+						timeseriesLandsatLstState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesLandsatLstState, () => {}, 'LANDSAT_LST timeseries')
+					renderNdviCalendar(timeseriesLandsatLstState)
+					const payload = await runNdviRequest('landsat_lst_timeseries', farmLandsatLstTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('landsat_lst_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesLandsatLstState = reduceTimeseriesState(
+							timeseriesLandsatLstState,
+							{ type: 'failure', message: 'Unable to load LANDSAT_LST timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesLandsatLstState, () => {}, 'LANDSAT_LST timeseries')
+						renderNdviCalendar(timeseriesLandsatLstState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesLandsatLstState = reduceTimeseriesState(
+						timeseriesLandsatLstState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesLandsatLstState, () => {}, 'LANDSAT_LST timeseries')
+					renderNdviCalendar(timeseriesLandsatLstState)
+					if (timeseriesLandsatLstState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesLandsatLstState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (landsatLstRasterButton) {
+				landsatLstRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmLandsatLstRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('landsat_lst_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					const operation = resolveOperation('landsat_lst_raster')
+					const isBinary = operation?.method !== 'GET' || operation?.responseType === 'binary'
+					try {
+						const tileUrlTemplate = farmLandsatLstRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load LANDSAT_LST raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'LANDSAT_LST raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('LANDSAT_LST raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'LANDSAT_LST')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load LANDSAT_LST raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (landsatLstQueueButton) {
+				landsatLstQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('landsat_lst_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue LANDSAT_LST raster', farmLandsatLstRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('landsat_lst_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('landsat_lst_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued LANDSAT_LST raster job #${jobId}`
+							: 'Queued LANDSAT_LST raster job'
+						showNdviSuccess(message)
+						const card = renderResultCard({
+							title: 'LANDSAT_LST raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue LANDSAT_LST raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (landsatLstRefreshButton) {
+				landsatLstRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh LANDSAT_LST', farmLandsatLstRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('landsat_lst_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued LANDSAT_LST refresh job #${jobId}`
+							: 'Queued LANDSAT_LST refresh job'
+						showNdviSuccess(message)
+						const card = renderResultCard({
+							title: 'LANDSAT_LST refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh LANDSAT_LST.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (landsatLstStateButton) {
+				landsatLstStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading LANDSAT_LST farm state...</div>'
+					}
+					const url = farmLandsatLstFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('landsat_lst farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load LANDSAT_LST farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanLandsatLst = data?.mean_lst ?? null
+						const maxLandsatLst = data?.max_lst ?? null
+						const minLandsatLst = data?.min_lst ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+						const formatPercent = typeof ndviUi.formatPercent === 'function' ? ndviUi.formatPercent : (v) => String(v * 100) + '%'
+
+						const stateLabels = {
+							cold: 'Cold',
+							moderate: 'Moderate',
+							hot: 'Hot',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							cold: 'info',
+							moderate: 'success',
+							hot: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean LANDSAT_LST', meanLandsatLst !== null ? formatNumber(meanLandsatLst, 3) : '-')
+						pushFact(facts, 'Max LANDSAT_LST', maxLandsatLst !== null ? formatNumber(maxLandsatLst, 3) : '-')
+						pushFact(facts, 'Min LANDSAT_LST', minLandsatLst !== null ? formatNumber(minLandsatLst, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'LANDSAT_LST Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `LANDSAT_LST farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] LANDSAT_LST farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load LANDSAT_LST farm state.</div>'
+						}
+					}
+				})
+			}
 
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
@@ -7858,6 +8195,9 @@
 			}
 			if (s3LstGeotiffButton) {
 				s3LstGeotiffButton.addEventListener('click', () => downloadGeotiff(farmS3LstGeotiffUrl, 'S3_LST'))
+			}
+			if (landsatLstGeotiffButton) {
+				landsatLstGeotiffButton.addEventListener('click', () => downloadGeotiff(farmLandsatLstGeotiffUrl, 'LANDSAT_LST'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {

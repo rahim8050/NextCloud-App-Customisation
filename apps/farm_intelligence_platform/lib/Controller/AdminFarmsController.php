@@ -2339,6 +2339,317 @@ final class AdminFarmsController extends Controller {
 
 
 	#[AdminRequired]
+	public function getLandsatLstLatest(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst latest', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_latest', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('landsat_lst latest', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst latest', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst latest', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'landsat_lst latest');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst latest');
+		}
+
+		return $this->buildSuccessResponse($payload, 'LANDSAT_LST latest loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getLandsatLstTimeseries(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst timeseries', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_timeseries', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('landsat_lst timeseries', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst timeseries', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst timeseries', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'landsat_lst timeseries');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst timeseries');
+		}
+
+		return $this->buildSuccessResponse($payload, 'LANDSAT_LST timeseries loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getLandsatLstRasterPng(string $farmId): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst raster', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_raster', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('landsat_lst raster', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst raster', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst raster', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst raster');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+
+	#[AdminRequired]
+	public function queueLandsatLstRaster(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst raster queue', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_raster_queue', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = [];
+			$body = null;
+			$bodyFields = $operation['bodyFields'] ?? [];
+			if ($bodyFields !== []) {
+				$body = $this->filterBodyParams($params, $bodyFields, true);
+				$dateField = $this->resolveBodyFieldName($bodyFields, 'date');
+				if ($dateField !== null && array_key_exists($dateField, $body)) {
+					$this->parseIsoDateValue($body[$dateField], $dateField);
+				}
+			} else {
+				$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+				$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+				$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+				if ($dateField !== null && array_key_exists($dateField, $query)) {
+					$this->parseIsoDateValue($query[$dateField], $dateField);
+				}
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('landsat_lst raster queue', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				$query,
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst raster queue', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst raster queue', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'landsat_lst raster queue');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst raster queue');
+		}
+
+		return $this->buildSuccessResponse($payload, 'LANDSAT_LST raster queued.');
+	}
+
+
+	#[AdminRequired]
+	public function refreshLandsatLst(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst refresh', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_refresh', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('landsat_lst refresh', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst refresh', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst refresh', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'landsat_lst refresh');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst refresh');
+		}
+
+		return $this->buildSuccessResponse($payload, 'LANDSAT_LST refresh queued.');
+	}
+
+
+	#[AdminRequired]
+	public function getLandsatLstFarmState(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('landsat_lst farm state', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('landsat_lst_farm_state', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('landsat_lst farm state', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('landsat_lst farm state', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('landsat_lst farm state', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'landsat_lst farm state');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'landsat_lst farm state');
+		}
+
+		return $this->buildSuccessResponse($payload, 'LANDSAT_LST farm state loaded.');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getLandsatLstRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'landsat_lst', $z, $x, $y);
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getLandsatLstRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'landsat_lst');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getLandsatLstGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'landsat_lst');
+	}
+
+
+	#[AdminRequired]
 	public function listFarmObservations(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$this->logEndpointEntry('list farm observations', $requestId);
