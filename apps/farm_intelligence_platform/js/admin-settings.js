@@ -82,6 +82,13 @@
 		const farmLandsatLstRefreshUrl = form.dataset.farmLandsatLstRefreshUrl || ''
 		const farmLandsatLstFarmStateUrl = form.dataset.farmLandsatLstFarmStateUrl || ''
 		const farmLandsatLstGeotiffUrl = form.dataset.farmLandsatLstGeotiffUrl || ''
+		const farmIronOxideLatestUrl = form.dataset.farmIronOxideLatestUrl || ''
+		const farmIronOxideTimeseriesUrl = form.dataset.farmIronOxideTimeseriesUrl || ''
+		const farmIronOxideRasterUrl = form.dataset.farmIronOxideRasterUrl || ''
+		const farmIronOxideRasterQueueUrl = form.dataset.farmIronOxideRasterQueueUrl || ''
+		const farmIronOxideRefreshUrl = form.dataset.farmIronOxideRefreshUrl || ''
+		const farmIronOxideFarmStateUrl = form.dataset.farmIronOxideFarmStateUrl || ''
+		const farmIronOxideGeotiffUrl = form.dataset.farmIronOxideGeotiffUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -189,6 +196,13 @@
 		const landsatLstQueueButton = document.getElementById('farm-intelligence-platform-landsat-lst-queue')
 		const landsatLstRefreshButton = document.getElementById('farm-intelligence-platform-landsat-lst-refresh')
 		const landsatLstStateButton = document.getElementById('farm-intelligence-platform-landsat-lst-state')
+		const ironOxideLatestButton = document.getElementById('farm-intelligence-platform-iron-oxide-latest')
+		const ironOxideTimeseriesButton = document.getElementById('farm-intelligence-platform-iron-oxide-timeseries')
+		const ironOxideRasterButton = document.getElementById('farm-intelligence-platform-iron-oxide-raster')
+		const ironOxideGeotiffButton = document.getElementById('farm-intelligence-platform-iron-oxide-geotiff')
+		const ironOxideQueueButton = document.getElementById('farm-intelligence-platform-iron-oxide-queue')
+		const ironOxideRefreshButton = document.getElementById('farm-intelligence-platform-iron-oxide-refresh')
+		const ironOxideStateButton = document.getElementById('farm-intelligence-platform-iron-oxide-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2340,6 +2354,8 @@
 			let timeseriesS3LstState = null
 			let latestLandsatLstState = null
 			let timeseriesLandsatLstState = null
+			let latestIronOxideState = null
+			let timeseriesIronOxideState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2425,6 +2441,8 @@
 				if (s3LstRefreshButton) s3LstRefreshButton.disabled = !enabled
 				if (landsatLstLatestButton) landsatLstLatestButton.disabled = !enabled
 				if (landsatLstRefreshButton) landsatLstRefreshButton.disabled = !enabled
+				if (ironOxideLatestButton) ironOxideLatestButton.disabled = !enabled
+				if (ironOxideRefreshButton) ironOxideRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2450,6 +2468,9 @@
 					if (landsatLstTimeseriesButton) landsatLstTimeseriesButton.disabled = true
 					if (landsatLstQueueButton) landsatLstQueueButton.disabled = true
 					if (landsatLstRasterButton) landsatLstRasterButton.disabled = true
+					if (ironOxideTimeseriesButton) ironOxideTimeseriesButton.disabled = true
+					if (ironOxideQueueButton) ironOxideQueueButton.disabled = true
+					if (ironOxideRasterButton) ironOxideRasterButton.disabled = true
 				}
 			}
 
@@ -3487,6 +3508,15 @@
 				if (landsatLstRasterButton) {
 					landsatLstRasterButton.disabled = !rasterValidation.ok
 				}
+				if (ironOxideTimeseriesButton) {
+					ironOxideTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (ironOxideQueueButton) {
+					ironOxideQueueButton.disabled = !rasterValidation.ok
+				}
+				if (ironOxideRasterButton) {
+					ironOxideRasterButton.disabled = !rasterValidation.ok
+				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
 				const showRasterError = (ndviTouched.raster || state.raster.raw)
@@ -3518,6 +3548,8 @@
 				timeseriesS1SmiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestLandsatLstState = reduceLatestState(null, { type: 'reset' })
 				timeseriesLandsatLstState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestIronOxideState = reduceLatestState(null, { type: 'reset' })
+				timeseriesIronOxideState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -6607,6 +6639,7 @@
 				else if (indexLower === 's1_smi') baseUrl = farmS1SmiRasterUrl
 				else if (indexLower === 's3_lst') baseUrl = farmS3LstRasterUrl
 				else if (indexLower === 'landsat_lst') baseUrl = farmLandsatLstRasterUrl
+				else if (indexLower === 'iron_oxide') baseUrl = farmIronOxideRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -8124,6 +8157,307 @@
 					}
 				})
 			}
+			if (ironOxideLatestButton) {
+				ironOxideLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest IRON_OXIDE...</div>'
+					}
+					latestIronOxideState = reduceLatestState(latestIronOxideState, { type: 'request' })
+					renderLatestCard(latestIronOxideState, () => {}, 'Latest IRON_OXIDE')
+					const payload = await runNdviRequest('latest IRON_OXIDE', farmIronOxideLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestIronOxideState = reduceLatestState(latestIronOxideState, {
+							type: 'failure',
+							message: 'Unable to load latest IRON_OXIDE.',
+						})
+						renderLatestCard(latestIronOxideState, () => {}, 'Latest IRON_OXIDE')
+						return
+					}
+					latestIronOxideState = reduceLatestState(latestIronOxideState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestIronOxideState, () => {}, 'Latest IRON_OXIDE')
+				})
+			}
+			if (ironOxideTimeseriesButton) {
+				ironOxideTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesIronOxideState = reduceTimeseriesState(
+						timeseriesIronOxideState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesIronOxideState, () => {}, 'IRON_OXIDE timeseries')
+					renderNdviCalendar(timeseriesIronOxideState)
+					const payload = await runNdviRequest('iron_oxide_timeseries', farmIronOxideTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('iron_oxide_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesIronOxideState = reduceTimeseriesState(
+							timeseriesIronOxideState,
+							{ type: 'failure', message: 'Unable to load IRON_OXIDE timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesIronOxideState, () => {}, 'IRON_OXIDE timeseries')
+						renderNdviCalendar(timeseriesIronOxideState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesIronOxideState = reduceTimeseriesState(
+						timeseriesIronOxideState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesIronOxideState, () => {}, 'IRON_OXIDE timeseries')
+					renderNdviCalendar(timeseriesIronOxideState)
+					if (timeseriesIronOxideState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesIronOxideState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (ironOxideRasterButton) {
+				ironOxideRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmIronOxideRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('iron_oxide_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmIronOxideRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load IRON_OXIDE raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'IRON_OXIDE raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('IRON_OXIDE raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'IRON_OXIDE')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load IRON_OXIDE raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ironOxideQueueButton) {
+				ironOxideQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('iron_oxide_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue IRON_OXIDE raster', farmIronOxideRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('iron_oxide_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('iron_oxide_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued IRON_OXIDE raster job #${jobId}`
+							: 'Queued IRON_OXIDE raster job'
+						const card = renderResultCard({
+							title: 'IRON_OXIDE raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue IRON_OXIDE raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ironOxideRefreshButton) {
+				ironOxideRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh IRON_OXIDE', farmIronOxideRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('iron_oxide_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued IRON_OXIDE refresh job #${jobId}`
+							: 'Queued IRON_OXIDE refresh job'
+						const card = renderResultCard({
+							title: 'IRON_OXIDE refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh IRON_OXIDE.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ironOxideStateButton) {
+				ironOxideStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading IRON_OXIDE farm state...</div>'
+					}
+					const url = farmIronOxideFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('iron_oxide farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load IRON_OXIDE farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanIronOxide = data?.mean_iron_oxide ?? null
+						const maxIronOxide = data?.max_iron_oxide ?? null
+						const minIronOxide = data?.min_iron_oxide ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'warning',
+							moderate: 'success',
+							low: 'info',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean IRON_OXIDE', meanIronOxide !== null ? formatNumber(meanIronOxide, 3) : '-')
+						pushFact(facts, 'Max IRON_OXIDE', maxIronOxide !== null ? formatNumber(maxIronOxide, 3) : '-')
+						pushFact(facts, 'Min IRON_OXIDE', minIronOxide !== null ? formatNumber(minIronOxide, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'IRON_OXIDE Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `IRON_OXIDE farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] IRON_OXIDE farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load IRON_OXIDE farm state.</div>'
+						}
+					}
+				})
+			}
 
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
@@ -8198,6 +8532,9 @@
 			}
 			if (landsatLstGeotiffButton) {
 				landsatLstGeotiffButton.addEventListener('click', () => downloadGeotiff(farmLandsatLstGeotiffUrl, 'LANDSAT_LST'))
+			}
+			if (ironOxideGeotiffButton) {
+				ironOxideGeotiffButton.addEventListener('click', () => downloadGeotiff(farmIronOxideGeotiffUrl, 'IRON_OXIDE'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {

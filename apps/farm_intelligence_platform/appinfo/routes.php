@@ -370,6 +370,52 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/geotiff',
 			'verb' => 'GET',
 		],
+		// IRON_OXIDE endpoints
+		[
+			'name' => 'adminFarms#getIronOxideLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueIronOxideRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshIronOxide',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getIronOxideGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/geotiff',
+			'verb' => 'GET',
+		],
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',
