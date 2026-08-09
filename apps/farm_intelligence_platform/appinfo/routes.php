@@ -416,6 +416,52 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/geotiff',
 			'verb' => 'GET',
 		],
+		// EVI endpoints
+		[
+			'name' => 'adminFarms#getEviLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getEviTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getEviRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueEviRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshEvi',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getEviFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getEviRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getEviRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getEviGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/geotiff',
+			'verb' => 'GET',
+		],
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',

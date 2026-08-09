@@ -2961,6 +2961,321 @@ final class AdminFarmsController extends Controller {
 
 
 	#[AdminRequired]
+	public function getEviLatest(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi latest', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_latest', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('evi latest', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('evi latest', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi latest', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'evi latest');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi latest');
+		}
+
+		return $this->buildSuccessResponse($payload, 'EVI latest loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getEviTimeseries(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi timeseries', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_timeseries', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$startName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'start');
+			$endName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'end');
+			$this->ensureDateOrder($query, $startName, $endName);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('evi timeseries', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('evi timeseries', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi timeseries', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'evi timeseries');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi timeseries');
+		}
+
+		return $this->buildSuccessResponse($payload, 'EVI timeseries loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getEviRasterPng(string $farmId): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi raster', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_raster', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('evi raster', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse('evi raster', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi raster', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi raster');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+
+	#[AdminRequired]
+	public function queueEviRaster(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi raster queue', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_raster_queue', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = [];
+			$body = null;
+			$bodyFields = $operation['bodyFields'] ?? [];
+			if ($bodyFields !== []) {
+				$body = $this->filterBodyParams($params, $bodyFields, true);
+				$dateField = $this->resolveBodyFieldName($bodyFields, 'date');
+				if ($dateField !== null && array_key_exists($dateField, $body)) {
+					$this->parseIsoDateValue($body[$dateField], $dateField);
+				}
+			} else {
+				$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+				$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+				$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+				if ($dateField !== null && array_key_exists($dateField, $query)) {
+					$this->parseIsoDateValue($query[$dateField], $dateField);
+				}
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('evi raster queue', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				$query,
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('evi raster queue', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi raster queue', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'evi raster queue');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi raster queue');
+		}
+
+		return $this->buildSuccessResponse($payload, 'EVI raster queued.');
+	}
+
+
+	#[AdminRequired]
+	public function refreshEvi(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi refresh', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_refresh', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('evi refresh', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('evi refresh', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi refresh', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'evi refresh');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi refresh');
+		}
+
+		return $this->buildSuccessResponse($payload, 'EVI refresh queued.');
+	}
+
+
+	#[AdminRequired]
+	public function getEviFarmState(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('evi farm state', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('evi_farm_state', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('evi farm state', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('evi farm state', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('evi farm state', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'evi farm state');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'evi farm state');
+		}
+
+		return $this->buildSuccessResponse($payload, 'EVI farm state loaded.');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getEviRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'evi', $z, $x, $y);
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getEviRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'evi');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getEviGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'evi');
+	}
+
+
+	#[AdminRequired]
 	public function listFarmObservations(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
 		$this->logEndpointEntry('list farm observations', $requestId);

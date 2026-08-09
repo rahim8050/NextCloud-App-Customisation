@@ -41,6 +41,26 @@ final class DrfSchemaServiceTest extends TestCase {
 		$this->assertSame('GET', $result['schema']['operations']['list']['method']);
 	}
 
+	public function testGetFarmOperationResolvesEviOperations(): void {
+		$schema = $this->createSchema();
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->any())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$service = $this->createService($client);
+
+		$latest = $service->getFarmOperation('evi_latest', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/evi/latest/', $latest['path']);
+		$this->assertSame('GET', $latest['method']);
+
+		$farmState = $service->getFarmOperation('evi_farm_state', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/evi/farm-state/', $farmState['path']);
+		$this->assertSame('GET', $farmState['method']);
+	}
+
 	public function testGetFarmSchemaSummaryFallsBackToCreateRequestBody(): void {
 		$schema = $this->createSchemaWithCreateBody();
 		$schema['components']['schemas']['Farm'] = ['type' => 'object'];
@@ -312,6 +332,117 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
 				],
+				'/api/v1/farms/{farm_id}/evi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_evi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_evi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_evi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_evi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/evi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_evi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_evi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_rvi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_rvi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_rvi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_s1_smi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_s1_smi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/latest/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_s3_lst_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_s3_lst_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/latest/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_landsat_lst_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_landsat_lst_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/latest/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_iron_oxide_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_iron_oxide_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/geotiff' => [
+					'get' => ['operationId' => 'v1_farms_geotiff_retrieve'],
+				],
 				'/api/v1/farm-state/{farm_id}/' => [
 					'get' => ['operationId' => 'v1_farm_state_retrieve'],
 				],
@@ -493,6 +624,117 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/ndwi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_ndwi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_evi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_evi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_evi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_evi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/evi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_evi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_evi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_rvi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_rvi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_rvi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/rvi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_rvi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_s1_smi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_s1_smi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_s1_smi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/latest/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_s3_lst_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_s3_lst_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_s3_lst_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/latest/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_landsat_lst_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_landsat_lst_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_landsat_lst_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/latest/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_iron_oxide_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_iron_oxide_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_iron_oxide_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/geotiff' => [
+					'get' => ['operationId' => 'v1_farms_geotiff_retrieve'],
 				],
 				'/api/v1/farm-state/{farm_id}/' => [
 					'get' => ['operationId' => 'v1_farm_state_retrieve'],

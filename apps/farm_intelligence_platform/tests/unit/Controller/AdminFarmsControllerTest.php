@@ -1124,6 +1124,254 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 	}
 
+	public function testEviLatestStripsFarmIdFromQuery(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'farmId' => '42',
+			'date' => '2024-06-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getEviLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/42/evi/latest/', ['date' => '2024-06-01'], null, 'request-id')
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testEviLatestRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviLatest('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testEviLatestMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testEviTimeseriesRequiresStartEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getEviTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviTimeseries('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetEviRasterPngRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getEviRasterPng',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestBinary');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviRasterPng('55');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetEviRasterPngReturnsBinary(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'date' => '2024-06-01',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestBinary')
+			->with('GET', '/api/v1/farms/55/evi/raster.png', ['date' => '2024-06-01'], 'request-id')
+			->willReturn([
+				'body' => 'png-bytes',
+				'contentType' => 'image/png',
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviRasterPng('55');
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+		$this->assertSame('png-bytes', $response->getData());
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testQueueEviRasterRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.queueEviRaster',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueEviRaster('55');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testRefreshEviCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/farms/42/evi/refresh/', [], null, 'request-id')
+			->willReturn(['payload' => ['data' => ['job_id' => 7]], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->refreshEvi('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(7, $data['data']['data']['job_id']);
+	}
+
+	public function testGetEviFarmStateReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/evi/farm-state/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['success' => 0, 'data' => ['mean_evi' => 0.42, 'state' => 'healthy']],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(0.42, $data['data']['data']['mean_evi']);
+		$this->assertSame('healthy', $data['data']['data']['state']);
+	}
+
+	public function testGetEviFarmStateMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getEviFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
 	public function testNdwiLatestLogsQueryKeysWithoutFarmId(): void {
 		$schema = $this->createSchema();
 
@@ -1597,6 +1845,245 @@ final class AdminFarmsControllerTest extends TestCase {
 				'/api/v1/farms/{farm_id}/ndmi/farm-state/' => [
 					'get' => [
 						'operationId' => 'v1_farms_ndmi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_evi_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_evi_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_evi_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_evi_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_evi_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_evi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_rvi_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_rvi_timeseries_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_rvi_raster.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_rvi_raster_queue_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_rvi_refresh_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/rvi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_rvi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s1_smi_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s1_smi_timeseries_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_s1_smi_raster.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_s1_smi_raster_queue_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_s1_smi_refresh_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s1_smi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s1_smi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s3_lst_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s3_lst_timeseries_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_s3_lst_raster.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_s3_lst_raster_queue_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_s3_lst_refresh_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/s3_lst/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_s3_lst_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_landsat_lst_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_landsat_lst_timeseries_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_landsat_lst_raster.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_landsat_lst_raster_queue_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_landsat_lst_refresh_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/landsat_lst/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_landsat_lst_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_iron_oxide_latest_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_iron_oxide_timeseries_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_iron_oxide_raster.png_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_iron_oxide_raster_queue_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_iron_oxide_refresh_create',
+					],
+				],
+				'/api/v1/farms/{farm_id}/iron_oxide/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_iron_oxide_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/geotiff' => [
+					'get' => [
+						'operationId' => 'v1_farms_geotiff_retrieve',
 					],
 				],
 				'/api/v1/farms/{farm_id}/observations/' => [

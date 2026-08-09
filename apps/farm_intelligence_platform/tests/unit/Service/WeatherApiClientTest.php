@@ -559,7 +559,7 @@ final class WeatherApiClientTest extends TestCase {
 			->with(
 				$this->stringContains('/api/v1/farms/1/ndvi/raster.png'),
 				$this->callback(fn (array $options): bool => $this->hasCorrectOptions($options, 'binary-request', 'Bearer cached-token')
-					&& $options['headers']['Accept'] === 'image/png'),
+					&& $options['headers']['Accept'] === 'image/png, image/tiff, */*'),
 			)
 			->willReturn($response);
 

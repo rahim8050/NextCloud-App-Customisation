@@ -89,6 +89,13 @@
 		const farmIronOxideRefreshUrl = form.dataset.farmIronOxideRefreshUrl || ''
 		const farmIronOxideFarmStateUrl = form.dataset.farmIronOxideFarmStateUrl || ''
 		const farmIronOxideGeotiffUrl = form.dataset.farmIronOxideGeotiffUrl || ''
+		const farmEviLatestUrl = form.dataset.farmEviLatestUrl || ''
+		const farmEviTimeseriesUrl = form.dataset.farmEviTimeseriesUrl || ''
+		const farmEviRasterUrl = form.dataset.farmEviRasterUrl || ''
+		const farmEviRasterQueueUrl = form.dataset.farmEviRasterQueueUrl || ''
+		const farmEviRefreshUrl = form.dataset.farmEviRefreshUrl || ''
+		const farmEviFarmStateUrl = form.dataset.farmEviFarmStateUrl || ''
+		const farmEviGeotiffUrl = form.dataset.farmEviGeotiffUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -203,6 +210,13 @@
 		const ironOxideQueueButton = document.getElementById('farm-intelligence-platform-iron-oxide-queue')
 		const ironOxideRefreshButton = document.getElementById('farm-intelligence-platform-iron-oxide-refresh')
 		const ironOxideStateButton = document.getElementById('farm-intelligence-platform-iron-oxide-state')
+		const eviLatestButton = document.getElementById('farm-intelligence-platform-evi-latest')
+		const eviTimeseriesButton = document.getElementById('farm-intelligence-platform-evi-timeseries')
+		const eviRasterButton = document.getElementById('farm-intelligence-platform-evi-raster')
+		const eviGeotiffButton = document.getElementById('farm-intelligence-platform-evi-geotiff')
+		const eviQueueButton = document.getElementById('farm-intelligence-platform-evi-queue')
+		const eviRefreshButton = document.getElementById('farm-intelligence-platform-evi-refresh')
+		const eviStateButton = document.getElementById('farm-intelligence-platform-evi-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2356,6 +2370,8 @@
 			let timeseriesLandsatLstState = null
 			let latestIronOxideState = null
 			let timeseriesIronOxideState = null
+			let latestEviState = null
+			let timeseriesEviState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2443,6 +2459,8 @@
 				if (landsatLstRefreshButton) landsatLstRefreshButton.disabled = !enabled
 				if (ironOxideLatestButton) ironOxideLatestButton.disabled = !enabled
 				if (ironOxideRefreshButton) ironOxideRefreshButton.disabled = !enabled
+				if (eviLatestButton) eviLatestButton.disabled = !enabled
+				if (eviRefreshButton) eviRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2471,6 +2489,9 @@
 					if (ironOxideTimeseriesButton) ironOxideTimeseriesButton.disabled = true
 					if (ironOxideQueueButton) ironOxideQueueButton.disabled = true
 					if (ironOxideRasterButton) ironOxideRasterButton.disabled = true
+					if (eviTimeseriesButton) eviTimeseriesButton.disabled = true
+					if (eviQueueButton) eviQueueButton.disabled = true
+					if (eviRasterButton) eviRasterButton.disabled = true
 				}
 			}
 
@@ -3517,6 +3538,15 @@
 				if (ironOxideRasterButton) {
 					ironOxideRasterButton.disabled = !rasterValidation.ok
 				}
+				if (eviTimeseriesButton) {
+					eviTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (eviQueueButton) {
+					eviQueueButton.disabled = !rasterValidation.ok
+				}
+				if (eviRasterButton) {
+					eviRasterButton.disabled = !rasterValidation.ok
+				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
 				const showRasterError = (ndviTouched.raster || state.raster.raw)
@@ -3550,6 +3580,8 @@
 				timeseriesLandsatLstState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestIronOxideState = reduceLatestState(null, { type: 'reset' })
 				timeseriesIronOxideState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestEviState = reduceLatestState(null, { type: 'reset' })
+				timeseriesEviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -6640,6 +6672,7 @@
 				else if (indexLower === 's3_lst') baseUrl = farmS3LstRasterUrl
 				else if (indexLower === 'landsat_lst') baseUrl = farmLandsatLstRasterUrl
 				else if (indexLower === 'iron_oxide') baseUrl = farmIronOxideRasterUrl
+				else if (indexLower === 'evi') baseUrl = farmEviRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -8458,6 +8491,307 @@
 					}
 				})
 			}
+			if (eviLatestButton) {
+				eviLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest EVI...</div>'
+					}
+					latestEviState = reduceLatestState(latestEviState, { type: 'request' })
+					renderLatestCard(latestEviState, () => {}, 'Latest EVI')
+					const payload = await runNdviRequest('latest EVI', farmEviLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestEviState = reduceLatestState(latestEviState, {
+							type: 'failure',
+							message: 'Unable to load latest EVI.',
+						})
+						renderLatestCard(latestEviState, () => {}, 'Latest EVI')
+						return
+					}
+					latestEviState = reduceLatestState(latestEviState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestEviState, () => {}, 'Latest EVI')
+				})
+			}
+			if (eviTimeseriesButton) {
+				eviTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesEviState = reduceTimeseriesState(
+						timeseriesEviState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesEviState, () => {}, 'EVI timeseries')
+					renderNdviCalendar(timeseriesEviState)
+					const payload = await runNdviRequest('evi_timeseries', farmEviTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('evi_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesEviState = reduceTimeseriesState(
+							timeseriesEviState,
+							{ type: 'failure', message: 'Unable to load EVI timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesEviState, () => {}, 'EVI timeseries')
+						renderNdviCalendar(timeseriesEviState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesEviState = reduceTimeseriesState(
+						timeseriesEviState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesEviState, () => {}, 'EVI timeseries')
+					renderNdviCalendar(timeseriesEviState)
+					if (timeseriesEviState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesEviState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (eviRasterButton) {
+				eviRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmEviRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('evi_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmEviRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load EVI raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'EVI raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('EVI raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'EVI')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load EVI raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (eviQueueButton) {
+				eviQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('evi_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue EVI raster', farmEviRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('evi_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('evi_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued EVI raster job #${jobId}`
+							: 'Queued EVI raster job'
+						const card = renderResultCard({
+							title: 'EVI raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue EVI raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (eviRefreshButton) {
+				eviRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh EVI', farmEviRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('evi_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued EVI refresh job #${jobId}`
+							: 'Queued EVI refresh job'
+						const card = renderResultCard({
+							title: 'EVI refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh EVI.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (eviStateButton) {
+				eviStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading EVI farm state...</div>'
+					}
+					const url = farmEviFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('evi farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load EVI farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanEvi = data?.mean_evi ?? null
+						const maxEvi = data?.max_evi ?? null
+						const minEvi = data?.min_evi ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'success',
+							moderate: 'success',
+							low: 'warning',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean EVI', meanEvi !== null ? formatNumber(meanEvi, 3) : '-')
+						pushFact(facts, 'Max EVI', maxEvi !== null ? formatNumber(maxEvi, 3) : '-')
+						pushFact(facts, 'Min EVI', minEvi !== null ? formatNumber(minEvi, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'EVI Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `EVI farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] EVI farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load EVI farm state.</div>'
+						}
+					}
+				})
+			}
 
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
@@ -8535,6 +8869,9 @@
 			}
 			if (ironOxideGeotiffButton) {
 				ironOxideGeotiffButton.addEventListener('click', () => downloadGeotiff(farmIronOxideGeotiffUrl, 'IRON_OXIDE'))
+			}
+			if (eviGeotiffButton) {
+				eviGeotiffButton.addEventListener('click', () => downloadGeotiff(farmEviGeotiffUrl, 'EVI'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {

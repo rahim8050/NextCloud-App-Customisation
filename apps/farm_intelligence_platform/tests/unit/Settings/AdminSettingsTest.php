@@ -46,25 +46,31 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/raster.png', $response->getParams()['farmNdwiRasterUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/raster/queue', $response->getParams()['farmNdwiRasterQueueUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/refresh', $response->getParams()['farmNdwiRefreshUrl']);
-		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/farm-state', $response->getParams()['farmNdwiFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/state', $response->getParams()['farmNdwiFarmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/latest', $response->getParams()['farmNdmiLatestUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/timeseries', $response->getParams()['farmNdmiTimeseriesUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster.png', $response->getParams()['farmNdmiRasterUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster/queue', $response->getParams()['farmNdmiRasterQueueUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/refresh', $response->getParams()['farmNdmiRefreshUrl']);
-		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/farm-state', $response->getParams()['farmNdmiFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/state', $response->getParams()['farmNdmiFarmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/latest', $response->getParams()['farmRviLatestUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/timeseries', $response->getParams()['farmRviTimeseriesUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster.png', $response->getParams()['farmRviRasterUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster/queue', $response->getParams()['farmRviRasterQueueUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/refresh', $response->getParams()['farmRviRefreshUrl']);
-		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/farm-state', $response->getParams()['farmRviFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/state', $response->getParams()['farmRviFarmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/latest', $response->getParams()['farmS1SmiLatestUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/timeseries', $response->getParams()['farmS1SmiTimeseriesUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster.png', $response->getParams()['farmS1SmiRasterUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster/queue', $response->getParams()['farmS1SmiRasterQueueUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/refresh', $response->getParams()['farmS1SmiRefreshUrl']);
-		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/farm-state', $response->getParams()['farmS1SmiFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/state', $response->getParams()['farmS1SmiFarmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/latest', $response->getParams()['farmEviLatestUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/timeseries', $response->getParams()['farmEviTimeseriesUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/raster.png', $response->getParams()['farmEviRasterUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/raster/queue', $response->getParams()['farmEviRasterQueueUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/refresh', $response->getParams()['farmEviRefreshUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/state', $response->getParams()['farmEviFarmStateUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/current', $response->getParams()['farmWeatherCurrentUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
@@ -115,7 +121,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(74))
+		$urlGenerator->expects($this->exactly(107))
 			->method('linkToRoute')
 			->withConsecutive(
 				['farm_intelligence_platform.settings.saveAdmin'],
@@ -132,44 +138,77 @@ final class AdminSettingsTest extends TestCase {
 				['farm_intelligence_platform.adminFarms.updateFarm', ['id' => '__ID__']],
 				['farm_intelligence_platform.adminFarms.patchFarm', ['id' => '__ID__']],
 				['farm_intelligence_platform.adminFarms.deleteFarm', ['id' => '__ID__']],
-				['farm_intelligence_platform.adminFarms.syncFarm', []],
+				['farm_intelligence_platform.adminFarms.syncFarm'],
 				['farm_intelligence_platform.adminFarms.getNdviLatest', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdviTimeseries', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdviRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getNdviGeotiff', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.queueNdviRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshNdvi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdwiLatest', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdwiTimeseries', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdwiRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getNdwiGeotiff', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.queueNdwiRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshNdwi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdwiFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdmiLatest', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdmiTimeseries', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdmiRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getNdmiGeotiff', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.queueNdmiRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshNdmi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getNdmiFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getRviLatest', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getRviTimeseries', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getRviRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getRviGeotiff', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.queueRviRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshRvi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getRviFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getS1SmiLatest', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getS1SmiTimeseries', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getS1SmiRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS1SmiGeotiff', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.queueS1SmiRaster', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.refreshS1Smi', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getS1SmiFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS3LstLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS3LstTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS3LstRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS3LstGeotiff', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueS3LstRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshS3Lst', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getS3LstFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getLandsatLstLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getLandsatLstTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getLandsatLstRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getLandsatLstGeotiff', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueLandsatLstRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshLandsatLst', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getLandsatLstFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getIronOxideLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getIronOxideTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getIronOxideRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getIronOxideGeotiff', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueIronOxideRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshIronOxide', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getIronOxideFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getEviLatest', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getEviTimeseries', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getEviRasterPng', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getEviGeotiff', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.queueEviRaster', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.refreshEvi', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getEviFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherCurrent', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getFarmState', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.listFarmObservations', ['farmId' => '__FARM_ID__']],
-				['farm_intelligence_platform.adminFarms.getFarmObservation', ['farmId' => '__FARM_ID__', 'observationId' => '__OBSERVATION_ID__']],
+				['farm_intelligence_platform.adminFarms.getFarmObservation', ['farmId' => '__FARM_ID__', 'observationId' => '__OBSERVATION_ID__'],],
 				['farm_intelligence_platform.adminFarms.listFarmActivities', ['farmId' => '__FARM_ID__']],
-				['farm_intelligence_platform.adminFarms.getFarmActivity', ['farmId' => '__FARM_ID__', 'activityId' => '__ACTIVITY_ID__']],
+				['farm_intelligence_platform.adminFarms.getFarmActivity', ['farmId' => '__FARM_ID__', 'activityId' => '__ACTIVITY_ID__'],],
 				['farm_intelligence_platform.adminActivities.getSchema'],
 				['farm_intelligence_platform.adminActivities.listActivities'],
 				['farm_intelligence_platform.adminActivities.createActivity'],
@@ -212,32 +251,65 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/latest',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/timeseries',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/geotiff',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndvi/refresh',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/latest',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/timeseries',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/geotiff',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/refresh',
-				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndwi/state',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/latest',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/timeseries',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/geotiff',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/refresh',
-				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/ndmi/state',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/latest',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/timeseries',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/geotiff',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/refresh',
-				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/rvi/state',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/latest',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/timeseries',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/geotiff',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/raster/queue',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/refresh',
-				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/farm-state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s1_smi/state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/geotiff',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/s3_lst/state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/geotiff',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/landsat_lst/state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/geotiff',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/iron_oxide/state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/latest',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/timeseries',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/raster.png',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/geotiff',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/raster/queue',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/refresh',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/evi/state',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/current',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily',
