@@ -96,6 +96,20 @@
 		const farmEviRefreshUrl = form.dataset.farmEviRefreshUrl || ''
 		const farmEviFarmStateUrl = form.dataset.farmEviFarmStateUrl || ''
 		const farmEviGeotiffUrl = form.dataset.farmEviGeotiffUrl || ''
+		const farmLRviLatestUrl = form.dataset.farmLRviLatestUrl || ''
+		const farmLRviTimeseriesUrl = form.dataset.farmLRviTimeseriesUrl || ''
+		const farmLRviRasterUrl = form.dataset.farmLRviRasterUrl || ''
+		const farmLRviRasterQueueUrl = form.dataset.farmLRviRasterQueueUrl || ''
+		const farmLRviRefreshUrl = form.dataset.farmLRviRefreshUrl || ''
+		const farmLRviFarmStateUrl = form.dataset.farmLRviFarmStateUrl || ''
+		const farmLRviGeotiffUrl = form.dataset.farmLRviGeotiffUrl || ''
+		const farmNisarSmiLatestUrl = form.dataset.farmNisarSmiLatestUrl || ''
+		const farmNisarSmiTimeseriesUrl = form.dataset.farmNisarSmiTimeseriesUrl || ''
+		const farmNisarSmiRasterUrl = form.dataset.farmNisarSmiRasterUrl || ''
+		const farmNisarSmiRasterQueueUrl = form.dataset.farmNisarSmiRasterQueueUrl || ''
+		const farmNisarSmiRefreshUrl = form.dataset.farmNisarSmiRefreshUrl || ''
+		const farmNisarSmiFarmStateUrl = form.dataset.farmNisarSmiFarmStateUrl || ''
+		const farmNisarSmiGeotiffUrl = form.dataset.farmNisarSmiGeotiffUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -217,6 +231,20 @@
 		const eviQueueButton = document.getElementById('farm-intelligence-platform-evi-queue')
 		const eviRefreshButton = document.getElementById('farm-intelligence-platform-evi-refresh')
 		const eviStateButton = document.getElementById('farm-intelligence-platform-evi-state')
+		const lRviLatestButton = document.getElementById('farm-intelligence-platform-l-rvi-latest')
+		const lRviTimeseriesButton = document.getElementById('farm-intelligence-platform-l-rvi-timeseries')
+		const lRviRasterButton = document.getElementById('farm-intelligence-platform-l-rvi-raster')
+		const lRviQueueButton = document.getElementById('farm-intelligence-platform-l-rvi-queue')
+		const lRviRefreshButton = document.getElementById('farm-intelligence-platform-l-rvi-refresh')
+		const lRviStateButton = document.getElementById('farm-intelligence-platform-l-rvi-state')
+		const lRviGeotiffButton = document.getElementById('farm-intelligence-platform-l-rvi-geotiff')
+		const nisarSmiLatestButton = document.getElementById('farm-intelligence-platform-nisar-smi-latest')
+		const nisarSmiTimeseriesButton = document.getElementById('farm-intelligence-platform-nisar-smi-timeseries')
+		const nisarSmiRasterButton = document.getElementById('farm-intelligence-platform-nisar-smi-raster')
+		const nisarSmiQueueButton = document.getElementById('farm-intelligence-platform-nisar-smi-queue')
+		const nisarSmiRefreshButton = document.getElementById('farm-intelligence-platform-nisar-smi-refresh')
+		const nisarSmiStateButton = document.getElementById('farm-intelligence-platform-nisar-smi-state')
+		const nisarSmiGeotiffButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2372,6 +2400,10 @@
 			let timeseriesIronOxideState = null
 			let latestEviState = null
 			let timeseriesEviState = null
+			let latestLRviState = null
+			let timeseriesLRviState = null
+			let latestNisarSmiState = null
+			let timeseriesNisarSmiState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2461,6 +2493,10 @@
 				if (ironOxideRefreshButton) ironOxideRefreshButton.disabled = !enabled
 				if (eviLatestButton) eviLatestButton.disabled = !enabled
 				if (eviRefreshButton) eviRefreshButton.disabled = !enabled
+				if (lRviLatestButton) lRviLatestButton.disabled = !enabled
+				if (lRviRefreshButton) lRviRefreshButton.disabled = !enabled
+				if (nisarSmiLatestButton) nisarSmiLatestButton.disabled = !enabled
+				if (nisarSmiRefreshButton) nisarSmiRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2489,9 +2525,12 @@
 					if (ironOxideTimeseriesButton) ironOxideTimeseriesButton.disabled = true
 					if (ironOxideQueueButton) ironOxideQueueButton.disabled = true
 					if (ironOxideRasterButton) ironOxideRasterButton.disabled = true
-					if (eviTimeseriesButton) eviTimeseriesButton.disabled = true
-					if (eviQueueButton) eviQueueButton.disabled = true
-					if (eviRasterButton) eviRasterButton.disabled = true
+					if (lRviTimeseriesButton) lRviTimeseriesButton.disabled = true
+					if (lRviQueueButton) lRviQueueButton.disabled = true
+					if (lRviRasterButton) lRviRasterButton.disabled = true
+					if (nisarSmiTimeseriesButton) nisarSmiTimeseriesButton.disabled = true
+					if (nisarSmiQueueButton) nisarSmiQueueButton.disabled = true
+					if (nisarSmiRasterButton) nisarSmiRasterButton.disabled = true
 				}
 			}
 
@@ -3547,6 +3586,24 @@
 				if (eviRasterButton) {
 					eviRasterButton.disabled = !rasterValidation.ok
 				}
+				if (lRviTimeseriesButton) {
+					lRviTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (lRviQueueButton) {
+					lRviQueueButton.disabled = !rasterValidation.ok
+				}
+				if (lRviRasterButton) {
+					lRviRasterButton.disabled = !rasterValidation.ok
+				}
+				if (nisarSmiTimeseriesButton) {
+					nisarSmiTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (nisarSmiQueueButton) {
+					nisarSmiQueueButton.disabled = !rasterValidation.ok
+				}
+				if (nisarSmiRasterButton) {
+					nisarSmiRasterButton.disabled = !rasterValidation.ok
+				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
 				const showRasterError = (ndviTouched.raster || state.raster.raw)
@@ -3582,6 +3639,10 @@
 				timeseriesIronOxideState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestEviState = reduceLatestState(null, { type: 'reset' })
 				timeseriesEviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestLRviState = reduceLatestState(null, { type: 'reset' })
+				timeseriesLRviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestNisarSmiState = reduceLatestState(null, { type: 'reset' })
+				timeseriesNisarSmiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -6673,6 +6734,8 @@
 				else if (indexLower === 'landsat_lst') baseUrl = farmLandsatLstRasterUrl
 				else if (indexLower === 'iron_oxide') baseUrl = farmIronOxideRasterUrl
 				else if (indexLower === 'evi') baseUrl = farmEviRasterUrl
+				else if (indexLower === 'l_rvi') baseUrl = farmLRviRasterUrl
+				else if (indexLower === 'nisar_smi') baseUrl = farmNisarSmiRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -8793,6 +8856,610 @@
 				})
 			}
 
+			if (lRviLatestButton) {
+				lRviLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest L_RVI...</div>'
+					}
+					latestLRviState = reduceLatestState(latestLRviState, { type: 'request' })
+					renderLatestCard(latestLRviState, () => {}, 'Latest L_RVI')
+					const payload = await runNdviRequest('latest L_RVI', farmLRviLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestLRviState = reduceLatestState(latestLRviState, {
+							type: 'failure',
+							message: 'Unable to load latest L_RVI.',
+						})
+						renderLatestCard(latestLRviState, () => {}, 'Latest L_RVI')
+						return
+					}
+					latestLRviState = reduceLatestState(latestLRviState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestLRviState, () => {}, 'Latest L_RVI')
+				})
+			}
+			if (lRviTimeseriesButton) {
+				lRviTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesLRviState = reduceTimeseriesState(
+						timeseriesLRviState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesLRviState, () => {}, 'L_RVI timeseries')
+					renderNdviCalendar(timeseriesLRviState)
+					const payload = await runNdviRequest('l_rvi_timeseries', farmLRviTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('l_rvi_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesLRviState = reduceTimeseriesState(
+							timeseriesLRviState,
+							{ type: 'failure', message: 'Unable to load L_RVI timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesLRviState, () => {}, 'L_RVI timeseries')
+						renderNdviCalendar(timeseriesLRviState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesLRviState = reduceTimeseriesState(
+						timeseriesLRviState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesLRviState, () => {}, 'L_RVI timeseries')
+					renderNdviCalendar(timeseriesLRviState)
+					if (timeseriesLRviState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesLRviState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (lRviRasterButton) {
+				lRviRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmLRviRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('l_rvi_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmLRviRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load L_RVI raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'L_RVI raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('L_RVI raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'L_RVI')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load L_RVI raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (lRviQueueButton) {
+				lRviQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('l_rvi_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue L_RVI raster', farmLRviRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('l_rvi_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('l_rvi_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued L_RVI raster job #${jobId}`
+							: 'Queued L_RVI raster job'
+						const card = renderResultCard({
+							title: 'L_RVI raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue L_RVI raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (lRviRefreshButton) {
+				lRviRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh L_RVI', farmLRviRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('l_rvi_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued L_RVI refresh job #${jobId}`
+							: 'Queued L_RVI refresh job'
+						const card = renderResultCard({
+							title: 'L_RVI refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh L_RVI.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (lRviStateButton) {
+				lRviStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading L_RVI farm state...</div>'
+					}
+					const url = farmLRviFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('l_rvi farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load L_RVI farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanLRvi = data?.mean_l_rvi ?? null
+						const maxLRvi = data?.max_l_rvi ?? null
+						const minLRvi = data?.min_l_rvi ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'success',
+							moderate: 'success',
+							low: 'warning',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean L_RVI', meanLRvi !== null ? formatNumber(meanLRvi, 3) : '-')
+						pushFact(facts, 'Max L_RVI', maxLRvi !== null ? formatNumber(maxLRvi, 3) : '-')
+						pushFact(facts, 'Min L_RVI', minLRvi !== null ? formatNumber(minLRvi, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'L_RVI Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `L_RVI farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] L_RVI farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load L_RVI farm state.</div>'
+						}
+					}
+				})
+			}
+
+			if (nisarSmiLatestButton) {
+				nisarSmiLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest NISAR_SMI...</div>'
+					}
+					latestNisarSmiState = reduceLatestState(latestNisarSmiState, { type: 'request' })
+					renderLatestCard(latestNisarSmiState, () => {}, 'Latest NISAR_SMI')
+					const payload = await runNdviRequest('latest NISAR_SMI', farmNisarSmiLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestNisarSmiState = reduceLatestState(latestNisarSmiState, {
+							type: 'failure',
+							message: 'Unable to load latest NISAR_SMI.',
+						})
+						renderLatestCard(latestNisarSmiState, () => {}, 'Latest NISAR_SMI')
+						return
+					}
+					latestNisarSmiState = reduceLatestState(latestNisarSmiState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestNisarSmiState, () => {}, 'Latest NISAR_SMI')
+				})
+			}
+			if (nisarSmiTimeseriesButton) {
+				nisarSmiTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesNisarSmiState = reduceTimeseriesState(
+						timeseriesNisarSmiState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNisarSmiState, () => {}, 'NISAR_SMI timeseries')
+					renderNdviCalendar(timeseriesNisarSmiState)
+					const payload = await runNdviRequest('nisar_smi_timeseries', farmNisarSmiTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('nisar_smi_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesNisarSmiState = reduceTimeseriesState(
+							timeseriesNisarSmiState,
+							{ type: 'failure', message: 'Unable to load NISAR_SMI timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesNisarSmiState, () => {}, 'NISAR_SMI timeseries')
+						renderNdviCalendar(timeseriesNisarSmiState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesNisarSmiState = reduceTimeseriesState(
+						timeseriesNisarSmiState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNisarSmiState, () => {}, 'NISAR_SMI timeseries')
+					renderNdviCalendar(timeseriesNisarSmiState)
+					if (timeseriesNisarSmiState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesNisarSmiState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (nisarSmiRasterButton) {
+				nisarSmiRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmNisarSmiRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('nisar_smi_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmNisarSmiRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load NISAR_SMI raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'NISAR_SMI raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('NISAR_SMI raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NISAR_SMI')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load NISAR_SMI raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarSmiQueueButton) {
+				nisarSmiQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('nisar_smi_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue NISAR_SMI raster', farmNisarSmiRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('nisar_smi_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('nisar_smi_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NISAR_SMI raster job #${jobId}`
+							: 'Queued NISAR_SMI raster job'
+						const card = renderResultCard({
+							title: 'NISAR_SMI raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue NISAR_SMI raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarSmiRefreshButton) {
+				nisarSmiRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh NISAR_SMI', farmNisarSmiRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('nisar_smi_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NISAR_SMI refresh job #${jobId}`
+							: 'Queued NISAR_SMI refresh job'
+						const card = renderResultCard({
+							title: 'NISAR_SMI refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh NISAR_SMI.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarSmiStateButton) {
+				nisarSmiStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading NISAR_SMI farm state...</div>'
+					}
+					const url = farmNisarSmiFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('nisar_smi farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load NISAR_SMI farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanNisarSmi = data?.mean_nisar_smi ?? null
+						const maxNisarSmi = data?.max_nisar_smi ?? null
+						const minNisarSmi = data?.min_nisar_smi ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'success',
+							moderate: 'success',
+							low: 'warning',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean NISAR_SMI', meanNisarSmi !== null ? formatNumber(meanNisarSmi, 3) : '-')
+						pushFact(facts, 'Max NISAR_SMI', maxNisarSmi !== null ? formatNumber(maxNisarSmi, 3) : '-')
+						pushFact(facts, 'Min NISAR_SMI', minNisarSmi !== null ? formatNumber(minNisarSmi, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'NISAR_SMI Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `NISAR_SMI farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] NISAR_SMI farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load NISAR_SMI farm state.</div>'
+						}
+					}
+				})
+			}
+
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
 				clearNdviError()
@@ -8872,6 +9539,12 @@
 			}
 			if (eviGeotiffButton) {
 				eviGeotiffButton.addEventListener('click', () => downloadGeotiff(farmEviGeotiffUrl, 'EVI'))
+			}
+			if (lRviGeotiffButton) {
+				lRviGeotiffButton.addEventListener('click', () => downloadGeotiff(farmLRviGeotiffUrl, 'L_RVI'))
+			}
+			if (nisarSmiGeotiffButton) {
+				nisarSmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNisarSmiGeotiffUrl, 'NISAR_SMI'))
 			}
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {

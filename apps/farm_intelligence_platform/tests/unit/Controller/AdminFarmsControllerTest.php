@@ -1372,6 +1372,502 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 	}
 
+	public function testLRviLatestStripsFarmIdFromQuery(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'farmId' => '42',
+			'date' => '2024-06-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getLRviLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/42/l_rvi/latest/', ['date' => '2024-06-01'], null, 'request-id')
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testLRviLatestRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviLatest('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testLRviLatestMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testLRviTimeseriesRequiresStartEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getLRviTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviTimeseries('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetLRviRasterPngRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getLRviRasterPng',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestBinary');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviRasterPng('55');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetLRviRasterPngReturnsBinary(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'date' => '2024-06-01',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestBinary')
+			->with('GET', '/api/v1/farms/55/l_rvi/raster.png', ['date' => '2024-06-01'], 'request-id')
+			->willReturn([
+				'body' => 'png-bytes',
+				'contentType' => 'image/png',
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviRasterPng('55');
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+		$this->assertSame('png-bytes', $response->getData());
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testQueueLRviRasterRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.queueLRviRaster',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueLRviRaster('55');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testRefreshLRviCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/farms/42/l_rvi/refresh/', [], null, 'request-id')
+			->willReturn(['payload' => ['data' => ['job_id' => 7]], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->refreshLRvi('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(7, $data['data']['data']['job_id']);
+	}
+
+	public function testGetLRviFarmStateReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/l_rvi/farm-state/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['success' => 0, 'data' => ['mean_evi' => 0.42, 'state' => 'healthy']],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(0.42, $data['data']['data']['mean_evi']);
+		$this->assertSame('healthy', $data['data']['data']['state']);
+	}
+
+	public function testGetLRviFarmStateMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getLRviFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testNisarSmiLatestStripsFarmIdFromQuery(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'farmId' => '42',
+			'date' => '2024-06-01',
+			'_route' => 'farm_intelligence_platform.adminFarms.getNisarSmiLatest',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/42/nisar_smi/latest/', ['date' => '2024-06-01'], null, 'request-id')
+			->willReturn(['payload' => ['data' => []], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+	}
+
+	public function testNisarSmiLatestRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiLatest('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testNisarSmiLatestMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiLatest('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
+	public function testNisarSmiTimeseriesRequiresStartEnd(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getNisarSmiTimeseries',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiTimeseries('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetNisarSmiRasterPngRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.getNisarSmiRasterPng',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestBinary');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiRasterPng('55');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetNisarSmiRasterPngReturnsBinary(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'date' => '2024-06-01',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestBinary')
+			->with('GET', '/api/v1/farms/55/nisar_smi/raster.png', ['date' => '2024-06-01'], 'request-id')
+			->willReturn([
+				'body' => 'png-bytes',
+				'contentType' => 'image/png',
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiRasterPng('55');
+
+		$this->assertInstanceOf(DataDisplayResponse::class, $response);
+		$this->assertSame('png-bytes', $response->getData());
+		$headers = $this->getResponseHeaders($response);
+		$this->assertSame('image/png', $headers['Content-Type'] ?? '');
+	}
+
+	public function testQueueNisarSmiRasterRequiresDate(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([
+			'_route' => 'farm_intelligence_platform.adminFarms.queueNisarSmiRaster',
+		]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->queueNisarSmiRaster('55');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testRefreshNisarSmiCallsBackend(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('POST', '/api/v1/farms/42/nisar_smi/refresh/', [], null, 'request-id')
+			->willReturn(['payload' => ['data' => ['job_id' => 7]], 'statusCode' => 200]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->refreshNisarSmi('42');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(7, $data['data']['data']['job_id']);
+	}
+
+	public function testGetNisarSmiFarmStateReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/nisar_smi/farm-state/', [], null, 'request-id')
+			->willReturn([
+				'payload' => ['success' => 0, 'data' => ['mean_evi' => 0.42, 'state' => 'healthy']],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame(0.42, $data['data']['data']['mean_evi']);
+		$this->assertSame('healthy', $data['data']['data']['state']);
+	}
+
+	public function testGetNisarSmiFarmStateMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getNisarSmiFarmState('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
 	public function testNdwiLatestLogsQueryKeysWithoutFarmId(): void {
 		$schema = $this->createSchema();
 
@@ -1929,6 +2425,174 @@ final class AdminFarmsControllerTest extends TestCase {
 				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
 					'get' => [
 						'operationId' => 'v1_farms_evi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_l_rvi_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_l_rvi_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_l_rvi_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_l_rvi_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_l_rvi_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_l_rvi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_nisar_smi_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_nisar_smi_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_nisar_smi_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_nisar_smi_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_nisar_smi_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_nisar_smi_farm_state_retrieve',
 					],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [

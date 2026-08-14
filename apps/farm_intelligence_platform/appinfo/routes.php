@@ -462,6 +462,100 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/evi/geotiff',
 			'verb' => 'GET',
 		],
+		// L_RVI endpoints
+		[
+			'name' => 'adminFarms#getLRviLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueLRviRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshLRvi',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getLRviFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/geotiff',
+			'verb' => 'GET',
+		],
+
+		// NISAR_SMI endpoints
+		[
+			'name' => 'adminFarms#getNisarSmiLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueNisarSmiRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshNisarSmi',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarSmiGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/geotiff',
+			'verb' => 'GET',
+		],
+
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',

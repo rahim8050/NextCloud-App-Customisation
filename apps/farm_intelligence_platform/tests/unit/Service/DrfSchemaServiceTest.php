@@ -59,6 +59,15 @@ final class DrfSchemaServiceTest extends TestCase {
 		$farmState = $service->getFarmOperation('evi_farm_state', 'request-id');
 		$this->assertSame('/api/v1/farms/{farm_id}/evi/farm-state/', $farmState['path']);
 		$this->assertSame('GET', $farmState['method']);
+
+		$latest = $service->getFarmOperation('l_rvi_latest', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/l_rvi/latest/', $latest['path']);
+		$farmState = $service->getFarmOperation('l_rvi_farm_state', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/l_rvi/farm-state/', $farmState['path']);
+		$latest = $service->getFarmOperation('nisar_smi_latest', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/nisar_smi/latest/', $latest['path']);
+		$farmState = $service->getFarmOperation('nisar_smi_farm_state', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/nisar_smi/farm-state/', $farmState['path']);
 	}
 
 	public function testGetFarmSchemaSummaryFallsBackToCreateRequestBody(): void {
@@ -349,6 +358,42 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_evi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_nisar_smi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_nisar_smi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_l_rvi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_l_rvi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
@@ -642,6 +687,42 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/evi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_evi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_nisar_smi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_nisar_smi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/nisar_smi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_nisar_smi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/latest/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_l_rvi_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_l_rvi_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
