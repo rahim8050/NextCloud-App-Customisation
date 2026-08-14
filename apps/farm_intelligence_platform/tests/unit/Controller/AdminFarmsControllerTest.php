@@ -1690,6 +1690,85 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 	}
 
+	public function testGetFarmDecisionReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/decision/', [], null, 'request-id')
+			->willReturn([
+				'payload' => [
+					'success' => 0,
+					'data' => [
+						'action' => 'irrigate',
+						'urgency' => 'medium',
+						'message' => 'irrigate within 1 days',
+						'days_until_critical' => 1,
+					],
+				],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmDecision('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('irrigate', $data['data']['data']['action']);
+		$this->assertSame('medium', $data['data']['data']['urgency']);
+	}
+
+	public function testGetFarmDecisionRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmDecision('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetFarmDecisionMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmDecision('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
 	public function testNisarSmiTimeseriesRequiresStartEnd(): void {
 		$schema = $this->createSchema();
 
@@ -2593,6 +2672,18 @@ final class AdminFarmsControllerTest extends TestCase {
 				'/api/v1/farms/{farm_id}/nisar_smi/farm-state/' => [
 					'get' => [
 						'operationId' => 'v1_farms_nisar_smi_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/decision/' => [
+					'get' => [
+						'operationId' => 'v1_farms_decision_retrieve',
+						'parameters' => [
+							[
+								'name' => 'external_farm_id',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
 					],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [

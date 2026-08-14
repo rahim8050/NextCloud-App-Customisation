@@ -89,6 +89,7 @@ final class AdminSettingsTest extends TestCase {
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly', $response->getParams()['farmWeatherHourlyUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily', $response->getParams()['farmWeatherDailyUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/state', $response->getParams()['farmStateUrl']);
+		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/decision', $response->getParams()['farmDecisionUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations', $response->getParams()['farmObservationsUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__', $response->getParams()['farmObservationUrl']);
 		$this->assertSame('/apps/farm_intelligence_platform/api/v1/admin/radio/emergency', $response->getParams()['radioEmergencyCreateUrl']);
@@ -135,7 +136,7 @@ final class AdminSettingsTest extends TestCase {
 
 		$l10n = $this->createMock(IL10N::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->expects($this->exactly(121))
+		$urlGenerator->expects($this->exactly(122))
 			->method('linkToRoute')
 			->withConsecutive(
 				['farm_intelligence_platform.settings.saveAdmin'],
@@ -233,6 +234,7 @@ final class AdminSettingsTest extends TestCase {
 				['farm_intelligence_platform.adminFarms.getWeatherHourly', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getWeatherDaily', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getFarmState', ['farmId' => '__FARM_ID__']],
+				['farm_intelligence_platform.adminFarms.getFarmDecision', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.listFarmObservations', ['farmId' => '__FARM_ID__']],
 				['farm_intelligence_platform.adminFarms.getFarmObservation', ['farmId' => '__FARM_ID__', 'observationId' => '__OBSERVATION_ID__'],],
 				['farm_intelligence_platform.adminFarms.listFarmActivities', ['farmId' => '__FARM_ID__']],
@@ -356,6 +358,7 @@ final class AdminSettingsTest extends TestCase {
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/hourly',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/weather/daily',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/state',
+				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/decision',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/observations/__OBSERVATION_ID__',
 				'/apps/farm_intelligence_platform/api/v1/admin/farms/__FARM_ID__/activities',

@@ -68,6 +68,9 @@ final class DrfSchemaServiceTest extends TestCase {
 		$this->assertSame('/api/v1/farms/{farm_id}/nisar_smi/latest/', $latest['path']);
 		$farmState = $service->getFarmOperation('nisar_smi_farm_state', 'request-id');
 		$this->assertSame('/api/v1/farms/{farm_id}/nisar_smi/farm-state/', $farmState['path']);
+		$decision = $service->getFarmOperation('farm_decision', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/decision/', $decision['path']);
+		$this->assertSame('GET', $decision['method']);
 	}
 
 	public function testGetFarmSchemaSummaryFallsBackToCreateRequestBody(): void {
@@ -394,6 +397,9 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/decision/' => [
+					'get' => ['operationId' => 'v1_farms_decision_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
@@ -723,6 +729,9 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/decision/' => [
+					'get' => ['operationId' => 'v1_farms_decision_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],

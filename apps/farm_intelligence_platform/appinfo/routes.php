@@ -556,6 +556,13 @@ return [
 			'verb' => 'GET',
 		],
 
+		// Decision engine endpoints
+		[
+			'name' => 'adminFarms#getFarmDecision',
+			'url' => '/api/v1/admin/farms/{farmId}/decision',
+			'verb' => 'GET',
+		],
+
 		[
 			'name' => 'adminFarms#getNdviRasterTile',
 			'url' => '/api/v1/admin/farms/{farmId}/ndvi/tiles',

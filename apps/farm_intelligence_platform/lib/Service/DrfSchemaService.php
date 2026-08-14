@@ -97,6 +97,7 @@ class DrfSchemaService {
 		'nisar_smi_raster_queue' => 'v1_farms_nisar_smi_raster_queue_create',
 		'nisar_smi_refresh' => 'v1_farms_nisar_smi_refresh_create',
 		'nisar_smi_farm_state' => 'v1_farms_nisar_smi_farm_state_retrieve',
+		'farm_decision' => 'v1_farms_decision_retrieve',
 		'weather_current' => 'v1_farms_weather_current_retrieve',
 		'weather_hourly' => 'v1_farms_weather_hourly_retrieve',
 		'weather_daily' => 'v1_farms_weather_daily_retrieve',
