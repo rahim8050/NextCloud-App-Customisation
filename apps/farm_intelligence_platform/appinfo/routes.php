@@ -556,6 +556,70 @@ return [
 			'verb' => 'GET',
 		],
 
+		// NDRE endpoints
+		[
+			'name' => 'adminFarms#getNdreLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdreTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdreRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueNdreRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshNdre',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNdreFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/state',
+			'verb' => 'GET',
+		],
+
+		// Biomass endpoints
+		[
+			'name' => 'adminFarms#getBiomassLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueBiomassRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshBiomass',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getBiomassFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/state',
+			'verb' => 'GET',
+		],
+
 		// Decision engine endpoints
 		[
 			'name' => 'adminFarms#getFarmDecision',

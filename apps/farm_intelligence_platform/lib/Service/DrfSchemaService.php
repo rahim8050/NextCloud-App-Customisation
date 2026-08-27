@@ -97,6 +97,21 @@ class DrfSchemaService {
 		'nisar_smi_raster_queue' => 'v1_farms_nisar_smi_raster_queue_create',
 		'nisar_smi_refresh' => 'v1_farms_nisar_smi_refresh_create',
 		'nisar_smi_farm_state' => 'v1_farms_nisar_smi_farm_state_retrieve',
+
+		'ndre_latest' => 'v1_farms_ndre_latest_retrieve',
+		'ndre_timeseries' => 'v1_farms_ndre_timeseries_retrieve',
+		'ndre_raster' => 'v1_farms_ndre_raster.png_retrieve',
+		'ndre_raster_queue' => 'v1_farms_ndre_raster_queue_create',
+		'ndre_refresh' => 'v1_farms_ndre_refresh_create',
+		'ndre_farm_state' => 'v1_farms_ndre_farm_state_retrieve',
+
+		'biomass_latest' => 'v1_farms_biomass_latest_retrieve',
+		'biomass_timeseries' => 'v1_farms_biomass_timeseries_retrieve',
+		'biomass_raster' => 'v1_farms_biomass_raster.png_retrieve',
+		'biomass_raster_queue' => 'v1_farms_biomass_raster_queue_create',
+		'biomass_refresh' => 'v1_farms_biomass_refresh_create',
+		'biomass_farm_state' => 'v1_farms_biomass_farm_state_retrieve',
+
 		'farm_decision' => 'v1_farms_decision_retrieve',
 		'weather_current' => 'v1_farms_weather_current_retrieve',
 		'weather_hourly' => 'v1_farms_weather_hourly_retrieve',
