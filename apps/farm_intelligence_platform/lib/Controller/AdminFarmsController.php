@@ -5674,4 +5674,791 @@ final class AdminFarmsController extends Controller {
 			default => Http::STATUS_BAD_REQUEST,
 		};
 	}
+
+	// In-Situ proxy methods
+
+	#[AdminRequired]
+	public function getInsituValidation(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu validation', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_validation', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu validation', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu validation', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu validation', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu validation');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu validation');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu validation loaded.');
+	}
+
+	#[AdminRequired]
+	public function listInsituMoistureSamples(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu moisture samples', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_moisture_samples_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu moisture samples', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu moisture samples', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu moisture samples', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu moisture samples');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu moisture samples');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu moisture samples loaded.');
+	}
+
+	#[AdminRequired]
+	public function createInsituMoistureSample(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu moisture sample create', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_moisture_samples_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu moisture sample create', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu moisture sample create', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu moisture sample create', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu moisture sample create');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu moisture sample create');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu moisture sample created.');
+	}
+
+	#[AdminRequired]
+	public function getInsituMoistureSample(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu moisture sample get', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_moisture_samples_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu moisture sample get', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu moisture sample get', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu moisture sample get', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu moisture sample get');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu moisture sample get');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu moisture sample loaded.');
+	}
+
+	#[AdminRequired]
+	public function updateInsituMoistureSample(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu moisture sample update', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_moisture_samples_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu moisture sample update', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu moisture sample update', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu moisture sample update', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu moisture sample update');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu moisture sample update');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu moisture sample updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteInsituMoistureSample(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu moisture sample delete', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_moisture_samples_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu moisture sample delete', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu moisture sample delete', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu moisture sample delete', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu moisture sample delete');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu moisture sample delete');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu moisture sample deleted.');
+	}
+
+	#[AdminRequired]
+	public function listInsituHarvests(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu harvests', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_harvests_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu harvests', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu harvests', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu harvests', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu harvests');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu harvests');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu harvests loaded.');
+	}
+
+	#[AdminRequired]
+	public function createInsituHarvest(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu harvest create', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_harvests_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu harvest create', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu harvest create', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu harvest create', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu harvest create');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu harvest create');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu harvest created.');
+	}
+
+	#[AdminRequired]
+	public function getInsituHarvest(string $farmId, string $recordId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu harvest get', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_harvests_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'record_id' => $recordId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu harvest get', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu harvest get', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu harvest get', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu harvest get');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu harvest get');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu harvest loaded.');
+	}
+
+	#[AdminRequired]
+	public function updateInsituHarvest(string $farmId, string $recordId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu harvest update', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_harvests_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'record_id' => $recordId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu harvest update', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu harvest update', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu harvest update', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu harvest update');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu harvest update');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu harvest updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteInsituHarvest(string $farmId, string $recordId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu harvest delete', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_harvests_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'record_id' => $recordId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu harvest delete', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu harvest delete', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu harvest delete', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu harvest delete');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu harvest delete');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu harvest deleted.');
+	}
+
+	#[AdminRequired]
+	public function listInsituBiomassObs(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu biomass obs', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_biomass_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu biomass obs', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu biomass obs', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu biomass obs', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu biomass obs');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu biomass obs');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu biomass observations loaded.');
+	}
+
+	#[AdminRequired]
+	public function createInsituBiomassObs(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu biomass obs create', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_biomass_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu biomass obs create', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu biomass obs create', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu biomass obs create', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu biomass obs create');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu biomass obs create');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu biomass observation created.');
+	}
+
+	#[AdminRequired]
+	public function getInsituBiomassObs(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu biomass obs get', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_biomass_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'observation_id' => $observationId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu biomass obs get', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu biomass obs get', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu biomass obs get', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu biomass obs get');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu biomass obs get');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu biomass observation loaded.');
+	}
+
+	#[AdminRequired]
+	public function updateInsituBiomassObs(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu biomass obs update', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_biomass_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'observation_id' => $observationId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu biomass obs update', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu biomass obs update', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu biomass obs update', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu biomass obs update');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu biomass obs update');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu biomass observation updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteInsituBiomassObs(string $farmId, string $observationId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu biomass obs delete', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_biomass_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'observation_id' => $observationId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu biomass obs delete', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu biomass obs delete', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu biomass obs delete', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu biomass obs delete');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu biomass obs delete');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu biomass observation deleted.');
+	}
+
+	#[AdminRequired]
+	public function listInsituTreeSurveys(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu tree surveys', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_tree_surveys_list', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu tree surveys', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu tree surveys', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu tree surveys', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu tree surveys');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu tree surveys');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu tree surveys loaded.');
+	}
+
+	#[AdminRequired]
+	public function createInsituTreeSurvey(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu tree survey create', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_tree_surveys_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu tree survey create', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu tree survey create', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu tree survey create', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu tree survey create');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu tree survey create');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu tree survey created.');
+	}
+
+	#[AdminRequired]
+	public function getInsituTreeSurvey(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu tree survey get', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_tree_surveys_retrieve', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu tree survey get', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu tree survey get', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu tree survey get', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu tree survey get');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu tree survey get');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu tree survey loaded.');
+	}
+
+	#[AdminRequired]
+	public function updateInsituTreeSurvey(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu tree survey update', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_tree_surveys_update', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$body = $this->request->getParams();
+			$this->logProxyRequest('insitu tree survey update', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'PATCH'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu tree survey update', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu tree survey update', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu tree survey update');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu tree survey update');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu tree survey updated.');
+	}
+
+	#[AdminRequired]
+	public function deleteInsituTreeSurvey(string $farmId, string $sampleId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu tree survey delete', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_tree_surveys_delete', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId, 'sample_id' => $sampleId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu tree survey delete', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'DELETE'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu tree survey delete', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu tree survey delete', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu tree survey delete');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu tree survey delete');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu tree survey deleted.');
+	}
 }

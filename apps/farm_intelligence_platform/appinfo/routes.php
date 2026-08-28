@@ -987,6 +987,113 @@ return [
 			'verb' => 'GET',
 		],
 
+		// In-Situ endpoints
+		[
+			'name' => 'adminFarms#getInsituValidation',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/validation',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#listInsituMoistureSamples',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/moisture-samples',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#createInsituMoistureSample',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/moisture-samples',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getInsituMoistureSample',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/moisture-samples/{sampleId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#updateInsituMoistureSample',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/moisture-samples/{sampleId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminFarms#deleteInsituMoistureSample',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/moisture-samples/{sampleId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminFarms#listInsituHarvests',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/harvests',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#createInsituHarvest',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/harvests',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getInsituHarvest',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/harvests/{recordId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#updateInsituHarvest',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/harvests/{recordId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminFarms#deleteInsituHarvest',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/harvests/{recordId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminFarms#listInsituBiomassObs',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/biomass',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#createInsituBiomassObs',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/biomass',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getInsituBiomassObs',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/biomass/{observationId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#updateInsituBiomassObs',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/biomass/{observationId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminFarms#deleteInsituBiomassObs',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/biomass/{observationId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminFarms#listInsituTreeSurveys',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/tree-surveys',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#createInsituTreeSurvey',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/tree-surveys',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getInsituTreeSurvey',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/tree-surveys/{sampleId}',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#updateInsituTreeSurvey',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/tree-surveys/{sampleId}',
+			'verb' => 'PATCH',
+		],
+		[
+			'name' => 'adminFarms#deleteInsituTreeSurvey',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/tree-surveys/{sampleId}',
+			'verb' => 'DELETE',
+		],
+
 	],
 	'ocs' => [
 		[
