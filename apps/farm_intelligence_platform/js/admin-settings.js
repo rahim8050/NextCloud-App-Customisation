@@ -2577,8 +2577,10 @@
 				if (nisarSmiRefreshButton) nisarSmiRefreshButton.disabled = !enabled
 				if (ndreLatestButton) ndreLatestButton.disabled = !enabled
 				if (ndreRefreshButton) ndreRefreshButton.disabled = !enabled
+				if (ndreStateButton) ndreStateButton.disabled = !enabled
 				if (biomassLatestButton) biomassLatestButton.disabled = !enabled
 				if (biomassRefreshButton) biomassRefreshButton.disabled = !enabled
+				if (biomassStateButton) biomassStateButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
