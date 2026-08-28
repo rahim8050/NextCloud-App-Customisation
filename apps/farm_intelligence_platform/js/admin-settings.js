@@ -117,6 +117,39 @@
 		const farmNisarSmiRefreshUrl = form.dataset.farmNisarSmiRefreshUrl || ''
 		const farmNisarSmiFarmStateUrl = form.dataset.farmNisarSmiFarmStateUrl || ''
 		const farmNisarSmiGeotiffUrl = form.dataset.farmNisarSmiGeotiffUrl || ''
+		const farmNdreLatestUrl = form.dataset.farmNdreLatestUrl || ''
+		const farmNdreTimeseriesUrl = form.dataset.farmNdreTimeseriesUrl || ''
+		const farmNdreRasterUrl = form.dataset.farmNdreRasterUrl || ''
+		const farmNdreRasterQueueUrl = form.dataset.farmNdreRasterQueueUrl || ''
+		const farmNdreRefreshUrl = form.dataset.farmNdreRefreshUrl || ''
+		const farmNdreFarmStateUrl = form.dataset.farmNdreFarmStateUrl || ''
+		const farmBiomassLatestUrl = form.dataset.farmBiomassLatestUrl || ''
+		const farmBiomassTimeseriesUrl = form.dataset.farmBiomassTimeseriesUrl || ''
+		const farmBiomassRasterUrl = form.dataset.farmBiomassRasterUrl || ''
+		const farmBiomassRasterQueueUrl = form.dataset.farmBiomassRasterQueueUrl || ''
+		const farmBiomassRefreshUrl = form.dataset.farmBiomassRefreshUrl || ''
+		const farmBiomassFarmStateUrl = form.dataset.farmBiomassFarmStateUrl || ''
+		const farmInsituValidationUrl = form.dataset.farmInsituValidationUrl || ''
+		const farmInsituMoistureSamplesUrl = form.dataset.farmInsituMoistureSamplesUrl || ''
+		const farmInsituMoistureSampleCreateUrl = form.dataset.farmInsituMoistureSampleCreateUrl || ''
+		const farmInsituMoistureSampleUrl = form.dataset.farmInsituMoistureSampleUrl || ''
+		const farmInsituMoistureSampleUpdateUrl = form.dataset.farmInsituMoistureSampleUpdateUrl || ''
+		const farmInsituMoistureSampleDeleteUrl = form.dataset.farmInsituMoistureSampleDeleteUrl || ''
+		const farmInsituHarvestsUrl = form.dataset.farmInsituHarvestsUrl || ''
+		const farmInsituHarvestCreateUrl = form.dataset.farmInsituHarvestCreateUrl || ''
+		const farmInsituHarvestUrl = form.dataset.farmInsituHarvestUrl || ''
+		const farmInsituHarvestUpdateUrl = form.dataset.farmInsituHarvestUpdateUrl || ''
+		const farmInsituHarvestDeleteUrl = form.dataset.farmInsituHarvestDeleteUrl || ''
+		const farmInsituBiomassObsUrl = form.dataset.farmInsituBiomassObsUrl || ''
+		const farmInsituBiomassObsCreateUrl = form.dataset.farmInsituBiomassObsCreateUrl || ''
+		const farmInsituBiomassObsGetUrl = form.dataset.farmInsituBiomassObsGetUrl || ''
+		const farmInsituBiomassObsUpdateUrl = form.dataset.farmInsituBiomassObsUpdateUrl || ''
+		const farmInsituBiomassObsDeleteUrl = form.dataset.farmInsituBiomassObsDeleteUrl || ''
+		const farmInsituTreeSurveysUrl = form.dataset.farmInsituTreeSurveysUrl || ''
+		const farmInsituTreeSurveyCreateUrl = form.dataset.farmInsituTreeSurveyCreateUrl || ''
+		const farmInsituTreeSurveyUrl = form.dataset.farmInsituTreeSurveyUrl || ''
+		const farmInsituTreeSurveyUpdateUrl = form.dataset.farmInsituTreeSurveyUpdateUrl || ''
+		const farmInsituTreeSurveyDeleteUrl = form.dataset.farmInsituTreeSurveyDeleteUrl || ''
 		const farmWeatherCurrentUrl = form.dataset.farmWeatherCurrentUrl || ''
 		const farmWeatherHourlyUrl = form.dataset.farmWeatherHourlyUrl || ''
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
@@ -256,6 +289,18 @@
 		const nisarSmiRefreshButton = document.getElementById('farm-intelligence-platform-nisar-smi-refresh')
 		const nisarSmiStateButton = document.getElementById('farm-intelligence-platform-nisar-smi-state')
 		const nisarSmiGeotiffButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff')
+		const ndreLatestButton = document.getElementById('farm-intelligence-platform-ndre-latest')
+		const ndreTimeseriesButton = document.getElementById('farm-intelligence-platform-ndre-timeseries')
+		const ndreRasterButton = document.getElementById('farm-intelligence-platform-ndre-raster')
+		const ndreQueueButton = document.getElementById('farm-intelligence-platform-ndre-queue')
+		const ndreRefreshButton = document.getElementById('farm-intelligence-platform-ndre-refresh')
+		const ndreStateButton = document.getElementById('farm-intelligence-platform-ndre-state')
+		const biomassLatestButton = document.getElementById('farm-intelligence-platform-biomass-latest')
+		const biomassTimeseriesButton = document.getElementById('farm-intelligence-platform-biomass-timeseries')
+		const biomassRasterButton = document.getElementById('farm-intelligence-platform-biomass-raster')
+		const biomassQueueButton = document.getElementById('farm-intelligence-platform-biomass-queue')
+		const biomassRefreshButton = document.getElementById('farm-intelligence-platform-biomass-refresh')
+		const biomassStateButton = document.getElementById('farm-intelligence-platform-biomass-state')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -2433,6 +2478,10 @@
 			let timeseriesLRviState = null
 			let latestNisarSmiState = null
 			let timeseriesNisarSmiState = null
+			let latestNdreState = null
+			let timeseriesNdreState = null
+			let latestBiomassState = null
+			let timeseriesBiomassState = null
 			let weatherCache = { current: null, hourly: null, daily: null }
 			let schemaReady = false
 			let schemaLoadPromise = null
@@ -2526,6 +2575,10 @@
 				if (lRviRefreshButton) lRviRefreshButton.disabled = !enabled
 				if (nisarSmiLatestButton) nisarSmiLatestButton.disabled = !enabled
 				if (nisarSmiRefreshButton) nisarSmiRefreshButton.disabled = !enabled
+				if (ndreLatestButton) ndreLatestButton.disabled = !enabled
+				if (ndreRefreshButton) ndreRefreshButton.disabled = !enabled
+				if (biomassLatestButton) biomassLatestButton.disabled = !enabled
+				if (biomassRefreshButton) biomassRefreshButton.disabled = !enabled
 				if (weatherCurrentTab) weatherCurrentTab.disabled = !enabled
 				if (weatherHourlyTab) weatherHourlyTab.disabled = !enabled
 				if (weatherDailyTab) weatherDailyTab.disabled = !enabled
@@ -2560,6 +2613,14 @@
 					if (nisarSmiTimeseriesButton) nisarSmiTimeseriesButton.disabled = true
 					if (nisarSmiQueueButton) nisarSmiQueueButton.disabled = true
 					if (nisarSmiRasterButton) nisarSmiRasterButton.disabled = true
+					if (ndreTimeseriesButton) ndreTimeseriesButton.disabled = true
+					if (ndreQueueButton) ndreQueueButton.disabled = true
+					if (ndreRasterButton) ndreRasterButton.disabled = true
+					if (ndreStateButton) ndreStateButton.disabled = true
+					if (biomassTimeseriesButton) biomassTimeseriesButton.disabled = true
+					if (biomassQueueButton) biomassQueueButton.disabled = true
+					if (biomassRasterButton) biomassRasterButton.disabled = true
+					if (biomassStateButton) biomassStateButton.disabled = true
 				}
 			}
 
@@ -3633,6 +3694,24 @@
 				if (nisarSmiRasterButton) {
 					nisarSmiRasterButton.disabled = !rasterValidation.ok
 				}
+				if (ndreTimeseriesButton) {
+					ndreTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (ndreQueueButton) {
+					ndreQueueButton.disabled = !rasterValidation.ok
+				}
+				if (ndreRasterButton) {
+					ndreRasterButton.disabled = !rasterValidation.ok
+				}
+				if (biomassTimeseriesButton) {
+					biomassTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (biomassQueueButton) {
+					biomassQueueButton.disabled = !rasterValidation.ok
+				}
+				if (biomassRasterButton) {
+					biomassRasterButton.disabled = !rasterValidation.ok
+				}
 
 				const showTimeseriesError = (ndviTouched.start || ndviTouched.end || state.start.raw || state.end.raw)
 				const showRasterError = (ndviTouched.raster || state.raster.raw)
@@ -3672,6 +3751,10 @@
 				timeseriesLRviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestNisarSmiState = reduceLatestState(null, { type: 'reset' })
 				timeseriesNisarSmiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestNdreState = reduceLatestState(null, { type: 'reset' })
+				timeseriesNdreState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestBiomassState = reduceLatestState(null, { type: 'reset' })
+				timeseriesBiomassState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				updateNdviActionState()
 			}
 
@@ -9650,6 +9733,923 @@
 			if (nisarSmiGeotiffButton) {
 				nisarSmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNisarSmiGeotiffUrl, 'NISAR_SMI'))
 			}
+
+			if (ndreLatestButton) {
+				ndreLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest NDRE...</div>'
+					}
+					latestNdreState = reduceLatestState(latestNdreState, { type: 'request' })
+					renderLatestCard(latestNdreState, () => {}, 'Latest NDRE')
+					const payload = await runNdviRequest('latest NDRE', farmNdreLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestNdreState = reduceLatestState(latestNdreState, {
+							type: 'failure',
+							message: 'Unable to load latest NDRE.',
+						})
+						renderLatestCard(latestNdreState, () => {}, 'Latest NDRE')
+						return
+					}
+					latestNdreState = reduceLatestState(latestNdreState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestNdreState, () => {}, 'Latest NDRE')
+				})
+			}
+			if (ndreTimeseriesButton) {
+				ndreTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesNdreState = reduceTimeseriesState(
+						timeseriesNdreState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNdreState, () => {}, 'NDRE timeseries')
+					renderNdviCalendar(timeseriesNdreState)
+					const payload = await runNdviRequest('ndre_timeseries', farmNdreTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('ndre_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesNdreState = reduceTimeseriesState(
+							timeseriesNdreState,
+							{ type: 'failure', message: 'Unable to load NDRE timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesNdreState, () => {}, 'NDRE timeseries')
+						renderNdviCalendar(timeseriesNdreState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesNdreState = reduceTimeseriesState(
+						timeseriesNdreState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNdreState, () => {}, 'NDRE timeseries')
+					renderNdviCalendar(timeseriesNdreState)
+					if (timeseriesNdreState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesNdreState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (ndreRasterButton) {
+				ndreRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmNdreRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('ndre_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmNdreRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load NDRE raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'NDRE raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('NDRE raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NDRE')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load NDRE raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ndreQueueButton) {
+				ndreQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('ndre_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue NDRE raster', farmNdreRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('ndre_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('ndre_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NDRE raster job #${jobId}`
+							: 'Queued NDRE raster job'
+						const card = renderResultCard({
+							title: 'NDRE raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue NDRE raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ndreRefreshButton) {
+				ndreRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh NDRE', farmNdreRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('ndre_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NDRE refresh job #${jobId}`
+							: 'Queued NDRE refresh job'
+						const card = renderResultCard({
+							title: 'NDRE refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh NDRE.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (ndreStateButton) {
+				ndreStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading NDRE farm state...</div>'
+					}
+					const url = farmNdreFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('ndre farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load NDRE farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const stateVal = data?.state ?? 'unknown'
+						const meanNdre = data?.mean_ndre ?? null
+						const maxNdre = data?.max_ndre ?? null
+						const minNdre = data?.min_ndre ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'success',
+							moderate: 'success',
+							low: 'warning',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[stateVal] ?? stateVal)
+						pushFact(facts, 'Mean NDRE', meanNdre !== null ? formatNumber(meanNdre, 3) : '-')
+						pushFact(facts, 'Max NDRE', maxNdre !== null ? formatNumber(maxNdre, 3) : '-')
+						pushFact(facts, 'Min NDRE', minNdre !== null ? formatNumber(minNdre, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'NDRE Farm State',
+							level: stateLevel[stateVal] ?? 'info',
+							badges: [
+								stateLabels[stateVal] ?? stateVal,
+							],
+							summary: interpretation || `NDRE farm state: ${stateLabels[stateVal] ?? stateVal}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] NDRE farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load NDRE farm state.</div>'
+						}
+					}
+				})
+			}
+
+			if (biomassLatestButton) {
+				biomassLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest Biomass...</div>'
+					}
+					latestBiomassState = reduceLatestState(latestBiomassState, { type: 'request' })
+					renderLatestCard(latestBiomassState, () => {}, 'Latest Biomass')
+					const payload = await runNdviRequest('latest Biomass', farmBiomassLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestBiomassState = reduceLatestState(latestBiomassState, {
+							type: 'failure',
+							message: 'Unable to load latest Biomass.',
+						})
+						renderLatestCard(latestBiomassState, () => {}, 'Latest Biomass')
+						return
+					}
+					latestBiomassState = reduceLatestState(latestBiomassState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestBiomassState, () => {}, 'Latest Biomass')
+				})
+			}
+			if (biomassTimeseriesButton) {
+				biomassTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesBiomassState = reduceTimeseriesState(
+						timeseriesBiomassState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesBiomassState, () => {}, 'Biomass timeseries')
+					renderNdviCalendar(timeseriesBiomassState)
+					const payload = await runNdviRequest('biomass_timeseries', farmBiomassTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('biomass_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesBiomassState = reduceTimeseriesState(
+							timeseriesBiomassState,
+							{ type: 'failure', message: 'Unable to load Biomass timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesBiomassState, () => {}, 'Biomass timeseries')
+						renderNdviCalendar(timeseriesBiomassState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesBiomassState = reduceTimeseriesState(
+						timeseriesBiomassState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesBiomassState, () => {}, 'Biomass timeseries')
+					renderNdviCalendar(timeseriesBiomassState)
+					if (timeseriesBiomassState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesBiomassState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (biomassRasterButton) {
+				biomassRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmBiomassRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('biomass_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmBiomassRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load Biomass raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'Biomass raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('Biomass raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'Biomass')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load Biomass raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (biomassQueueButton) {
+				biomassQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('biomass_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue Biomass raster', farmBiomassRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('biomass_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('biomass_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued Biomass raster job #${jobId}`
+							: 'Queued Biomass raster job'
+						const card = renderResultCard({
+							title: 'Biomass raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue Biomass raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (biomassRefreshButton) {
+				biomassRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh Biomass', farmBiomassRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('biomass_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued Biomass refresh job #${jobId}`
+							: 'Queued Biomass refresh job'
+						const card = renderResultCard({
+							title: 'Biomass refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh Biomass.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (biomassStateButton) {
+				biomassStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading Biomass farm state...</div>'
+					}
+					const url = farmBiomassFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('biomass farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load Biomass farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const stateVal = data?.state ?? 'unknown'
+						const meanBiomass = data?.mean_biomass ?? null
+						const maxBiomass = data?.max_biomass ?? null
+						const minBiomass = data?.min_biomass ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							high: 'High',
+							moderate: 'Moderate',
+							low: 'Low',
+							declining: 'Declining',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							high: 'success',
+							moderate: 'success',
+							low: 'warning',
+							declining: 'warning',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[stateVal] ?? stateVal)
+						pushFact(facts, 'Mean Biomass', meanBiomass !== null ? formatNumber(meanBiomass, 3) : '-')
+						pushFact(facts, 'Max Biomass', maxBiomass !== null ? formatNumber(maxBiomass, 3) : '-')
+						pushFact(facts, 'Min Biomass', minBiomass !== null ? formatNumber(minBiomass, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'Biomass Farm State',
+							level: stateLevel[stateVal] ?? 'info',
+							badges: [
+								stateLabels[stateVal] ?? stateVal,
+							],
+							summary: interpretation || `Biomass farm state: ${stateLabels[stateVal] ?? stateVal}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] Biomass farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load Biomass farm state.</div>'
+						}
+					}
+				})
+			}
+
+			// In-Situ Event Handlers
+			const insituValidationButton = document.getElementById('farm-intelligence-platform-insitu-validation')
+			const insituMoistureListButton = document.getElementById('farm-intelligence-platform-insitu-moisture-list')
+			const insituMoistureCreateButton = document.getElementById('farm-intelligence-platform-insitu-moisture-create')
+			const insituHarvestListButton = document.getElementById('farm-intelligence-platform-insitu-harvest-list')
+			const insituHarvestCreateButton = document.getElementById('farm-intelligence-platform-insitu-harvest-create')
+			const insituBiomassListButton = document.getElementById('farm-intelligence-platform-insitu-biomass-list')
+			const insituBiomassCreateButton = document.getElementById('farm-intelligence-platform-insitu-biomass-create')
+			const insituTreeListButton = document.getElementById('farm-intelligence-platform-insitu-tree-list')
+			const insituTreeCreateButton = document.getElementById('farm-intelligence-platform-insitu-tree-create')
+			const insituOutput = document.getElementById('farm-intelligence-platform-insitu-output')
+			const insituError = document.getElementById('farm-intelligence-platform-insitu-error')
+
+			const clearInsituError = () => {
+				if (insituError) {
+					insituError.textContent = ''
+					insituError.hidden = true
+				}
+			}
+
+			const showInsituError = (message) => {
+				if (insituError) {
+					insituError.textContent = message
+					insituError.hidden = false
+				}
+			}
+
+			const renderInsituCard = (title, data, level = 'info') => {
+				const card = document.createElement('div')
+				card.className = `farm-intelligence-platform-farms__note ${level}`
+				card.innerHTML = `<strong>${title}</strong><pre style="max-height:400px;overflow:auto;font-size:12px;">${JSON.stringify(data, null, 2)}</pre>`
+				return card
+			}
+
+			if (insituValidationButton) {
+				insituValidationButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading validation report...</div>'
+					}
+					const url = form.dataset.farmInsituValidationUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, { headers: { Accept: 'application/json' } })
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Validation Report', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load validation report.')
+					}
+				})
+			}
+
+			if (insituMoistureListButton) {
+				insituMoistureListButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading soil moisture samples...</div>'
+					}
+					const url = form.dataset.farmInsituMoistureSamplesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, { headers: { Accept: 'application/json' } })
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Soil Moisture Samples', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load samples.')
+					}
+				})
+			}
+
+			if (insituMoistureCreateButton) {
+				insituMoistureCreateButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					const collectedAt = prompt('Collected at (YYYY-MM-DDTHH:MM:SS):')
+					if (!collectedAt) return
+					const depthCm = prompt('Depth (cm):')
+					if (!depthCm) return
+					const method = prompt('Method (gravimetric/volumetric_probe/tdr/other):')
+					if (!method) return
+					const moistureFrac = prompt('Moisture fraction (0-1):')
+					if (!moistureFrac) return
+					const notes = prompt('Notes (optional):') || ''
+					const url = form.dataset.farmInsituMoistureSampleCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+							body: JSON.stringify({
+								collected_at: collectedAt,
+								depth_cm: parseFloat(depthCm),
+								method,
+								moisture_frac: parseFloat(moistureFrac),
+								notes,
+							}),
+						})
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Sample Created', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to create sample.')
+					}
+				})
+			}
+
+			if (insituHarvestListButton) {
+				insituHarvestListButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading harvest records...</div>'
+					}
+					const url = form.dataset.farmInsituHarvestsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, { headers: { Accept: 'application/json' } })
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Harvest Records', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load harvests.')
+					}
+				})
+			}
+
+			if (insituHarvestCreateButton) {
+				insituHarvestCreateButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					const cropType = prompt('Crop type:')
+					if (!cropType) return
+					const harvestedAt = prompt('Harvested at (YYYY-MM-DD):')
+					if (!harvestedAt) return
+					const areaHa = prompt('Area (ha):')
+					if (!areaHa) return
+					const yieldTonnes = prompt('Yield (tonnes):')
+					if (!yieldTonnes) return
+					const notes = prompt('Notes (optional):') || ''
+					const url = form.dataset.farmInsituHarvestCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+							body: JSON.stringify({
+								crop_type: cropType,
+								harvested_at: harvestedAt,
+								area_ha: parseFloat(areaHa),
+								yield_tonnes: parseFloat(yieldTonnes),
+								notes,
+							}),
+						})
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Harvest Created', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to create harvest.')
+					}
+				})
+			}
+
+			if (insituBiomassListButton) {
+				insituBiomassListButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading biomass observations...</div>'
+					}
+					const url = form.dataset.farmInsituBiomassObsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, { headers: { Accept: 'application/json' } })
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Biomass Observations', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load observations.')
+					}
+				})
+			}
+
+			if (insituBiomassCreateButton) {
+				insituBiomassCreateButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					const observedAt = prompt('Observed at (YYYY-MM-DDTHH:MM:SS):')
+					if (!observedAt) return
+					const plantHeightCm = prompt('Plant height (cm):')
+					if (!plantHeightCm) return
+					const standCountPerHa = prompt('Stand count per ha:')
+					if (!standCountPerHa) return
+					const growthStage = prompt('Growth stage:')
+					if (!growthStage) return
+					const notes = prompt('Notes (optional):') || ''
+					const url = form.dataset.farmInsituBiomassObsCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+							body: JSON.stringify({
+								observed_at: observedAt,
+								plant_height_cm: parseFloat(plantHeightCm),
+								stand_count_per_ha: parseFloat(standCountPerHa),
+								growth_stage: growthStage,
+								notes,
+							}),
+						})
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Observation Created', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to create observation.')
+					}
+				})
+			}
+
+			if (insituTreeListButton) {
+				insituTreeListButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading tree surveys...</div>'
+					}
+					const url = form.dataset.farmInsituTreeSurveysUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const response = await fetch(url, { headers: { Accept: 'application/json' } })
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Tree Surveys', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load surveys.')
+					}
+				})
+			}
+
+			if (insituTreeCreateButton) {
+				insituTreeCreateButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					const observedAt = prompt('Observed at (YYYY-MM-DDTHH:MM:SS):')
+					if (!observedAt) return
+					const dbhCm = prompt('DBH (cm) or leave blank:')
+					const crownDiameterM = prompt('Crown diameter (m) or leave blank:')
+					if (!dbhCm && !crownDiameterM) {
+						showInsituError('At least one of DBH or crown diameter is required.')
+						return
+					}
+					const species = prompt('Species (optional):') || ''
+					const notes = prompt('Notes (optional):') || ''
+					const url = form.dataset.farmInsituTreeSurveyCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const body = { observed_at: observedAt, species, notes }
+					if (dbhCm) body.dbh_cm = parseFloat(dbhCm)
+					if (crownDiameterM) body.crown_diameter_m = parseFloat(crownDiameterM)
+					try {
+						const response = await fetch(url, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+							body: JSON.stringify(body),
+						})
+						const data = await response.json()
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Survey Created', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to create survey.')
+					}
+				})
+			}
+
 			if (weatherCurrentTab) {
 				weatherCurrentTab.addEventListener('click', () => {
 					loadWeatherTab('current')
