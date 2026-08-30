@@ -9672,7 +9672,7 @@
 						method: 'GET',
 						credentials: 'same-origin',
 						headers: {
-							Accept: 'image/tiff',
+							Accept: 'application/zip',
 							'OCS-APIRequest': 'true',
 							'X-Requested-With': 'XMLHttpRequest',
 						},
@@ -9691,7 +9691,7 @@
 					}
 					const link = document.createElement('a')
 					link.href = URL.createObjectURL(blob)
-					const filename = `${label.toLowerCase()}_${selectedFarm.id}_${validation.date}.tif`
+					const filename = `${label.toLowerCase()}_${selectedFarm.id}_${validation.date}.zip`
 					link.download = filename
 					document.body.appendChild(link)
 					link.click()

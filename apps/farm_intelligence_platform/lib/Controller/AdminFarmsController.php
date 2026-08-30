@@ -5442,7 +5442,10 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, $index . ' geotiff');
 		}
 
-		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/tiff']);
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, [
+			'Content-Type' => $binary['contentType'],
+			'Content-Disposition' => 'attachment; filename="' . $index . '_' . $farmId . '.zip"',
+		]);
 		$response->addHeader('Cache-Control', 'no-store');
 		return $response;
 	}
