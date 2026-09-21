@@ -4121,17 +4121,28 @@
 			}))
 
 			const formatNdviNumber = typeof ndviUi.formatNumber === 'function'
-				? ndviUi.formatNumber
-				: (value, digits = 3) => {
-					if (value === null || value === undefined || value === '') {
-						return '-'
-					}
-					const num = Number(value)
-					if (!Number.isFinite(num)) {
-						return '-'
-					}
-					return num.toFixed(digits)
+			? ndviUi.formatNumber
+			: (value, digits = 3) => {
+				if (value === null || value === undefined || value === '') {
+					return '-'
 				}
+				const num = Number(value)
+				if (!Number.isFinite(num)) {
+					return '-'
+				}
+				return num.toFixed(digits)
+			}
+			const kelvinToCelsius = (k) => (k == null ? null : k - 273.15)
+			const formatLst = (value, digits = 1) => {
+				if (value === null || value === undefined) {
+					return '-'
+				}
+				const num = Number(value)
+				if (!Number.isFinite(num)) {
+					return '-'
+				}
+				return (num - 273.15).toFixed(digits) + ' \u00B0C'
+			}
 			const formatNdviPercent = typeof ndviUi.formatPercent === 'function'
 				? ndviUi.formatPercent
 				: (value, digits = 1) => {
@@ -7857,19 +7868,19 @@
 					}
 					latestS3LstState = reduceLatestState(latestS3LstState, { type: 'request' })
 					renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
-					const payload = await runNdviRequest('latest S3_LST', farmS3LstLatestUrl, {
-						method: 'GET',
-						returnRaw: true,
+				const payload = await runNdviRequest('latest S3_LST', farmS3LstLatestUrl, {
+					method: 'GET',
+					returnRaw: true,
+				})
+				if (!payload) {
+					latestS3LstState = reduceLatestState(latestS3LstState, {
+						type: 'failure',
+						message: 'Unable to load latest S3_LST.',
 					})
-					if (!payload) {
-						latestS3LstState = reduceLatestState(latestS3LstState, {
-							type: 'failure',
-							message: 'Unable to load latest S3_LST.',
-						})
-						renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
-						return
-					}
-					latestS3LstState = reduceLatestState(latestS3LstState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
+					return
+				}
+				latestS3LstState = reduceLatestState(latestS3LstState, { type: 'success', payload }, new Date())
 					renderLatestCard(latestS3LstState, () => {}, 'Latest S3_LST')
 				})
 			}
@@ -7917,16 +7928,22 @@
 						}
 						return
 					}
-					timeseriesS3LstState = reduceTimeseriesState(
-						timeseriesS3LstState,
-						{ type: 'success', payload },
-						validation.start,
-						validation.end,
-					)
-					renderTimeseriesCard(timeseriesS3LstState, () => {}, 'S3_LST timeseries')
-					renderNdviCalendar(timeseriesS3LstState)
-					if (timeseriesS3LstState.status === NDVI_SERIES_STATE.has_data) {
-						renderNdviTable(timeseriesS3LstState.vm?.points ?? [])
+				timeseriesS3LstState = reduceTimeseriesState(
+					timeseriesS3LstState,
+					{ type: 'success', payload },
+					validation.start,
+					validation.end,
+				)
+				renderTimeseriesCard(timeseriesS3LstState, () => {}, 'S3_LST timeseries')
+				renderNdviCalendar(timeseriesS3LstState)
+				if (timeseriesS3LstState.status === NDVI_SERIES_STATE.has_data) {
+					const lstPoints = (timeseriesS3LstState.vm?.points ?? []).map((p) => ({
+						...p,
+						mean: kelvinToCelsius(p.mean),
+						min: kelvinToCelsius(p.min),
+						max: kelvinToCelsius(p.max),
+					}))
+					renderNdviTable(lstPoints)
 					} else if (ndviTable) {
 						ndviTable.textContent = ''
 					}
@@ -8114,12 +8131,12 @@
 							hot: 'warning',
 							unknown: 'info',
 						}
-						const facts = []
-						pushFact(facts, 'State', stateLabels[state] ?? state)
-						pushFact(facts, 'Mean S3_LST', meanS3Lst !== null ? formatNumber(meanS3Lst, 3) : '-')
-						pushFact(facts, 'Max S3_LST', maxS3Lst !== null ? formatNumber(maxS3Lst, 3) : '-')
-						pushFact(facts, 'Min S3_LST', minS3Lst !== null ? formatNumber(minS3Lst, 3) : '-')
-						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+					const facts = []
+					pushFact(facts, 'State', stateLabels[state] ?? state)
+					pushFact(facts, 'Mean S3_LST', formatLst(meanS3Lst))
+					pushFact(facts, 'Max S3_LST', formatLst(maxS3Lst))
+					pushFact(facts, 'Min S3_LST', formatLst(minS3Lst))
+					pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
 						const card = renderResultCard({
 							title: 'S3_LST Farm State',
 							level: stateLevel[state] ?? 'info',
@@ -8156,19 +8173,19 @@
 					}
 					latestLandsatLstState = reduceLatestState(latestLandsatLstState, { type: 'request' })
 					renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
-					const payload = await runNdviRequest('latest LANDSAT_LST', farmLandsatLstLatestUrl, {
-						method: 'GET',
-						returnRaw: true,
+				const payload = await runNdviRequest('latest LANDSAT_LST', farmLandsatLstLatestUrl, {
+					method: 'GET',
+					returnRaw: true,
+				})
+				if (!payload) {
+					latestLandsatLstState = reduceLatestState(latestLandsatLstState, {
+						type: 'failure',
+						message: 'Unable to load latest LANDSAT_LST.',
 					})
-					if (!payload) {
-						latestLandsatLstState = reduceLatestState(latestLandsatLstState, {
-							type: 'failure',
-							message: 'Unable to load latest LANDSAT_LST.',
-						})
-						renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
-						return
-					}
-					latestLandsatLstState = reduceLatestState(latestLandsatLstState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
+					return
+				}
+				latestLandsatLstState = reduceLatestState(latestLandsatLstState, { type: 'success', payload }, new Date())
 					renderLatestCard(latestLandsatLstState, () => {}, 'Latest LANDSAT_LST')
 				})
 			}
@@ -8216,16 +8233,22 @@
 						}
 						return
 					}
-					timeseriesLandsatLstState = reduceTimeseriesState(
-						timeseriesLandsatLstState,
-						{ type: 'success', payload },
-						validation.start,
-						validation.end,
-					)
-					renderTimeseriesCard(timeseriesLandsatLstState, () => {}, 'LANDSAT_LST timeseries')
-					renderNdviCalendar(timeseriesLandsatLstState)
-					if (timeseriesLandsatLstState.status === NDVI_SERIES_STATE.has_data) {
-						renderNdviTable(timeseriesLandsatLstState.vm?.points ?? [])
+				timeseriesLandsatLstState = reduceTimeseriesState(
+					timeseriesLandsatLstState,
+					{ type: 'success', payload },
+					validation.start,
+					validation.end,
+				)
+				renderTimeseriesCard(timeseriesLandsatLstState, () => {}, 'LANDSAT_LST timeseries')
+				renderNdviCalendar(timeseriesLandsatLstState)
+				if (timeseriesLandsatLstState.status === NDVI_SERIES_STATE.has_data) {
+					const lstPoints = (timeseriesLandsatLstState.vm?.points ?? []).map((p) => ({
+						...p,
+						mean: kelvinToCelsius(p.mean),
+						min: kelvinToCelsius(p.min),
+						max: kelvinToCelsius(p.max),
+					}))
+					renderNdviTable(lstPoints)
 					} else if (ndviTable) {
 						ndviTable.textContent = ''
 					}
@@ -8413,12 +8436,12 @@
 							hot: 'warning',
 							unknown: 'info',
 						}
-						const facts = []
-						pushFact(facts, 'State', stateLabels[state] ?? state)
-						pushFact(facts, 'Mean LANDSAT_LST', meanLandsatLst !== null ? formatNumber(meanLandsatLst, 3) : '-')
-						pushFact(facts, 'Max LANDSAT_LST', maxLandsatLst !== null ? formatNumber(maxLandsatLst, 3) : '-')
-						pushFact(facts, 'Min LANDSAT_LST', minLandsatLst !== null ? formatNumber(minLandsatLst, 3) : '-')
-						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+					const facts = []
+					pushFact(facts, 'State', stateLabels[state] ?? state)
+					pushFact(facts, 'Mean LANDSAT_LST', formatLst(meanLandsatLst))
+					pushFact(facts, 'Max LANDSAT_LST', formatLst(maxLandsatLst))
+					pushFact(facts, 'Min LANDSAT_LST', formatLst(minLandsatLst))
+					pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
 						const card = renderResultCard({
 							title: 'LANDSAT_LST Farm State',
 							level: stateLevel[state] ?? 'info',

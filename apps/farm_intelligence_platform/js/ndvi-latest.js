@@ -487,6 +487,11 @@
 		case NDVI_LATEST_STATE.stale:
 		case NDVI_LATEST_STATE.fresh: {
 			const vm = state.vm || {}
+			const isLst = /lst/i.test(label)
+			const toC = (v) => (v == null ? null : v - 273.15)
+			const mean = isLst ? toC(vm.mean) : vm.mean
+			const min = isLst ? toC(vm.min) : vm.min
+			const max = isLst ? toC(vm.max) : vm.max
 			const badges = [state.status === NDVI_LATEST_STATE.stale ? 'Stale' : 'Fresh']
 			if (vm.cached) {
 				badges.push('Cached')
@@ -495,8 +500,8 @@
 			if (vm.date) {
 				facts.push({ label: 'Date', value: formatDateWithAge(vm.date, vm.daysAgo) })
 			}
-			facts.push({ label: 'Min', value: formatNumber(vm.min) })
-			facts.push({ label: 'Max', value: formatNumber(vm.max) })
+			facts.push({ label: 'Min', value: isLst ? `${formatNumber(min)} \u00B0C` : formatNumber(min) })
+			facts.push({ label: 'Max', value: isLst ? `${formatNumber(max)} \u00B0C` : formatNumber(max) })
 			facts.push({ label: 'Cloud %', value: formatPercent(vm.cloudFraction, 1) })
 			facts.push({ label: 'Samples', value: formatCount(vm.sampleCount) })
 			facts.push({ label: 'Engine', value: vm.engine ?? '-' })
@@ -508,7 +513,7 @@
 			return {
 				...model,
 				level: state.status === NDVI_LATEST_STATE.stale ? 'warning' : 'success',
-				summary: `Mean ${formatNumber(vm.mean)}`,
+				summary: isLst ? `${formatNumber(mean)} \u00B0C` : `Mean ${formatNumber(mean)}`,
 				badges,
 				facts,
 			}
