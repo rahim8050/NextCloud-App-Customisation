@@ -113,6 +113,7 @@ class DrfSchemaService {
 		'biomass_farm_state' => 'v1_farms_biomass_farm_state_retrieve',
 
 		'farm_decision' => 'v1_farms_decision_retrieve',
+		'crop_health_forecast' => 'v1_farms_forecast_retrieve',
 		'weather_current' => 'v1_farms_weather_current_retrieve',
 		'weather_hourly' => 'v1_farms_weather_hourly_retrieve',
 		'weather_daily' => 'v1_farms_weather_daily_retrieve',

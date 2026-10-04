@@ -398,8 +398,47 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
 				],
+				'/api/v1/farms/{farm_id}/ndre/latest/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndre_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndre_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndre_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/latest/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_biomass_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_biomass_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_biomass_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_farm_state_retrieve'],
+				],
 				'/api/v1/farms/{farm_id}/decision/' => [
 					'get' => ['operationId' => 'v1_farms_decision_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/forecast/' => [
+					'get' => ['operationId' => 'v1_farms_forecast_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],
@@ -730,8 +769,47 @@ final class DrfSchemaServiceTest extends TestCase {
 				'/api/v1/farms/{farm_id}/l_rvi/farm-state/' => [
 					'get' => ['operationId' => 'v1_farms_l_rvi_farm_state_retrieve'],
 				],
+				'/api/v1/farms/{farm_id}/ndre/latest/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_ndre_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_ndre_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_ndre_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/ndre/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_ndre_farm_state_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/latest/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_latest_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/timeseries/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_timeseries_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster.png' => [
+					'get' => ['operationId' => 'v1_farms_biomass_raster.png_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster/queue' => [
+					'post' => ['operationId' => 'v1_farms_biomass_raster_queue_create'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/refresh/' => [
+					'post' => ['operationId' => 'v1_farms_biomass_refresh_create'],
+				],
+				'/api/v1/farms/{farm_id}/biomass/farm-state/' => [
+					'get' => ['operationId' => 'v1_farms_biomass_farm_state_retrieve'],
+				],
 				'/api/v1/farms/{farm_id}/decision/' => [
 					'get' => ['operationId' => 'v1_farms_decision_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/forecast/' => [
+					'get' => ['operationId' => 'v1_farms_forecast_retrieve'],
 				],
 				'/api/v1/farms/{farm_id}/rvi/latest/' => [
 					'get' => ['operationId' => 'v1_farms_rvi_latest_retrieve'],

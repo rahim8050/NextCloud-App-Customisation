@@ -626,6 +626,12 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/decision',
 			'verb' => 'GET',
 		],
+		// Crop health forecast endpoint
+		[
+			'name' => 'adminFarms#getFarmForecast',
+			'url' => '/api/v1/admin/farms/{farmId}/forecast',
+			'verb' => 'GET',
+		],
 
 		[
 			'name' => 'adminFarms#getNdviRasterTile',

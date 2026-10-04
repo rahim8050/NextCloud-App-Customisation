@@ -1769,6 +1769,84 @@ final class AdminFarmsControllerTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 	}
 
+	public function testGetFarmForecastReturnsPayload(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->with('GET', '/api/v1/farms/9/forecast/', [], null, 'request-id')
+			->willReturn([
+				'payload' => [
+					'status' => 0,
+					'message' => 'Forecast retrieved',
+					'data' => [
+						'farm_id' => 9,
+						'model' => 'RandomForestRegressor',
+						'predictions' => [],
+					],
+				],
+				'statusCode' => 200,
+			]);
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmForecast('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('ok', $data['status']);
+		$this->assertSame('RandomForestRegressor', $data['data']['data']['model']);
+	}
+
+	public function testGetFarmForecastRejectsInvalidFarmId(): void {
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->never())->method('fetchSchema');
+		$weatherApiClient->expects($this->never())->method('requestJsonWithStatus');
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmForecast('invalid');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('invalid_argument', $data['error']['code']);
+	}
+
+	public function testGetFarmForecastMapsUpstreamFailure(): void {
+		$schema = $this->createSchema();
+
+		$request = $this->createMock(IRequest::class);
+		$this->stubRequestHeaders($request);
+		$request->method('getParams')->willReturn([]);
+
+		$weatherApiClient = $this->createMock(WeatherApiClientInterface::class);
+		$weatherApiClient->expects($this->once())
+			->method('fetchSchema')
+			->willReturn($schema);
+		$weatherApiClient->expects($this->once())
+			->method('requestJsonWithStatus')
+			->willThrowException(new WeatherApiException('backend_error', 'Boom'));
+
+		$controller = $this->createController($request, $weatherApiClient);
+		$response = $controller->getFarmForecast('9');
+		$data = $this->decodeResponse($response);
+
+		$this->assertSame('error', $data['status']);
+		$this->assertSame('backend_error', $data['error']['code']);
+		$this->assertSame(400, $response->getStatus());
+	}
+
 	public function testNisarSmiTimeseriesRequiresStartEnd(): void {
 		$schema = $this->createSchema();
 
@@ -2674,9 +2752,199 @@ final class AdminFarmsControllerTest extends TestCase {
 						'operationId' => 'v1_farms_nisar_smi_farm_state_retrieve',
 					],
 				],
+				'/api/v1/farms/{farm_id}/ndre/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndre_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+							[
+								'name' => 'external_farm_id',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndre/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndre_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndre_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndre/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndre_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndre/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_ndre_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/ndre/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_ndre_farm_state_retrieve',
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/latest/' => [
+					'get' => [
+						'operationId' => 'v1_farms_biomass_latest_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+							[
+								'name' => 'external_farm_id',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/timeseries/' => [
+					'get' => [
+						'operationId' => 'v1_farms_biomass_timeseries_retrieve',
+						'parameters' => [
+							[
+								'name' => 'start',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+							[
+								'name' => 'end',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster.png' => [
+					'get' => [
+						'operationId' => 'v1_farms_biomass_raster.png_retrieve',
+						'parameters' => [
+							[
+								'name' => 'date',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+								'required' => true,
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/raster/queue' => [
+					'post' => [
+						'operationId' => 'v1_farms_biomass_raster_queue_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'required' => ['date'],
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/refresh/' => [
+					'post' => [
+						'operationId' => 'v1_farms_biomass_refresh_create',
+						'requestBody' => [
+							'content' => [
+								'application/json' => [
+									'schema' => [
+										'type' => 'object',
+										'properties' => [
+											'date' => ['type' => 'string'],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/biomass/farm-state/' => [
+					'get' => [
+						'operationId' => 'v1_farms_biomass_farm_state_retrieve',
+					],
+				],
 				'/api/v1/farms/{farm_id}/decision/' => [
 					'get' => [
 						'operationId' => 'v1_farms_decision_retrieve',
+						'parameters' => [
+							[
+								'name' => 'external_farm_id',
+								'in' => 'query',
+								'schema' => ['type' => 'string'],
+							],
+						],
+					],
+				],
+				'/api/v1/farms/{farm_id}/forecast/' => [
+					'get' => [
+						'operationId' => 'v1_farms_forecast_retrieve',
 						'parameters' => [
 							[
 								'name' => 'external_farm_id',
