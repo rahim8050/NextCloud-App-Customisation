@@ -155,6 +155,7 @@
 		const farmWeatherDailyUrl = form.dataset.farmWeatherDailyUrl || ''
 		const farmStateUrl = form.dataset.farmStateUrl || ''
 		const farmDecisionUrl = form.dataset.farmDecisionUrl || ''
+		const farmForecastUrl = form.dataset.farmForecastUrl || ''
 		const farmObservationsUrl = form.dataset.farmObservationsUrl || ''
 		const farmObservationUrl = form.dataset.farmObservationUrl || ''
 		const farmActivitiesUrl = form.dataset.farmActivitiesUrl || ''
@@ -207,6 +208,9 @@
 		const decisionButton = document.getElementById('farm-intelligence-platform-decision')
 		const decisionOutput = document.getElementById('farm-intelligence-platform-decision-output')
 		const decisionContent = document.getElementById('farm-intelligence-platform-decision-content')
+		const forecastButton = document.getElementById('farm-intelligence-platform-forecast')
+		const forecastOutput = document.getElementById('farm-intelligence-platform-forecast-output')
+		const forecastContent = document.getElementById('farm-intelligence-platform-forecast-content')
 		const ndviStartInput = document.getElementById('farm-intelligence-platform-ndvi-start')
 		const ndviEndInput = document.getElementById('farm-intelligence-platform-ndvi-end')
 		const ndviDateInput = document.getElementById('farm-intelligence-platform-ndvi-date')
@@ -6376,6 +6380,108 @@
 						console.error('[farm_intelligence_platform] farm decision error', error)
 						if (decisionContent) {
 							decisionContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load decision.</div>'
+						}
+					}
+				})
+			}
+			if (forecastButton) {
+				forecastButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (forecastOutput) {
+						forecastOutput.hidden = false
+					}
+					if (forecastContent) {
+						forecastContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading crop health forecast...</div>'
+					}
+					const url = farmForecastUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('crop health forecast', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (forecastContent) {
+								forecastContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load forecast.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const farmName = data?.farm_name ?? selectedFarm?.name ?? '-'
+						const cropType = data?.crop_type ?? '-'
+						const targetMetric = data?.target_metric ?? 'RVI'
+						const currentValue = data?.current_value ?? null
+						const currentObsDate = data?.current_observation_date ?? '-'
+						const forecast7d = data?.forecast_7d_value ?? null
+						const forecastTargetDate = data?.forecast_target_date ?? '-'
+						const changeDelta = data?.change_delta ?? null
+						const changePct = data?.change_pct ?? null
+						const status = data?.status ?? 'unknown'
+						const modelVersion = data?.model_version ?? '1.0.0'
+						const topDrivers = data?.top_drivers ?? null
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v, d = 4) => (v !== null && v !== undefined ? Number(v).toFixed(d) : String(v))
+
+						const statusLevelMap = {
+							dense_healthy_canopy: 'success',
+							moderate_canopy: 'info',
+							sparse_canopy_or_senescence: 'warning',
+							critical_decline: 'error',
+						}
+						const level = statusLevelMap[status] ?? (changeDelta !== null && changeDelta < -0.1 ? 'warning' : 'info')
+
+						const facts = []
+						pushFact(facts, 'Farm', farmName)
+						pushFact(facts, 'Crop', cropType)
+						pushFact(facts, 'Target metric', targetMetric)
+						pushFact(facts, 'Current value', currentValue !== null ? `${formatNumber(currentValue, 4)} (${currentObsDate})` : '-')
+						pushFact(facts, '7-day forecast', forecast7d !== null ? `${formatNumber(forecast7d, 4)} (target: ${forecastTargetDate})` : '-')
+						if (changeDelta !== null) {
+							const sign = changeDelta >= 0 ? '+' : ''
+							const pctStr = changePct !== null ? ` (${sign}${formatNumber(changePct, 2)}%)` : ''
+							pushFact(facts, 'Projected change', `${sign}${formatNumber(changeDelta, 4)}${pctStr}`)
+						}
+						pushFact(facts, 'Status', status.replace(/_/g, ' '))
+						pushFact(facts, 'Model version', modelVersion)
+						if (topDrivers && typeof topDrivers === 'object') {
+							const top5 = Object.entries(topDrivers)
+								.slice(0, 5)
+								.map(([k, v]) => `${k} (${v})`)
+								.join(', ')
+							pushFact(facts, 'Top predictive drivers', top5 || '-')
+						}
+
+						const deltaBadge = changePct !== null ? `${changePct >= 0 ? '+' : ''}${formatNumber(changePct, 1)}%` : null
+						const badges = [
+							status.replace(/_/g, ' '),
+							targetMetric,
+						]
+						if (deltaBadge) {
+							badges.push(deltaBadge)
+						}
+
+						const card = renderResultCard({
+							title: 'Crop Health Forecast (7-day ML Outlook)',
+							level,
+							badges,
+							summary: `7-day forward predictive outlook for ${cropType}: ${currentValue !== null ? formatNumber(currentValue, 3) : '-'} → ${forecast7d !== null ? formatNumber(forecast7d, 3) : '-'} (${status.replace(/_/g, ' ')})`,
+							callout: `${targetMetric} 7-day outlook: ${status.replace(/_/g, ' ')} by ${forecastTargetDate}`,
+							facts,
+							debug: data,
+						})
+						if (forecastContent) {
+							forecastContent.innerHTML = ''
+							forecastContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] crop health forecast error', error)
+						if (forecastContent) {
+							forecastContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load forecast.</div>'
 						}
 					}
 				})
