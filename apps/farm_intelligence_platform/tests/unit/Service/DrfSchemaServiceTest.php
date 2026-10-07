@@ -73,6 +73,46 @@ final class DrfSchemaServiceTest extends TestCase {
 		$this->assertSame('GET', $decision['method']);
 	}
 
+	public function testGetFarmOperationResolvesInsituOperations(): void {
+		$schema = $this->createSchema();
+
+		$client = $this->createMock(WeatherApiClientInterface::class);
+		$client->expects($this->any())
+			->method('fetchSchema')
+			->with('request-id')
+			->willReturn($schema);
+
+		$service = $this->createService($client);
+
+		$validation = $service->getFarmOperation('insitu_validation', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/insitu/validation/', $validation['path']);
+		$this->assertSame('GET', $validation['method']);
+
+		$moistureList = $service->getFarmOperation('insitu_moisture_samples_list', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/insitu/moisture-samples/', $moistureList['path']);
+		$this->assertSame('GET', $moistureList['method']);
+
+		$harvestCreate = $service->getFarmOperation('insitu_harvests_create', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/insitu/harvests/', $harvestCreate['path']);
+		$this->assertSame('POST', $harvestCreate['method']);
+
+		$biomassDelete = $service->getFarmOperation('insitu_biomass_delete', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/insitu/biomass/{observation_id}/', $biomassDelete['path']);
+		$this->assertSame('DELETE', $biomassDelete['method']);
+
+		$treeUpdate = $service->getFarmOperation('insitu_tree_surveys_update', 'request-id');
+		$this->assertSame('/api/v1/farms/{farm_id}/insitu/tree-surveys/{sample_id}/', $treeUpdate['path']);
+		$this->assertSame('PATCH', $treeUpdate['method']);
+
+		// All 21 insitu keys resolve and appear in the summary.
+		$summary = $service->getFarmSchemaSummary('request-id');
+		$insituKeys = array_values(array_filter(
+			array_keys($summary['schema']['operations']),
+			static fn (string $key): bool => str_starts_with($key, 'insitu_'),
+		));
+		$this->assertCount(21, $insituKeys);
+	}
+
 	public function testGetFarmSchemaSummaryFallsBackToCreateRequestBody(): void {
 		$schema = $this->createSchemaWithCreateBody();
 		$schema['components']['schemas']['Farm'] = ['type' => 'object'];
@@ -580,6 +620,45 @@ final class DrfSchemaServiceTest extends TestCase {
 				],
 				'/api/v1/farms/{farm_id}/{index}/raster-dates' => [
 					'get' => ['operationId' => 'v1_farms_raster_dates_retrieve'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/validation/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_validation_report'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/moisture-samples/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_moisture_samples_list'],
+					'post' => ['operationId' => 'v1_farms_insitu_moisture_samples_create'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/moisture-samples/{sample_id}/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_moisture_samples_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_insitu_moisture_samples_update'],
+					'delete' => ['operationId' => 'v1_farms_insitu_moisture_samples_delete'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/harvests/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_harvests_list'],
+					'post' => ['operationId' => 'v1_farms_insitu_harvests_create'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/harvests/{record_id}/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_harvests_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_insitu_harvests_update'],
+					'delete' => ['operationId' => 'v1_farms_insitu_harvests_delete'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/biomass/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_biomass_list'],
+					'post' => ['operationId' => 'v1_farms_insitu_biomass_create'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/biomass/{observation_id}/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_biomass_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_insitu_biomass_update'],
+					'delete' => ['operationId' => 'v1_farms_insitu_biomass_delete'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/tree-surveys/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_tree_surveys_list'],
+					'post' => ['operationId' => 'v1_farms_insitu_tree_surveys_create'],
+				],
+				'/api/v1/farms/{farm_id}/insitu/tree-surveys/{sample_id}/' => [
+					'get' => ['operationId' => 'v1_farms_insitu_tree_surveys_retrieve'],
+					'patch' => ['operationId' => 'v1_farms_insitu_tree_surveys_update'],
+					'delete' => ['operationId' => 'v1_farms_insitu_tree_surveys_delete'],
 				],
 			],
 		];

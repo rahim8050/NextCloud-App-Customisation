@@ -124,6 +124,27 @@ class DrfSchemaService {
 		'raster_tiles' => 'v1_farms_tiles_.png_retrieve',
 		'raster_dates' => 'v1_farms_raster_dates_retrieve',
 		'geotiff_download' => 'v1_farms_geotiff_retrieve',
+		'insitu_validation' => 'v1_farms_insitu_validation_report',
+		'insitu_moisture_samples_list' => 'v1_farms_insitu_moisture_samples_list',
+		'insitu_moisture_samples_create' => 'v1_farms_insitu_moisture_samples_create',
+		'insitu_moisture_samples_retrieve' => 'v1_farms_insitu_moisture_samples_retrieve',
+		'insitu_moisture_samples_update' => 'v1_farms_insitu_moisture_samples_update',
+		'insitu_moisture_samples_delete' => 'v1_farms_insitu_moisture_samples_delete',
+		'insitu_harvests_list' => 'v1_farms_insitu_harvests_list',
+		'insitu_harvests_create' => 'v1_farms_insitu_harvests_create',
+		'insitu_harvests_retrieve' => 'v1_farms_insitu_harvests_retrieve',
+		'insitu_harvests_update' => 'v1_farms_insitu_harvests_update',
+		'insitu_harvests_delete' => 'v1_farms_insitu_harvests_delete',
+		'insitu_biomass_list' => 'v1_farms_insitu_biomass_list',
+		'insitu_biomass_create' => 'v1_farms_insitu_biomass_create',
+		'insitu_biomass_retrieve' => 'v1_farms_insitu_biomass_retrieve',
+		'insitu_biomass_update' => 'v1_farms_insitu_biomass_update',
+		'insitu_biomass_delete' => 'v1_farms_insitu_biomass_delete',
+		'insitu_tree_surveys_list' => 'v1_farms_insitu_tree_surveys_list',
+		'insitu_tree_surveys_create' => 'v1_farms_insitu_tree_surveys_create',
+		'insitu_tree_surveys_retrieve' => 'v1_farms_insitu_tree_surveys_retrieve',
+		'insitu_tree_surveys_update' => 'v1_farms_insitu_tree_surveys_update',
+		'insitu_tree_surveys_delete' => 'v1_farms_insitu_tree_surveys_delete',
 	];
 
 	private const ACTIVITY_OPERATION_IDS = [
@@ -290,7 +311,14 @@ class DrfSchemaService {
 		$operations = [];
 
 		foreach (self::FARM_OPERATION_IDS as $key => $operationId) {
-			$operations[$key] = $this->extractOperation($schema, $operationId);
+			try {
+				$operations[$key] = $this->extractOperation($schema, $operationId);
+			} catch (WeatherApiException) {
+				// A single operation missing from the fetched schema (e.g. a
+				// stale cache or older backend) must not break the whole
+				// farm summary; the caller gets a precise per-key error.
+				continue;
+			}
 		}
 
 		return [
