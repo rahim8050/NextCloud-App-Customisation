@@ -10503,6 +10503,24 @@
 				return card
 			}
 
+			// Nextcloud's security middleware rejects requests that omit the
+			// requesttoken header ("CSRF check failed"); always go through
+			// performJsonRequest, which attaches it.
+			const performInsituRequest = async (method, url, body = undefined) => {
+				const options = body === undefined ? {} : { body }
+				const result = await performJsonRequest(method, url, options)
+				if (!result.response?.ok) {
+					const message = result.data?.error?.message
+						|| result.data?.message
+						|| (result.text || '').trim().slice(0, 200)
+					throw new Error(message || `Request failed (${result.response?.status ?? 'error'}).`)
+				}
+				if (!result.parsed) {
+					throw new Error((result.text || '').trim().slice(0, 200) || 'Unexpected response from server.')
+				}
+				return result.data
+			}
+
 			if (insituValidationButton) {
 				insituValidationButton.addEventListener('click', async () => {
 					clearInsituError()
@@ -10515,8 +10533,7 @@
 					}
 					const url = form.dataset.farmInsituValidationUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, { headers: { Accept: 'application/json' } })
-						const data = await response.json()
+						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Validation Report', data))
@@ -10539,8 +10556,7 @@
 					}
 					const url = form.dataset.farmInsituMoistureSamplesUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, { headers: { Accept: 'application/json' } })
-						const data = await response.json()
+						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Soil Moisture Samples', data))
@@ -10558,7 +10574,7 @@
 						showInsituError('Select a farm first.')
 						return
 					}
-					const collectedAt = prompt('Collected at (YYYY-MM-DDTHH:MM:SS):')
+					const collectedAt = prompt('Collected at (YYYY-MM-DD):')
 					if (!collectedAt) return
 					const depthCm = prompt('Depth (cm):')
 					if (!depthCm) return
@@ -10569,18 +10585,13 @@
 					const notes = prompt('Notes (optional):') || ''
 					const url = form.dataset.farmInsituMoistureSampleCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-							body: JSON.stringify({
-								collected_at: collectedAt,
-								depth_cm: parseFloat(depthCm),
-								method,
-								moisture_frac: parseFloat(moistureFrac),
-								notes,
-							}),
+						const data = await performInsituRequest('POST', url, {
+							collected_at: collectedAt,
+							depth_cm: parseFloat(depthCm),
+							method,
+							moisture_frac: parseFloat(moistureFrac),
+							notes,
 						})
-						const data = await response.json()
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Sample Created', data))
@@ -10603,8 +10614,7 @@
 					}
 					const url = form.dataset.farmInsituHarvestsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, { headers: { Accept: 'application/json' } })
-						const data = await response.json()
+						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Harvest Records', data))
@@ -10633,18 +10643,13 @@
 					const notes = prompt('Notes (optional):') || ''
 					const url = form.dataset.farmInsituHarvestCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-							body: JSON.stringify({
-								crop_type: cropType,
-								harvested_at: harvestedAt,
-								area_ha: parseFloat(areaHa),
-								yield_tonnes: parseFloat(yieldTonnes),
-								notes,
-							}),
+						const data = await performInsituRequest('POST', url, {
+							crop_type: cropType,
+							harvested_at: harvestedAt,
+							area_ha: parseFloat(areaHa),
+							yield_tonnes: parseFloat(yieldTonnes),
+							notes,
 						})
-						const data = await response.json()
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Harvest Created', data))
@@ -10667,8 +10672,7 @@
 					}
 					const url = form.dataset.farmInsituBiomassObsUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, { headers: { Accept: 'application/json' } })
-						const data = await response.json()
+						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Biomass Observations', data))
@@ -10686,7 +10690,7 @@
 						showInsituError('Select a farm first.')
 						return
 					}
-					const observedAt = prompt('Observed at (YYYY-MM-DDTHH:MM:SS):')
+					const observedAt = prompt('Observed at (YYYY-MM-DD):')
 					if (!observedAt) return
 					const plantHeightCm = prompt('Plant height (cm):')
 					if (!plantHeightCm) return
@@ -10697,18 +10701,13 @@
 					const notes = prompt('Notes (optional):') || ''
 					const url = form.dataset.farmInsituBiomassObsCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-							body: JSON.stringify({
-								observed_at: observedAt,
-								plant_height_cm: parseFloat(plantHeightCm),
-								stand_count_per_ha: parseFloat(standCountPerHa),
-								growth_stage: growthStage,
-								notes,
-							}),
+						const data = await performInsituRequest('POST', url, {
+							observed_at: observedAt,
+							plant_height_cm: parseFloat(plantHeightCm),
+							stand_count_per_ha: parseFloat(standCountPerHa),
+							growth_stage: growthStage,
+							notes,
 						})
-						const data = await response.json()
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Observation Created', data))
@@ -10731,8 +10730,7 @@
 					}
 					const url = form.dataset.farmInsituTreeSurveysUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
-						const response = await fetch(url, { headers: { Accept: 'application/json' } })
-						const data = await response.json()
+						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Tree Surveys', data))
@@ -10750,7 +10748,7 @@
 						showInsituError('Select a farm first.')
 						return
 					}
-					const observedAt = prompt('Observed at (YYYY-MM-DDTHH:MM:SS):')
+					const observedAt = prompt('Observed at (YYYY-MM-DD):')
 					if (!observedAt) return
 					const dbhCm = prompt('DBH (cm) or leave blank:')
 					const crownDiameterM = prompt('Crown diameter (m) or leave blank:')
@@ -10765,12 +10763,7 @@
 					if (dbhCm) body.dbh_cm = parseFloat(dbhCm)
 					if (crownDiameterM) body.crown_diameter_m = parseFloat(crownDiameterM)
 					try {
-						const response = await fetch(url, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-							body: JSON.stringify(body),
-						})
-						const data = await response.json()
+						const data = await performInsituRequest('POST', url, body)
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
 							insituOutput.appendChild(renderInsituCard('Survey Created', data))
