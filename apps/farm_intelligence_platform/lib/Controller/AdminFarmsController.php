@@ -6508,4 +6508,92 @@ final class AdminFarmsController extends Controller {
 
 		return $this->buildSuccessResponse($payload, 'Insitu tree survey deleted.');
 	}
+
+	#[AdminRequired]
+	public function getInsituSummary(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu summary', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_summary', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('insitu summary', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'), $path, $query, null, $requestId,
+			);
+			$this->logProxyResponse('insitu summary', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu summary', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu summary');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu summary');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu summary loaded.');
+	}
+
+	#[AdminRequired]
+	public function bulkInsituSamples(string $farmId, string $type): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu bulk ' . $type, $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_bulk_create', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, [
+				'farm_id' => $farmId,
+				'sample_type' => $type,
+			]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$samples = $params['samples'] ?? null;
+			if (!is_array($samples) || $samples === []) {
+				return $this->buildErrorResponse(
+					'bad_request',
+					'Body must include a non-empty "samples" array.',
+					$requestId,
+					Http::STATUS_BAD_REQUEST,
+				);
+			}
+			$idempotencyKey = $this->resolveIdempotencyKey();
+			$headers = $idempotencyKey !== null
+				? ['Idempotency-Key' => $idempotencyKey]
+				: [];
+			$body = ['samples' => array_values($samples)];
+			$this->logProxyRequest('insitu bulk', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, [], $body, $requestId, $headers,
+			);
+			$this->logProxyResponse('insitu bulk', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu bulk', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu bulk');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu bulk');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Insitu samples created.');
+	}
 }

@@ -145,6 +145,8 @@ class DrfSchemaService {
 		'insitu_tree_surveys_retrieve' => 'v1_farms_insitu_tree_surveys_retrieve',
 		'insitu_tree_surveys_update' => 'v1_farms_insitu_tree_surveys_update',
 		'insitu_tree_surveys_delete' => 'v1_farms_insitu_tree_surveys_delete',
+		'insitu_summary' => 'v1_farms_insitu_summary',
+		'insitu_bulk_create' => 'v1_farms_insitu_bulk_create',
 	];
 
 	private const ACTIVITY_OPERATION_IDS = [

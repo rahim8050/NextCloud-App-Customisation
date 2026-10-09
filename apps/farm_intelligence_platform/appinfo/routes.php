@@ -995,6 +995,16 @@ return [
 
 		// In-Situ endpoints
 		[
+			'name' => 'adminFarms#getInsituSummary',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/summary',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#bulkInsituSamples',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/{type}/bulk',
+			'verb' => 'POST',
+		],
+		[
 			'name' => 'adminFarms#getInsituValidation',
 			'url' => '/api/v1/admin/farms/{farmId}/insitu/validation',
 			'verb' => 'GET',
