@@ -10470,7 +10470,9 @@
 			}
 
 			// In-Situ Event Handlers
+			const insituSummaryButton = document.getElementById('farm-intelligence-platform-insitu-summary')
 			const insituValidationButton = document.getElementById('farm-intelligence-platform-insitu-validation')
+			const insituBulkButton = document.getElementById('farm-intelligence-platform-insitu-bulk')
 			const insituMoistureListButton = document.getElementById('farm-intelligence-platform-insitu-moisture-list')
 			const insituMoistureCreateButton = document.getElementById('farm-intelligence-platform-insitu-moisture-create')
 			const insituHarvestListButton = document.getElementById('farm-intelligence-platform-insitu-harvest-list')
@@ -10521,6 +10523,44 @@
 				return result.data
 			}
 
+			const promptInsituMetadata = () => {
+				const extra = {}
+				const lat = prompt('Latitude (optional, -90..90):')
+				if (lat) extra.lat = parseFloat(lat)
+				const lon = prompt('Longitude (optional, -180..180):')
+				if (lon) extra.lon = parseFloat(lon)
+				const plotId = prompt('Plot ID (optional):')
+				if (plotId) extra.plot_id = plotId
+				const cropStage = prompt('Crop stage (optional):')
+				if (cropStage) extra.crop_stage = cropStage
+				const photoUrl = prompt('Photo URL (optional):')
+				if (photoUrl) extra.photo_url = photoUrl
+				return extra
+			}
+
+			if (insituSummaryButton) {
+				insituSummaryButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					if (insituOutput) {
+						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading ground truth summary...</div>'
+					}
+					const url = form.dataset.farmInsituSummaryUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const data = await performInsituRequest('GET', url)
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard('Ground Truth Summary', data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Failed to load summary.')
+					}
+				})
+			}
+
 			if (insituValidationButton) {
 				insituValidationButton.addEventListener('click', async () => {
 					clearInsituError()
@@ -10528,10 +10568,14 @@
 						showInsituError('Select a farm first.')
 						return
 					}
+					const indexType = prompt('Index type (NDVI / NDRE / EVI / NISAR_SMI / S1_SMI, blank = default):') || ''
 					if (insituOutput) {
 						insituOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading validation report...</div>'
 					}
-					const url = form.dataset.farmInsituValidationUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					let url = form.dataset.farmInsituValidationUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					if (indexType) {
+						url += `?index_type=${encodeURIComponent(indexType)}`
+					}
 					try {
 						const data = await performInsituRequest('GET', url)
 						if (insituOutput) {
@@ -10540,6 +10584,43 @@
 						}
 					} catch (error) {
 						showInsituError(error instanceof Error ? error.message : 'Failed to load validation report.')
+					}
+				})
+			}
+
+			if (insituBulkButton) {
+				insituBulkButton.addEventListener('click', async () => {
+					clearInsituError()
+					if (!selectedFarm) {
+						showInsituError('Select a farm first.')
+						return
+					}
+					const type = prompt('Sample type (moisture-samples / harvests / biomass / tree-surveys):')
+					if (!type) return
+					const raw = prompt('Paste a JSON array of samples (max 500):')
+					if (!raw) return
+					let samples
+					try {
+						samples = JSON.parse(raw)
+					} catch {
+						showInsituError('Invalid JSON.')
+						return
+					}
+					if (!Array.isArray(samples) || samples.length === 0 || samples.length > 500) {
+						showInsituError('Expected a non-empty JSON array of at most 500 samples.')
+						return
+					}
+					const url = form.dataset.farmInsituBulkUrl
+						.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+						.replace('__TYPE__', encodeURIComponent(type))
+					try {
+						const data = await performInsituRequest('POST', url, { samples })
+						if (insituOutput) {
+							insituOutput.innerHTML = ''
+							insituOutput.appendChild(renderInsituCard(`Bulk Import (${samples.length} ${type})`, data))
+						}
+					} catch (error) {
+						showInsituError(error instanceof Error ? error.message : 'Bulk import failed.')
 					}
 				})
 			}
@@ -10583,6 +10664,7 @@
 					const moistureFrac = prompt('Moisture fraction (0-1):')
 					if (!moistureFrac) return
 					const notes = prompt('Notes (optional):') || ''
+					const metadata = promptInsituMetadata()
 					const url = form.dataset.farmInsituMoistureSampleCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
 						const data = await performInsituRequest('POST', url, {
@@ -10591,6 +10673,7 @@
 							method,
 							moisture_frac: parseFloat(moistureFrac),
 							notes,
+							...metadata,
 						})
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
@@ -10641,6 +10724,7 @@
 					const yieldTonnes = prompt('Yield (tonnes):')
 					if (!yieldTonnes) return
 					const notes = prompt('Notes (optional):') || ''
+					const metadata = promptInsituMetadata()
 					const url = form.dataset.farmInsituHarvestCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
 						const data = await performInsituRequest('POST', url, {
@@ -10649,6 +10733,7 @@
 							area_ha: parseFloat(areaHa),
 							yield_tonnes: parseFloat(yieldTonnes),
 							notes,
+							...metadata,
 						})
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
@@ -10699,6 +10784,7 @@
 					const growthStage = prompt('Growth stage:')
 					if (!growthStage) return
 					const notes = prompt('Notes (optional):') || ''
+					const metadata = promptInsituMetadata()
 					const url = form.dataset.farmInsituBiomassObsCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 					try {
 						const data = await performInsituRequest('POST', url, {
@@ -10707,6 +10793,7 @@
 							stand_count_per_ha: parseFloat(standCountPerHa),
 							growth_stage: growthStage,
 							notes,
+							...metadata,
 						})
 						if (insituOutput) {
 							insituOutput.innerHTML = ''
@@ -10759,7 +10846,7 @@
 					const species = prompt('Species (optional):') || ''
 					const notes = prompt('Notes (optional):') || ''
 					const url = form.dataset.farmInsituTreeSurveyCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-					const body = { observed_at: observedAt, species, notes }
+					const body = { observed_at: observedAt, species, notes, ...promptInsituMetadata() }
 					if (dbhCm) body.dbh_cm = parseFloat(dbhCm)
 					if (crownDiameterM) body.crown_diameter_m = parseFloat(crownDiameterM)
 					try {

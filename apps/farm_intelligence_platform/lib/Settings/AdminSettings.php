@@ -155,6 +155,8 @@ final class AdminSettings implements IDelegatedSettings {
 			'farmBiomassRefreshUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.refreshBiomass', ['farmId' => '__FARM_ID__']),
 			'farmBiomassFarmStateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getBiomassFarmState', ['farmId' => '__FARM_ID__']),
 			'farmInsituValidationUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getInsituValidation', ['farmId' => '__FARM_ID__']),
+			'farmInsituSummaryUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getInsituSummary', ['farmId' => '__FARM_ID__']),
+			'farmInsituBulkUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.bulkInsituSamples', ['farmId' => '__FARM_ID__', 'type' => '__TYPE__']),
 			'farmInsituMoistureSamplesUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.listInsituMoistureSamples', ['farmId' => '__FARM_ID__']),
 			'farmInsituMoistureSampleCreateUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.createInsituMoistureSample', ['farmId' => '__FARM_ID__']),
 			'farmInsituMoistureSampleUrl' => $this->urlGenerator->linkToRoute('farm_intelligence_platform.adminFarms.getInsituMoistureSample', ['farmId' => '__FARM_ID__', 'sampleId' => '__SAMPLE_ID__']),
