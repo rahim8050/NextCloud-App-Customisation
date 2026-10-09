@@ -142,8 +142,8 @@ final class AdminSettingsTest extends TestCase {
 			if (!isset($r['name']) || !isset($r['url'])) {
 				continue;
 			}
-			$name = str_replace('#', '.', (string)$r['name']);
-			$routesMap['farm_intelligence_platform.' . $name] = (string)$r['url'];
+			$name = str_replace('#', '.', $r['name']);
+			$routesMap['farm_intelligence_platform.' . $name] = $r['url'];
 		}
 
 		$urlGenerator = $this->createMock(IURLGenerator::class);
