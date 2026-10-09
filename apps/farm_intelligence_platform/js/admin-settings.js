@@ -10731,6 +10731,26 @@
 				return card
 			}
 
+			const renderInsituRecordCard = (title, data, extraStats = []) => {
+				const record = insituUnwrap(data)
+				const stats = [...extraStats]
+				if (record && typeof record === 'object') {
+					for (const [key, value] of Object.entries(record)) {
+						if (Array.isArray(value)) {
+							if (value.length && typeof value[0] === 'object') continue
+							stats.push([key === 'ids' ? 'Record IDs' : insituHumanize(key), value.length ? value.join(', ') : '—'])
+							continue
+						}
+						if (value && typeof value === 'object') continue
+						stats.push([insituHumanize(key), value])
+					}
+				}
+				if (!stats.length) {
+					return renderInsituJsonCard(title, data)
+				}
+				return renderInsituStatCard(title, stats)
+			}
+
 			const insituMetadataFields = () => [
 				{ name: 'lat', label: 'Latitude', type: 'number', step: 'any', placeholder: '-90..90' },
 				{ name: 'lon', label: 'Longitude', type: 'number', step: 'any', placeholder: '-180..180' },
@@ -10959,7 +10979,10 @@
 								.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 								.replace('__TYPE__', encodeURIComponent(values.type))
 							const data = await performInsituRequest('POST', url, { samples })
-							insituMount(renderInsituJsonCard(`Bulk Import — ${samples.length} ${values.type}`, data))
+							insituMount(renderInsituRecordCard('Bulk Import Complete', data, [
+								['Sample type', values.type],
+								['Submitted', samples.length],
+							]))
 						},
 					})
 				})
@@ -11021,7 +11044,7 @@
 						onSubmit: async (values) => {
 							const url = form.dataset.farmInsituMoistureSampleCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 							const data = await performInsituRequest('POST', url, values)
-							insituMount(renderInsituJsonCard('Sample Created', data))
+							insituMount(renderInsituRecordCard('Sample Created', data, [['Type', 'Soil moisture']]))
 						},
 					})
 				})
@@ -11048,7 +11071,7 @@
 						onSubmit: async (values) => {
 							const url = form.dataset.farmInsituHarvestCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 							const data = await performInsituRequest('POST', url, values)
-							insituMount(renderInsituJsonCard('Harvest Created', data))
+							insituMount(renderInsituRecordCard('Harvest Created', data, [['Type', 'Harvest']]))
 						},
 					})
 				})
@@ -11075,7 +11098,7 @@
 						onSubmit: async (values) => {
 							const url = form.dataset.farmInsituBiomassObsCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 							const data = await performInsituRequest('POST', url, values)
-							insituMount(renderInsituJsonCard('Observation Created', data))
+							insituMount(renderInsituRecordCard('Observation Created', data, [['Type', 'Biomass']]))
 						},
 					})
 				})
@@ -11106,7 +11129,7 @@
 							}
 							const url = form.dataset.farmInsituTreeSurveyCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
 							const data = await performInsituRequest('POST', url, values)
-							insituMount(renderInsituJsonCard('Survey Created', data))
+							insituMount(renderInsituRecordCard('Survey Created', data, [['Type', 'Tree survey']]))
 						},
 					})
 				})
