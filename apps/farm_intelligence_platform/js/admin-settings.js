@@ -10756,8 +10756,36 @@
 				{ name: 'lon', label: 'Longitude', type: 'number', step: 'any', placeholder: '-180..180' },
 				{ name: 'plot_id', label: 'Plot ID', type: 'text' },
 				{ name: 'crop_stage', label: 'Crop stage', type: 'text' },
-				{ name: 'photo_url', label: 'Photo URL', type: 'text', placeholder: 'https://…' },
+				{ name: 'photo', label: 'Photo', type: 'file', accept: 'image/jpeg,image/png' },
 			]
+
+			const insituUploadPhotoIfNeeded = async (values) => {
+				const file = values.photo
+				if (!(file instanceof File)) {
+					return values
+				}
+				const rest = { ...values }
+				delete rest.photo
+				const contentBase64 = await new Promise((resolve, reject) => {
+					const reader = new FileReader()
+					reader.onload = () => resolve(String(reader.result || '').split(',', 2)[1] || '')
+					reader.onerror = () => reject(new Error('Could not read the selected photo.'))
+					reader.readAsDataURL(file)
+				})
+				if (!contentBase64) {
+					throw new Error('Could not read the selected photo.')
+				}
+				const url = form.dataset.farmInsituPhotoUploadUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const uploaded = await performInsituRequest('POST', url, {
+					filename: file.name,
+					content_base64: contentBase64,
+				})
+				const photoUrl = uploaded?.data?.photo_url
+				if (!photoUrl) {
+					throw new Error('Photo upload did not return a URL.')
+				}
+				return { ...rest, photo_url: photoUrl }
+			}
 
 			const renderInsituForm = ({ title, sub, fields, submitLabel, onSubmit }) => {
 				const card = insituCard(title, sub)
@@ -10800,6 +10828,10 @@
 					} else if (field.type === 'textarea') {
 						input = document.createElement('textarea')
 						if (field.placeholder) input.placeholder = field.placeholder
+					} else if (field.type === 'file') {
+						input = document.createElement('input')
+						input.type = 'file'
+						if (field.accept) input.accept = field.accept
 					} else {
 						input = document.createElement('input')
 						input.type = field.type || 'text'
@@ -10828,6 +10860,11 @@
 						const values = {}
 						for (const field of fields) {
 							const input = inputs[field.name]
+							if (field.type === 'file') {
+								const file = input.files && input.files[0]
+								if (file) values[field.name] = file
+								continue
+							}
 							const raw = (input.value || '').trim()
 							if (field.required && !raw) {
 								throw new Error(`${field.label} is required.`)
@@ -11042,8 +11079,9 @@
 							...insituMetadataFields(),
 						],
 						onSubmit: async (values) => {
+							const payload = await insituUploadPhotoIfNeeded(values)
 							const url = form.dataset.farmInsituMoistureSampleCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-							const data = await performInsituRequest('POST', url, values)
+							const data = await performInsituRequest('POST', url, payload)
 							insituMount(renderInsituRecordCard('Sample Created', data, [['Type', 'Soil moisture']]))
 						},
 					})
@@ -11069,8 +11107,9 @@
 							...insituMetadataFields(),
 						],
 						onSubmit: async (values) => {
+							const payload = await insituUploadPhotoIfNeeded(values)
 							const url = form.dataset.farmInsituHarvestCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-							const data = await performInsituRequest('POST', url, values)
+							const data = await performInsituRequest('POST', url, payload)
 							insituMount(renderInsituRecordCard('Harvest Created', data, [['Type', 'Harvest']]))
 						},
 					})
@@ -11096,8 +11135,9 @@
 							...insituMetadataFields(),
 						],
 						onSubmit: async (values) => {
+							const payload = await insituUploadPhotoIfNeeded(values)
 							const url = form.dataset.farmInsituBiomassObsCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-							const data = await performInsituRequest('POST', url, values)
+							const data = await performInsituRequest('POST', url, payload)
 							insituMount(renderInsituRecordCard('Observation Created', data, [['Type', 'Biomass']]))
 						},
 					})
@@ -11127,8 +11167,9 @@
 							if (values.dbh_cm === undefined && values.crown_diameter_m === undefined) {
 								throw new Error('At least one of DBH or crown diameter is required.')
 							}
+							const payload = await insituUploadPhotoIfNeeded(values)
 							const url = form.dataset.farmInsituTreeSurveyCreateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
-							const data = await performInsituRequest('POST', url, values)
+							const data = await performInsituRequest('POST', url, payload)
 							insituMount(renderInsituRecordCard('Survey Created', data, [['Type', 'Tree survey']]))
 						},
 					})

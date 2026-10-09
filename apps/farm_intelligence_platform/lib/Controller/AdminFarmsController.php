@@ -6596,4 +6596,48 @@ final class AdminFarmsController extends Controller {
 
 		return $this->buildSuccessResponse($payload, 'Insitu samples created.');
 	}
+
+	#[AdminRequired]
+	public function uploadInsituPhoto(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('insitu photo upload', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('insitu_photo_upload', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+			$filename = (string)($this->request->getParam('filename') ?? '');
+			$contentBase64 = (string)($this->request->getParam('content_base64') ?? '');
+			if ($contentBase64 === '') {
+				return $this->buildErrorResponse('invalid_request', 'content_base64 is required.', $requestId, 400);
+			}
+			$body = [
+				'filename' => $filename,
+				'content_base64' => $contentBase64,
+			];
+			$this->logProxyRequest('insitu photo upload', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'), $path, $query, $body, $requestId,
+			);
+			$this->logProxyResponse('insitu photo upload', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('insitu photo upload', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'insitu photo upload');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'insitu photo upload');
+		}
+
+		return $this->buildSuccessResponse($payload, 'Photo uploaded.');
+	}
 }

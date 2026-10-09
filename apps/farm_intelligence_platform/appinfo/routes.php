@@ -1000,6 +1000,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#uploadInsituPhoto',
+			'url' => '/api/v1/admin/farms/{farmId}/insitu/photos/upload',
+			'verb' => 'POST',
+		],
+		[
 			'name' => 'adminFarms#bulkInsituSamples',
 			'url' => '/api/v1/admin/farms/{farmId}/insitu/{type}/bulk',
 			'verb' => 'POST',

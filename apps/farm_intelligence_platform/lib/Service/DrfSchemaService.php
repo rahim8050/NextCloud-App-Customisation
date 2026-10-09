@@ -10,7 +10,7 @@ use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 class DrfSchemaService {
-	private const CACHE_KEY = 'drf_openapi_schema_json_v2';
+	private const CACHE_KEY = 'drf_openapi_schema_json_v3';
 	private const CACHE_TTL_SECONDS = 3600;
 
 	private const FARM_OPERATION_IDS = [
@@ -147,6 +147,7 @@ class DrfSchemaService {
 		'insitu_tree_surveys_delete' => 'v1_farms_insitu_tree_surveys_delete',
 		'insitu_summary' => 'v1_farms_insitu_summary',
 		'insitu_bulk_create' => 'v1_farms_insitu_bulk_create',
+		'insitu_photo_upload' => 'v1_farms_insitu_photo_upload',
 	];
 
 	private const ACTIVITY_OPERATION_IDS = [
