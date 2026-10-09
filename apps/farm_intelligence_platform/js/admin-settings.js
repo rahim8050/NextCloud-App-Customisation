@@ -3951,6 +3951,7 @@
 				callout,
 				facts,
 				debug,
+				onDismiss,
 			} = {}) => {
 				const levels = new Set(['success', 'warning', 'error', 'info'])
 				const resolvedLevel = levels.has(level) ? level : 'info'
@@ -4014,6 +4015,9 @@
 				dismissBtn.setAttribute('aria-label', 'Dismiss card')
 				dismissBtn.addEventListener('click', () => {
 					card.remove()
+					if (typeof onDismiss === 'function') {
+						onDismiss()
+					}
 				})
 				actions.appendChild(hideBtn)
 				actions.appendChild(dismissBtn)
@@ -4225,6 +4229,13 @@
 					badges: model.badges,
 					facts: model.facts,
 					debug: state?.payload,
+					onDismiss: () => {
+						hideNdviCalendar()
+						if (ndviTable) {
+							ndviTable.replaceChildren()
+							ndviTable.textContent = ''
+						}
+					},
 				})
 				if (model.emptyMessage) {
 					const emptyLine = document.createElement('p')
