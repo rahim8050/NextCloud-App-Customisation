@@ -10,7 +10,7 @@ use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 class DrfSchemaService {
-	private const CACHE_KEY = 'drf_openapi_schema_json_v3';
+	private const CACHE_KEY = 'drf_openapi_schema_json_v4';
 	private const CACHE_TTL_SECONDS = 3600;
 
 	private const FARM_OPERATION_IDS = [
@@ -124,6 +124,7 @@ class DrfSchemaService {
 		'raster_tiles' => 'v1_farms_tiles_.png_retrieve',
 		'raster_dates' => 'v1_farms_raster_dates_retrieve',
 		'geotiff_download' => 'v1_farms_geotiff_retrieve',
+		'geotiff_style' => 'v1_farms_geotiff_style_retrieve',
 		'insitu_validation' => 'v1_farms_insitu_validation_report',
 		'insitu_moisture_samples_list' => 'v1_farms_insitu_moisture_samples_list',
 		'insitu_moisture_samples_create' => 'v1_farms_insitu_moisture_samples_create',

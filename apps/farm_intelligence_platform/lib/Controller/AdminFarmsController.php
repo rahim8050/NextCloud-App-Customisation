@@ -525,6 +525,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdviGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'ndvi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdviRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1008,6 +1015,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdwiGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'ndwi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdwiRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1358,6 +1372,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdmiGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'ndmi');
+	}
+
+
 	#[AdminRequired]
 	public function queueNdmiRaster(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -1619,6 +1640,13 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getRviGeotiff(string $farmId): Response {
 		return $this->proxyGeotiff($farmId, 'rvi');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getRviGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'rvi');
 	}
 
 
@@ -1927,6 +1955,13 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getS1SmiGeotiff(string $farmId): Response {
 		return $this->proxyGeotiff($farmId, 's1_smi');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getS1SmiGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 's1_smi');
 	}
 
 
@@ -2338,6 +2373,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getS3LstGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 's3_lst');
+	}
+
+
 	#[AdminRequired]
 	public function getLandsatLstLatest(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -2649,6 +2691,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getLandsatLstGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'landsat_lst');
+	}
+
+
 	#[AdminRequired]
 	public function getIronOxideLatest(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -2957,6 +3006,13 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getIronOxideGeotiff(string $farmId): Response {
 		return $this->proxyGeotiff($farmId, 'iron_oxide');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getIronOxideGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'iron_oxide');
 	}
 
 
@@ -3275,6 +3331,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getEviGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'evi');
+	}
+
+
 	#[AdminRequired]
 	public function getLRviLatest(string $farmId): JSONResponse {
 		$requestId = $this->resolveRequestId();
@@ -3587,6 +3650,13 @@ final class AdminFarmsController extends Controller {
 	#[AdminRequired]
 	public function getLRviGeotiff(string $farmId): Response {
 		return $this->proxyGeotiff($farmId, 'l_rvi');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getLRviGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'l_rvi');
 	}
 
 
@@ -3994,6 +4064,13 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNisarSmiGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'nisar_smi');
+	}
+
+
 	// ── NDRE endpoints ─────────────────────────────────────────
 
 	#[AdminRequired]
@@ -4227,6 +4304,37 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdreRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'ndre', $z, $x, $y);
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdreRasterDates(string $farmId): JSONResponse {
+		return $this->proxyRasterDates($farmId, 'ndre');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdreGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'ndre');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNdreGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'ndre');
+	}
+
+
 	// ── Biomass endpoints ──────────────────────────────────────
 
 	#[AdminRequired]
@@ -4457,6 +4565,37 @@ final class AdminFarmsController extends Controller {
 		}
 
 		return $this->buildSuccessResponse($payload, 'Biomass farm state loaded.');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getBiomassRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'biomass', $z, $x, $y);
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getBiomassRasterDates(string $farmId): JSONResponse {
+		return $this->proxyRasterDates($farmId, 'biomass');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getBiomassGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'biomass');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getBiomassGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'biomass');
 	}
 
 
@@ -5546,6 +5685,70 @@ final class AdminFarmsController extends Controller {
 		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, [
 			'Content-Type' => $binary['contentType'],
 			'Content-Disposition' => 'attachment; filename="' . $index . '_' . $farmId . '.zip"',
+		]);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+
+	/**
+	 * Proxy a QGIS .qml geotiff-style download request to the Django backend.
+	 */
+	private function proxyGeotiffStyle(string $farmId, string $index): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry($index . ' geotiff style', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('geotiff_style', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, [
+				'farm_id' => $farmId,
+				'index' => $index,
+			]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest($index . ' geotiff style', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse($index . ' geotiff style', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError($index . ' geotiff style', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, $index . ' geotiff style');
+		}
+
+		$contentType = $binary['contentType'] !== '' ? $binary['contentType'] : 'text/xml';
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, [
+			'Content-Type' => $contentType,
+			'Content-Disposition' => 'attachment; filename="' . $index . '_' . $farmId . '.qml"',
 		]);
 		$response->addHeader('Cache-Control', 'no-store');
 		return $response;

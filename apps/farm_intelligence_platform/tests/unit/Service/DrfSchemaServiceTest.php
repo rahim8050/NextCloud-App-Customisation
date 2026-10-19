@@ -181,7 +181,7 @@ final class DrfSchemaServiceTest extends TestCase {
 		$cache = $this->createMock(ICache::class);
 		$cache->expects($this->once())
 			->method('get')
-			->with('drf_openapi_schema_json_v3')
+			->with('drf_openapi_schema_json_v4')
 			->willReturn($cached);
 
 		$service = $this->createServiceWithCache($client, $cache);
@@ -203,12 +203,12 @@ final class DrfSchemaServiceTest extends TestCase {
 		$cache = $this->createMock(ICache::class);
 		$cache->expects($this->once())
 			->method('get')
-			->with('drf_openapi_schema_json_v3')
+			->with('drf_openapi_schema_json_v4')
 			->willReturn(null);
 		$cache->expects($this->once())
 			->method('set')
 			->with(
-				'drf_openapi_schema_json_v3',
+				'drf_openapi_schema_json_v4',
 				$this->isType('string'),
 				3600,
 			)

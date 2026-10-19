@@ -234,6 +234,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getRviGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/rvi/geotiff-style',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getS1SmiLatest',
 			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/latest',
 			'verb' => 'GET',
@@ -276,6 +281,11 @@ return [
 		[
 			'name' => 'adminFarms#getS1SmiGeotiff',
 			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getS1SmiGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/s1_smi/geotiff-style',
 			'verb' => 'GET',
 		],
 		// S3_LST endpoints
@@ -324,6 +334,11 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/geotiff',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getS3LstGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/s3_lst/geotiff-style',
+			'verb' => 'GET',
+		],
 		// LANDSAT_LST endpoints
 		[
 			'name' => 'adminFarms#getLandsatLstLatest',
@@ -368,6 +383,11 @@ return [
 		[
 			'name' => 'adminFarms#getLandsatLstGeotiff',
 			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLandsatLstGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/landsat_lst/geotiff-style',
 			'verb' => 'GET',
 		],
 		// IRON_OXIDE endpoints
@@ -416,6 +436,11 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/geotiff',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getIronOxideGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/iron_oxide/geotiff-style',
+			'verb' => 'GET',
+		],
 		// EVI endpoints
 		[
 			'name' => 'adminFarms#getEviLatest',
@@ -462,6 +487,11 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/evi/geotiff',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getEviGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/evi/geotiff-style',
+			'verb' => 'GET',
+		],
 		// L_RVI endpoints
 		[
 			'name' => 'adminFarms#getLRviLatest',
@@ -506,6 +536,11 @@ return [
 		[
 			'name' => 'adminFarms#getLRviGeotiff',
 			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getLRviGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/l_rvi/geotiff-style',
 			'verb' => 'GET',
 		],
 
@@ -555,6 +590,11 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/geotiff',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getNisarSmiGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/geotiff-style',
+			'verb' => 'GET',
+		],
 
 		// NDRE endpoints
 		[
@@ -587,6 +627,26 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/ndre/state',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getNdreRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdreRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdreGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdreGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/ndre/geotiff-style',
+			'verb' => 'GET',
+		],
 
 		// Biomass endpoints
 		[
@@ -617,6 +677,26 @@ return [
 		[
 			'name' => 'adminFarms#getBiomassFarmState',
 			'url' => '/api/v1/admin/farms/{farmId}/biomass/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getBiomassGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/biomass/geotiff-style',
 			'verb' => 'GET',
 		],
 
@@ -659,6 +739,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdviGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/ndvi/geotiff-style',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdwiRasterDates',
 			'url' => '/api/v1/admin/farms/{farmId}/ndwi/raster-dates',
 			'verb' => 'GET',
@@ -669,6 +754,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'adminFarms#getNdwiGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/ndwi/geotiff-style',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'adminFarms#getNdmiRasterDates',
 			'url' => '/api/v1/admin/farms/{farmId}/ndmi/raster-dates',
 			'verb' => 'GET',
@@ -676,6 +766,11 @@ return [
 		[
 			'name' => 'adminFarms#getNdmiGeotiff',
 			'url' => '/api/v1/admin/farms/{farmId}/ndmi/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNdmiGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/ndmi/geotiff-style',
 			'verb' => 'GET',
 		],
 		[
