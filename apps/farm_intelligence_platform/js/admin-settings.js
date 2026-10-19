@@ -7032,14 +7032,16 @@
 						zoomControl: true,
 						attributionControl: true,
 					})
-					// Esri World Street Map: full road network (unlike the sparse
-					// Light Gray Canvas), free without an API key. OSM public
-					// tiles 403 (usage policy) and CARTO raster tiles require
-					// an API key since 2026-09-25.
-					// NOTE: Esri URL template is {z}/{y}/{x} (y before x).
-					L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+					// OpenTopoMap: rendered from current full OpenStreetMap data
+					// (every mapped road/track — Esri's street map lags OSM for
+					// rural roads). Free without an API key. OSM public tiles
+					// 403 (usage policy) and CARTO raster tiles require a key
+					// since 2026-09-25. maxNativeZoom is 17; overscale beyond.
+					L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+						subdomains: 'abc',
 						maxZoom: 19,
-						attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors',
+						maxNativeZoom: 17,
+						attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
 					}).addTo(rasterMap)
 					if (tileTemplate) {
 						currentTileUrlTemplate = tileTemplate
