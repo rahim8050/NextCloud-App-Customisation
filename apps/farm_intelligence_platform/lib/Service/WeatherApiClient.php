@@ -329,7 +329,7 @@ final class WeatherApiClient implements WeatherApiClientInterface {
 				$this->ensureSuccessResponse($response, $body);
 
 				$contentType = strtolower($response->getHeader('Content-Type'));
-				if ($contentType !== '' && !str_contains($contentType, 'application/zip') && !str_contains($contentType, 'image/png') && !str_contains($contentType, 'image/tiff')) {
+				if ($contentType !== '' && !str_contains($contentType, 'application/zip') && !str_contains($contentType, 'image/png') && !str_contains($contentType, 'image/tiff') && !str_contains($contentType, 'text/xml') && !str_contains($contentType, 'application/xml')) {
 					throw new WeatherApiException('backend_error', 'Binary response is not a supported download type.');
 				}
 
