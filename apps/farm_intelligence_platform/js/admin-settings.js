@@ -47,6 +47,7 @@
 		const farmNdviRasterQueueUrl = form.dataset.farmNdviRasterQueueUrl || ''
 		const farmNdviRefreshUrl = form.dataset.farmNdviRefreshUrl || ''
 		const farmNdviGeotiffUrl = form.dataset.farmNdviGeotiffUrl || ''
+		const farmNdviGeotiffStyleUrl = form.dataset.farmNdviGeotiffStyleUrl || ''
 		const farmNdwiLatestUrl = form.dataset.farmNdwiLatestUrl || ''
 		const farmNdwiTimeseriesUrl = form.dataset.farmNdwiTimeseriesUrl || ''
 		const farmNdwiRasterUrl = form.dataset.farmNdwiRasterUrl || ''
@@ -54,6 +55,7 @@
 		const farmNdwiRefreshUrl = form.dataset.farmNdwiRefreshUrl || ''
 		const farmNdwiFarmStateUrl = form.dataset.farmNdwiFarmStateUrl || ''
 		const farmNdwiGeotiffUrl = form.dataset.farmNdwiGeotiffUrl || ''
+		const farmNdwiGeotiffStyleUrl = form.dataset.farmNdwiGeotiffStyleUrl || ''
 		const farmNdmiLatestUrl = form.dataset.farmNdmiLatestUrl || ''
 		const farmNdmiTimeseriesUrl = form.dataset.farmNdmiTimeseriesUrl || ''
 		const farmNdmiRasterUrl = form.dataset.farmNdmiRasterUrl || ''
@@ -61,6 +63,7 @@
 		const farmNdmiRefreshUrl = form.dataset.farmNdmiRefreshUrl || ''
 		const farmNdmiFarmStateUrl = form.dataset.farmNdmiFarmStateUrl || ''
 		const farmNdmiGeotiffUrl = form.dataset.farmNdmiGeotiffUrl || ''
+		const farmNdmiGeotiffStyleUrl = form.dataset.farmNdmiGeotiffStyleUrl || ''
 		const farmRviLatestUrl = form.dataset.farmRviLatestUrl || ''
 		const farmRviTimeseriesUrl = form.dataset.farmRviTimeseriesUrl || ''
 		const farmRviRasterUrl = form.dataset.farmRviRasterUrl || ''
@@ -68,6 +71,7 @@
 		const farmRviRefreshUrl = form.dataset.farmRviRefreshUrl || ''
 		const farmRviFarmStateUrl = form.dataset.farmRviFarmStateUrl || ''
 		const farmRviGeotiffUrl = form.dataset.farmRviGeotiffUrl || ''
+		const farmRviGeotiffStyleUrl = form.dataset.farmRviGeotiffStyleUrl || ''
 		const farmS1SmiLatestUrl = form.dataset.farmS1SmiLatestUrl || ''
 		const farmS1SmiTimeseriesUrl = form.dataset.farmS1SmiTimeseriesUrl || ''
 		const farmS1SmiRasterUrl = form.dataset.farmS1SmiRasterUrl || ''
@@ -75,6 +79,7 @@
 		const farmS1SmiRefreshUrl = form.dataset.farmS1SmiRefreshUrl || ''
 		const farmS1SmiFarmStateUrl = form.dataset.farmS1SmiFarmStateUrl || ''
 		const farmS1SmiGeotiffUrl = form.dataset.farmS1SmiGeotiffUrl || ''
+		const farmS1SmiGeotiffStyleUrl = form.dataset.farmS1SmiGeotiffStyleUrl || ''
 		const farmS3LstLatestUrl = form.dataset.farmS3LstLatestUrl || ''
 		const farmS3LstTimeseriesUrl = form.dataset.farmS3LstTimeseriesUrl || ''
 		const farmS3LstRasterUrl = form.dataset.farmS3LstRasterUrl || ''
@@ -82,6 +87,7 @@
 		const farmS3LstRefreshUrl = form.dataset.farmS3LstRefreshUrl || ''
 		const farmS3LstFarmStateUrl = form.dataset.farmS3LstFarmStateUrl || ''
 		const farmS3LstGeotiffUrl = form.dataset.farmS3LstGeotiffUrl || ''
+		const farmS3LstGeotiffStyleUrl = form.dataset.farmS3LstGeotiffStyleUrl || ''
 		const farmLandsatLstLatestUrl = form.dataset.farmLandsatLstLatestUrl || ''
 		const farmLandsatLstTimeseriesUrl = form.dataset.farmLandsatLstTimeseriesUrl || ''
 		const farmLandsatLstRasterUrl = form.dataset.farmLandsatLstRasterUrl || ''
@@ -89,6 +95,7 @@
 		const farmLandsatLstRefreshUrl = form.dataset.farmLandsatLstRefreshUrl || ''
 		const farmLandsatLstFarmStateUrl = form.dataset.farmLandsatLstFarmStateUrl || ''
 		const farmLandsatLstGeotiffUrl = form.dataset.farmLandsatLstGeotiffUrl || ''
+		const farmLandsatLstGeotiffStyleUrl = form.dataset.farmLandsatLstGeotiffStyleUrl || ''
 		const farmIronOxideLatestUrl = form.dataset.farmIronOxideLatestUrl || ''
 		const farmIronOxideTimeseriesUrl = form.dataset.farmIronOxideTimeseriesUrl || ''
 		const farmIronOxideRasterUrl = form.dataset.farmIronOxideRasterUrl || ''
@@ -96,6 +103,7 @@
 		const farmIronOxideRefreshUrl = form.dataset.farmIronOxideRefreshUrl || ''
 		const farmIronOxideFarmStateUrl = form.dataset.farmIronOxideFarmStateUrl || ''
 		const farmIronOxideGeotiffUrl = form.dataset.farmIronOxideGeotiffUrl || ''
+		const farmIronOxideGeotiffStyleUrl = form.dataset.farmIronOxideGeotiffStyleUrl || ''
 		const farmEviLatestUrl = form.dataset.farmEviLatestUrl || ''
 		const farmEviTimeseriesUrl = form.dataset.farmEviTimeseriesUrl || ''
 		const farmEviRasterUrl = form.dataset.farmEviRasterUrl || ''
@@ -103,6 +111,7 @@
 		const farmEviRefreshUrl = form.dataset.farmEviRefreshUrl || ''
 		const farmEviFarmStateUrl = form.dataset.farmEviFarmStateUrl || ''
 		const farmEviGeotiffUrl = form.dataset.farmEviGeotiffUrl || ''
+		const farmEviGeotiffStyleUrl = form.dataset.farmEviGeotiffStyleUrl || ''
 		const farmLRviLatestUrl = form.dataset.farmLRviLatestUrl || ''
 		const farmLRviTimeseriesUrl = form.dataset.farmLRviTimeseriesUrl || ''
 		const farmLRviRasterUrl = form.dataset.farmLRviRasterUrl || ''
@@ -110,6 +119,7 @@
 		const farmLRviRefreshUrl = form.dataset.farmLRviRefreshUrl || ''
 		const farmLRviFarmStateUrl = form.dataset.farmLRviFarmStateUrl || ''
 		const farmLRviGeotiffUrl = form.dataset.farmLRviGeotiffUrl || ''
+		const farmLRviGeotiffStyleUrl = form.dataset.farmLRviGeotiffStyleUrl || ''
 		const farmNisarSmiLatestUrl = form.dataset.farmNisarSmiLatestUrl || ''
 		const farmNisarSmiTimeseriesUrl = form.dataset.farmNisarSmiTimeseriesUrl || ''
 		const farmNisarSmiRasterUrl = form.dataset.farmNisarSmiRasterUrl || ''
@@ -117,18 +127,23 @@
 		const farmNisarSmiRefreshUrl = form.dataset.farmNisarSmiRefreshUrl || ''
 		const farmNisarSmiFarmStateUrl = form.dataset.farmNisarSmiFarmStateUrl || ''
 		const farmNisarSmiGeotiffUrl = form.dataset.farmNisarSmiGeotiffUrl || ''
+		const farmNisarSmiGeotiffStyleUrl = form.dataset.farmNisarSmiGeotiffStyleUrl || ''
 		const farmNdreLatestUrl = form.dataset.farmNdreLatestUrl || ''
 		const farmNdreTimeseriesUrl = form.dataset.farmNdreTimeseriesUrl || ''
 		const farmNdreRasterUrl = form.dataset.farmNdreRasterUrl || ''
 		const farmNdreRasterQueueUrl = form.dataset.farmNdreRasterQueueUrl || ''
 		const farmNdreRefreshUrl = form.dataset.farmNdreRefreshUrl || ''
 		const farmNdreFarmStateUrl = form.dataset.farmNdreFarmStateUrl || ''
+		const farmNdreGeotiffUrl = form.dataset.farmNdreGeotiffUrl || ''
+		const farmNdreGeotiffStyleUrl = form.dataset.farmNdreGeotiffStyleUrl || ''
 		const farmBiomassLatestUrl = form.dataset.farmBiomassLatestUrl || ''
 		const farmBiomassTimeseriesUrl = form.dataset.farmBiomassTimeseriesUrl || ''
 		const farmBiomassRasterUrl = form.dataset.farmBiomassRasterUrl || ''
 		const farmBiomassRasterQueueUrl = form.dataset.farmBiomassRasterQueueUrl || ''
 		const farmBiomassRefreshUrl = form.dataset.farmBiomassRefreshUrl || ''
 		const farmBiomassFarmStateUrl = form.dataset.farmBiomassFarmStateUrl || ''
+		const farmBiomassGeotiffUrl = form.dataset.farmBiomassGeotiffUrl || ''
+		const farmBiomassGeotiffStyleUrl = form.dataset.farmBiomassGeotiffStyleUrl || ''
 		const farmInsituValidationUrl = form.dataset.farmInsituValidationUrl || ''
 		const farmInsituMoistureSamplesUrl = form.dataset.farmInsituMoistureSamplesUrl || ''
 		const farmInsituMoistureSampleCreateUrl = form.dataset.farmInsituMoistureSampleCreateUrl || ''
@@ -200,6 +215,7 @@
 		const ndviTimeseriesButton = document.getElementById('farm-intelligence-platform-ndvi-timeseries')
 		const ndviRasterButton = document.getElementById('farm-intelligence-platform-ndvi-raster')
 		const ndviGeotiffButton = document.getElementById('farm-intelligence-platform-ndvi-geotiff')
+		const ndviGeotiffStyleButton = document.getElementById('farm-intelligence-platform-ndvi-geotiff-style')
 		const ndviQueueButton = document.getElementById('farm-intelligence-platform-ndvi-queue')
 		const ndviRefreshButton = document.getElementById('farm-intelligence-platform-ndvi-refresh')
 		const farmStateButton = document.getElementById('farm-intelligence-platform-farm-state')
@@ -227,6 +243,7 @@
 		const ndwiTimeseriesButton = document.getElementById('farm-intelligence-platform-ndwi-timeseries')
 		const ndwiRasterButton = document.getElementById('farm-intelligence-platform-ndwi-raster')
 		const ndwiGeotiffButton = document.getElementById('farm-intelligence-platform-ndwi-geotiff')
+		const ndwiGeotiffStyleButton = document.getElementById('farm-intelligence-platform-ndwi-geotiff-style')
 		const ndwiQueueButton = document.getElementById('farm-intelligence-platform-ndwi-queue')
 		const ndwiRefreshButton = document.getElementById('farm-intelligence-platform-ndwi-refresh')
 		const ndwiStateButton = document.getElementById('farm-intelligence-platform-ndwi-state')
@@ -234,6 +251,7 @@
 		const ndmiTimeseriesButton = document.getElementById('farm-intelligence-platform-ndmi-timeseries')
 		const ndmiRasterButton = document.getElementById('farm-intelligence-platform-ndmi-raster')
 		const ndmiGeotiffButton = document.getElementById('farm-intelligence-platform-ndmi-geotiff')
+		const ndmiGeotiffStyleButton = document.getElementById('farm-intelligence-platform-ndmi-geotiff-style')
 		const ndmiQueueButton = document.getElementById('farm-intelligence-platform-ndmi-queue')
 		const ndmiRefreshButton = document.getElementById('farm-intelligence-platform-ndmi-refresh')
 		const ndmiStateButton = document.getElementById('farm-intelligence-platform-ndmi-state')
@@ -241,6 +259,7 @@
 		const rviTimeseriesButton = document.getElementById('farm-intelligence-platform-rvi-timeseries')
 		const rviRasterButton = document.getElementById('farm-intelligence-platform-rvi-raster')
 		const rviGeotiffButton = document.getElementById('farm-intelligence-platform-rvi-geotiff')
+		const rviGeotiffStyleButton = document.getElementById('farm-intelligence-platform-rvi-geotiff-style')
 		const rviQueueButton = document.getElementById('farm-intelligence-platform-rvi-queue')
 		const rviRefreshButton = document.getElementById('farm-intelligence-platform-rvi-refresh')
 		const rviStateButton = document.getElementById('farm-intelligence-platform-rvi-state')
@@ -248,6 +267,7 @@
 		const s1SmiTimeseriesButton = document.getElementById('farm-intelligence-platform-s1-smi-timeseries')
 		const s1SmiRasterButton = document.getElementById('farm-intelligence-platform-s1-smi-raster')
 		const s1SmiGeotiffButton = document.getElementById('farm-intelligence-platform-s1-smi-geotiff')
+		const s1SmiGeotiffStyleButton = document.getElementById('farm-intelligence-platform-s1-smi-geotiff-style')
 		const s1SmiQueueButton = document.getElementById('farm-intelligence-platform-s1-smi-queue')
 		const s1SmiRefreshButton = document.getElementById('farm-intelligence-platform-s1-smi-refresh')
 		const s1SmiStateButton = document.getElementById('farm-intelligence-platform-s1-smi-state')
@@ -255,6 +275,7 @@
 		const s3LstTimeseriesButton = document.getElementById('farm-intelligence-platform-s3-lst-timeseries')
 		const s3LstRasterButton = document.getElementById('farm-intelligence-platform-s3-lst-raster')
 		const s3LstGeotiffButton = document.getElementById('farm-intelligence-platform-s3-lst-geotiff')
+		const s3LstGeotiffStyleButton = document.getElementById('farm-intelligence-platform-s3-lst-geotiff-style')
 		const s3LstQueueButton = document.getElementById('farm-intelligence-platform-s3-lst-queue')
 		const s3LstRefreshButton = document.getElementById('farm-intelligence-platform-s3-lst-refresh')
 		const s3LstStateButton = document.getElementById('farm-intelligence-platform-s3-lst-state')
@@ -262,6 +283,7 @@
 		const landsatLstTimeseriesButton = document.getElementById('farm-intelligence-platform-landsat-lst-timeseries')
 		const landsatLstRasterButton = document.getElementById('farm-intelligence-platform-landsat-lst-raster')
 		const landsatLstGeotiffButton = document.getElementById('farm-intelligence-platform-landsat-lst-geotiff')
+		const landsatLstGeotiffStyleButton = document.getElementById('farm-intelligence-platform-landsat-lst-geotiff-style')
 		const landsatLstQueueButton = document.getElementById('farm-intelligence-platform-landsat-lst-queue')
 		const landsatLstRefreshButton = document.getElementById('farm-intelligence-platform-landsat-lst-refresh')
 		const landsatLstStateButton = document.getElementById('farm-intelligence-platform-landsat-lst-state')
@@ -269,6 +291,7 @@
 		const ironOxideTimeseriesButton = document.getElementById('farm-intelligence-platform-iron-oxide-timeseries')
 		const ironOxideRasterButton = document.getElementById('farm-intelligence-platform-iron-oxide-raster')
 		const ironOxideGeotiffButton = document.getElementById('farm-intelligence-platform-iron-oxide-geotiff')
+		const ironOxideGeotiffStyleButton = document.getElementById('farm-intelligence-platform-iron-oxide-geotiff-style')
 		const ironOxideQueueButton = document.getElementById('farm-intelligence-platform-iron-oxide-queue')
 		const ironOxideRefreshButton = document.getElementById('farm-intelligence-platform-iron-oxide-refresh')
 		const ironOxideStateButton = document.getElementById('farm-intelligence-platform-iron-oxide-state')
@@ -276,6 +299,7 @@
 		const eviTimeseriesButton = document.getElementById('farm-intelligence-platform-evi-timeseries')
 		const eviRasterButton = document.getElementById('farm-intelligence-platform-evi-raster')
 		const eviGeotiffButton = document.getElementById('farm-intelligence-platform-evi-geotiff')
+		const eviGeotiffStyleButton = document.getElementById('farm-intelligence-platform-evi-geotiff-style')
 		const eviQueueButton = document.getElementById('farm-intelligence-platform-evi-queue')
 		const eviRefreshButton = document.getElementById('farm-intelligence-platform-evi-refresh')
 		const eviStateButton = document.getElementById('farm-intelligence-platform-evi-state')
@@ -286,6 +310,7 @@
 		const lRviRefreshButton = document.getElementById('farm-intelligence-platform-l-rvi-refresh')
 		const lRviStateButton = document.getElementById('farm-intelligence-platform-l-rvi-state')
 		const lRviGeotiffButton = document.getElementById('farm-intelligence-platform-l-rvi-geotiff')
+		const lRviGeotiffStyleButton = document.getElementById('farm-intelligence-platform-l-rvi-geotiff-style')
 		const nisarSmiLatestButton = document.getElementById('farm-intelligence-platform-nisar-smi-latest')
 		const nisarSmiTimeseriesButton = document.getElementById('farm-intelligence-platform-nisar-smi-timeseries')
 		const nisarSmiRasterButton = document.getElementById('farm-intelligence-platform-nisar-smi-raster')
@@ -293,18 +318,23 @@
 		const nisarSmiRefreshButton = document.getElementById('farm-intelligence-platform-nisar-smi-refresh')
 		const nisarSmiStateButton = document.getElementById('farm-intelligence-platform-nisar-smi-state')
 		const nisarSmiGeotiffButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff')
+		const nisarSmiGeotiffStyleButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff-style')
 		const ndreLatestButton = document.getElementById('farm-intelligence-platform-ndre-latest')
 		const ndreTimeseriesButton = document.getElementById('farm-intelligence-platform-ndre-timeseries')
 		const ndreRasterButton = document.getElementById('farm-intelligence-platform-ndre-raster')
 		const ndreQueueButton = document.getElementById('farm-intelligence-platform-ndre-queue')
 		const ndreRefreshButton = document.getElementById('farm-intelligence-platform-ndre-refresh')
 		const ndreStateButton = document.getElementById('farm-intelligence-platform-ndre-state')
+		const ndreGeotiffButton = document.getElementById('farm-intelligence-platform-ndre-geotiff')
+		const ndreGeotiffStyleButton = document.getElementById('farm-intelligence-platform-ndre-geotiff-style')
 		const biomassLatestButton = document.getElementById('farm-intelligence-platform-biomass-latest')
 		const biomassTimeseriesButton = document.getElementById('farm-intelligence-platform-biomass-timeseries')
 		const biomassRasterButton = document.getElementById('farm-intelligence-platform-biomass-raster')
 		const biomassQueueButton = document.getElementById('farm-intelligence-platform-biomass-queue')
 		const biomassRefreshButton = document.getElementById('farm-intelligence-platform-biomass-refresh')
 		const biomassStateButton = document.getElementById('farm-intelligence-platform-biomass-state')
+		const biomassGeotiffButton = document.getElementById('farm-intelligence-platform-biomass-geotiff')
+		const biomassGeotiffStyleButton = document.getElementById('farm-intelligence-platform-biomass-geotiff-style')
 		const farmsWeather = document.getElementById('farm-intelligence-platform-farms-weather')
 		const farmsWeatherTitle = document.getElementById('farm-intelligence-platform-farms-weather-title')
 		const farmsObservations = document.getElementById('farm-intelligence-platform-farms-observations')
@@ -6429,6 +6459,10 @@
 						const currentObsDate = data?.current_observation_date ?? '-'
 						const forecast7d = data?.forecast_7d_value ?? null
 						const forecastTargetDate = data?.forecast_target_date ?? '-'
+						const forecast3d = data?.forecast_3d_value ?? null
+						const forecast3dDate = data?.forecast_3d_target_date ?? null
+						const forecast14d = data?.forecast_14d_value ?? null
+						const forecast14dDate = data?.forecast_14d_target_date ?? null
 						const changeDelta = data?.change_delta ?? null
 						const changePct = data?.change_pct ?? null
 						const status = data?.status ?? 'unknown'
@@ -6452,6 +6486,12 @@
 						pushFact(facts, 'Target metric', targetMetric)
 						pushFact(facts, 'Current value', currentValue !== null ? `${formatNumber(currentValue, 4)} (${currentObsDate})` : '-')
 						pushFact(facts, '7-day forecast', forecast7d !== null ? `${formatNumber(forecast7d, 4)} (target: ${forecastTargetDate})` : '-')
+						if (forecast3d !== null) {
+							pushFact(facts, '3-day forecast', `${formatNumber(forecast3d, 4)}${forecast3dDate ? ` (target: ${forecast3dDate})` : ''}`)
+						}
+						if (forecast14d !== null) {
+							pushFact(facts, '14-day forecast', `${formatNumber(forecast14d, 4)}${forecast14dDate ? ` (target: ${forecast14dDate})` : ''}`)
+						}
 						if (changeDelta !== null) {
 							const sign = changeDelta >= 0 ? '+' : ''
 							const pctStr = changePct !== null ? ` (${sign}${formatNumber(changePct, 2)}%)` : ''
@@ -6476,12 +6516,18 @@
 							badges.push(deltaBadge)
 						}
 
+						const horizonSeries = [
+							forecast3d !== null ? `3d ${formatNumber(forecast3d, 3)}` : null,
+							`7d ${forecast7d !== null ? formatNumber(forecast7d, 3) : '-'}`,
+							forecast14d !== null ? `14d ${formatNumber(forecast14d, 3)}` : null,
+						].filter(Boolean).join(' · ')
+
 						const card = renderResultCard({
-							title: 'Crop Health Forecast (7-day ML Outlook)',
+							title: 'Crop Health Forecast (ML Outlook)',
 							level,
 							badges,
-							summary: `7-day forward predictive outlook for ${cropType}: ${currentValue !== null ? formatNumber(currentValue, 3) : '-'} → ${forecast7d !== null ? formatNumber(forecast7d, 3) : '-'} (${status.replace(/_/g, ' ')})`,
-							callout: `${targetMetric} 7-day outlook: ${status.replace(/_/g, ' ')} by ${forecastTargetDate}`,
+							summary: `Predictive outlook for ${cropType}: ${currentValue !== null ? formatNumber(currentValue, 3) : '-'} → ${horizonSeries} (${status.replace(/_/g, ' ')})`,
+							callout: `${targetMetric} outlook: ${status.replace(/_/g, ' ')} · 7d by ${forecastTargetDate}${forecast3dDate ? ` · 3d by ${forecast3dDate}` : ''}${forecast14dDate ? ` · 14d by ${forecast14dDate}` : ''}`,
 							facts,
 							debug: data,
 						})
@@ -7066,6 +7112,8 @@
 				else if (indexLower === 'evi') baseUrl = farmEviRasterUrl
 				else if (indexLower === 'l_rvi') baseUrl = farmLRviRasterUrl
 				else if (indexLower === 'nisar_smi') baseUrl = farmNisarSmiRasterUrl
+				else if (indexLower === 'ndre') baseUrl = farmNdreRasterUrl
+				else if (indexLower === 'biomass') baseUrl = farmBiomassRasterUrl
 				else return
 				const datesUrl = baseUrl
 					.replace('__FARM_ID__', encodeURIComponent(farmId))
@@ -9874,6 +9922,105 @@
 			}
 			if (nisarSmiGeotiffButton) {
 				nisarSmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNisarSmiGeotiffUrl, 'NISAR_SMI'))
+			}
+
+			const downloadGeotiffStyle = async (urlTemplate, label) => {
+				clearFarmsNotes()
+				clearNdviError()
+				if (!selectedFarm) {
+					showNdviError('Select a farm first.')
+					return
+				}
+				const state = readNdviDateState()
+				const validation = validateRasterInput(state)
+				if (!validation.ok) {
+					showNdviError(validation.message)
+					return
+				}
+				const url = urlTemplate.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+				const query = buildNdviQuery('geotiff_style', { date: validation.date })
+				const queryString = buildQueryString(query)
+				const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+				const resolvedUrl = ncGenerateUrl(finalUrl)
+				try {
+					const response = await fetch(resolvedUrl, {
+						method: 'GET',
+						credentials: 'same-origin',
+						headers: {
+							Accept: 'text/xml',
+							'OCS-APIRequest': 'true',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+					})
+					if (!response.ok) {
+						const result = await readJsonResponse(response)
+						const message = buildNdviErrorMessage(response, result.data, `Unable to download ${label} QGIS style.`, result.text)
+						showNdviError(message)
+						if (shouldToastNdviError(message)) toast(message)
+						return
+					}
+					const blob = await response.blob()
+					if (blob.size === 0) {
+						showNdviError(`${label} QGIS style response was empty.`)
+						return
+					}
+					const link = document.createElement('a')
+					link.href = URL.createObjectURL(blob)
+					const filename = `${label.toLowerCase()}_${selectedFarm.id}_${validation.date}.qml`
+					link.download = filename
+					document.body.appendChild(link)
+					link.click()
+					document.body.removeChild(link)
+					URL.revokeObjectURL(link.href)
+				} catch (error) {
+					const message = error instanceof Error ? error.message : `Unable to download ${label} QGIS style.`
+					showNdviError(message)
+				}
+			}
+			if (ndviGeotiffStyleButton) {
+				ndviGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNdviGeotiffStyleUrl, 'NDVI'))
+			}
+			if (ndwiGeotiffStyleButton) {
+				ndwiGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNdwiGeotiffStyleUrl, 'NDWI'))
+			}
+			if (ndmiGeotiffStyleButton) {
+				ndmiGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNdmiGeotiffStyleUrl, 'NDMI'))
+			}
+			if (rviGeotiffStyleButton) {
+				rviGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmRviGeotiffStyleUrl, 'RVI'))
+			}
+			if (s1SmiGeotiffStyleButton) {
+				s1SmiGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmS1SmiGeotiffStyleUrl, 'S1_SMI'))
+			}
+			if (s3LstGeotiffStyleButton) {
+				s3LstGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmS3LstGeotiffStyleUrl, 'S3_LST'))
+			}
+			if (landsatLstGeotiffStyleButton) {
+				landsatLstGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmLandsatLstGeotiffStyleUrl, 'LANDSAT_LST'))
+			}
+			if (ironOxideGeotiffStyleButton) {
+				ironOxideGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmIronOxideGeotiffStyleUrl, 'IRON_OXIDE'))
+			}
+			if (eviGeotiffStyleButton) {
+				eviGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmEviGeotiffStyleUrl, 'EVI'))
+			}
+			if (lRviGeotiffStyleButton) {
+				lRviGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmLRviGeotiffStyleUrl, 'L_RVI'))
+			}
+			if (nisarSmiGeotiffStyleButton) {
+				nisarSmiGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNisarSmiGeotiffStyleUrl, 'NISAR_SMI'))
+			}
+			if (ndreGeotiffButton) {
+				ndreGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNdreGeotiffUrl, 'NDRE'))
+			}
+			if (ndreGeotiffStyleButton) {
+				ndreGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNdreGeotiffStyleUrl, 'NDRE'))
+			}
+			if (biomassGeotiffButton) {
+				biomassGeotiffButton.addEventListener('click', () => downloadGeotiff(farmBiomassGeotiffUrl, 'BIOMASS'))
+			}
+			if (biomassGeotiffStyleButton) {
+				biomassGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmBiomassGeotiffStyleUrl, 'BIOMASS'))
 			}
 
 			if (ndreLatestButton) {
