@@ -579,6 +579,55 @@ final class WeatherApiClientTest extends TestCase {
 		$this->assertSame(200, $result['statusCode']);
 	}
 
+	public function testRequestBinaryAcceptsXmlContentType(): void {
+		$qmlPayload = "<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>";
+		$response = $this->createResponse(200, $qmlPayload, ['Content-Type' => 'text/xml']);
+
+		$binaryClient = $this->createMock(IClient::class);
+		$binaryClient
+			->expects($this->once())
+			->method('get')
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($binaryClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$result = $client->requestBinary('GET', '/api/v1/farms/1/ndvi/geotiff-style', [], 'style-request');
+
+		$this->assertSame('text/xml', $result['contentType']);
+		$this->assertSame($qmlPayload, $result['body']);
+		$this->assertSame(200, $result['statusCode']);
+	}
+
+	public function testRequestBinaryRejectsUnsupportedContentType(): void {
+		$response = $this->createResponse(200, '{"message":"nope"}', ['Content-Type' => 'application/json']);
+
+		$binaryClient = $this->createMock(IClient::class);
+		$binaryClient
+			->expects($this->once())
+			->method('get')
+			->willReturn($response);
+
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->expects($this->once())
+			->method('newClient')
+			->willReturn($binaryClient);
+
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturn('cached-token');
+
+		$client = $this->createClient($clientService, $cache);
+		$this->expectException(WeatherApiException::class);
+		$this->expectExceptionMessage('Binary response is not a supported download type.');
+		$client->requestBinary('GET', '/api/v1/farms/1/ndvi/raster.png', [], 'binary-request');
+	}
+
 	public function testFetchSchemaUsesJsonFormat(): void {
 		$schemaResponse = $this->createResponse(200, '{"openapi":"3.0.0","paths":{}}');
 
