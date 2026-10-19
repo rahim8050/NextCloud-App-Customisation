@@ -7032,12 +7032,12 @@
 						zoomControl: true,
 						attributionControl: true,
 					})
-					// Esri World Light Gray Canvas basemap: OSM public tiles 403
-					// (usage policy) and CARTO raster tiles require an API key
-					// since 2026-09-25 ("API KEY REQUIRED" watermark). Esri's
-					// ArcGIS tile service is free without a key for this use.
+					// Esri World Street Map: full road network (unlike the sparse
+					// Light Gray Canvas), free without an API key. OSM public
+					// tiles 403 (usage policy) and CARTO raster tiles require
+					// an API key since 2026-09-25.
 					// NOTE: Esri URL template is {z}/{y}/{x} (y before x).
-					L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+					L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
 						maxZoom: 19,
 						attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors',
 					}).addTo(rasterMap)
