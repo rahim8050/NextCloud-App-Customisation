@@ -97,6 +97,12 @@ class DrfSchemaService {
 		'nisar_smi_raster_queue' => 'v1_farms_nisar_smi_raster_queue_create',
 		'nisar_smi_refresh' => 'v1_farms_nisar_smi_refresh_create',
 		'nisar_smi_farm_state' => 'v1_farms_nisar_smi_farm_state_retrieve',
+		'nisar_flood_latest' => 'v1_farms_nisar_flood_latest_retrieve',
+		'nisar_flood_timeseries' => 'v1_farms_nisar_flood_timeseries_retrieve',
+		'nisar_flood_raster' => 'v1_farms_nisar_flood_raster.png_retrieve',
+		'nisar_flood_raster_queue' => 'v1_farms_nisar_flood_raster_queue_create',
+		'nisar_flood_refresh' => 'v1_farms_nisar_flood_refresh_create',
+		'nisar_flood_farm_state' => 'v1_farms_nisar_flood_farm_state_retrieve',
 
 		'ndre_latest' => 'v1_farms_ndre_latest_retrieve',
 		'ndre_timeseries' => 'v1_farms_ndre_timeseries_retrieve',

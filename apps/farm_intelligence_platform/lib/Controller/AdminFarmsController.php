@@ -4071,6 +4071,330 @@ final class AdminFarmsController extends Controller {
 	}
 
 
+	// ── NISAR_FLOOD endpoints ─────────────────────────────────────────
+
+	#[AdminRequired]
+	public function getNisarFloodLatest(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood latest', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_latest', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('nisar_flood latest', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood latest', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood latest', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'nisar_flood latest');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood latest');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NISAR_SMI latest loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getNisarFloodTimeseries(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood timeseries', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_timeseries', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$startName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'start');
+			$endName = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'end');
+			$this->ensureDateOrder($query, $startName, $endName);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('nisar_flood timeseries', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood timeseries', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood timeseries', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'nisar_flood timeseries');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood timeseries');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NISAR_SMI timeseries loaded.');
+	}
+
+
+	#[AdminRequired]
+	public function getNisarFloodRasterPng(string $farmId): Response {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood raster', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_raster', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+			$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+			if ($dateField !== null && array_key_exists($dateField, $query)) {
+				$this->parseIsoDateValue($query[$dateField], $dateField);
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('nisar_flood raster', $operation, $path, $query, $requestId);
+			$binary = $this->weatherApiClient->requestBinary(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood raster', $operation, $path, $requestId, $binary['statusCode']);
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood raster', $operation, $path, $query, $requestId, $exception);
+			return $this->buildErrorResponse(
+				$exception->getErrorCode(),
+				$exception->getMessage(),
+				$requestId,
+				$this->httpStatusForCode($exception->getErrorCode()),
+				$exception->getDetails(),
+			);
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood raster');
+		}
+
+		$response = new DataDisplayResponse($binary['body'], Http::STATUS_OK, ['Content-Type' => 'image/png']);
+		$response->addHeader('Cache-Control', 'no-store');
+		return $response;
+	}
+
+
+	#[AdminRequired]
+	public function queueNisarFloodRaster(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood raster queue', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_raster_queue', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = [];
+			$body = null;
+			$bodyFields = $operation['bodyFields'] ?? [];
+			if ($bodyFields !== []) {
+				$body = $this->filterBodyParams($params, $bodyFields, true);
+				$dateField = $this->resolveBodyFieldName($bodyFields, 'date');
+				if ($dateField !== null && array_key_exists($dateField, $body)) {
+					$this->parseIsoDateValue($body[$dateField], $dateField);
+				}
+			} else {
+				$query = $this->filterQueryParams($params, $operation['queryParams'] ?? []);
+				$this->requireQueryParams($query, $operation['queryParams'] ?? []);
+				$dateField = $this->resolveQueryParamName($operation['queryParams'] ?? [], 'date');
+				if ($dateField !== null && array_key_exists($dateField, $query)) {
+					$this->parseIsoDateValue($query[$dateField], $dateField);
+				}
+			}
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('nisar_flood raster queue', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				$query,
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood raster queue', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood raster queue', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'nisar_flood raster queue');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood raster queue');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NISAR_SMI raster queued.');
+	}
+
+
+	#[AdminRequired]
+	public function refreshNisarFlood(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood refresh', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_refresh', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$body = $this->filterBodyParams($params, $operation['bodyFields'] ?? [], false);
+			$this->logProxyRequest('nisar_flood refresh', $operation, $path, [], $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'POST'),
+				$path,
+				[],
+				$body === [] ? null : $body,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood refresh', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood refresh', $operation, $path, [], $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'nisar_flood refresh');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood refresh');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NISAR_SMI refresh queued.');
+	}
+
+
+	#[AdminRequired]
+	public function getNisarFloodFarmState(string $farmId): JSONResponse {
+		$requestId = $this->resolveRequestId();
+		$this->logEndpointEntry('nisar_flood farm state', $requestId);
+		$invalid = $this->validateFarmId($farmId, $requestId);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		$operation = [];
+		$path = '';
+		$query = [];
+
+		try {
+			$operation = $this->schemaService->getFarmOperation('nisar_flood_farm_state', $requestId);
+			$pathTemplate = (string)($operation['path'] ?? '');
+			$path = $this->applyPathParams($pathTemplate, ['farm_id' => $farmId]);
+			$params = $this->stripPathParams($this->request->getParams(), $pathTemplate);
+			$externalFarmId = $this->pullExternalFarmId($params);
+			$query = $this->filterQueryParams(
+				$params,
+				$operation['queryParams'] ?? [],
+			);
+			$query = $this->appendExternalFarmIdValue($externalFarmId, $query);
+			$this->logProxyRequest('nisar_flood farm state', $operation, $path, $query, $requestId);
+			$result = $this->weatherApiClient->requestJsonWithStatus(
+				(string)($operation['method'] ?? 'GET'),
+				$path,
+				$query,
+				null,
+				$requestId,
+			);
+			$this->logProxyResponse('nisar_flood farm state', $operation, $path, $requestId, $result['statusCode']);
+			$payload = $result['payload'];
+		} catch (WeatherApiException $exception) {
+			$this->logProxyError('nisar_flood farm state', $operation, $path, $query, $requestId, $exception);
+			return $this->handleWeatherApiException($exception, $requestId, 'nisar_flood farm state');
+		} catch (\Throwable $throwable) {
+			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood farm state');
+		}
+
+		return $this->buildSuccessResponse($payload, 'NISAR_SMI farm state loaded.');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNisarFloodRasterTile(string $farmId): Response {
+		$z = $this->request->getParam('z', '');
+		$x = $this->request->getParam('x', '');
+		$y = $this->request->getParam('y', '');
+		return $this->proxyRasterTile($farmId, 'nisar_flood', $z, $x, $y);
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNisarFloodRasterDates(string $farmId): Response {
+		return $this->proxyRasterDates($farmId, 'nisar_flood');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNisarFloodGeotiff(string $farmId): Response {
+		return $this->proxyGeotiff($farmId, 'nisar_flood');
+	}
+
+
+	#[NoCSRFRequired]
+	#[AdminRequired]
+	public function getNisarFloodGeotiffStyle(string $farmId): Response {
+		return $this->proxyGeotiffStyle($farmId, 'nisar_flood');
+	}
+
+
 	// ── NDRE endpoints ─────────────────────────────────────────
 
 	#[AdminRequired]

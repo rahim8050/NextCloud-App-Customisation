@@ -595,6 +595,56 @@ return [
 			'url' => '/api/v1/admin/farms/{farmId}/nisar_smi/geotiff-style',
 			'verb' => 'GET',
 		],
+		[
+			'name' => 'adminFarms#getNisarFloodLatest',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/latest',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodTimeseries',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/timeseries',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodRasterPng',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/raster.png',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#queueNisarFloodRaster',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/raster/queue',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#refreshNisarFlood',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/refresh',
+			'verb' => 'POST',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodFarmState',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/state',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodRasterTile',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/tiles',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodRasterDates',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/raster-dates',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodGeotiff',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/geotiff',
+			'verb' => 'GET',
+		],
+		[
+			'name' => 'adminFarms#getNisarFloodGeotiffStyle',
+			'url' => '/api/v1/admin/farms/{farmId}/nisar_flood/geotiff-style',
+			'verb' => 'GET',
+		],
 
 		// NDRE endpoints
 		[

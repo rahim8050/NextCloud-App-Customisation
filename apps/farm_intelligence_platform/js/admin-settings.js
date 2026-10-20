@@ -128,6 +128,14 @@
 		const farmNisarSmiFarmStateUrl = form.dataset.farmNisarSmiFarmStateUrl || ''
 		const farmNisarSmiGeotiffUrl = form.dataset.farmNisarSmiGeotiffUrl || ''
 		const farmNisarSmiGeotiffStyleUrl = form.dataset.farmNisarSmiGeotiffStyleUrl || ''
+		const farmNisarFloodLatestUrl = form.dataset.farmNisarFloodLatestUrl || ''
+		const farmNisarFloodTimeseriesUrl = form.dataset.farmNisarFloodTimeseriesUrl || ''
+		const farmNisarFloodRasterUrl = form.dataset.farmNisarFloodRasterUrl || ''
+		const farmNisarFloodRasterQueueUrl = form.dataset.farmNisarFloodRasterQueueUrl || ''
+		const farmNisarFloodRefreshUrl = form.dataset.farmNisarFloodRefreshUrl || ''
+		const farmNisarFloodFarmStateUrl = form.dataset.farmNisarFloodFarmStateUrl || ''
+		const farmNisarFloodGeotiffUrl = form.dataset.farmNisarFloodGeotiffUrl || ''
+		const farmNisarFloodGeotiffStyleUrl = form.dataset.farmNisarFloodGeotiffStyleUrl || ''
 		const farmNdreLatestUrl = form.dataset.farmNdreLatestUrl || ''
 		const farmNdreTimeseriesUrl = form.dataset.farmNdreTimeseriesUrl || ''
 		const farmNdreRasterUrl = form.dataset.farmNdreRasterUrl || ''
@@ -319,6 +327,14 @@
 		const nisarSmiStateButton = document.getElementById('farm-intelligence-platform-nisar-smi-state')
 		const nisarSmiGeotiffButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff')
 		const nisarSmiGeotiffStyleButton = document.getElementById('farm-intelligence-platform-nisar-smi-geotiff-style')
+		const nisarFloodLatestButton = document.getElementById('farm-intelligence-platform-nisar-flood-latest')
+		const nisarFloodTimeseriesButton = document.getElementById('farm-intelligence-platform-nisar-flood-timeseries')
+		const nisarFloodRasterButton = document.getElementById('farm-intelligence-platform-nisar-flood-raster')
+		const nisarFloodQueueButton = document.getElementById('farm-intelligence-platform-nisar-flood-queue')
+		const nisarFloodRefreshButton = document.getElementById('farm-intelligence-platform-nisar-flood-refresh')
+		const nisarFloodStateButton = document.getElementById('farm-intelligence-platform-nisar-flood-state')
+		const nisarFloodGeotiffButton = document.getElementById('farm-intelligence-platform-nisar-flood-geotiff')
+		const nisarFloodGeotiffStyleButton = document.getElementById('farm-intelligence-platform-nisar-flood-geotiff-style')
 		const ndreLatestButton = document.getElementById('farm-intelligence-platform-ndre-latest')
 		const ndreTimeseriesButton = document.getElementById('farm-intelligence-platform-ndre-timeseries')
 		const ndreRasterButton = document.getElementById('farm-intelligence-platform-ndre-raster')
@@ -2609,6 +2625,8 @@
 				if (lRviRefreshButton) lRviRefreshButton.disabled = !enabled
 				if (nisarSmiLatestButton) nisarSmiLatestButton.disabled = !enabled
 				if (nisarSmiRefreshButton) nisarSmiRefreshButton.disabled = !enabled
+				if (nisarFloodLatestButton) nisarFloodLatestButton.disabled = !enabled
+				if (nisarFloodRefreshButton) nisarFloodRefreshButton.disabled = !enabled
 				if (ndreLatestButton) ndreLatestButton.disabled = !enabled
 				if (ndreRefreshButton) ndreRefreshButton.disabled = !enabled
 				if (ndreStateButton) ndreStateButton.disabled = !enabled
@@ -2649,6 +2667,9 @@
 					if (nisarSmiTimeseriesButton) nisarSmiTimeseriesButton.disabled = true
 					if (nisarSmiQueueButton) nisarSmiQueueButton.disabled = true
 					if (nisarSmiRasterButton) nisarSmiRasterButton.disabled = true
+					if (nisarFloodTimeseriesButton) nisarFloodTimeseriesButton.disabled = true
+					if (nisarFloodQueueButton) nisarFloodQueueButton.disabled = true
+					if (nisarFloodRasterButton) nisarFloodRasterButton.disabled = true
 					if (ndreTimeseriesButton) ndreTimeseriesButton.disabled = true
 					if (ndreQueueButton) ndreQueueButton.disabled = true
 					if (ndreRasterButton) ndreRasterButton.disabled = true
@@ -3729,6 +3750,15 @@
 				}
 				if (nisarSmiRasterButton) {
 					nisarSmiRasterButton.disabled = !rasterValidation.ok
+				}
+				if (nisarFloodTimeseriesButton) {
+					nisarFloodTimeseriesButton.disabled = !timeseriesValidation.ok
+				}
+				if (nisarFloodQueueButton) {
+					nisarFloodQueueButton.disabled = !rasterValidation.ok
+				}
+				if (nisarFloodRasterButton) {
+					nisarFloodRasterButton.disabled = !rasterValidation.ok
 				}
 				if (ndreTimeseriesButton) {
 					ndreTimeseriesButton.disabled = !timeseriesValidation.ok
@@ -7119,6 +7149,7 @@
 				else if (indexLower === 'evi') baseUrl = farmEviRasterUrl
 				else if (indexLower === 'l_rvi') baseUrl = farmLRviRasterUrl
 				else if (indexLower === 'nisar_smi') baseUrl = farmNisarSmiRasterUrl
+				else if (indexLower === 'nisar_flood') baseUrl = farmNisarFloodRasterUrl
 				else if (indexLower === 'ndre') baseUrl = farmNdreRasterUrl
 				else if (indexLower === 'biomass') baseUrl = farmBiomassRasterUrl
 				else return
@@ -9844,6 +9875,308 @@
 				})
 			}
 
+			if (nisarFloodLatestButton) {
+				nisarFloodLatestButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (ndviOutput) {
+						ndviOutput.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading latest NISAR_FLOOD...</div>'
+					}
+					latestNisarFloodState = reduceLatestState(latestNisarFloodState, { type: 'request' })
+					renderLatestCard(latestNisarFloodState, () => {}, 'Latest NISAR_FLOOD')
+					const payload = await runNdviRequest('latest NISAR_FLOOD', farmNisarFloodLatestUrl, {
+						method: 'GET',
+						returnRaw: true,
+					})
+					if (!payload) {
+						latestNisarFloodState = reduceLatestState(latestNisarFloodState, {
+							type: 'failure',
+							message: 'Unable to load latest NISAR_FLOOD.',
+						})
+						renderLatestCard(latestNisarFloodState, () => {}, 'Latest NISAR_FLOOD')
+						return
+					}
+					latestNisarFloodState = reduceLatestState(latestNisarFloodState, { type: 'success', payload }, new Date())
+					renderLatestCard(latestNisarFloodState, () => {}, 'Latest NISAR_FLOOD')
+				})
+			}
+			if (nisarFloodTimeseriesButton) {
+				nisarFloodTimeseriesButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					clearNdviError()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateTimeseriesInputs(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					timeseriesNisarFloodState = reduceTimeseriesState(
+						timeseriesNisarFloodState,
+						{ type: 'request' },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNisarFloodState, () => {}, 'NISAR_FLOOD timeseries')
+					renderNdviCalendar(timeseriesNisarFloodState)
+					const payload = await runNdviRequest('nisar_flood_timeseries', farmNisarFloodTimeseriesUrl, {
+						method: 'GET',
+						query: buildNdviQuery('nisar_flood_timeseries', {
+							start: validation.start,
+							end: validation.end,
+						}),
+						returnRaw: true,
+					})
+					if (!payload) {
+						timeseriesNisarFloodState = reduceTimeseriesState(
+							timeseriesNisarFloodState,
+							{ type: 'failure', message: 'Unable to load NISAR_FLOOD timeseries.' },
+							validation.start,
+							validation.end,
+						)
+						renderTimeseriesCard(timeseriesNisarFloodState, () => {}, 'NISAR_FLOOD timeseries')
+						renderNdviCalendar(timeseriesNisarFloodState)
+						if (ndviTable) {
+							ndviTable.textContent = ''
+						}
+						return
+					}
+					timeseriesNisarFloodState = reduceTimeseriesState(
+						timeseriesNisarFloodState,
+						{ type: 'success', payload },
+						validation.start,
+						validation.end,
+					)
+					renderTimeseriesCard(timeseriesNisarFloodState, () => {}, 'NISAR_FLOOD timeseries')
+					renderNdviCalendar(timeseriesNisarFloodState)
+					if (timeseriesNisarFloodState.status === NDVI_SERIES_STATE.has_data) {
+						renderNdviTable(timeseriesNisarFloodState.vm?.points ?? [])
+					} else if (ndviTable) {
+						ndviTable.textContent = ''
+					}
+				})
+			}
+			if (nisarFloodRasterButton) {
+				nisarFloodRasterButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const url = farmNisarFloodRasterUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					const query = buildNdviQuery('nisar_flood_raster', { date: validation.date })
+					const queryString = buildQueryString(query)
+					const finalUrl = queryString ? `${url}${url.includes('?') ? '&' : '?'}${queryString}` : url
+					try {
+						const tileUrlTemplate = farmNisarFloodRasterUrl
+							.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+							.replace('/raster.png', '/tiles/{z}/{x}/{y}.png')
+						const response = await fetch(ncGenerateUrl(finalUrl), {
+							credentials: 'same-origin',
+							headers: {
+								'OCS-APIRequest': 'true',
+								'X-Requested-With': 'XMLHttpRequest',
+								requesttoken: resolveRequestToken() ?? '',
+							},
+						})
+						if (!response.ok) {
+							showNdviError(
+								`Unable to load NISAR_FLOOD raster preview (HTTP ${response.status}).`,
+							)
+							return
+						}
+						const contentType = response.headers.get('content-type') || ''
+						if (!contentType.startsWith('image/')) {
+							showNdviError(
+								'NISAR_FLOOD raster preview did not return an image.',
+							)
+							return
+						}
+						const blob = await response.blob()
+						if (!blob || blob.size === 0) {
+							showNdviError('NISAR_FLOOD raster preview response was empty.')
+							return
+						}
+						if (ndviRasterObjectUrl) {
+							URL.revokeObjectURL(ndviRasterObjectUrl)
+						}
+						ndviRasterObjectUrl = URL.createObjectURL(blob)
+						showRasterMap(ndviRasterObjectUrl, selectedFarm, tileUrlTemplate, 'NISAR_FLOOD')
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Unable to load NISAR_FLOOD raster preview.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarFloodQueueButton) {
+				nisarFloodQueueButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					const state = readNdviDateState()
+					const validation = validateRasterInput(state)
+					if (!validation.ok) {
+						showNdviError(validation.message)
+						return
+					}
+					const queueOperation = resolveOperation('nisar_flood_raster_queue')
+					const bodyDateField = queueOperation?.bodyFields ? Object.keys(queueOperation.bodyFields).find(k => k.toLowerCase().includes('date')) : null
+					try {
+						const data = await runNdviRequest('queue NISAR_FLOOD raster', farmNisarFloodRasterQueueUrl, {
+							method: 'POST',
+							body: bodyDateField ? buildNdviBody('nisar_flood_raster_queue', { date: validation.date }) : null,
+							query: !bodyDateField
+								? buildNdviQuery('nisar_flood_raster_queue', { date: validation.date })
+								: undefined,
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NISAR_FLOOD raster job #${jobId}`
+							: 'Queued NISAR_FLOOD raster job'
+						const card = renderResultCard({
+							title: 'NISAR_FLOOD raster queue',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to queue NISAR_FLOOD raster.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarFloodRefreshButton) {
+				nisarFloodRefreshButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					try {
+						const data = await runNdviRequest('refresh NISAR_FLOOD', farmNisarFloodRefreshUrl, {
+							method: 'POST',
+							body: buildNdviBody('nisar_flood_refresh'),
+						})
+						const jobId = data?.data?.job_id ?? data?.job_id ?? null
+						const message = jobId !== null
+							? `Queued NISAR_FLOOD refresh job #${jobId}`
+							: 'Queued NISAR_FLOOD refresh job'
+						const card = renderResultCard({
+							title: 'NISAR_FLOOD refresh',
+							level: 'info',
+							summary: message,
+							debug: data,
+						})
+						if (ndviOutput) {
+							ndviOutput.innerHTML = ''
+							ndviOutput.appendChild(card)
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Failed to refresh NISAR_FLOOD.'
+						showNdviError(message)
+					}
+				})
+			}
+			if (nisarFloodStateButton) {
+				nisarFloodStateButton.addEventListener('click', async () => {
+					clearFarmsNotes()
+					if (!selectedFarm) {
+						showNdviError('Select a farm first.')
+						return
+					}
+					if (farmStateOutput) {
+						farmStateOutput.hidden = false
+					}
+					if (farmStateContent) {
+						farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note">Loading NISAR_FLOOD farm state...</div>'
+					}
+					const url = farmNisarFloodFarmStateUrl.replace('__FARM_ID__', encodeURIComponent(selectedFarm.id))
+					try {
+						const payload = await runNdviRequest('nisar_flood farm state', url, {
+							method: 'GET',
+							returnRaw: true,
+						})
+						if (!payload) {
+							if (farmStateContent) {
+								farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Unable to load NISAR_FLOOD farm state.</div>'
+							}
+							return
+						}
+						const data = unwrapResponseData(payload?.data ?? payload)
+						const state = data?.state ?? 'unknown'
+						const meanNisarFlood = data?.mean_nisar_flood ?? null
+						const maxNisarFlood = data?.max_nisar_flood ?? null
+						const minNisarFlood = data?.min_nisar_flood ?? null
+						const trend = data?.trend ?? null
+						const interpretation = data?.interpretation ?? ''
+						const action = data?.action ?? ''
+
+						const ndviUi = window.FarmIntelligencePlatformNdviUi ?? window.FarmIntelligencePlatformNdviLatest ?? {}
+						const formatNumber = typeof ndviUi.formatNumber === 'function' ? ndviUi.formatNumber : (v) => String(v)
+
+						const stateLabels = {
+							no_flood: 'No flood',
+							possible_flood: 'Possible flood',
+							flooding: 'Flooding',
+							receding: 'Receding',
+							unknown: 'Unknown',
+						}
+						const stateLevel = {
+							no_flood: 'success',
+							possible_flood: 'warning',
+							flooding: 'error',
+							receding: 'info',
+							unknown: 'info',
+						}
+						const facts = []
+						pushFact(facts, 'State', stateLabels[state] ?? state)
+						pushFact(facts, 'Mean NISAR_FLOOD', meanNisarFlood !== null ? formatNumber(meanNisarFlood, 3) : '-')
+						pushFact(facts, 'Max NISAR_FLOOD', maxNisarFlood !== null ? formatNumber(maxNisarFlood, 3) : '-')
+						pushFact(facts, 'Min NISAR_FLOOD', minNisarFlood !== null ? formatNumber(minNisarFlood, 3) : '-')
+						pushFact(facts, 'Trend', trend !== null ? (trend >= 0 ? `+${formatNumber(trend, 4)}` : formatNumber(trend, 4)) : '-')
+						const card = renderResultCard({
+							title: 'NISAR_FLOOD Farm State',
+							level: stateLevel[state] ?? 'info',
+							badges: [
+								stateLabels[state] ?? state,
+							],
+							summary: interpretation || `NISAR_FLOOD farm state: ${stateLabels[state] ?? state}`,
+							callout: action || 'No action available',
+							facts,
+							debug: data,
+						})
+						if (farmStateContent) {
+							farmStateContent.innerHTML = ''
+							farmStateContent.appendChild(card)
+						}
+					} catch (error) {
+						console.error('[farm_intelligence_platform] NISAR_FLOOD farm state error', error)
+						if (farmStateContent) {
+							farmStateContent.innerHTML = '<div class="farm-intelligence-platform-farms__note error">Failed to load NISAR_FLOOD farm state.</div>'
+						}
+					}
+				})
+			}
+
 			const downloadGeotiff = async (urlTemplate, label) => {
 				clearFarmsNotes()
 				clearNdviError()
@@ -9929,6 +10262,9 @@
 			}
 			if (nisarSmiGeotiffButton) {
 				nisarSmiGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNisarSmiGeotiffUrl, 'NISAR_SMI'))
+			}
+			if (nisarFloodGeotiffButton) {
+				nisarFloodGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNisarFloodGeotiffUrl, 'NISAR_FLOOD'))
 			}
 
 			const downloadGeotiffStyle = async (urlTemplate, label) => {
@@ -10016,6 +10352,9 @@
 			}
 			if (nisarSmiGeotiffStyleButton) {
 				nisarSmiGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNisarSmiGeotiffStyleUrl, 'NISAR_SMI'))
+			}
+			if (nisarFloodGeotiffStyleButton) {
+				nisarFloodGeotiffStyleButton.addEventListener('click', () => downloadGeotiffStyle(farmNisarFloodGeotiffStyleUrl, 'NISAR_FLOOD'))
 			}
 			if (ndreGeotiffButton) {
 				ndreGeotiffButton.addEventListener('click', () => downloadGeotiff(farmNdreGeotiffUrl, 'NDRE'))
