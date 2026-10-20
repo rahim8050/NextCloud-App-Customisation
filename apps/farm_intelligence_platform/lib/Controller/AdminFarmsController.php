@@ -4114,7 +4114,7 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood latest');
 		}
 
-		return $this->buildSuccessResponse($payload, 'NISAR_SMI latest loaded.');
+		return $this->buildSuccessResponse($payload, 'NISAR_FLOOD latest loaded.');
 	}
 
 
@@ -4163,7 +4163,7 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood timeseries');
 		}
 
-		return $this->buildSuccessResponse($payload, 'NISAR_SMI timeseries loaded.');
+		return $this->buildSuccessResponse($payload, 'NISAR_FLOOD timeseries loaded.');
 	}
 
 
@@ -4276,7 +4276,7 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood raster queue');
 		}
 
-		return $this->buildSuccessResponse($payload, 'NISAR_SMI raster queued.');
+		return $this->buildSuccessResponse($payload, 'NISAR_FLOOD raster queued.');
 	}
 
 
@@ -4315,7 +4315,7 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood refresh');
 		}
 
-		return $this->buildSuccessResponse($payload, 'NISAR_SMI refresh queued.');
+		return $this->buildSuccessResponse($payload, 'NISAR_FLOOD refresh queued.');
 	}
 
 
@@ -4360,7 +4360,7 @@ final class AdminFarmsController extends Controller {
 			return $this->handleUnexpectedError($throwable, $requestId, 'nisar_flood farm state');
 		}
 
-		return $this->buildSuccessResponse($payload, 'NISAR_SMI farm state loaded.');
+		return $this->buildSuccessResponse($payload, 'NISAR_FLOOD farm state loaded.');
 	}
 
 
