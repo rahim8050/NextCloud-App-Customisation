@@ -22,6 +22,10 @@ class PhpInfoSection extends Section {
 
 	#[\Override]
 	public function getDetails(): array {
+		if (!function_exists('phpinfo')) {
+			$this->createDetail('error', 'phpinfo function is disabled.', IDetail::TYPE_SINGLE_LINE);
+			return parent::getDetails();
+		}
 		ob_start();
 		phpinfo(INFO_CONFIGURATION | INFO_MODULES);
 		$phpinfo = ob_get_clean();
@@ -31,7 +35,7 @@ class PhpInfoSection extends Section {
 			return parent::getDetails();
 		}
 
-		if (strpos($phpinfo, '<!DOCTYPE html>') === false) {
+		if (str_contains($phpinfo, '<!DOCTYPE html') === false) {
 			// If phpinfo output is not HTML, we dump the raw output
 			$this->createDetail('phpifo', $phpinfo, IDetail::TYPE_COLLAPSIBLE_PREFORMAT);
 			return parent::getDetails();

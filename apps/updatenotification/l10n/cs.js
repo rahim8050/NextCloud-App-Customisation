@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Kanál aktualizován",
     "Web updater is disabled" : "Nástroj pro aktualizaci přes webové rozhraní je vypnutý",
+    "Configuration is read-only" : "Nastavení je pouze pro čtení",
     "App updated" : "Aplikace zaktualizována",
     "See what's new" : "Zjistěte, co je nového",
     "{app} updated to version {version}" : "{app} zaktualizováno na verzi {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Pro {app} je dostupná aktualizace na verzi %s.",
     "Update notification" : "Upozornění na aktualizaci",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Zobrazí upozornění na aktualizace pro Nextcloud, aplikace a poskytuje sjednocené přihlašování pro nástroj pro provedení aktualizace.",
-    "Give feedback" : "Dát zpětnou vazbu",
-    "Get started" : "Začněte",
-    "No changelog available" : "Není k dispozici žádný soupis změn",
-    "What's new in {app} {version}" : "Co je nového v {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "Je k dispozici nová verze: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Můžete si všimnout, že po vydání nové verze se aktualizace objeví až po vydání první opravné aktualizace. Nové verze totiž distribuujeme mezi uživatele postupně – a občas, pokud jsou nalezeny chyby, danou verzi i přeskočíme. Zjistěte více o aktualizacích a kanálech aktualizací kliknutím na {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Zkontrolováno {lastCheckedDate} – otevřít seznam změn",
@@ -56,11 +53,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "K dispozici jsou upozornění pouze na aktualizace aplikací.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Pro zvolený kanál aktualizací se už vyhrazená upozorňování pro server nepoužívají.",
     "The selected update channel does not support updates of the server." : "Vybraný kanál aktualizací nepodporuje aktualizace serveru.",
+    "Give feedback" : "Dát zpětnou vazbu",
+    "Get started" : "Začněte",
+    "No changelog available" : "Není k dispozici žádný soupis změn",
+    "What's new in {app} {version}" : "Co je nového v {app} {version}",
     "Changelog for app {app}" : "Soupis změn v aplikaci {app}",
     "What's new in {app} version {version}" : "Co je nového v {app} verze {version}",
-    "{version} is available. Get more information on how to update." : "Je k dispozici {version}. Přečtěte si informace o tom, jak aktualizovat.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Všechny</strong> aplikace mají k dispozici kompatibilní verzi s verzí tohoto Nextcloud serveru.",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["<strong>%n</strong> aplikace nemá kompatibilní verzi pro tuto verzi Nextcloud serveru.","<strong>%n</strong> aplikace nemají kompatibilní verzi pro tuto verzi Nextcloud serveru.","<strong>%n</strong>aplikací nemá kompatibilní verzi pro tuto verzi Nextcloud serveru.","<strong>%n</strong> aplikace nemají kompatibilní verzi pro tuto verzi Nextcloud serveru."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Pro podnikové nasazení. Poskytuje vždy nejnovější opravy, ale nebude hned aktualizováno na další hlavní vydání. K tomu dochází až když Nextcloud GmbH dokončí další zodolnění a testování pro rozsáhlá a kritická nasazení. Tento kanál je k dispozici pouze zákazníkům a poskytuje balíček Nextcloud Enterprise."
+    "{version} is available. Get more information on how to update." : "Je k dispozici {version}. Přečtěte si informace o tom, jak aktualizovat."
 },
 "nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;");

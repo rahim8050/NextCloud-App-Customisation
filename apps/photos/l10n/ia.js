@@ -10,11 +10,15 @@ OC.L10N.register(
     "Shared by" : "Compartite per",
     "Favorite" : "Favorite",
     "Go back" : "Retornar",
-    "Home" : "Initio",
-    "View" : "Vider",
     "Remove from favorites" : "Remove from favorites",
-    "Details" : "Detalios",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Location" : "Loco",
+    "Home" : "Initio",
+    "General" : "General",
     "Group" : "Gruppo",
-    "Add" : "Adder"
+    "View" : "Vider",
+    "Details" : "Detalios",
+    "Confirm" : "Confirmar"
 },
 "nplurals=2; plural=(n != 1);");

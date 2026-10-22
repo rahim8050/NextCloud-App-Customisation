@@ -27,7 +27,6 @@ class LogException extends \Exception {
 }
 
 
-use CurlHandle;
 
 class Updater {
 	private string $nextcloudDir;
@@ -159,7 +158,8 @@ class Updater {
 		if ($version !== '' && $version !== $this->currentVersion) {
 			$this->updateAvailable = true;
 			$releaseChannel = $this->getCurrentReleaseChannel();
-			$updateText = 'Update to ' . htmlentities($versionString) . ' available. (channel: "' . htmlentities($releaseChannel) . '")<br /><span class="light">Following file will be downloaded automatically:</span> <code class="light">' . (string)$response['url'] . '</code>';
+			$downloadUrl = current($this->getDownloadURLs());
+			$updateText = 'Update to ' . htmlentities($versionString) . ' available. (channel: "' . htmlentities($releaseChannel) . '")<br /><span class="light">Following file will be downloaded automatically:</span> <code class="light">' . $downloadUrl . '</code>';
 
 			// only show changelog link for stable releases (non-RC & non-beta)
 			if (!preg_match('!(rc|beta)!i', $versionString)) {
@@ -555,12 +555,12 @@ class Updater {
 	 *
 	 * @throws \Exception
 	 */
-	public function downloadUpdate(?string $url = null): void {
+	public function downloadUpdate(string $urlOverride = ''): void {
 		$this->silentLog('[info] downloadUpdate()');
 
-		if ($url) {
+		if ($urlOverride !== '') {
 			// If a URL is provided, use it directly
-			$downloadURLs = [$url];
+			$downloadURLs = [$urlOverride];
 		} else {
 			// Otherwise, get the download URLs from the update server
 			$downloadURLs = $this->getDownloadURLs();
@@ -585,10 +585,10 @@ class Updater {
 			}
 		}
 
-		foreach ($downloadURLs as $url) {
+		foreach ($downloadURLs as $urlOverride) {
 			$this->previousProgress = 0;
-			$saveLocation = $storageLocation . basename($url);
-			if ($this->downloadArchive($url, $saveLocation)) {
+			$saveLocation = $storageLocation . basename($urlOverride);
+			if ($this->downloadArchive($urlOverride, $saveLocation)) {
 				return;
 			}
 		}
@@ -599,7 +599,10 @@ class Updater {
 	private function getDownloadURLs(): array {
 		$response = $this->getUpdateServerResponse();
 		$downloadURLs = [];
-		if (!isset($response['downloads']) || !is_array($response['downloads'])) {
+
+		if (isset($response['downloads'])) {
+			$response['downloads'] = (array)$response['downloads'];
+		} else {
 			if (isset($response['url']) && is_string($response['url'])) {
 				// Compatibility with previous verison of updater_server
 				$ext = pathinfo($response['url'], PATHINFO_EXTENSION);
@@ -610,10 +613,14 @@ class Updater {
 				throw new \Exception('Response from update server is missing download URLs');
 			}
 		}
+
 		foreach ($response['downloads'] as $format => $urls) {
 			if (!$this->isAbleToDecompress($format)) {
 				continue;
 			}
+
+			// If only one download URL exists, $urls is a string
+			$urls = (array)$urls;
 			foreach ($urls as $url) {
 				if (!is_string($url)) {
 					continue;
@@ -759,7 +766,7 @@ class Updater {
 	 *
 	 * @throws \Exception
 	 */
-	public function verifyIntegrity(?string $urlOverride = null): void {
+	public function verifyIntegrity(string $urlOverride = '', string $signature = ''): void {
 		$this->silentLog('[info] verifyIntegrity()');
 
 		if ($this->getCurrentReleaseChannel() === 'daily') {
@@ -767,17 +774,13 @@ class Updater {
 			return;
 		}
 
-		if ($urlOverride) {
-			$this->silentLog('[info] custom download url provided, cannot verify signature');
-			return;
-		}
-
-		$response = $this->getUpdateServerResponse();
-		if (empty($response['signature'])) {
-			throw new \Exception('No signature specified for defined update');
-		}
-		if (!is_string($response['signature'])) {
-			throw new \Exception('Signature specified for defined update should be a string');
+		if ($signature === '') {
+			if ($urlOverride !== '') {
+				throw new \Exception(
+					'Custom download url provided. You need to provide a signature with --signature or skip integrity check with --no-verify.'
+				);
+			}
+			$signature = $this->getSignatureFromUpdater();
 		}
 
 		$certificate = <<<EOF
@@ -812,7 +815,7 @@ EOF;
 
 		$validSignature = openssl_verify(
 			file_get_contents($this->getDownloadedFilePath()),
-			base64_decode($response['signature']),
+			base64_decode($signature),
 			$certificate,
 			OPENSSL_ALGO_SHA512
 		) === 1;
@@ -822,6 +825,19 @@ EOF;
 		}
 
 		$this->silentLog('[info] end of verifyIntegrity()');
+	}
+
+	private function getSignatureFromUpdater(): string {
+		$response = $this->getUpdateServerResponse();
+		if (empty($response['signature'])) {
+			throw new \Exception('No signature specified for defined update');
+		}
+
+		if (!is_string($response['signature'])) {
+			throw new \Exception('Signature specified for defined update should be a string');
+		}
+
+		return $response['signature'];
 	}
 
 	/**

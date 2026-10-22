@@ -35,15 +35,19 @@ OC.L10N.register(
     "Your settings have been updated." : "Le impostazioni sono state aggiornate.",
     "An error occurred while updating your settings." : "Si è verificato un errore durante l'aggiornamento delle impostazioni.",
     "Notifications defaults" : "Notifiche predefinite",
+    "Configure the default notification settings" : "Configura le impostazioni di notifica",
     "Send email reminders about unhandled notifications after:" : "Invia promemoria via email riguardo notifiche non gestite dopo:",
     "Play sound when a new notification arrives" : "Riproduci un suono quando arriva una nuova notifica",
     "Play sound when a call started (requires Nextcloud Talk)" : "Riproduci un suono all'inizio di una chiamata (richiede Nextcloud Talk)",
+    "Web push settings" : "Impostazioni notifiche push web",
+    "Web push is a push notification system that lets web applications send notifications to users´ mobile apps or browser, even when the app is not open in a tab." : "Le notifiche push web permettono alle applicazioni web di inviare notifiche alle app mobili o al browser degli utenti, anche quando l’app non è aperta in una scheda del browser.",
+    "Web push notifications are encrypted but routed through services provided by Mozilla, Microsoft, Apple, Google or user-choosen ones in case of mobile apps. While the content is protected, metadata such as timing and frequency of notifications may be exposed to these providers." : "Le notifiche push web sono cifrate, ma vengono instradate tramite servizi forniti da Mozilla, Microsoft, Apple, Google oppure, nel caso delle app mobili, da servizi scelti dall’utente. Anche se il contenuto è protetto, metadati come orario e frequenza delle notifiche potrebbero essere visibili a questi provider.",
+    "Allow web push to be used" : "Consenti l’uso delle notifiche push web",
+    "Allow web push for browsers" : "Consenti notifiche push web nei browser",
     "None" : "Nessuno",
     "You need to set up your email address before you can receive notification emails." : "Devi impostare l'indirizzo di posta prima di poter ricevere le email di notifica.",
     "Also repeat sound on a secondary speaker" : "Ripeti il suono in un'uscita audio secondaria",
     "Selection of the speaker device is currently not supported by Safari" : "La selezione del dispositivo audio attualmente non è supportata da Safari",
-    "Select a device" : "Seleziona un dispositivo",
-    "seconds ago" : "secondi fa",
-    "Configure the default notification settings for new users" : "Configura le impostazioni di notifica predefinite per i nuovi utenti"
+    "Select a device" : "Seleziona un dispositivo"
 },
 "nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");

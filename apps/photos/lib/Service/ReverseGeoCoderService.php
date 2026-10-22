@@ -5,6 +5,7 @@ declare(strict_types=1);
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OCA\Photos\Service;
 
 use Hexogen\KDTree\FSKDTree;
@@ -68,6 +69,10 @@ class ReverseGeoCoderService {
 	}
 
 	public function arePlacesEnabled(): bool {
+		if (!$this->config->getSystemValueBool('has_internet_connection', true)) {
+			/* This feature cannot work without internet access */
+			return false;
+		}
 		return ($this->config->getAppValue(Application::APP_ID, self::CONFIG_DISABLE_PLACES, '0') !== '1');
 	}
 

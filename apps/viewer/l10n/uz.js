@@ -1,8 +1,8 @@
 OC.L10N.register(
     "viewer",
     {
-    "Cancel" : "Bekor qilish",
     "Overwrite" : "ustiga yozish",
+    "Cancel" : "Bekor qilish",
     "Edit" : "Tahrirlash",
     "Download" : "Yuklab olish",
     "Delete" : "O'chirish",
@@ -10,13 +10,22 @@ OC.L10N.register(
     "Name" : "Name",
     "Save" : "Saqlash",
     "Back" : "Orqaga",
+    "Loading …" : "Yuklanmoqda…",
     "Reset" : "Qayta tiklash",
+    "Warning" : "Ogohlantirish",
     "Confirm" : "Confirm",
+    "Discard changes" : "O'zgarishlarni bekor qilish",
     "Undo" : "Bekor qilish",
     "Custom" : "Boshqa",
     "Value" : "Qiymati",
     "Line" : "Chiziq",
     "Text" : "Matn",
-    "Size" : "Size"
+    "Size" : "Size",
+    "Format" : "Formatlash",
+    "Play" : "O'ynang",
+    "Duration" : "Davomiyligi",
+    "Settings" : "Sozlamalar",
+    "Normal" : "Oddiy",
+    "All" : "Barchasi"
 },
 "nplurals=1; plural=0;");

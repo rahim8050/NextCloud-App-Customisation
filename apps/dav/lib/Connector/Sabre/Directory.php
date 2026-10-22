@@ -116,11 +116,16 @@ class Directory extends Node implements \Sabre\DAV\ICollection, \Sabre\DAV\IQuot
 			$node->acquireLock(ILockingProvider::LOCK_SHARED);
 			$this->fileView->lockFile($this->path . '/' . $name . '.upload.part', ILockingProvider::LOCK_EXCLUSIVE);
 
-			$result = $node->put($data);
-
-			$this->fileView->unlockFile($this->path . '/' . $name . '.upload.part', ILockingProvider::LOCK_EXCLUSIVE);
-			$node->releaseLock(ILockingProvider::LOCK_SHARED);
-			return $result;
+			try {
+				return $node->put($data);
+			} finally {
+				// Always release the locks, even when the upload failed or was
+				// interrupted. Otherwise a failed attempt leaves the exclusive
+				// part-file lock behind and every later upload to the same path
+				// keeps getting rejected with 423 until the lock TTL expires.
+				$this->fileView->unlockFile($this->path . '/' . $name . '.upload.part', ILockingProvider::LOCK_EXCLUSIVE);
+				$node->releaseLock(ILockingProvider::LOCK_SHARED);
+			}
 		} catch (StorageNotAvailableException $e) {
 			throw new \Sabre\DAV\Exception\ServiceUnavailable($e->getMessage(), $e->getCode(), $e);
 		} catch (InvalidPathException $ex) {
@@ -181,7 +186,7 @@ class Directory extends Node implements \Sabre\DAV\ICollection, \Sabre\DAV\IQuot
 		// If we are, then only PUT and MKCOL are allowed (see plugin)
 		// so we are safe to return the directory without a risk of
 		// leaking files and folders structure.
-		if ($storage instanceof PublicShareWrapper) {
+		if ($storage->instanceOfStorage(PublicShareWrapper::class)) {
 			$share = $storage->getShare();
 			$allowDirectory = ($share->getPermissions() & Constants::PERMISSION_READ) !== Constants::PERMISSION_READ;
 		}

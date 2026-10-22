@@ -2,7 +2,7 @@ OC.L10N.register(
     "twofactor_totp",
     {
     "You enabled TOTP two-factor authentication for your account" : "Hesabınız için tek kullanımlık parola ile iki adımlı doğrulamayı açtınız",
-    "You disabled TOTP two-factor authentication for your account" : "Hesabınız için tek kullanımlık parola ile iki adımlı doğrulamayı kullanımdan kaldırdınız",
+    "You disabled TOTP two-factor authentication for your account" : "Hesabınız için tek kullanımlık parola ile iki adımlı doğrulamayı kapattınız",
     "TOTP two-factor authentication disabled by the administration" : "Tek kullanımlık parola ile iki adımlı doğrulama yönetim tarafından kapatılmış",
     "TOTP (Authenticator app)" : "Tek kullanımlık parola (kimlik doğrulama uygulaması)",
     "Authenticate with a TOTP app" : "Tek kullanımlık parola uygulamasıyla kimlik doğrulama",
@@ -11,6 +11,7 @@ OC.L10N.register(
     "A two-factor authentication provider for TOTP (RFC 6238)" : "Tek kullanımlık parola için iki adımlı doğrulama hizmeti sağlayıcısı (RFC 6238)",
     "Could not enable TOTP" : "Tek kullanımlık parola açılamadı",
     "Could not verify your key. Please try again" : "Anahtarınız doğrulanamadı. Lütfen yeniden deneyin",
+    "Could not confirm TOTP" : "Tek kullanımlık parola doğrulanamadı",
     "Enable TOTP" : "Tek kullanımlık parola kullanılsın",
     "Your new TOTP secret is:" : "Yeni tek kullanımlık parolanız:",
     "For quick setup, scan this QR code with your TOTP app:" : "Hızlı kurulum için tek kullanımlık parola uygulamanızla şu kare kodunu tarayın:",

@@ -354,7 +354,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		}
 
 		$emailTemplate->addBodyButton(
-			$this->l->t('Open %s', [$filename]),
+			$this->l->t('Open shared item'),
 			$link
 		);
 
@@ -528,7 +528,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		$link = $this->urlGenerator->linkToRouteAbsolute('files_sharing.sharecontroller.showShare',
 			['token' => $share->getToken()]);
 		$emailTemplate->addBodyButton(
-			$this->l->t('Open %s', [$filename]),
+			$this->l->t('Open shared item'),
 			$link
 		);
 
@@ -644,8 +644,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		$qb->select('*')
 			->from('share')
 			->where($qb->expr()->eq('parent', $qb->createNamedParameter($parent->getId())))
-			->andWhere($qb->expr()->eq('share_type', $qb->createNamedParameter(IShare::TYPE_EMAIL)))
-			->orderBy('id');
+			->andWhere($qb->expr()->eq('share_type', $qb->createNamedParameter(IShare::TYPE_EMAIL)));
 
 		$cursor = $qb->executeQuery();
 		while ($data = $cursor->fetch()) {
@@ -702,6 +701,8 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 
 		$qb->setValue('attributes', $qb->createNamedParameter($shareAttributes));
 		if ($expirationTime !== null) {
+			$expirationTime = \DateTime::createFromInterface($expirationTime);
+			$expirationTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 			$qb->setValue('expiration', $qb->createNamedParameter($expirationTime, IQueryBuilder::PARAM_DATETIME_MUTABLE));
 		}
 
@@ -733,6 +734,11 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		 * We allow updating mail shares
 		 */
 		$qb = $this->dbConnection->getQueryBuilder();
+		$expiration = $share->getExpirationDate();
+		if ($expiration !== null) {
+			$expiration = \DateTime::createFromInterface($expiration);
+			$expiration->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+		}
 		$qb->update('share')
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($share->getId())))
 			->set('item_source', $qb->createNamedParameter($share->getNodeId()))
@@ -745,7 +751,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 			->set('password_expiration_time', $qb->createNamedParameter($share->getPasswordExpirationTime(), IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->set('label', $qb->createNamedParameter($share->getLabel()))
 			->set('password_by_talk', $qb->createNamedParameter($share->getSendPasswordByTalk(), IQueryBuilder::PARAM_BOOL))
-			->set('expiration', $qb->createNamedParameter($share->getExpirationDate(), IQueryBuilder::PARAM_DATETIME_MUTABLE))
+			->set('expiration', $qb->createNamedParameter($expiration, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->set('note', $qb->createNamedParameter($share->getNote()))
 			->set('hide_download', $qb->createNamedParameter((int)$share->getHideDownload(), IQueryBuilder::PARAM_INT))
 			->set('attributes', $qb->createNamedParameter($shareAttributes))
@@ -839,7 +845,9 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		}
 
 		$qb->setFirstResult($offset);
-		$qb->orderBy('id');
+		if ($offset !== 0 || $limit !== -1) {
+			$qb->orderBy('id');
+		}
 
 		$cursor = $qb->executeQuery();
 		$shares = [];
@@ -914,8 +922,10 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		$qb->select('*')
 			->from('share');
 
-		// Order by id
-		$qb->orderBy('id');
+		// Order by id only if we need it for limit/offset
+		if ($offset !== 0 || $limit !== -1) {
+			$qb->orderBy('id');
+		}
 
 		// Set limit and offset
 		if ($limit !== -1) {
@@ -1146,8 +1156,6 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 		$qb->innerJoin('s', 'filecache', 'f', $qb->expr()->eq('s.file_source', 'f.fileid'));
 
 		$qb->andWhere($qb->expr()->eq('f.parent', $qb->createNamedParameter($node->getId())));
-
-		$qb->orderBy('id');
 
 		$cursor = $qb->executeQuery();
 		$shares = [];

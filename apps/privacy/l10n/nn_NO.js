@@ -3,9 +3,11 @@ OC.L10N.register(
     {
     "Privacy" : "Personvern",
     "Cancel" : "Cancel",
+    "Add" : "Legg til",
     "Encryption" : "Kryptering",
     "Edit" : "Rediger",
     "Region" : "Region/fylke",
+    "Learn more ↗" : "Les meir ↗",
     "Albania" : "Albania",
     "Armenia" : "Armenia",
     "Angola" : "Angola",

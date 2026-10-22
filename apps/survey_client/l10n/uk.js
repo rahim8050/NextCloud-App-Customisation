@@ -3,7 +3,7 @@ OC.L10N.register(
     {
     "Last report sent on: {on}" : "Останній звіт відправлено: {on}",
     "An error occurred while sending your report." : "Під час надсилання звіту сталася помилка.",
-    "App list <em>(for each app: name, version, enabled status)</em>" : "Список додатків <em>(для кожного додатка: назва, версія, статус увімкнення)</em>",
+    "App list <em>(for each app: name, version, enabled status)</em>" : "Перелік застосунків <em>(для кожного застосунку: назва, версія, чи увімкнено)</em>",
     "Database environment <em>(type, version, database size)</em>" : "Інформація про БД <em>(тип, версія, розмір бази даних)</em>",
     "Encryption information <em>(is it enabled?, what is the default module)</em>" : "Інформація про шифрування <em>(чи ввімкнено?, який модуль за замовчуванням)</em>",
     "Number of shares <em>(per type and permission setting)</em>" : "Кількість спільних ресурсів <em>(за типом та налаштуванням дозволу)</em>",
@@ -23,7 +23,7 @@ OC.L10N.register(
     "Send new report now" : "Надіслати новий звіт зараз",
     "Send usage survey monthly" : "Щомісяця надсилати звіт про використання",
     "Data to send" : "Дані для надсилання",
-    "Last report sent on: %s" : "Останній звіт відправлено: %s",
-    "Last report" : "Останній звіт"
+    "Last report" : "Останній звіт",
+    "Last report sent on: %s" : "Останній звіт відправлено: %s"
 },
 "nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);");

@@ -8,6 +8,7 @@
 namespace OC\Files\Storage\Wrapper;
 
 use OC\Files\Cache\Wrapper\CachePermissionsMask;
+use OC\Files\Storage\Storage;
 use OCP\Constants;
 use OCP\Files\Storage\IStorage;
 
@@ -22,10 +23,10 @@ class PermissionsMask extends Wrapper {
 	/**
 	 * @var int the permissions bits we want to keep
 	 */
-	private $mask;
+	protected readonly int $mask;
 
 	/**
-	 * @param array $parameters ['storage' => $storage, 'mask' => $mask]
+	 * @param array{storage: Storage, mask: int, ...} $parameters
 	 *
 	 * $storage: The storage the permissions mask should be applied on
 	 * $mask: The permission bits that should be kept, a combination of the \OCP\Constant::PERMISSION_ constants
@@ -61,7 +62,9 @@ class PermissionsMask extends Wrapper {
 
 	public function rename(string $source, string $target): bool {
 		//This is a rename of the transfer file to the original file
-		if (dirname($source) === dirname($target) && strpos($source, '.ocTransferId') > 0) {
+		$sourceDir = dirname($source);
+		$targetDir = dirname($target);
+		if (($sourceDir === $targetDir || $sourceDir === dirname($targetDir)) && strpos($source, '.ocTransferId') > 0) {
 			return $this->checkMask(Constants::PERMISSION_CREATE) and parent::rename($source, $target);
 		}
 		return $this->checkMask(Constants::PERMISSION_UPDATE) and parent::rename($source, $target);

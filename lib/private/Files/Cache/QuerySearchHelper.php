@@ -150,9 +150,18 @@ class QuerySearchHelper {
 
 		$builder = $this->getQueryBuilder();
 
-		$query = $builder->selectFileCache('file', false);
+		$requestedFields = array_merge(
+			$this->searchBuilder->extractRequestedFields($searchQuery->getSearchOperation()),
+			array_map(fn ($order) => $order->getField(), $searchQuery->getOrder()),
+			$searchQuery->getSelectFields(),
+		);
 
-		$requestedFields = $this->searchBuilder->extractRequestedFields($searchQuery->getSearchOperation());
+		$joinExtendedCache = in_array('metadata_etag', $requestedFields)
+			|| in_array('creation_time', $requestedFields)
+			|| in_array('upload_time', $requestedFields)
+			|| in_array('last_activity', $requestedFields);
+
+		$query = $builder->selectFileCache('file', $joinExtendedCache);
 
 		if (in_array('systemtag', $requestedFields)) {
 			$this->equipQueryForSystemTags($query, $this->requireUser($searchQuery));

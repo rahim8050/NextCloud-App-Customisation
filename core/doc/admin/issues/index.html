@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Issues and troubleshooting &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Issues and troubleshooting &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/issues/index.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="General troubleshooting" href="general_troubleshooting.html" />
-    <link rel="prev" title="Migrating from ownCloud" href="../maintenance/migrating_owncloud.html" /> 
+    <link rel="prev" title="Migrating from ownCloud" href="../maintenance/migrating_owncloud.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -136,7 +141,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -169,15 +174,16 @@
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#troubleshooting-contacts-calendar">Troubleshooting contacts &amp; calendar</a></li>
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#troubleshooting-data-directory">Troubleshooting data-directory</a></li>
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#troubleshooting-quota-or-size-issues">Troubleshooting quota or size issues</a></li>
-<li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#troubleshooting-downloading-or-decrypting-files">Troubleshooting downloading or decrypting files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#troubleshooting-encrypted-files">Troubleshooting encrypted files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#fair-use-policy">Fair Use Policy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html#other-issues">Other issues</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="applying_patch.html">Patching Nextcloud</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="applying_patch.html#obtaining-a-patch">Obtaining a patch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applying_patch.html#applying-a-patch">Applying a patch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="applying_patch.html#reverting-a-patch">Reverting a patch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="applying_patch.html#getting-a-patch-from-a-github-pull-request">Getting a patch from a GitHub pull request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="applying_patch.html#notes-and-troubleshooting">Notes and troubleshooting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="code_signing.html">Code signing</a><ul>
@@ -202,7 +208,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -216,7 +222,7 @@
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -226,10 +232,8 @@
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -237,31 +241,25 @@
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

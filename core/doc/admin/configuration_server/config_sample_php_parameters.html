@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Configuration Parameters &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Configuration Parameters &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/config_sample_php_parameters.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Activity app" href="activity_configuration.html" />
-    <link rel="prev" title="Warnings on admin page" href="security_setup_warnings.html" /> 
+    <link rel="prev" title="Warnings on admin page" href="security_setup_warnings.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -86,6 +91,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#modifying">Modifying</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#defaults">Defaults</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#multiple-merged-configuration-files">Multiple/Merged Configuration Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#default-parameters">Default Parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#instanceid">instanceid</a></li>
@@ -138,6 +144,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#auth-bruteforce-protection-testing">auth.bruteforce.protection.testing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auth-bruteforce-max-attempts">auth.bruteforce.max-attempts</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ratelimit-protection-enabled">ratelimit.protection.enabled</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ratelimit-overwrite">ratelimit_overwrite</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#security-ipv6-normalized-subnet-size">security.ipv6_normalized_subnet_size</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auth-webauthn-enabled">auth.webauthn.enabled</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auth-storecryptedpassword">auth.storeCryptedPassword</a></li>
@@ -279,6 +286,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#memory-caching-backend-configuration">Memory caching backend configuration</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#memcache-local">memcache.local</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#memcache-distributed">memcache.distributed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#memcache-customprefix">memcache_customprefix</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#redis">redis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#redis-cluster">redis.cluster</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#memcached-servers">memcached_servers</a></li>
@@ -291,6 +299,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#using-object-store-with-nextcloud">Using Object Store with Nextcloud</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#objectstore">objectstore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id2">objectstore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">objectstore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#objectstore-multibucket-preview-distribution">objectstore.multibucket.preview-distribution</a></li>
 </ul>
 </li>
@@ -354,6 +363,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#trusted-proxies">trusted_proxies</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#forwarded-for-headers">forwarded_for_headers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#allowed-admin-ranges">allowed_admin_ranges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#allowed-no-password-confirmation-ranges">allowed_no_password_confirmation_ranges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#max-filesize-animated-gifs-public-sharing">max_filesize_animated_gifs_public_sharing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#filelocking-ttl">filelocking.ttl</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#memcache-locking">memcache.locking</a></li>
@@ -394,6 +404,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#files-chunked-upload-max-parallel-count">files.chunked_upload.max_parallel_count</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#files-trash-delete">files.trash.delete</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enable-lazy-objects">enable_lazy_objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#default-certificates-bundle-path">default_certificates_bundle_path</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#app-config-options">App config options</a><ul>
@@ -479,7 +490,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -675,6 +686,32 @@ named <code class="docutils literal notranslate"><span class="pre">(ANYTHING).co
 your <code class="docutils literal notranslate"><span class="pre">config/config.php</span></code> values!</p>
 </div>
 </section>
+<section id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">NEXTCLOUD_CONFIG_DIR</span></code> environment variable overrides the default config directory path.
+When set, Nextcloud loads <code class="docutils literal notranslate"><span class="pre">config.php</span></code> (and any <code class="docutils literal notranslate"><span class="pre">*.config.php</span></code> files) from that path instead
+of the <code class="docutils literal notranslate"><span class="pre">config/</span></code> directory inside the webroot.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">NEXTCLOUD_CONFIG_DIR</span><span class="o">=</span>/etc/nextcloud<span class="w"> </span>php<span class="w"> </span>/var/www/nextcloud/cron.php
+</pre></div>
+</div>
+<p>This is useful for:</p>
+<ul class="simple">
+<li><p>Moving <code class="docutils literal notranslate"><span class="pre">config.php</span></code> outside the webroot as a hardening measure — credentials are not
+accessible via HTTP even if directory listing is enabled or misconfigured.</p></li>
+<li><p>Running multiple Nextcloud instances that share a single codebase but require separate
+config directories.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">NEXTCLOUD_CONFIG_DIR</span></code> must be set for <strong>both</strong> the web server process and any CLI
+invocations (<code class="docutils literal notranslate"><span class="pre">occ</span></code>, cron jobs). Set it in your web server virtual host configuration and
+in the shell environment used for CLI work.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../installation/harden_server.html#harden-config-dir"><span class="std std-ref">Place config directory outside of the web root</span></a> in the hardening guide for a deployment recommendation.</p>
+</div>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
 <p>These are some examples of the content of typical <code class="docutils literal notranslate"><span class="pre">config/config.php</span></code> files immediately after
@@ -767,10 +804,10 @@ lose this string, there will be data corruption.</p>
 <section id="trusted-domains">
 <h3>trusted_domains<a class="headerlink" href="#trusted-domains" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;trusted_domains&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;demo.example.org&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;otherdomain.example.org&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;10.111.112.113&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;[2001:db8::1]&#39;</span>
+    <span class="s1">&#39;demo.example.org&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;otherdomain.example.org&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;10.111.112.113&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;[2001:db8::1]&#39;</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -888,8 +925,8 @@ uses the PDO::ATTR_PERSISTENT option from the PDO driver.</p>
 <section id="dbreplica">
 <h3>dbreplica<a class="headerlink" href="#dbreplica" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;dbreplica&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="p">[</span><span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;password1&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;replica1&#39;</span><span class="p">,</span> <span class="s1">&#39;dbname&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
-        <span class="p">[</span><span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;password2&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;replica2&#39;</span><span class="p">,</span> <span class="s1">&#39;dbname&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;password1&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;replica1&#39;</span><span class="p">,</span> <span class="s1">&#39;dbname&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;password2&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;replica2&#39;</span><span class="p">,</span> <span class="s1">&#39;dbname&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -1206,6 +1243,28 @@ For security reasons, change it only if you know what you are doing.</p>
 <p>Whether the rate limit protection shipped with Nextcloud should be enabled or not.</p>
 <p>Disabling this is discouraged for security reasons.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
+</section>
+<section id="ratelimit-overwrite">
+<h3>ratelimit_overwrite<a class="headerlink" href="#ratelimit-overwrite" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;ratelimit_overwrite&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;profile.profilepage.index&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;limit&#39;</span> <span class="o">=&gt;</span> <span class="mi">300</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span> <span class="o">=&gt;</span> <span class="mi">3600</span><span class="p">],</span>
+        <span class="s1">&#39;anon&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;limit&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span> <span class="o">=&gt;</span> <span class="mi">300</span><span class="p">],</span>
+    <span class="p">]</span>
+<span class="p">],</span>
+</pre></div>
+</div>
+<p>Overwrite the individual rate limit for a specific route</p>
+<p>From time to time it can be necessary to extend the rate limit of a specific route,
+depending on your usage pattern or when you script some actions.
+Instead of completely disabling the rate limit or excluding an IP address from the
+rate limit, the following config allows to overwrite the rate limit duration and period.</p>
+<p>The first level key is the name of the route. You can find the route name from a URL
+using the <code class="docutils literal notranslate"><span class="pre">occ</span> <span class="pre">router:list</span></code> command of your server.</p>
+<p>You can also specify different limits for logged-in users with the <code class="docutils literal notranslate"><span class="pre">user</span></code> key
+and not-logged-in users with the <code class="docutils literal notranslate"><span class="pre">anon</span></code> key. However, if there is no specific <code class="docutils literal notranslate"><span class="pre">user</span></code> limit,
+the <code class="docutils literal notranslate"><span class="pre">anon</span></code> limit is also applied for logged-in users.</p>
+<p>Defaults to empty array <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </section>
 <section id="security-ipv6-normalized-subnet-size">
 <h3>security.ipv6_normalized_subnet_size<a class="headerlink" href="#security-ipv6-normalized-subnet-size" title="Link to this heading"></a></h3>
@@ -1755,10 +1814,10 @@ available version based on those metrics.</p>
 <section id="connectivity-check-domains">
 <h3>connectivity_check_domains<a class="headerlink" href="#connectivity-check-domains" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;connectivity_check_domains&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;https://www.nextcloud.com&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;https://www.startpage.com&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;https://www.eff.org&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;https://www.edri.org&#39;</span>
+    <span class="s1">&#39;https://www.nextcloud.com&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;https://www.startpage.com&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;https://www.eff.org&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;https://www.edri.org&#39;</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -1935,18 +1994,18 @@ with a unique ID. Only available if <code class="docutils literal notranslate"><
 <section id="log-condition">
 <h3>log.condition<a class="headerlink" href="#log-condition" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;log.condition&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;shared_secret&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;57b58edb6637fe3059b3595cf9c41b9&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;users&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;sample-user&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;apps&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;matches&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="p">[</span>
-                        <span class="s1">&#39;shared_secret&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;57b58edb6637fe3059b3595cf9c41b9&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;users&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;sample-user&#39;</span><span class="p">],</span>
-                        <span class="s1">&#39;apps&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">],</span>
-                        <span class="s1">&#39;loglevel&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-                        <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;contains substring&#39;</span>
-                <span class="p">],</span>
+    <span class="s1">&#39;shared_secret&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;57b58edb6637fe3059b3595cf9c41b9&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;users&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;sample-user&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;apps&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;matches&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="p">[</span>
+            <span class="s1">&#39;shared_secret&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;57b58edb6637fe3059b3595cf9c41b9&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;users&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;sample-user&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;apps&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;loglevel&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;contains substring&#39;</span>
         <span class="p">],</span>
+    <span class="p">],</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2176,11 +2235,11 @@ on. If no enabled apps are found, it defaults to the dashboard app.</p>
 <section id="apps-paths">
 <h3>apps_paths<a class="headerlink" href="#apps-paths" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;apps_paths&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="p">[</span>
-                <span class="s1">&#39;path&#39;</span><span class="o">=&gt;</span> <span class="s1">&#39;/var/www/nextcloud/apps&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/apps&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;writable&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
-        <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s1">&#39;path&#39;</span><span class="o">=&gt;</span> <span class="s1">&#39;/var/www/nextcloud/apps&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/apps&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;writable&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
+    <span class="p">],</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2323,15 +2382,15 @@ have to add the <code class="docutils literal notranslate"><span class="pre">OC\
 <section id="enabledpreviewproviders">
 <h3>enabledPreviewProviders<a class="headerlink" href="#enabledpreviewproviders" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;enabledPreviewProviders&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;OC\Preview\BMP&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\GIF&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\JPEG&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\Krita&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\MarkDown&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\OpenDocument&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\PNG&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\TXT&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;OC\Preview\XBitmap&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\BMP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\GIF&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\JPEG&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\Krita&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\MarkDown&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\OpenDocument&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\PNG&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\TXT&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OC\Preview\XBitmap&#39;</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2487,7 +2546,7 @@ Also, it might log sensitive data into a plain text file.</p>
 <section id="openssl">
 <h3>openssl<a class="headerlink" href="#openssl" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;openssl&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;config&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/absolute/location/of/openssl.cnf&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;config&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/absolute/location/of/openssl.cnf&#39;</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2534,23 +2593,35 @@ For the local cache (you can configure two) take APCu.</p></li>
 </ul>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
 </section>
+<section id="memcache-customprefix">
+<h3>memcache_customprefix<a class="headerlink" href="#memcache-customprefix" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;memcache_customprefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;mycustomprefix&#39;</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>Cache Key Prefix for Redis or Memcached</p>
+<ul class="simple">
+<li><p>Used for avoiding collisions in the cache system</p></li>
+<li><p>May be used for ACL restrictions in Redis</p></li>
+</ul>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">''</span></code> (empty string)</p>
+</section>
 <section id="redis">
 <h3>redis<a class="headerlink" href="#redis" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;redis&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">can</span> <span class="n">also</span> <span class="n">be</span> <span class="n">a</span> <span class="n">Unix</span> <span class="n">domain</span> <span class="n">socket</span><span class="p">:</span> <span class="s1">&#39;/tmp/redis.sock&#39;</span>
-        <span class="s1">&#39;port&#39;</span> <span class="o">=&gt;</span> <span class="mi">6379</span><span class="p">,</span>
-        <span class="s1">&#39;timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="s1">&#39;read_timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span>  <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
-        <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
-        <span class="s1">&#39;dbindex&#39;</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="n">undefined</span><span class="p">,</span> <span class="n">SELECT</span> <span class="n">will</span> <span class="ow">not</span> <span class="n">run</span> <span class="ow">and</span> <span class="n">will</span> <span class="n">use</span> <span class="n">Redis</span> <span class="n">Server</span><span class="s1">&#39;s default DB Index.</span>
-        <span class="o">//</span> <span class="n">If</span> <span class="n">Redis</span> <span class="ow">in</span><span class="o">-</span><span class="n">transit</span> <span class="n">encryption</span> <span class="ow">is</span> <span class="n">enabled</span><span class="p">,</span> <span class="n">provide</span> <span class="n">certificates</span>
-        <span class="o">//</span> <span class="n">SSL</span> <span class="n">context</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">context</span><span class="o">.</span><span class="n">ssl</span><span class="o">.</span><span class="n">php</span>
-        <span class="s1">&#39;ssl_context&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">&#39;local_cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.crt&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;local_pk&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.key&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;cafile&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/ca.crt&#39;</span>
-        <span class="p">]</span>
+    <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">can</span> <span class="n">also</span> <span class="n">be</span> <span class="n">a</span> <span class="n">Unix</span> <span class="n">domain</span> <span class="n">socket</span><span class="p">:</span> <span class="s1">&#39;/tmp/redis.sock&#39;</span>
+    <span class="s1">&#39;port&#39;</span> <span class="o">=&gt;</span> <span class="mi">6379</span><span class="p">,</span>
+    <span class="s1">&#39;timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s1">&#39;read_timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span>  <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+    <span class="s1">&#39;dbindex&#39;</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="n">undefined</span><span class="p">,</span> <span class="n">SELECT</span> <span class="n">will</span> <span class="ow">not</span> <span class="n">run</span> <span class="ow">and</span> <span class="n">will</span> <span class="n">use</span> <span class="n">Redis</span> <span class="n">Server</span><span class="s1">&#39;s default DB Index.</span>
+    <span class="o">//</span> <span class="n">If</span> <span class="n">Redis</span> <span class="ow">in</span><span class="o">-</span><span class="n">transit</span> <span class="n">encryption</span> <span class="ow">is</span> <span class="n">enabled</span><span class="p">,</span> <span class="n">provide</span> <span class="n">certificates</span>
+    <span class="o">//</span> <span class="n">SSL</span> <span class="n">context</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">context</span><span class="o">.</span><span class="n">ssl</span><span class="o">.</span><span class="n">php</span>
+    <span class="s1">&#39;ssl_context&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="s1">&#39;local_cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.crt&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;local_pk&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.key&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cafile&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/ca.crt&#39;</span>
+    <span class="p">]</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2564,22 +2635,22 @@ See <a class="reference external" href="https://redis.io/topics/encryption">http
 <section id="redis-cluster">
 <h3>redis.cluster<a class="headerlink" href="#redis-cluster" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;redis.cluster&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;seeds&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="o">//</span> <span class="n">provide</span> <span class="n">some</span> <span class="ow">or</span> <span class="nb">all</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cluster</span> <span class="n">servers</span> <span class="n">to</span> <span class="n">bootstrap</span> <span class="n">discovery</span><span class="p">,</span> <span class="n">port</span> <span class="n">required</span>
-                <span class="s1">&#39;localhost:7000&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;localhost:7001&#39;</span><span class="p">,</span>
-        <span class="p">],</span>
-        <span class="s1">&#39;timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="s1">&#39;read_timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="s1">&#39;failover_mode&#39;</span> <span class="o">=&gt;</span> \<span class="n">RedisCluster</span><span class="p">::</span><span class="n">FAILOVER_ERROR</span><span class="p">,</span>
-        <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span>  <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
-        <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
-        <span class="o">//</span> <span class="n">If</span> <span class="n">Redis</span> <span class="ow">in</span><span class="o">-</span><span class="n">transit</span> <span class="n">encryption</span> <span class="ow">is</span> <span class="n">enabled</span><span class="p">,</span> <span class="n">provide</span> <span class="n">certificates</span>
-        <span class="o">//</span> <span class="n">SSL</span> <span class="n">context</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">context</span><span class="o">.</span><span class="n">ssl</span><span class="o">.</span><span class="n">php</span>
-        <span class="s1">&#39;ssl_context&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">&#39;local_cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.crt&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;local_pk&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.key&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;cafile&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/ca.crt&#39;</span>
-        <span class="p">]</span>
+    <span class="s1">&#39;seeds&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="o">//</span> <span class="n">provide</span> <span class="n">some</span> <span class="ow">or</span> <span class="nb">all</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cluster</span> <span class="n">servers</span> <span class="n">to</span> <span class="n">bootstrap</span> <span class="n">discovery</span><span class="p">,</span> <span class="n">port</span> <span class="n">required</span>
+        <span class="s1">&#39;localhost:7000&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;localhost:7001&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="s1">&#39;timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s1">&#39;read_timeout&#39;</span> <span class="o">=&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s1">&#39;failover_mode&#39;</span> <span class="o">=&gt;</span> \<span class="n">RedisCluster</span><span class="p">::</span><span class="n">FAILOVER_ERROR</span><span class="p">,</span>
+    <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span>  <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Optional</span><span class="p">:</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined</span><span class="p">,</span> <span class="n">no</span> <span class="n">password</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+    <span class="o">//</span> <span class="n">If</span> <span class="n">Redis</span> <span class="ow">in</span><span class="o">-</span><span class="n">transit</span> <span class="n">encryption</span> <span class="ow">is</span> <span class="n">enabled</span><span class="p">,</span> <span class="n">provide</span> <span class="n">certificates</span>
+    <span class="o">//</span> <span class="n">SSL</span> <span class="n">context</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">context</span><span class="o">.</span><span class="n">ssl</span><span class="o">.</span><span class="n">php</span>
+    <span class="s1">&#39;ssl_context&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="s1">&#39;local_cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.crt&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;local_pk&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/redis.key&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cafile&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/certs/ca.crt&#39;</span>
+    <span class="p">]</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2609,12 +2680,12 @@ which then causes a FileLocked exception.</p>
 <section id="memcached-servers">
 <h3>memcached_servers<a class="headerlink" href="#memcached-servers" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;memcached_servers&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="o">//</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span> <span class="ow">and</span> <span class="n">optional</span> <span class="n">weight</span>
-        <span class="o">//</span> <span class="ow">or</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">port</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">Unix</span> <span class="n">socket</span><span class="o">.</span> <span class="n">Also</span> <span class="n">see</span><span class="p">:</span>
-        <span class="o">//</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">memcached</span><span class="o">.</span><span class="n">addservers</span><span class="o">.</span><span class="n">php</span>
-        <span class="o">//</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">memcached</span><span class="o">.</span><span class="n">addserver</span><span class="o">.</span><span class="n">php</span>
-        <span class="p">[</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">],</span>
-        <span class="o">//</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;other.host.local&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">),</span>
+    <span class="o">//</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span> <span class="ow">and</span> <span class="n">optional</span> <span class="n">weight</span>
+    <span class="o">//</span> <span class="ow">or</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">port</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">Unix</span> <span class="n">socket</span><span class="o">.</span> <span class="n">Also</span> <span class="n">see</span><span class="p">:</span>
+    <span class="o">//</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">memcached</span><span class="o">.</span><span class="n">addservers</span><span class="o">.</span><span class="n">php</span>
+    <span class="o">//</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">php</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">manual</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">memcached</span><span class="o">.</span><span class="n">addserver</span><span class="o">.</span><span class="n">php</span>
+    <span class="p">[</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">],</span>
+    <span class="o">//</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;other.host.local&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">),</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2623,24 +2694,24 @@ which then causes a FileLocked exception.</p>
 <section id="memcached-options">
 <h3>memcached_options<a class="headerlink" href="#memcached-options" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;memcached_options&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="o">//</span> <span class="n">Set</span> <span class="n">timeouts</span> <span class="n">to</span> <span class="mi">50</span><span class="n">ms</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_CONNECT_TIMEOUT</span> <span class="o">=&gt;</span> <span class="mi">50</span><span class="p">,</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_RETRY_TIMEOUT</span> <span class="o">=&gt;</span>   <span class="mi">50</span><span class="p">,</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_SEND_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_RECV_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_POLL_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
+    <span class="o">//</span> <span class="n">Set</span> <span class="n">timeouts</span> <span class="n">to</span> <span class="mi">50</span><span class="n">ms</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_CONNECT_TIMEOUT</span> <span class="o">=&gt;</span> <span class="mi">50</span><span class="p">,</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_RETRY_TIMEOUT</span> <span class="o">=&gt;</span>   <span class="mi">50</span><span class="p">,</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_SEND_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_RECV_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_POLL_TIMEOUT</span> <span class="o">=&gt;</span>    <span class="mi">50</span><span class="p">,</span>
 
-        <span class="o">//</span> <span class="n">Enable</span> <span class="n">compression</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_COMPRESSION</span> <span class="o">=&gt;</span>          <span class="n">true</span><span class="p">,</span>
+    <span class="o">//</span> <span class="n">Enable</span> <span class="n">compression</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_COMPRESSION</span> <span class="o">=&gt;</span>          <span class="n">true</span><span class="p">,</span>
 
-        <span class="o">//</span> <span class="n">Turn</span> <span class="n">on</span> <span class="n">consistent</span> <span class="n">hashing</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_LIBKETAMA_COMPATIBLE</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
+    <span class="o">//</span> <span class="n">Turn</span> <span class="n">on</span> <span class="n">consistent</span> <span class="n">hashing</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_LIBKETAMA_COMPATIBLE</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
 
-        <span class="o">//</span> <span class="n">Enable</span> <span class="n">Binary</span> <span class="n">Protocol</span>
-        \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_BINARY_PROTOCOL</span> <span class="o">=&gt;</span>      <span class="n">true</span><span class="p">,</span>
+    <span class="o">//</span> <span class="n">Enable</span> <span class="n">Binary</span> <span class="n">Protocol</span>
+    \<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_BINARY_PROTOCOL</span> <span class="o">=&gt;</span>      <span class="n">true</span><span class="p">,</span>
 
-        <span class="o">//</span> <span class="n">Binary</span> <span class="n">serializer</span> <span class="n">will</span> <span class="n">be</span> <span class="n">enabled</span> <span class="k">if</span> <span class="n">the</span> <span class="n">igbinary</span> <span class="n">PECL</span> <span class="n">module</span> <span class="ow">is</span> <span class="n">available</span>
-        <span class="o">//</span>\<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_SERIALIZER</span> <span class="o">=&gt;</span> \<span class="n">Memcached</span><span class="p">::</span><span class="n">SERIALIZER_IGBINARY</span><span class="p">,</span>
+    <span class="o">//</span> <span class="n">Binary</span> <span class="n">serializer</span> <span class="n">will</span> <span class="n">be</span> <span class="n">enabled</span> <span class="k">if</span> <span class="n">the</span> <span class="n">igbinary</span> <span class="n">PECL</span> <span class="n">module</span> <span class="ow">is</span> <span class="n">available</span>
+    <span class="o">//</span>\<span class="n">Memcached</span><span class="p">::</span><span class="n">OPT_SERIALIZER</span> <span class="o">=&gt;</span> \<span class="n">Memcached</span><span class="p">::</span><span class="n">SERIALIZER_IGBINARY</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2684,33 +2755,33 @@ reducing database load significantly on larger setups.</p>
 <section id="objectstore">
 <h3>objectstore<a class="headerlink" href="#objectstore" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;objectstore&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;class&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;OC</span><span class="se">\\</span><span class="s1">Files</span><span class="se">\\</span><span class="s1">ObjectStore</span><span class="se">\\</span><span class="s1">Swift&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;arguments&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="o">//</span> <span class="n">trystack</span> <span class="n">will</span> <span class="n">use</span> <span class="n">your</span> <span class="n">Facebook</span> <span class="n">ID</span> <span class="k">as</span> <span class="n">the</span> <span class="n">username</span>
-                <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;facebook100000123456789&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">trystack</span> <span class="n">dashboard</span><span class="p">,</span> <span class="n">go</span> <span class="n">to</span> <span class="n">user</span> <span class="o">-&gt;</span> <span class="n">settings</span> <span class="o">-&gt;</span> <span class="n">API</span> <span class="n">Password</span> <span class="n">to</span>
-                <span class="o">//</span> <span class="n">generate</span> <span class="n">a</span> <span class="n">password</span>
-                <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Secr3tPaSSWoRdt7&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">must</span> <span class="n">already</span> <span class="n">exist</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">objectstore</span><span class="p">,</span> <span class="n">name</span> <span class="n">can</span> <span class="n">be</span> <span class="n">different</span>
-                <span class="s1">&#39;container&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">prefix</span> <span class="n">to</span> <span class="n">prepend</span> <span class="n">to</span> <span class="n">the</span> <span class="n">fileid</span><span class="p">,</span> <span class="n">default</span> <span class="ow">is</span> <span class="s1">&#39;oid:urn:&#39;</span>
-                <span class="s1">&#39;objectPrefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;oid:urn:&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">create</span> <span class="n">the</span> <span class="n">container</span> <span class="k">if</span> <span class="n">it</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">exist</span><span class="o">.</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">false</span>
-                <span class="s1">&#39;autocreate&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">required</span><span class="p">,</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;RegionOne&#39;</span>
-                <span class="s1">&#39;region&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;RegionOne&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">The</span> <span class="n">Identity</span> <span class="o">/</span> <span class="n">Keystone</span> <span class="n">endpoint</span>
-                <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://8.21.28.222:5000/v2.0&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">uploadPartSize</span><span class="p">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">the</span> <span class="n">uploaded</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="mi">524288000</span>
-                <span class="s1">&#39;uploadPartSize&#39;</span> <span class="o">=&gt;</span> <span class="mi">524288000</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">required</span> <span class="n">on</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span>
-                <span class="s1">&#39;tenantName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;facebook100000123456789&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span> <span class="n">uses</span> <span class="n">swift</span> <span class="n">by</span> <span class="n">default</span><span class="p">,</span> <span class="n">the</span> <span class="n">lib</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;cloudFiles&#39;</span>
-                <span class="o">//</span> <span class="k">if</span> <span class="n">omitted</span>
-                <span class="s1">&#39;serviceName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
-                <span class="o">//</span> <span class="n">The</span> <span class="n">Interface</span> <span class="o">/</span> <span class="n">URL</span> <span class="n">Type</span><span class="p">,</span> <span class="n">optional</span>
-                <span class="s1">&#39;urlType&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;internal&#39;</span>
-        <span class="p">],</span>
+    <span class="s1">&#39;class&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;OC</span><span class="se">\\</span><span class="s1">Files</span><span class="se">\\</span><span class="s1">ObjectStore</span><span class="se">\\</span><span class="s1">Swift&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;arguments&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="o">//</span> <span class="n">trystack</span> <span class="n">will</span> <span class="n">use</span> <span class="n">your</span> <span class="n">Facebook</span> <span class="n">ID</span> <span class="k">as</span> <span class="n">the</span> <span class="n">username</span>
+        <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;facebook100000123456789&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">trystack</span> <span class="n">dashboard</span><span class="p">,</span> <span class="n">go</span> <span class="n">to</span> <span class="n">user</span> <span class="o">-&gt;</span> <span class="n">settings</span> <span class="o">-&gt;</span> <span class="n">API</span> <span class="n">Password</span> <span class="n">to</span>
+        <span class="o">//</span> <span class="n">generate</span> <span class="n">a</span> <span class="n">password</span>
+        <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Secr3tPaSSWoRdt7&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">must</span> <span class="n">already</span> <span class="n">exist</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">objectstore</span><span class="p">,</span> <span class="n">name</span> <span class="n">can</span> <span class="n">be</span> <span class="n">different</span>
+        <span class="s1">&#39;container&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">prefix</span> <span class="n">to</span> <span class="n">prepend</span> <span class="n">to</span> <span class="n">the</span> <span class="n">fileid</span><span class="p">,</span> <span class="n">default</span> <span class="ow">is</span> <span class="s1">&#39;oid:urn:&#39;</span>
+        <span class="s1">&#39;objectPrefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;oid:urn:&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">create</span> <span class="n">the</span> <span class="n">container</span> <span class="k">if</span> <span class="n">it</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">exist</span><span class="o">.</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">false</span>
+        <span class="s1">&#39;autocreate&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">required</span><span class="p">,</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;RegionOne&#39;</span>
+        <span class="s1">&#39;region&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;RegionOne&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">The</span> <span class="n">Identity</span> <span class="o">/</span> <span class="n">Keystone</span> <span class="n">endpoint</span>
+        <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://8.21.28.222:5000/v2.0&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">uploadPartSize</span><span class="p">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">the</span> <span class="n">uploaded</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="mi">524288000</span>
+        <span class="s1">&#39;uploadPartSize&#39;</span> <span class="o">=&gt;</span> <span class="mi">524288000</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">required</span> <span class="n">on</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span>
+        <span class="s1">&#39;tenantName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;facebook100000123456789&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">dev</span><span class="o">-/</span><span class="n">trystack</span> <span class="n">uses</span> <span class="n">swift</span> <span class="n">by</span> <span class="n">default</span><span class="p">,</span> <span class="n">the</span> <span class="n">lib</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;cloudFiles&#39;</span>
+        <span class="o">//</span> <span class="k">if</span> <span class="n">omitted</span>
+        <span class="s1">&#39;serviceName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">The</span> <span class="n">Interface</span> <span class="o">/</span> <span class="n">URL</span> <span class="n">Type</span><span class="p">,</span> <span class="n">optional</span>
+        <span class="s1">&#39;urlType&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;internal&#39;</span>
+    <span class="p">],</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -2732,34 +2803,61 @@ to be fetched in addition to any requested file.</p>
 <section id="id2">
 <h3>objectstore<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;objectstore&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;class&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;OC</span><span class="se">\\</span><span class="s1">Files</span><span class="se">\\</span><span class="s1">ObjectStore</span><span class="se">\\</span><span class="s1">Swift&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;arguments&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">&#39;autocreate&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
-                <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                        <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;domain&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                                <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-                        <span class="p">],</span>
-                <span class="p">],</span>
-                <span class="s1">&#39;scope&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                        <span class="s1">&#39;project&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                                <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;service&#39;</span><span class="p">,</span>
-                                <span class="s1">&#39;domain&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                                        <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
-                                <span class="p">],</span>
-                        <span class="p">],</span>
-                <span class="p">],</span>
-                <span class="s1">&#39;tenantName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;service&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;serviceName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;region&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;regionOne&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://yourswifthost:5000/v3&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;bucket&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;class&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;OC</span><span class="se">\\</span><span class="s1">Files</span><span class="se">\\</span><span class="s1">ObjectStore</span><span class="se">\\</span><span class="s1">Swift&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;arguments&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="s1">&#39;autocreate&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s1">&#39;user&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;domain&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+            <span class="p">],</span>
         <span class="p">],</span>
+        <span class="s1">&#39;scope&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+            <span class="s1">&#39;project&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;service&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;domain&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                    <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+                <span class="p">],</span>
+            <span class="p">],</span>
+        <span class="p">],</span>
+        <span class="s1">&#39;tenantName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;service&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;serviceName&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;swift&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;region&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;regionOne&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;url&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://yourswifthost:5000/v3&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;bucket&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
 <span class="p">],</span>
 </pre></div>
 </div>
 <p>To use Swift V3</p>
+</section>
+<section id="id3">
+<h3>objectstore<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;objectstore&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;class&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;OC</span><span class="se">\\</span><span class="s1">Files</span><span class="se">\\</span><span class="s1">ObjectStore</span><span class="se">\\</span><span class="s1">S3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;arguments&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="s1">&#39;bucket&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;nextcloud&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;key&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;your-access-key&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;secret&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;your-secret-key&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;hostname&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;s3.example.com&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;port&#39;</span> <span class="o">=&gt;</span> <span class="mi">443</span><span class="p">,</span>
+        <span class="s1">&#39;use_ssl&#39;</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s1">&#39;region&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;us-east-1&#39;</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">optional</span><span class="p">:</span> <span class="n">Maximum</span> <span class="n">number</span> <span class="n">of</span> <span class="n">retry</span> <span class="n">attempts</span> <span class="k">for</span> <span class="n">failed</span> <span class="n">S3</span> <span class="n">requests</span>
+        <span class="o">//</span> <span class="n">Default</span><span class="p">:</span> <span class="mi">5</span>
+        <span class="s1">&#39;retriesMaxAttempts&#39;</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="o">//</span> <span class="n">Data</span> <span class="n">Integrity</span> <span class="n">Protections</span> <span class="k">for</span> <span class="n">Amazon</span> <span class="n">S3</span> <span class="p">(</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">docs</span><span class="o">.</span><span class="n">aws</span><span class="o">.</span><span class="n">amazon</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">sdkref</span><span class="o">/</span><span class="n">latest</span><span class="o">/</span><span class="n">guide</span><span class="o">/</span><span class="n">feature</span><span class="o">-</span><span class="n">dataintegrity</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+        <span class="o">//</span> <span class="n">Valid</span> <span class="n">values</span> <span class="n">are</span> <span class="s2">&quot;when_required&quot;</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;when_supported&quot;</span><span class="o">.</span>
+        <span class="o">//</span> <span class="n">To</span> <span class="n">ensure</span> <span class="n">compatibility</span> <span class="k">with</span> <span class="mi">3</span><span class="n">rd</span> <span class="n">party</span> <span class="n">S3</span> <span class="n">implementations</span><span class="p">,</span> <span class="n">Nextcloud</span> <span class="n">disables</span> <span class="n">it</span> <span class="n">by</span> <span class="n">default</span><span class="o">.</span> <span class="n">However</span><span class="p">,</span> <span class="k">if</span> <span class="n">you</span> <span class="n">are</span>
+        <span class="o">//</span> <span class="n">using</span> <span class="n">Amazon</span> <span class="n">S3</span> <span class="p">(</span><span class="ow">or</span> <span class="nb">any</span> <span class="n">other</span> <span class="n">implementation</span> <span class="n">that</span> <span class="n">supports</span> <span class="n">it</span><span class="p">)</span> <span class="n">we</span> <span class="n">recommend</span> <span class="n">enabling</span> <span class="n">it</span> <span class="n">by</span> <span class="n">using</span> <span class="s2">&quot;when_supported&quot;</span><span class="o">.</span>
+        <span class="s1">&#39;request_checksum_calculation&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;when_required&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;response_checksum_validation&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;when_required&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">],</span>
+</pre></div>
+</div>
+<p>To use S3 object storage</p>
 </section>
 <section id="objectstore-multibucket-preview-distribution">
 <h3>objectstore.multibucket.preview-distribution<a class="headerlink" href="#objectstore-multibucket-preview-distribution" title="Link to this heading"></a></h3>
@@ -2950,11 +3048,11 @@ Using a higher value requires more time and CPU power to calculate the hashes</p
 <section id="dbdriveroptions">
 <h3>dbdriveroptions<a class="headerlink" href="#dbdriveroptions" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;dbdriveroptions&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_CA</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/ca_cert.pem&#39;</span><span class="p">,</span>
-        <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_KEY</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/mysql-client-key.pem&#39;</span><span class="p">,</span>
-        <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_CERT</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/mysql-client-cert.pem&#39;</span><span class="p">,</span>
-        <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_VERIFY_SERVER_CERT</span> <span class="o">=&gt;</span> <span class="n">false</span><span class="p">,</span>
-        <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_INIT_COMMAND</span> <span class="o">=&gt;</span> <span class="s1">&#39;SET wait_timeout = 28800&#39;</span>
+    <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_CA</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/ca_cert.pem&#39;</span><span class="p">,</span>
+    <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_KEY</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/mysql-client-key.pem&#39;</span><span class="p">,</span>
+    <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_CERT</span> <span class="o">=&gt;</span> <span class="s1">&#39;/file/path/to/mysql-client-cert.pem&#39;</span><span class="p">,</span>
+    <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_SSL_VERIFY_SERVER_CERT</span> <span class="o">=&gt;</span> <span class="n">false</span><span class="p">,</span>
+    <span class="n">PDO</span><span class="p">::</span><span class="n">MYSQL_ATTR_INIT_COMMAND</span> <span class="o">=&gt;</span> <span class="s1">&#39;SET wait_timeout = 28800&#39;</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -3026,11 +3124,11 @@ always used. It applies only to SQL queries using LIKE comparison operators.</p>
 <section id="pgsql-ssl">
 <h3>pgsql_ssl<a class="headerlink" href="#pgsql-ssl" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;pgsql_ssl&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;mode&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;rootcert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;key&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;crl&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mode&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rootcert&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;key&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;crl&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -3039,10 +3137,10 @@ always used. It applies only to SQL queries using LIKE comparison operators.</p>
 <section id="supporteddatabases">
 <h3>supportedDatabases<a class="headerlink" href="#supporteddatabases" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;supportedDatabases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;sqlite&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;mysql&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;oci&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sqlite&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mysql&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;oci&#39;</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -3358,6 +3456,19 @@ must originate from IPs within these ranges.</p>
 - IPv6 addresses or ranges, e.g., <cite>2001:db8::13:37/64</cite></p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">[]</span></code> (empty array)</p>
 </section>
+<section id="allowed-no-password-confirmation-ranges">
+<h3>allowed_no_password_confirmation_ranges<a class="headerlink" href="#allowed-no-password-confirmation-ranges" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;allowed_no_password_confirmation_ranges&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;192.0.2.42/32&#39;</span><span class="p">,</span> <span class="s1">&#39;233.252.0.0/24&#39;</span><span class="p">,</span> <span class="s1">&#39;2001:db8::13:37/64&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>List of trusted IP ranges that can bypass password confirmation.</p>
+<p>If non-empty, all endpoints marked with the PasswordConfirmationRequired attribute
+won’t need a password confirmation when originating from IPs within these ranges.</p>
+<p>Supported formats:
+- IPv4 addresses or ranges, e.g., <code class="docutils literal notranslate"><span class="pre">192.0.2.42/32</span></code>, <code class="docutils literal notranslate"><span class="pre">233.252.0.0/24</span></code>
+- IPv6 addresses or ranges, e.g., <code class="docutils literal notranslate"><span class="pre">2001:db8::13:37/64</span></code></p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">[]</span></code> (empty array)</p>
+</section>
 <section id="max-filesize-animated-gifs-public-sharing">
 <h3>max_filesize_animated_gifs_public_sharing<a class="headerlink" href="#max-filesize-animated-gifs-public-sharing" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;max_filesize_animated_gifs_public_sharing&#39;</span> <span class="o">=&gt;</span> <span class="mi">10</span><span class="p">,</span>
@@ -3488,8 +3599,8 @@ federation outside the environment.</p>
 <section id="csrf-optout">
 <h3>csrf.optout<a class="headerlink" href="#csrf-optout" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;csrf.optout&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;/^WebDAVFS/&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">OS</span> <span class="n">X</span> <span class="n">Finder</span>
-        <span class="s1">&#39;/^Microsoft-WebDAV-MiniRedir/&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Windows</span> <span class="n">WebDAV</span> <span class="n">drive</span>
+    <span class="s1">&#39;/^WebDAVFS/&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">OS</span> <span class="n">X</span> <span class="n">Finder</span>
+    <span class="s1">&#39;/^Microsoft-WebDAV-MiniRedir/&#39;</span><span class="p">,</span> <span class="o">//</span> <span class="n">Windows</span> <span class="n">WebDAV</span> <span class="n">drive</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -3702,13 +3813,13 @@ Nextcloud 25.</p>
 <section id="binary-search-paths">
 <h3>binary_search_paths<a class="headerlink" href="#binary-search-paths" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;binary_search_paths&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;/usr/local/sbin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/usr/local/bin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/usr/sbin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/usr/bin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/sbin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/bin&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/opt/bin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/usr/local/sbin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/usr/local/bin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/usr/sbin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/usr/bin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/sbin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/bin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/opt/bin&#39;</span><span class="p">,</span>
 <span class="p">],</span>
 </pre></div>
 </div>
@@ -3740,7 +3851,7 @@ Cloudflare may limit to 100 MiB.</p>
 </div>
 <p>Maximum number of chunks uploaded in parallel during chunked uploads. Higher
 counts increase throughput but consume more server resources, with diminishing
-returns.</p>
+returns. Value must be a positive integer.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">5</span></code></p>
 </section>
 <section id="files-trash-delete">
@@ -3760,6 +3871,15 @@ returns.</p>
 <p>Enable PHP 8.4 lazy objects for Dependency Injection to improve performance by
 avoiding instantiation of unused objects.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
+</section>
+<section id="default-certificates-bundle-path">
+<h3>default_certificates_bundle_path<a class="headerlink" href="#default-certificates-bundle-path" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&#39;default_certificates_bundle_path&#39; =&gt; \OC::$SERVERROOT . &#39;/resources/config/ca-bundle.crt&#39;,
+</pre></div>
+</div>
+<p>Change the default certificates bundle used for trusting certificates.</p>
+<p>Nextcloud ships its own up-to-date certificates bundle, but in certain cases admins may wish to specify a different bundle, for example the one shipped by their distro.</p>
+<p>Defaults to <cite>\OC::$SERVERROOT . ‘/resources/config/ca-bundle.crt’</cite>.</p>
 </section>
 </section>
 <section id="app-config-options">
@@ -3806,7 +3926,7 @@ normal maintenance change. To disable this specific email the appconfig option
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -3820,7 +3940,7 @@ normal maintenance change. To disable this specific email the appconfig option
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -3830,10 +3950,8 @@ normal maintenance change. To disable this specific email the appconfig option
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -3841,31 +3959,25 @@ normal maintenance change. To disable this specific email the appconfig option
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

@@ -12,6 +12,7 @@ use OCA\Circles\CirclesManager;
 use OCA\Circles\Exceptions\CircleNotFoundException;
 use OCA\Circles\Model\Circle;
 use OCA\Circles\Model\Member;
+use OCA\Circles\Model\Probes\CircleProbe;
 use OCP\IURLGenerator;
 use OCP\Server;
 use OCP\Teams\ITeamManager;
@@ -71,7 +72,10 @@ class TeamManager implements ITeamManager {
 			return [];
 		}
 
-		if ($this->getTeam($teamId, $userId) === null) {
+		$probe = new CircleProbe();
+		$probe->mustBeMember();
+
+		if ($this->getTeam($teamId, $userId, $probe) === null) {
 			return [];
 		}
 
@@ -84,27 +88,41 @@ class TeamManager implements ITeamManager {
 		return array_values($resources);
 	}
 
+	public function getSharedWithList(array $teams, string $userId, string $resourceId): array {
+		if (!$this->hasTeamSupport()) {
+			return [];
+		}
+
+		$resources = [];
+		foreach ($this->getProviders() as $provider) {
+			if (method_exists($provider, 'getSharedWithList')) {
+				$resources[] = $provider->getSharedWithList($teams, $resourceId);
+			} else {
+				foreach ($teams as $team) {
+					$resources[] = [$team => $provider->getSharedWith($team)];
+				}
+			}
+		}
+
+		return array_merge_recursive(...$resources);
+	}
+
 	public function getTeamsForResource(string $providerId, string $resourceId, string $userId): array {
 		if (!$this->hasTeamSupport()) {
 			return [];
 		}
 
 		$provider = $this->getProvider($providerId);
-		return array_values(array_filter(array_map(function ($teamId) use ($userId) {
-			$team = $this->getTeam($teamId, $userId);
-			if ($team === null) {
-				return null;
-			}
-
+		return array_map(function (Circle $team) {
 			return new Team(
-				$teamId,
+				$team->getSingleId(),
 				$team->getDisplayName(),
-				$this->urlGenerator->linkToRouteAbsolute('contacts.contacts.directcircle', ['singleId' => $teamId]),
+				$this->urlGenerator->linkToRouteAbsolute('contacts.contacts.directcircle', ['singleId' => $team->getSingleId()]),
 			);
-		}, $provider->getTeamsForResource($resourceId))));
+		}, $this->getTeams($provider->getTeamsForResource($resourceId), $userId));
 	}
 
-	private function getTeam(string $teamId, string $userId): ?Circle {
+	private function getTeam(string $teamId, string $userId, ?CircleProbe $probe = null): ?Circle {
 		if (!$this->hasTeamSupport()) {
 			return null;
 		}
@@ -112,9 +130,22 @@ class TeamManager implements ITeamManager {
 		try {
 			$federatedUser = $this->circlesManager->getFederatedUser($userId, Member::TYPE_USER);
 			$this->circlesManager->startSession($federatedUser);
-			return $this->circlesManager->getCircle($teamId);
+			return $this->circlesManager->getCircle($teamId, $probe);
 		} catch (CircleNotFoundException) {
 			return null;
 		}
+	}
+
+	/**
+	 * @return Circle[]
+	 */
+	private function getTeams(array $teams, string $userId): array {
+		if (!$this->hasTeamSupport()) {
+			return [];
+		}
+
+		$federatedUser = $this->circlesManager->getFederatedUser($userId, Member::TYPE_USER);
+		$this->circlesManager->startSession($federatedUser);
+		return $this->circlesManager->getCirclesByIds($teams);
 	}
 }

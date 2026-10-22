@@ -34,6 +34,7 @@ use OCP\Files\Folder;
 use OCP\Files\IMimeTypeLoader;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\Files\NotEnoughSpaceException;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\Files\Storage\ILockingStorage;
@@ -41,12 +42,16 @@ use OCP\Files\Storage\IStorage;
 use OCP\FilesMetadata\IFilesMetadataManager;
 use OCP\IConfig;
 use OCP\IDBConnection;
+use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use OCP\Server;
+use OCP\Share\Exceptions\ShareNotFound;
 use OCP\Util;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 /** @template-implements IEventListener<BeforeNodeDeletedEvent> */
@@ -291,18 +296,65 @@ class Trashbin implements IEventListener {
 
 		$configuredTrashbinSize = static::getConfiguredTrashbinSize($owner);
 		if ($configuredTrashbinSize >= 0 && $sourceInfo->getSize() >= $configuredTrashbinSize) {
+			$trashStorage->releaseLock($trashInternalPath, ILockingProvider::LOCK_EXCLUSIVE, $lockingProvider);
 			return false;
 		}
 
-		try {
-			$moveSuccessful = true;
+		// there is still a possibility that the file has been deleted by a remote user
+		$deletedBy = self::overwriteDeletedBy($user);
 
+		$query = Server::get(IDBConnection::class)->getQueryBuilder();
+		$query->insert('files_trash')
+			->setValue('id', $query->createNamedParameter($filename))
+			->setValue('timestamp', $query->createNamedParameter($timestamp))
+			->setValue('location', $query->createNamedParameter($location))
+			->setValue('user', $query->createNamedParameter($owner))
+			->setValue('deleted_by', $query->createNamedParameter($deletedBy));
+		$inserted = false;
+		try {
+			$inserted = ($query->executeStatement() === 1);
+		} catch (\Throwable $e) {
+			Server::get(LoggerInterface::class)->error(
+				'trash bin database insert failed',
+				[
+					'app' => 'files_trashbin',
+					'exception' => $e,
+					'user' => $owner,
+					'filename' => $filename,
+					'timestamp' => $timestamp,
+				]
+			);
+		}
+		if (!$inserted) {
+			Server::get(LoggerInterface::class)->error(
+				'trash bin database couldn\'t be updated, skipping trash move',
+				[
+					'app' => 'files_trashbin',
+					'user' => $owner,
+					'filename' => $filename,
+					'timestamp' => $timestamp,
+				]
+			);
+			$trashStorage->releaseLock($trashInternalPath, ILockingProvider::LOCK_EXCLUSIVE, $lockingProvider);
+			return false;
+		}
+
+		$moveSuccessful = true;
+		try {
 			$inCache = $sourceStorage->getCache()->inCache($sourceInternalPath);
 			$trashStorage->moveFromStorage($sourceStorage, $sourceInternalPath, $trashInternalPath);
 			if ($inCache) {
 				$trashStorage->getUpdater()->renameFromStorage($sourceStorage, $sourceInternalPath, $trashInternalPath);
+			} else {
+				$sizeDifference = $sourceInfo->getSize();
+				if ($sizeDifference < 0) {
+					$sizeDifference = null;
+				} else {
+					$sizeDifference = (int)$sizeDifference;
+				}
+				$trashStorage->getUpdater()->update($trashInternalPath, null, $sizeDifference);
 			}
-		} catch (CopyRecursiveException $e) {
+		} catch (\Exception $e) {
 			$moveSuccessful = false;
 			if ($trashStorage->file_exists($trashInternalPath)) {
 				$trashStorage->unlink($trashInternalPath);
@@ -323,21 +375,31 @@ class Trashbin implements IEventListener {
 			} else {
 				$trashStorage->getUpdater()->remove($trashInternalPath);
 			}
-			return false;
+			$moveSuccessful = false;
+		}
+
+		if (!$moveSuccessful) {
+			Server::get(LoggerInterface::class)->error(
+				'trash move failed, removing trash metadata and payload',
+				[
+					'app' => 'files_trashbin',
+					'user' => $owner,
+					'filename' => $filename,
+					'timestamp' => $timestamp,
+				]
+			);
+			self::deleteTrashRow($user, $filename, $timestamp);
+			if ($trashStorage->file_exists($trashInternalPath)) {
+				if ($trashStorage->is_dir($trashInternalPath)) {
+					$trashStorage->rmdir($trashInternalPath);
+				} else {
+					$trashStorage->unlink($trashInternalPath);
+				}
+			}
+			$trashStorage->getUpdater()->remove($trashInternalPath);
 		}
 
 		if ($moveSuccessful) {
-			$query = Server::get(IDBConnection::class)->getQueryBuilder();
-			$query->insert('files_trash')
-				->setValue('id', $query->createNamedParameter($filename))
-				->setValue('timestamp', $query->createNamedParameter($timestamp))
-				->setValue('location', $query->createNamedParameter($location))
-				->setValue('user', $query->createNamedParameter($owner))
-				->setValue('deleted_by', $query->createNamedParameter($user));
-			$result = $query->executeStatement();
-			if (!$result) {
-				Server::get(LoggerInterface::class)->error('trash bin database couldn\'t be updated', ['app' => 'files_trashbin']);
-			}
 			Util::emitHook('\OCA\Files_Trashbin\Trashbin', 'post_moveToTrash', ['filePath' => Filesystem::normalizePath($file_path),
 				'trashPath' => Filesystem::normalizePath(static::getTrashFilename($filename, $timestamp))]);
 
@@ -500,6 +562,14 @@ class Trashbin implements IEventListener {
 
 		$sourceNode = self::getNodeForPath($user, $sourcePath);
 		$targetNode = self::getNodeForPath($user, $targetPath, 'files');
+
+		$targetParent = $targetNode->getParent();
+
+		$free = $targetParent->getFreeSpace();
+		if ($free >= 0 && $free < $sourceNode->getSize(false)) {
+			throw new NotEnoughSpaceException('Not enough free space in ' . $targetParent->getPath() . ' to restore ' . $sourceNode->getPath());
+		}
+
 		$run = true;
 		$event = new BeforeNodeRestoredEvent($sourceNode, $targetNode, $run);
 		$dispatcher = Server::get(IEventDispatcher::class);
@@ -528,12 +598,7 @@ class Trashbin implements IEventListener {
 			self::restoreVersions($view, $file, $filename, $uniqueFilename, $location, $timestamp);
 
 			if ($timestamp) {
-				$query = Server::get(IDBConnection::class)->getQueryBuilder();
-				$query->delete('files_trash')
-					->where($query->expr()->eq('user', $query->createNamedParameter($user)))
-					->andWhere($query->expr()->eq('id', $query->createNamedParameter($filename)))
-					->andWhere($query->expr()->eq('timestamp', $query->createNamedParameter($timestamp)));
-				$query->executeStatement();
+				self::deleteTrashRow($user, $filename, $timestamp);
 			}
 
 			return true;
@@ -672,13 +737,6 @@ class Trashbin implements IEventListener {
 		$size = 0;
 
 		if ($timestamp) {
-			$query = Server::get(IDBConnection::class)->getQueryBuilder();
-			$query->delete('files_trash')
-				->where($query->expr()->eq('user', $query->createNamedParameter($user)))
-				->andWhere($query->expr()->eq('id', $query->createNamedParameter($filename)))
-				->andWhere($query->expr()->eq('timestamp', $query->createNamedParameter($timestamp)));
-			$query->executeStatement();
-
 			$file = static::getTrashFilename($filename, $timestamp);
 		} else {
 			$file = $filename;
@@ -689,6 +747,9 @@ class Trashbin implements IEventListener {
 		try {
 			$node = $userRoot->get('/files_trashbin/files/' . $file);
 		} catch (NotFoundException $e) {
+			if ($timestamp) {
+				self::deleteTrashRow($user, $filename, $timestamp);
+			}
 			return $size;
 		}
 
@@ -702,7 +763,20 @@ class Trashbin implements IEventListener {
 		$node->delete();
 		self::emitTrashbinPostDelete('/files_trashbin/files/' . $file);
 
+		if ($timestamp) {
+			self::deleteTrashRow($user, $filename, $timestamp);
+		}
+
 		return $size;
+	}
+
+	private static function deleteTrashRow(string $user, string $filename, int $timestamp): void {
+		$query = Server::get(IDBConnection::class)->getQueryBuilder();
+		$query->delete('files_trash')
+			->where($query->expr()->eq('user', $query->createNamedParameter($user)))
+			->andWhere($query->expr()->eq('id', $query->createNamedParameter($filename)))
+			->andWhere($query->expr()->eq('timestamp', $query->createNamedParameter($timestamp)));
+		$query->executeStatement();
 	}
 
 	/**
@@ -1156,12 +1230,13 @@ class Trashbin implements IEventListener {
 		// oc_filecache `name` column has a limit of 250 chars
 		$maxLength = 250;
 		if ($length > $maxLength) {
-			$trashFilename = substr_replace(
-				$trashFilename,
-				'',
-				$maxLength / 2,
-				$length - $maxLength
-			);
+			// truncate at the middle, since the last characters are fairly likely to have meaningful information such as version numbering
+
+			$charsToRemove = $length - $maxLength + 1;
+			$charLength = mb_strlen($trashFilename);
+			$start = mb_substr($trashFilename, 0, intdiv($charLength, 2) - $charsToRemove);
+			$end = mb_substr($trashFilename, intdiv($charLength, 2));
+			return $start . '_' . $end;
 		}
 		return $trashFilename;
 	}
@@ -1186,6 +1261,29 @@ class Trashbin implements IEventListener {
 		} else {
 			return new NonExistingFile($rootFolder, $view, $fullPath);
 		}
+	}
+
+	/**
+	 * in case the request is authed, and user token is from a federated share
+	 * we use shared_with as initiator of the deletion
+	 */
+	private static function overwriteDeletedBy(string $user) {
+		try {
+			$request = Server::get(IRequest::class);
+			/** @psalm-suppress NoInterfaceProperties */
+			$token = $request->server['PHP_AUTH_USER'] ?? '';
+			if ($token === '') {
+				return $user;
+			}
+
+			$federatedShareProvider = Server::get(\OCA\FederatedFileSharing\FederatedShareProvider::class);
+			$share = $federatedShareProvider->getShareByToken($token);
+
+			return $share->getSharedWith();
+		} catch (NotFoundExceptionInterface|ContainerExceptionInterface|ShareNotFound) {
+		}
+
+		return $user;
 	}
 
 	public function handle(Event $event): void {

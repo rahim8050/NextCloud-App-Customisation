@@ -206,9 +206,9 @@ class AlbumMapper {
 			->leftJoin('p', 'filecache', 'f', $query->expr()->eq('p.file_id', 'f.fileid'))
 			->where($query->expr()->eq('a.album_id', $query->createNamedParameter($albumId, IQueryBuilder::PARAM_INT)))
 			->andWhere($query->expr()->eq('file_id', $query->createNamedParameter($fileId, IQueryBuilder::PARAM_INT)));
-		$row = $query->executeQuery()->fetchAll()[0];
+		$row = $query->executeQuery()->fetch();
 
-		if ($row === null) {
+		if ($row === false) {
 			return null;
 		}
 
@@ -352,7 +352,6 @@ class AlbumMapper {
 
 		return array_values(array_filter($collaborators, fn ($c): bool => $c !== null));
 	}
-
 
 	public function isCollaborator(int $albumId, string $userId): bool {
 		$query = $this->connection->getQueryBuilder();
@@ -578,7 +577,6 @@ class AlbumMapper {
 			->groupBy('a.album_id')
 			->executeQuery()
 			->fetchAll();
-
 
 		return array_map(fn (array $row): AlbumInfo => new AlbumInfo(
 			(int)$row['album_id'],

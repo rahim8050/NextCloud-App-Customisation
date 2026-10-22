@@ -6,6 +6,7 @@ declare(strict_types=1);
  * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
  * SPDX-License-Identifier: AGPL-3.0-only
  */
+
 namespace OCA\Activity;
 
 use Doctrine\DBAL\Platforms\MySQLPlatform;
@@ -15,6 +16,7 @@ use OCP\Activity\IEvent;
 use OCP\Activity\IExtension;
 use OCP\Activity\IFilter;
 use OCP\Activity\IManager;
+use OCP\DB\Exception;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -89,6 +91,75 @@ class Data {
 		$this->insertActivity->executeStatement();
 
 		return $this->insertActivity->getLastInsertId();
+	}
+
+	/**
+	 * Bulk sends an event into the activity stream
+	 * for a batch of users that are affected by the same event
+	 * (ex. Call Started, Call ended)
+	 *
+	 * @param IEvent $event
+	 * @param array $affectedUsers
+	 * @return array<int, string>
+	 * @throws Exception
+	 */
+	public function bulkSend(IEvent $event, array $affectedUsers): array {
+		$this->connection->beginTransaction();
+
+		$activityIds = [];
+		try {
+			if ($this->insertActivity === null) {
+				$this->insertActivity = $this->connection->getQueryBuilder();
+			}
+			$this->insertActivity->insert('activity')
+				->values([
+					'app' => $this->insertActivity->createParameter('app'),
+					'subject' => $this->insertActivity->createParameter('subject'),
+					'subjectparams' => $this->insertActivity->createParameter('subjectparams'),
+					'message' => $this->insertActivity->createParameter('message'),
+					'messageparams' => $this->insertActivity->createParameter('messageparams'),
+					'file' => $this->insertActivity->createParameter('object_name'),
+					'link' => $this->insertActivity->createParameter('link'),
+					'user' => $this->insertActivity->createParameter('user'),
+					'affecteduser' => $this->insertActivity->createParameter('affecteduser'),
+					'timestamp' => $this->insertActivity->createParameter('timestamp'),
+					'priority' => $this->insertActivity->createParameter('priority'),
+					'type' => $this->insertActivity->createParameter('type'),
+					'object_type' => $this->insertActivity->createParameter('object_type'),
+					'object_id' => $this->insertActivity->createParameter('object_id'),
+				]);
+
+			$this->insertActivity->setParameters([
+				'app' => $event->getApp(),
+				'type' => $event->getType(),
+				'user' => $event->getAuthor(),
+				'timestamp' => $event->getTimestamp(),
+				'subject' => $event->getSubject(),
+				'subjectparams' => json_encode($event->getSubjectParameters()),
+				'message' => $event->getMessage(),
+				'messageparams' => json_encode($event->getMessageParameters()),
+				'priority' => IExtension::PRIORITY_MEDIUM,
+				'object_type' => $event->getObjectType(),
+				'object_id' => $event->getObjectId(),
+				'object_name' => $event->getObjectName(),
+				'link' => $event->getLink(),
+			]);
+
+			foreach ($affectedUsers as $affectedUser) {
+				$this->insertActivity->setParameter('affecteduser', $affectedUser);
+				$this->insertActivity->executeStatement();
+				$activityIds[$this->insertActivity->getLastInsertId()] = (string)$affectedUser;
+			}
+
+			$this->connection->commit();
+		} catch (Exception $e) {
+			// Make sure to always roll back, otherwise the outer code runs in a failed transaction
+			$this->logger->error('Could not create bulk activities', ['exception' => $e]);
+			$this->connection->rollBack();
+			return [];
+		}
+
+		return $activityIds;
 	}
 
 	/**
@@ -202,8 +273,8 @@ class Data {
 		}
 
 		if (
-			$filter === 'files_favorites' ||
-			(in_array($filter, ['all', 'by', 'self']) && $userSettings->getUserSetting($user, 'stream', 'files_favorites'))
+			$filter === 'files_favorites'
+			|| (in_array($filter, ['all', 'by', 'self']) && $userSettings->getUserSetting($user, 'stream', 'files_favorites'))
 		) {
 			try {
 				$favoriteFilter = $this->activityManager->getFilterById('files_favorites');
@@ -254,35 +325,38 @@ class Data {
 	 * @throws \OutOfBoundsException If $since is not owned by $user
 	 */
 	protected function setOffsetFromSince(IQueryBuilder $query, $user, $since, $sort) {
-		if ($since) {
-			$queryBuilder = $this->connection->getQueryBuilder();
-			$queryBuilder->select(['affecteduser', 'timestamp'])
-				->from('activity')
-				->where($queryBuilder->expr()->eq('activity_id', $queryBuilder->createNamedParameter((int)$since)));
-			$result = $queryBuilder->executeQuery();
-			$activity = $result->fetch();
-			$result->closeCursor();
-
-			if ($activity) {
-				if ($activity['affecteduser'] !== $user) {
-					throw new \OutOfBoundsException('Invalid since', 2);
-				}
-				$timestamp = (int)$activity['timestamp'];
-
-				if ($sort === 'DESC') {
-					$query->andWhere($query->expr()->lte('timestamp', $query->createNamedParameter($timestamp)));
-					$query->andWhere($query->expr()->lt('activity_id', $query->createNamedParameter($since)));
-				} else {
-					$query->andWhere($query->expr()->gte('timestamp', $query->createNamedParameter($timestamp)));
-					$query->andWhere($query->expr()->gt('activity_id', $query->createNamedParameter($since)));
-				}
-				return [];
-			}
+		if (!$since) {
+			return $this->getFirstKnownActivityHeader($user, $sort);
 		}
 
-		/**
-		 * Couldn't find the since, so find the oldest one and set the header
-		 */
+		$queryBuilder = $this->connection->getQueryBuilder();
+		$queryBuilder->select(['affecteduser', 'timestamp'])
+			->from('activity')
+			->where($queryBuilder->expr()->eq('activity_id', $queryBuilder->createNamedParameter((int)$since)));
+		$result = $queryBuilder->executeQuery();
+		$activity = $result->fetch();
+		$result->closeCursor();
+
+		if (!$activity) {
+			return $this->getFirstKnownActivityHeader($user, $sort);
+		}
+
+		if ($activity['affecteduser'] !== $user) {
+			throw new \OutOfBoundsException('Invalid since', 2);
+		}
+
+		$timestamp = (int)$activity['timestamp'];
+		if ($sort === 'DESC') {
+			$query->andWhere($query->expr()->lte('timestamp', $query->createNamedParameter($timestamp)));
+			$query->andWhere($query->expr()->lt('activity_id', $query->createNamedParameter($since)));
+		} else {
+			$query->andWhere($query->expr()->gte('timestamp', $query->createNamedParameter($timestamp)));
+			$query->andWhere($query->expr()->gt('activity_id', $query->createNamedParameter($since)));
+		}
+		return [];
+	}
+
+	private function getFirstKnownActivityHeader(string $user, string $sort): array {
 		$fetchQuery = $this->connection->getQueryBuilder();
 		$fetchQuery->select('activity_id')
 			->from('activity')
@@ -294,11 +368,8 @@ class Data {
 		$result->closeCursor();
 
 		if ($activity !== false) {
-			return [
-				'X-Activity-First-Known' => (int)$activity['activity_id'],
-			];
+			return ['X-Activity-First-Known' => (int)$activity['activity_id']];
 		}
-
 		return [];
 	}
 
@@ -449,7 +520,7 @@ class Data {
 			$query->andWhere($query->expr()->neq('user', $nameParam));
 		}
 
-		return $query->executeQuery()->fetch();
+		return $query->executeQuery()->fetch() ?: [];
 	}
 
 	/**

@@ -39,12 +39,15 @@ OC.L10N.register(
     "Send email reminders about unhandled notifications after:" : "Envoyer par e-mail des rappels des notifications non gérées après :",
     "Play sound when a new notification arrives" : "Jouer un son lorsqu'une notification arrive",
     "Play sound when a call started (requires Nextcloud Talk)" : "Jouer un son quand un appel est lancé (l'application Nextcloud Talk est requise)",
+    "Web push settings" : "Paramètres des notifications web",
+    "Web push is a push notification system that lets web applications send notifications to users´ mobile apps or browser, even when the app is not open in a tab." : "Une notification web est une notification système qui permet aux applications web d'envoyer des notifications aux utilisateurs d'application mobile ou navigateur, même quand l'application n'est pas ouverte dans un onglet.",
+    "Web push notifications are encrypted but routed through services provided by Mozilla, Microsoft, Apple, Google or user-choosen ones in case of mobile apps. While the content is protected, metadata such as timing and frequency of notifications may be exposed to these providers." : "Les notifications web sont chiffrées mais transmises via des services fournis par Mozilla, Microsoft, Apple, Google ou choisis par l'utilisateur dans le cas des applications mobiles. Même si le contenu est protégé, les métadonnées comme le moment, la fréquence des notifications peuvent être accessibles à ces fournisseurs.",
+    "Allow web push to be used" : "Autoriser l'utilisation des notifications web",
+    "Allow web push for browsers" : "Autoriser les notifications web pour navigateurs",
     "None" : "Aucun",
     "You need to set up your email address before you can receive notification emails." : "Vous devez définir votre adresse e-mail avant de pouvoir recevoir des e-mails de notification.",
     "Also repeat sound on a secondary speaker" : "Répéter aussi le son sur le haut-parleur secondaire",
     "Selection of the speaker device is currently not supported by Safari" : "La sélection du périphérique de haut-parleur n'est actuellement pas prise en charge par Safari",
-    "Select a device" : "Sélectionner un appareil",
-    "seconds ago" : "à l'instant",
-    "Configure the default notification settings for new users" : "Configurer les paramètres de notification par défaut pour les nouveaux utilisateurs"
+    "Select a device" : "Sélectionner un appareil"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");

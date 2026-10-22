@@ -11,11 +11,18 @@ declare(strict_types=1);
 
 namespace OCA\Circles\Service;
 
+use OCA\Circles\Db\MemberRequest;
+use OCA\Circles\Db\MembershipRequest;
 use OCA\Circles\Exceptions\InitiatorNotFoundException;
 use OCA\Circles\Exceptions\InsufficientPermissionException;
+use OCA\Circles\Exceptions\MemberHelperException;
+use OCA\Circles\Exceptions\MemberLevelException;
+use OCA\Circles\Exceptions\MemberNotFoundException;
 use OCA\Circles\Exceptions\MembershipNotFoundException;
 use OCA\Circles\Exceptions\RequestBuilderException;
 use OCA\Circles\Model\Circle;
+use OCA\Circles\Model\Helpers\MemberHelper;
+use OCA\Circles\Model\Member;
 use OCP\IL10N;
 
 class PermissionService {
@@ -28,6 +35,11 @@ class PermissionService {
 	/** @var ConfigService */
 	private $configService;
 
+	/** @var MemberRequest */
+	private $memberRequest;
+
+	/** @var MembershipRequest */
+	private $membershipRequest;
 
 	/**
 	 * @param IL10N $l10n
@@ -38,10 +50,14 @@ class PermissionService {
 		IL10N $l10n,
 		FederatedUserService $federatedUserService,
 		ConfigService $configService,
+		MemberRequest $memberRequest,
+		MembershipRequest $membershipRequest,
 	) {
 		$this->l10n = $l10n;
 		$this->federatedUserService = $federatedUserService;
 		$this->configService = $configService;
+		$this->memberRequest = $memberRequest;
+		$this->membershipRequest = $membershipRequest;
 	}
 
 
@@ -158,5 +174,67 @@ class PermissionService {
 		}
 
 		return $values;
+	}
+
+	public function userMustBeMember(string $userId, string $circleId): Member {
+		try {
+			return $this->memberRequest->getMemberByUserId($circleId, $userId);
+		} catch (MemberNotFoundException) {
+			// not a direct member, check if user has inherited membership via group/circle
+			try {
+				$membership = $this->membershipRequest->getMembershipByUserId($circleId, $userId);
+				// return group/circle member through which access is inherited, to use its permission level
+				return $this->memberRequest->getMember($circleId, $membership->getInheritanceFirst());
+			} catch (MembershipNotFoundException) {
+				throw new InsufficientPermissionException(
+					$this->l10n->t('Insufficient permissions to perform this action')
+				);
+			}
+		}
+	}
+
+	public function memberMustBeAtLeastModerator(Member $member): void {
+		$memberHelper = new MemberHelper($member);
+		try {
+			$memberHelper->mustBeModerator();
+		} catch (MemberHelperException|MemberLevelException) {
+			throw new InsufficientPermissionException(
+				$this->l10n->t('Insufficient permissions to perform this action')
+			);
+		}
+	}
+
+	public function memberMustBeAtLeastAdmin(Member $member): void {
+		$memberHelper = new MemberHelper($member);
+		try {
+			$memberHelper->mustBeAdmin();
+		} catch (MemberHelperException|MemberLevelException) {
+			throw new InsufficientPermissionException(
+				$this->l10n->t('Insufficient permissions to perform this action')
+			);
+		}
+	}
+
+	public function memberMustBeOwner(Member $member): void {
+		$memberHelper = new MemberHelper($member);
+		try {
+			$memberHelper->mustBeOwner();
+		} catch (MemberHelperException|MemberLevelException) {
+			throw new InsufficientPermissionException(
+				$this->l10n->t('Insufficient permissions to perform this action')
+			);
+		}
+	}
+
+	public function memberMustBeHigherLevelThan(Member $memberUser, string $targetMemberId): void {
+		$targetMember = $this->memberRequest->getMemberById($targetMemberId);
+		$memberHelper = new MemberHelper($memberUser);
+		try {
+			$memberHelper->mustBeHigherLevelThan($targetMember);
+		} catch (MemberLevelException) {
+			throw new InsufficientPermissionException(
+				$this->l10n->t('Insufficient permissions to perform this action')
+			);
+		}
 	}
 }

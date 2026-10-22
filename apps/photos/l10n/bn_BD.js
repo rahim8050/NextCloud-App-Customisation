@@ -10,10 +10,14 @@ OC.L10N.register(
     "Shared by" : "যাদের মাঝে ভাগাভাগি করা হয়েছে",
     "Favorite" : "প্রিয়জন",
     "Go back" : "ফিরে যাও",
-    "Home" : "বাড়ি",
     "Remove from favorites" : "Remove from favorites",
-    "Details" : "বিসতারিত",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Location" : "অবস্থান",
+    "Add" : "যোগ কর",
+    "Home" : "বাড়ি",
+    "General" : "সাধারণ",
     "Group" : "গোষ্ঠীসমূহ",
-    "Add" : "যোগ করুন"
+    "Details" : "বিসতারিত"
 },
 "nplurals=2; plural=(n != 1);");

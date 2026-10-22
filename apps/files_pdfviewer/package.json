@@ -1,7 +1,7 @@
 {
   "name": "files_pdfviewer",
   "description": "PDF viewer plugin for Nextcloud",
-  "version": "5.0.0-dev.0",
+  "version": "5.0.0",
   "author": "John Molakvoæ <skjnldsv@protonmail.com>",
   "contributors": [],
   "bugs": {
@@ -30,12 +30,14 @@
     "@nextcloud/auth": "^2.5.2",
     "@nextcloud/axios": "^2.5.1",
     "@nextcloud/dialogs": "^6.3.0",
+    "@nextcloud/initial-state": "^3.0.0",
     "@nextcloud/l10n": "^3.3.0",
     "@nextcloud/logger": "^3.0.2",
-    "@nextcloud/paths": "^2.2.1",
+    "@nextcloud/paths": "^2.2.2",
     "@nextcloud/router": "^3.0.1",
     "@nextcloud/sharing": "^0.2.5",
-    "pdfjs-dist": "4.0.189"
+    "@nextcloud/vue": "^8.37.0",
+    "pdfjs-dist": "4.10.38"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -47,11 +49,13 @@
   "devDependencies": {
     "@nextcloud/babel-config": "^1.2.0",
     "@nextcloud/browserslist-config": "^3.0.1",
-    "@nextcloud/eslint-config": "^9.0.0-rc.5",
+    "@nextcloud/eslint-config": "^9.0.1",
     "@nextcloud/stylelint-config": "^3.1.1",
-    "@nextcloud/webpack-vue-config": "^6.3.0",
-    "adm-zip": "^0.5.16",
+    "@nextcloud/webpack-vue-config": "^6.3.2",
+    "adm-zip": "^0.5.18",
     "axios": "^1.10.0",
-    "cli-progress": "^3.12.0"
+    "cli-progress": "^3.12.0",
+    "terser-webpack-plugin": "^5.6.1",
+    "vue-loader": "^15.11.1"
   }
 }

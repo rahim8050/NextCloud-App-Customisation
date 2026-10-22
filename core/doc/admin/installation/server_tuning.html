@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Server tuning &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Server tuning &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/installation/server_tuning.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Example installation on Ubuntu 22.04 LTS" href="example_ubuntu.html" />
-    <link rel="prev" title="Hardening and security guidance" href="harden_server.html" /> 
+    <link rel="prev" title="Hardening and security guidance" href="harden_server.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -171,7 +176,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -294,7 +299,7 @@ more processes to run in parallel to handle the requests.</p>
 </section>
 <section id="enable-php-opcache">
 <h2>Enable PHP OPcache<a class="headerlink" href="#enable-php-opcache" title="Link to this heading"></a></h2>
-<p>The <a class="reference external" href="https://php.net/manual/en/intro.opcache.php">OPcache</a> improves the performance of PHP applications by caching precompiled bytecode.</p>
+<p>The <a class="reference external" href="https://www.php.net/manual/en/book.opcache.php">OPcache</a> improves the performance of PHP applications by caching precompiled bytecode.</p>
 <section id="revalidation">
 <h3>Revalidation<a class="headerlink" href="#revalidation" title="Link to this heading"></a></h3>
 <p>OPcache revalidation in PHP handles changes made to PHP application code stored on disk. Code changes occur whenever:</p>
@@ -318,10 +323,6 @@ will likely experience unusual behavior due to a mismatch between what is on dis
 </div>
 <p>To change the default from <code class="docutils literal notranslate"><span class="pre">2</span></code> and check for changes on disk at most every <code class="docutils literal notranslate"><span class="pre">60</span></code> seconds, use the following setting:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">opcache.revalidate_freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">60</span>
-</pre></div>
-</div>
-<p>To disable the revalidation completely:</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">opcache.validate_timestamps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">0</span>
 </pre></div>
 </div>
 <p>Any Server/app upgrades or changes to <code class="docutils literal notranslate"><span class="pre">config.php</span></code> will then require restarting PHP (or otherwise manually clearing the cache or invalidating this particular script).</p>
@@ -372,7 +373,6 @@ You can find the image at <cite>https://ghcr.io/nextcloud-releases/aio-imaginary
 not accessible from outside of your servers. Then you can configure
 Nextcloud to use Imaginary by editing your <cite>config.php</cite>:</p>
 <div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">&#39;enabledPreviewProviders&#39; =&gt; [</span>
-<span class="x">    &#39;OC\Preview\MP3&#39;,</span>
 <span class="x">    &#39;OC\Preview\TXT&#39;,</span>
 <span class="x">    &#39;OC\Preview\MarkDown&#39;,</span>
 <span class="x">    &#39;OC\Preview\OpenDocument&#39;,</span>
@@ -389,7 +389,7 @@ Also make sure to add the capability <cite>SYS_NICE</cite> via <cite>–cap-add=
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For large instance, you should follow <cite>Imaginary’s scalability recommendation &lt;https://github.com/h2non/imaginary#scalability&gt;</cite>.</p>
+<p>For large instance, you should follow <a class="reference external" href="https://github.com/h2non/imaginary#scalability">Imaginary’s scalability recommendation</a>.</p>
 </div>
 <section id="settings">
 <h3>Settings<a class="headerlink" href="#settings" title="Link to this heading"></a></h3>
@@ -421,7 +421,7 @@ You can change between jpeg and webp, the default is jpeg:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -435,7 +435,7 @@ You can change between jpeg and webp, the default is jpeg:</p>
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -445,10 +445,8 @@ You can change between jpeg and webp, the default is jpeg:</p>
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -456,31 +454,25 @@ You can change between jpeg and webp, the default is jpeg:</p>
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

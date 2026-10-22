@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NGINX configuration &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>NGINX configuration &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/installation/nginx.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hardening and security guidance" href="harden_server.html" />
-    <link rel="prev" title="SELinux configuration" href="selinux_configuration.html" /> 
+    <link rel="prev" title="SELinux configuration" href="selinux_configuration.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -159,7 +164,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -180,16 +185,7 @@
              
   <section id="nginx-configuration">
 <span id="nginx-config"></span><h1>NGINX configuration<a class="headerlink" href="#nginx-configuration" title="Link to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Please note that web servers other than Apache 2.x are not officially supported.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This page covers example NGINX configurations to run a Nextcloud server.
-These configurations examples were originally provided by <a class="reference external" href="https://github.com/josh4trunks">&#64;josh4trunks</a>
-and are exclusively community-maintained. (Thank you contributors!)</p>
-</div>
+<p>This page covers how to run a Nextcloud server using NGINX backed by PHP-FPM, which is also an officially supported setup.</p>
 <ul class="simple">
 <li><p>You need to insert the following code into <strong>your Nginx configuration file</strong>.
 Choose the appropriate example based on whether you are deploying <a class="reference internal" href="#nginx-webroot-example"><span class="std std-ref">Nextcloud in the webroot of NGINX</span></a> (i.e. <code class="code docutils literal notranslate"><span class="pre">https://cloud.example.com/</span></code>) or <a class="reference internal" href="#nginx-subdir-example"><span class="std std-ref">Nextcloud in a subdir of the NGINX webroot</span></a> (i.e. <code class="code docutils literal notranslate"><span class="pre">https://cloud.example.com/nextcloud</span></code>).</p></li>
@@ -396,7 +392,7 @@ webroot of your nginx installation. In this example it is
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1"># Serve static files</span>
-<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">\.(?:css|js|mjs|svg|gif|ico|jpg|png|webp|wasm|tflite|map|ogg|flac)$</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">\.(?:css|js|mjs|svg|gif|ico|jpg|png|webp|wasm|tflite|map|ogg|flac|mp4|webm)$</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">/index.php</span><span class="nv">$request_uri</span><span class="p">;</span>
 <span class="w">        </span><span class="c1"># HTTP response headers borrowed from Nextcloud `.htaccess`</span>
 <span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w">                     </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">max-age=15778463</span><span class="nv">$asset_immutable&quot;</span><span class="p">;</span>
@@ -624,7 +620,7 @@ The configuration differs from the “Nextcloud in webroot” configuration abov
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="c1"># Serve static files</span>
-<span class="w">        </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">\.(?:css|js|mjs|svg|gif|ico|jpg|png|webp|wasm|tflite|map|ogg|flac)$</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">\.(?:css|js|mjs|svg|gif|ico|jpg|png|webp|wasm|tflite|map|ogg|flac|mp4|webm)$</span><span class="w"> </span><span class="p">{</span>
 <span class="w">            </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">/nextcloud/index.php</span><span class="nv">$request_uri</span><span class="p">;</span>
 <span class="w">            </span><span class="c1"># HTTP response headers borrowed from Nextcloud `.htaccess`</span>
 <span class="w">            </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w">                     </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">max-age=15778463</span><span class="nv">$asset_immutable&quot;</span><span class="p">;</span>
@@ -744,7 +740,7 @@ chown<span class="w"> </span>root:nginx<span class="w"> </span>/var/lib/php/opca
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -758,7 +754,7 @@ chown<span class="w"> </span>root:nginx<span class="w"> </span>/var/lib/php/opca
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -768,10 +764,8 @@ chown<span class="w"> </span>root:nginx<span class="w"> </span>/var/lib/php/opca
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -779,31 +773,25 @@ chown<span class="w"> </span>root:nginx<span class="w"> </span>/var/lib/php/opca
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

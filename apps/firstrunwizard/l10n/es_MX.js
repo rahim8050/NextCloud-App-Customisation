@@ -50,8 +50,8 @@ OC.L10N.register(
     "Download For Windows, Mac OS and Linux." : "Descargar para Windows, Mac OS y Linux.",
     "Calendar and contacts ↗" : "Calendario y contactos ↗",
     "Connect your calendar and contacts with your devices." : "Conecte su calendario y contactos con sus dispositivos.",
-    "Introducing Nextcloud Hub {version}" : "Presentando Nextcloud Hub {version}",
     "Welcome to {cloudName}!" : "¡Bienvenido a {cloudName}!",
+    "Skip" : "Saltar",
     "This Nextcloud is on version {version}" : "Este Nextcloud está en la versión {version}",
     "A collaboration platform that puts you in control" : "Una plataforma de colaboración que le da el control",
     "Privacy" : "Privacidad",
@@ -81,7 +81,6 @@ OC.L10N.register(
     "What's new?" : "¿Qué hay de nuevo?",
     "Nextcloud on all your devices" : "Nextcloud en todos sus dispositivos",
     "Nextcloud Hub {version}" : "Nextcloud Hub {version}",
-    "Read more" : "Leer más",
     "Share on social media" : "Compartir en redes sociales",
     "Get started!" : "¡Empezar!"
 },

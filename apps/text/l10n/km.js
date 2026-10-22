@@ -1,19 +1,24 @@
 OC.L10N.register(
     "text",
     {
-    "Translate" : "Translate",
+    "Close" : "បិទ",
+    "guest" : "ភ្ញៀវ",
+    "Edit" : "កែប្រែ",
+    "Delete" : "Delete",
+    "Save" : "រក្សាទុក",
+    "Cancel" : "លើកលែង",
+    "Comment" : "មតិ",
+    "Table" : "តារាង",
+    "Details" : "ព័ត៌មាន​លម្អិត",
+    "Previous" : "មុន",
     "Reload" : "ផ្ទុកឡើងវិញ",
     "you" : "អ្នក​",
     "Copy link" : "ចម្លងតំណ",
-    "guest" : "ភ្ញៀវ",
     "Saved" : "បាន​រក្សាទុក",
-    "Cancel" : "លើកលែង",
     "URL" : "URL",
-    "to" : "ទៅ",
+    "Translate" : "Translate",
     "Upload" : "ផ្ទុក​ឡើង",
-    "Edit" : "កែប្រែ",
-    "Table" : "តារាង",
-    "Details" : "ព័ត៌មាន​លម្អិត",
-    "Choose" : "ជ្រើស"
+    "Choose" : "ជ្រើស",
+    "to" : "ទៅ"
 },
 "nplurals=1; plural=0;");

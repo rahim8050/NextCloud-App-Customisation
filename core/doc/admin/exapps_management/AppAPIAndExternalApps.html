@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AppAPI and External Apps &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>AppAPI and External Apps &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/exapps_management/AppAPIAndExternalApps.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -38,7 +39,10 @@ window.addEventListener("load", () => mermaid.run());
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Deployment configurations" href="DeployConfigurations.html" />
-    <link rel="prev" title="ExApps management" href="index.html" /> 
+    <link rel="prev" title="ExApps management" href="index.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -70,6 +74,7 @@ window.addEventListener("load", () => mermaid.run());
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -158,7 +163,7 @@ window.addEventListener("load", () => mermaid.run());
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -283,14 +288,14 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
 <h2>FAQ<a class="headerlink" href="#faq" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><dl class="simple">
-<dt>I have two graphics cards XXX with 6/8/Y GB of ram each. How can I run something which does not fit into one graphics card?</dt><dd><ul>
+<dt>I have two graphics cards (e.g. NVIDIA RTX 3060) with 8 GB of VRAM each. How can I run something which does not fit into one graphics card?</dt><dd><ul>
 <li><p>Distributing models across multiple GPUs is currently not supported. You will need a GPU that fits all of the model you are trying to use.</p></li>
 </ul>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>I have YYY graphics card that does not supports CUDA - can I use it and how?</dt><dd><ul>
+<dt>I have a graphics card that does not support CUDA - can I use it and how?</dt><dd><ul>
 <li><p>No, our AI apps require GPUs with CUDA support to function at this time.</p></li>
 </ul>
 </dd>
@@ -326,45 +331,45 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
 <div class="line"><a class="reference external" href="https://github.com/fatedier/frp">FRP</a> is used to create a tunnel between the ExApp and the HaRP container so there is no need for the ExApp containers to expose any ports to the host or to be reachable from the Nextcloud server.</div>
 <div class="line">The Nextcloud server can reach the ExApp containers through the HaRP container.</div>
 </div>
-<p>HaRP has an additional benefit of being able to proxy requests coming from the Web interface or an API to the ExApp container without being proxies through the Nextcloud server, saving resources, improving performance and supporting additional protocols like WebSockets.</p>
+<p>HaRP has an additional benefit of being able to proxy requests coming from the Web interface or an API to the ExApp container without being proxied through the Nextcloud server, saving resources, improving performance and supporting additional protocols like WebSockets.</p>
 <p>HaRP is the recommended way to run ExApps, but if you are not able to use it, Docker Socket Proxy is still supported.</p>
 <p>Frontend requests in case of Docker Socket Proxy:</p>
 <pre  class="mermaid">
         graph LR;
-        subgraph Browser
-                A[Frontend]
-        end
+    subgraph Browser
+        A[Frontend]
+    end
 
-        B[Proxy]
+    B[Proxy]
 
-        subgraph Services behind the proxy
-                C[Dcker Socket Proxy]
-                D[ExApp]
-                E[Nextcloud Server / AppAPI]
-        end
+    subgraph Services behind the proxy
+        C[Docker Socket Proxy]
+        D[ExApp]
+        E[Nextcloud Server / AppAPI]
+    end
 
-        A --&gt; B
-        B --&gt;|Request to an ExApp| E --Converted to ExApp auth--&gt; D
-        B --&gt;|All other usual requests| E
+    A --&gt; B
+    B --&gt;|Request to an ExApp| E --Converted to ExApp auth--&gt; D
+    B --&gt;|All other usual requests| E
     </pre><p>Frontend requests in case of HaRP:</p>
 <pre  class="mermaid">
         graph LR;
-        subgraph Browser
-                A[Frontend]
-        end
+    subgraph Browser
+        A[Frontend]
+    end
 
-        B[Proxy]
+    B[Proxy]
 
-        subgraph Services behind the proxy
-                C[HaRP]
-                D[ExApp]
-                E[Nextcloud Server / AppAPI]
-        end
+    subgraph Services behind the proxy
+        C[HaRP]
+        D[ExApp]
+        E[Nextcloud Server / AppAPI]
+    end
 
-        B --All other usual requests--&gt; E
-        A --&gt; B
-        B --Direct request to an ExApp--&gt; C --Converted to ExApp auth--&gt; D
-        C --User auth validation--&gt; E
+    B --All other usual requests--&gt; E
+    A --&gt; B
+    B --Direct request to an ExApp--&gt; C --Converted to ExApp auth--&gt; D
+    C --User auth validation--&gt; E
     </pre></section>
 </section>
 
@@ -379,7 +384,7 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -393,7 +398,7 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -403,10 +408,8 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -414,31 +417,25 @@ If successful, the ExApp will be displayed under the “Your apps” list.</p>
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

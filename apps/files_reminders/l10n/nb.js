@@ -6,15 +6,13 @@ OC.L10N.register(
     "View file" : "Vis fil",
     "View folder" : "Vis mappe",
     "Set file reminders" : "Angi filpåminnelser",
-    "Set reminder for \"{fileName}\"" : "Angi påminnelse for \"{fileName}\"",
-    "Clear reminder" : "Tydelig påminnelse",
     "Please choose a valid date & time" : "Vennligst velg en gyldig dato og tid",
     "Reminder set for \"{fileName}\"" : "Påminnelse satt for «{fileName}»",
     "Failed to set reminder" : "Kunne ikke angi påminnelse",
     "Reminder cleared for \"{fileName}\"" : "Påminnelse slettet for \"{fileName}\"",
     "Failed to clear reminder" : "Kunne ikke fjerne påminnelsen",
-    "We will remind you of this file" : "Vi minner deg på denne filen",
     "Cancel" : "Avbryt",
+    "Clear reminder" : "Tydelig påminnelse",
     "Set reminder" : "Angi påminnelse",
     "Reminder set" : "Påminnelse angitt",
     "Later today" : "Senere i dag",
@@ -25,7 +23,7 @@ OC.L10N.register(
     "Set reminder for this weekend" : "Sett påminnelse for denne helgen",
     "Next week" : "Neste uke",
     "Set reminder for next week" : "Sett påminnelse for neste uke",
-    "Set reminder at custom date & time" : "Still inn påminnelse til egendefinert dato og klokkeslett",
-    "Set custom reminder" : "Angi egendefinert påminnelse"
+    "Set reminder for \"{fileName}\"" : "Angi påminnelse for \"{fileName}\"",
+    "We will remind you of this file" : "Vi minner deg på denne filen"
 },
 "nplurals=2; plural=(n != 1);");

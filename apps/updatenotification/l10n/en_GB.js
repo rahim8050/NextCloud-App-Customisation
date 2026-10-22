@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Channel updated",
     "Web updater is disabled" : "Web updater is disabled",
+    "Configuration is read-only" : "Configuration is read-only",
     "App updated" : "App updated",
     "See what's new" : "See what's new",
     "{app} updated to version {version}" : "{app} updated to version {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Update for {app} to version %s is available.",
     "Update notification" : "Update notification",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater.",
-    "Give feedback" : "Give feedback",
-    "Get started" : "Get started",
-    "No changelog available" : "No changelog available",
-    "What's new in {app} {version}" : "What's new in {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "A new version is available: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Checked on {lastCheckedDate} - Open changelog",
@@ -56,11 +53,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Only notifications for app updates are available.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "The selected update channel makes dedicated notifications for the server obsolete.",
     "The selected update channel does not support updates of the server." : "The selected update channel does not support updates of the server.",
+    "Give feedback" : "Give feedback",
+    "Get started" : "Get started",
+    "No changelog available" : "No changelog available",
+    "What's new in {app} {version}" : "What's new in {app} {version}",
     "Changelog for app {app}" : "Changelog for app {app}",
     "What's new in {app} version {version}" : "What's new in {app} version {version}",
-    "{version} is available. Get more information on how to update." : "{version} is available. Get more information on how to update.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>All</strong> apps have a compatible version for this Nextcloud version available.",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["<strong>%n</strong> app has no compatible version for this Nextcloud version available.","<strong>%n</strong> apps have no compatible version for this Nextcloud version available."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package."
+    "{version} is available. Get more information on how to update." : "{version} is available. Get more information on how to update."
 },
 "nplurals=2; plural=(n != 1);");

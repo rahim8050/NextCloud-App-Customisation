@@ -9,10 +9,17 @@ OC.L10N.register(
     "Save" : "Saxla",
     "Shared by" : "Tərəfindən yayımlanıb",
     "Favorite" : "İstəkli",
-    "Home" : "Ev",
     "Remove from favorites" : "Remove from favorites",
-    "Details" : "Detallar",
+    "Share" : "Yayımla",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Location" : "Yerləşdiyiniz ünvan",
+    "Slideshow" : "Slayd şou",
+    "Home" : "Ev",
+    "General" : "Ümumi",
+    "Start slideshow" : "Slayd şouya başlayın",
     "Group" : "Qrup",
-    "Add" : "Əlavə etmək"
+    "Details" : "Detallar",
+    "Confirm" : "Təsdiq edin"
 },
 "nplurals=2; plural=(n != 1);");

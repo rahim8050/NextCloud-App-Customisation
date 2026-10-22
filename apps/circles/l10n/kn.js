@@ -9,8 +9,20 @@ OC.L10N.register(
     "Admin" : "﻿ನಿರ್ವಹಕ",
     "Owner" : "Owner",
     "Files" : "﻿ಕಡತಗಳು",
+    "Invalid image" : "ಅಸಾಮರ್ಥ್ಯ ಚಿತ್ರ",
+    "Unknown filetype" : "﻿ಅಪರಿಚಿತ ಕಡತ ಮಾದರಿ",
+    "Cancel" : "Cancel",
+    "Save" : "Save",
+    "Other" : "﻿ಇತರೆ",
     "Name" : "﻿ಹೆಸರು",
     "Size" : "﻿ ಗಾತ್ರ",
-    "Modified" : "﻿ಬದಲಾಯಿಸಿದ"
+    "Modified" : "﻿ಬದಲಾಯಿಸಿದ",
+    "Home" : "﻿ಮುಖಪುಟ",
+    "Pending" : "﻿ಬಾಕಿ ಇದೆ",
+    "User" : "User",
+    "Group" : "﻿ಗುಂಪು",
+    "Email" : "﻿ಇ-ಅಂಚೆ",
+    "Users" : "﻿ಬಳಕೆದಾರರು",
+    "Groups" : "﻿ಗುಂಪುಗಳು"
 },
 "nplurals=2; plural=(n > 1);");

@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Example installation on CentOS 8 &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Example installation on CentOS 8 &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/installation/example_centos.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Example installation on OpenBSD" href="example_openbsd.html" />
-    <link rel="prev" title="Example installation on Ubuntu 22.04 LTS" href="example_ubuntu.html" /> 
+    <link rel="prev" title="Example installation on Ubuntu 22.04 LTS" href="example_ubuntu.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -91,6 +96,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#database">Database</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#redis">Redis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-nextcloud">Installing Nextcloud</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selinux">SELinux</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="example_openbsd.html">Example installation on OpenBSD</a></li>
@@ -158,7 +165,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -179,6 +186,13 @@
              
   <section id="example-installation-on-centos-8">
 <span id="centos7-installation-label"></span><h1>Example installation on CentOS 8<a class="headerlink" href="#example-installation-on-centos-8" title="Link to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>CentOS 8 reached end-of-life on December 31, 2021 and no longer receives
+security updates. This guide is preserved for reference only and may be
+outdated. For production deployments, use a currently supported Linux
+distribution.</p>
+</div>
 <p>In this install tutorial we will be deploying CentOS 8, PHP 7.4, MariaDB, Redis as memcache and Nextcloud running on Apache.</p>
 <p>Start off by installing a CentOS 8 minimal install. This should provide a sufficient platform to run a successful Nextcloud instance.</p>
 <p>First install some dependencies you will be needing during installation, but which will also be useful in every day use situations:</p>
@@ -289,7 +303,9 @@ see the <a class="reference internal" href="../configuration_database/linux_data
 <span class="n">systemctl</span> <span class="n">start</span> <span class="n">redis</span><span class="o">.</span><span class="n">service</span>
 </pre></div>
 </div>
-<p><strong>Installing Nextcloud</strong></p>
+</section>
+<section id="installing-nextcloud">
+<h2>Installing Nextcloud<a class="headerlink" href="#installing-nextcloud" title="Link to this heading"></a></h2>
 <p>Nearly there, so keep at it, you are doing great!</p>
 <p>Now download the archive of the latest Nextcloud version:</p>
 <ul>
@@ -342,7 +358,9 @@ or nextcloud-x.y.z.tar.bz2.sha256.</p></li>
 <span class="n">firewall</span><span class="o">-</span><span class="n">cmd</span> <span class="o">--</span><span class="n">reload</span>
 </pre></div>
 </div>
-<p><strong>SELinux</strong></p>
+</section>
+<section id="selinux">
+<h2>SELinux<a class="headerlink" href="#selinux" title="Link to this heading"></a></h2>
 <p>Again, there is an extensive write-up done on SELinux which can be found at <a class="reference internal" href="selinux_configuration.html"><span class="doc">SELinux configuration</span></a>, so if you are using SELinux in Enforcing mode, please run the commands suggested on that page.
 The following commands only refers to this tutorial:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">semanage</span> <span class="n">fcontext</span> <span class="o">-</span><span class="n">a</span> <span class="o">-</span><span class="n">t</span> <span class="n">httpd_sys_rw_content_t</span> <span class="s1">&#39;/var/www/html/nextcloud/data(/.*)?&#39;</span>
@@ -389,7 +407,7 @@ The following commands only refers to this tutorial:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -403,7 +421,7 @@ The following commands only refers to this tutorial:</p>
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -413,10 +431,8 @@ The following commands only refers to this tutorial:</p>
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -424,31 +440,25 @@ The following commands only refers to this tutorial:</p>
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

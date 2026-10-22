@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
 
 namespace OCA\RelatedResources\Controller;
 
@@ -30,7 +28,6 @@ use Psr\Log\LoggerInterface;
 
 class ApiController extends OcsController {
 	use TDeserialize;
-
 
 	private LoggerInterface $logger;
 	private IUserSession $userSession;
@@ -58,7 +55,6 @@ class ApiController extends OcsController {
 		}
 	}
 
-
 	/**
 	 * @NoAdminRequired
 	 *
@@ -80,7 +76,7 @@ class ApiController extends OcsController {
 			return new DataResponse([]);
 		}
 
-		$limit = ($limit > 0) ? $limit : $this->configService->getAppValueInt(ConfigService::RESULT_MAX);
+		$limit = min(max(1, $limit), $this->configService->getAppValueInt(ConfigService::RESULT_MAX));
 		try {
 			$this->circlesManager->startSession();
 

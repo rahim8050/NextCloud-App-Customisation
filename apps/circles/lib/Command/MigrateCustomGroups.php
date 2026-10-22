@@ -96,7 +96,7 @@ class MigrateCustomGroups extends Base {
 				$circle = $this->circlesManager->createCircle($name);
 			} catch (\Exception $e) {
 				$this->output->writeln('<error>' . get_class($e) . ' ' . $e->getMessage() . '</error> with data ' . json_encode($rowCG));
-				$this->logger->log(2, 'error while creating circle', ['exception' => $e]);
+				$this->logger->log(2, 'error while creating team', ['exception' => $e]);
 				$this->circlesManager->stopSession();
 				continue;
 			}
@@ -130,7 +130,7 @@ class MigrateCustomGroups extends Base {
 					$this->output->writeln(' - new member <info>' . $userId . '</info>');
 
 					$member = $this->circlesManager->addMember($circle->getSingleId(), $fedUser);
-					if ($rowM['role'] === '1') {
+					if ((int)$rowM['role'] === 1) {
 						$this->circlesManager->levelMember($member->getId(), Member::LEVEL_ADMIN);
 					}
 				} catch (\Exception $e) {

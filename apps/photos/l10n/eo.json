@@ -14,14 +14,20 @@
     "An error occurred" : "Eraro okazis",
     "Favorite" : "Pliŝatati",
     "Go back" : "Reveni",
+    "Remove from favorites" : "Forigi el pliŝataĵoj",
+    "Add to favorites" : "Aldoni al pliŝatataĵoj",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Filename" : "Dosiernomo",
+    "Location" : "Loko",
     "Add folder" : "Aldoni dosierujon",
     "Home" : "Hejmo",
-    "View" : "Vidi",
-    "Remove from favorites" : "Forigi el pliŝataĵoj",
+    "General" : "Ĝenerala",
     "Loading folders…" : "Ŝargado de dosierujoj...",
     "Delete selection" : "Forigi elekton",
-    "Details" : "Detaloj",
     "Group" : "Grupo",
-    "Add" : "Aldoni"
+    "View" : "Vidi",
+    "Details" : "Detaloj",
+    "Confirm" : "Konfirmi"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -165,6 +165,7 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin {
 
 			// Do not generate iTip and iMip messages if scheduling is disabled for this message
 			if ($request->getHeader('x-nc-scheduling') === 'false') {
+				$this->logger->debug('Skipping scheduling messages for calendar object change because x-nc-scheduling header is set to false');
 				return;
 			}
 
@@ -212,6 +213,13 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin {
 	 * @inheritDoc
 	 */
 	public function beforeUnbind($path): void {
+
+		// Do not generate iTip and iMip messages if scheduling is disabled for this message
+		if ($this->server->httpRequest->getHeader('x-nc-scheduling') === 'false') {
+			$this->logger->debug('Skipping scheduling messages for calendar object delete because x-nc-scheduling header is set to false');
+			return;
+		}
+
 		try {
 			parent::beforeUnbind($path);
 		} catch (SameOrganizerForAllComponentsException $e) {
@@ -749,7 +757,7 @@ EOF;
 
 		$addresses = $this->getAddressesForPrincipal($calendarNode->getOwner());
 		foreach ($vCal->VEVENT as $vevent) {
-			if (in_array($vevent->ORGANIZER->getNormalizedValue(), $addresses, true)) {
+			if (isset($vevent->ORGANIZER) && in_array($vevent->ORGANIZER->getNormalizedValue(), $addresses, true)) {
 				// User is an organizer => throw the exception
 				throw $e;
 			}

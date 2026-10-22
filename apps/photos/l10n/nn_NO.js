@@ -2,7 +2,10 @@ OC.L10N.register(
     "photos",
     {
     "Photos" : "Foto",
+    "Clear search" : "Tøm søk",
     "Videos" : "Video",
+    "People" : "Folk",
+    "Folders" : "Mapper",
     "Favorites" : "Favorit",
     "Shared with you" : "Shared with you",
     "Tags" : "Emneord",
@@ -11,10 +14,19 @@ OC.L10N.register(
     "Shared by" : "Delt av",
     "An error occurred" : "Det oppstod ein feil.",
     "Favorite" : "Favoritt",
-    "Home" : "Heim",
     "Remove from favorites" : "Remove from favorites",
-    "Details" : "Detaljar",
+    "Add to favorites" : "Legg til i favorittar",
+    "Share" : "Del",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Filename" : "Filnamn",
+    "Location" : "Stad",
+    "Add" : "Legg til",
+    "Home" : "Heim",
+    "Upload folder" : "Last opp mappe",
+    "General" : "Generelt",
     "Group" : "Gruppe",
-    "Add" : "Legg til"
+    "View" : "Vis",
+    "Details" : "Detaljar"
 },
 "nplurals=2; plural=(n != 1);");

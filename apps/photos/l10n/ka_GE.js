@@ -12,10 +12,15 @@ OC.L10N.register(
     "Shared by" : "გამზიარებელი",
     "Favorite" : "რჩეული",
     "Go back" : "უკან დაბრუნება",
+    "Remove from favorites" : "რჩეულებიდან ამოშლა",
+    "Delete" : "Delete",
+    "Cancel" : "Cancel",
+    "Location" : "ადგილმდებარეობა",
     "Dates" : "თარიღები",
     "Home" : "სახლი",
-    "Remove from favorites" : "რჩეულებიდან ამოშლა",
+    "General" : "ზოგადი",
+    "Default" : "საწყისი პარამეტრები",
     "Details" : "დეტალები",
-    "Add" : "დამატება"
+    "Confirm" : "დადასტურება"
 },
 "nplurals=2; plural=(n!=1);");

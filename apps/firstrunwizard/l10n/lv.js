@@ -15,13 +15,14 @@ OC.L10N.register(
     "More about Nextcloud" : "Vairāk par Nextcloud",
     "Explore more apps ↗" : "Izpētīt vairāk lietotņu ↗",
     "Find out more about your Nextcloud setup with the admin, user or developer documentation." : "Uzzini vairāk par savu Nextcloud serveri dokumentācijā pārvaldītājiem, lietotājiem vai izstrādātājiem!",
+    "Skip" : "Izlaist",
     "This Nextcloud is on version {version}" : "Šim Nextcloud ir versija {version}",
     "A collaboration platform that puts you in control" : "Sadarbošanās platforma, kas nodod pārraudzību Tavās rokās",
     "Privacy" : "Privātums",
     "Host your data and files where you decide." : "Izvēlies, kur mitināt savus datus un datnes!",
-    "Productivity" : "Produktivitāte",
+    "Productivity" : "Ražīgums",
     "Collaborate and communicate across any platform." : "Sadarbošanās un sazināšanās jebkurā platformā.",
-    "Interoperability" : "Sadarbspēja",
+    "Interoperability" : "Savietojamība",
     "Import and export anything you want with open standards." : "Ievieto un izgūsti jebko, ko vēlies, ar atvērtiem standartiem!",
     "Community" : "Kopiena",
     "Enjoy constant improvements from a thriving open-source community." : "Izbaudi pastāvīgus uzlabojums no plaukstošas atvērtā pirmkoda kopienas!",
@@ -29,7 +30,6 @@ OC.L10N.register(
     "{productName} gives you access to your files wherever you are. Our easy to use desktop and mobile clients are available for all major platforms at zero cost." : "{productName} sniedz piekļuvi Tavām datnēm, lai kur arī Tu būtu. Mūsu viegli izmantojamie darbvirsmas un viedierīču klienti ir bez maksas pieejami visās galvenajās platformās.",
     "Server address" : "Servera adrese",
     "What's new?" : "Kas jauns?",
-    "Nextcloud on all your devices" : "Nextcloud visās Tavās ierīcēs",
-    "Read more" : "Lasīt vairāk"
+    "Nextcloud on all your devices" : "Nextcloud visās Tavās ierīcēs"
 },
 "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);");

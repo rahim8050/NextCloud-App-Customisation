@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Server-side encryption details &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Server-side encryption details &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/configuration_files/encryption_details.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Server-side encryption migration" href="encryption_migration.html" />
-    <link rel="prev" title="Server-side encryption configuration" href="encryption_configuration.html" /> 
+    <link rel="prev" title="Server-side Encryption" href="encryption_configuration.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -90,7 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="primary_storage.html">Configuring Object Storage as Primary Storage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage_configuration_gui.html">Configuring External Storage (GUI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="external_storage/auth_mechanisms.html">External Storage authentication mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encryption_configuration.html">Server-side encryption configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="encryption_configuration.html">Server-side Encryption</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Server-side encryption details</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#key-type-master-key">Key type: master key</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#key-type-public-sharing-key">Key type: public sharing key</a></li>
@@ -224,7 +229,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -245,7 +250,7 @@
              
   <section id="server-side-encryption-details">
 <h1>Server-side encryption details<a class="headerlink" href="#server-side-encryption-details" title="Link to this heading"></a></h1>
-<p>This document - provided by <a class="reference external" href="https://syseleven.de">SysEleven</a> - describes the server-side encryption scheme implemented by Nextcloud’s default encryption module. This includes:</p>
+<p>This document describes the server-side encryption scheme implemented by Nextcloud’s default encryption module. This includes:</p>
 <ul class="simple">
 <li><p>the encryption and signature of files with a master key.</p></li>
 <li><p>the encryption and signature of files with a public sharing key.</p></li>
@@ -544,7 +549,7 @@ $encrypted[$n].&quot;00iv00&quot;.$iv[$n].&quot;00sig00&quot;.$signature[$n].&qu
 <h2>Sources<a class="headerlink" href="#sources" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/nextcloud/encryption-recovery-tools">encryption-recovery-tools repository on GitHub</a></p></li>
-<li><p><a class="reference external" href="https://docs.nextcloud.com/server/latest/admin_manual/configuration_files/encryption_configuration.html">Nextcloud Encryption Configuration documentation</a></p></li>
+<li><p><a class="reference internal" href="encryption_configuration.html"><span class="doc">Nextcloud Encryption Configuration documentation</span></a></p></li>
 <li><p><a class="reference external" href="https://help.nextcloud.com/t/allow-file-decryption-with-only-the-files-keys-and-passwords/436/12">Nextcloud Help response concerning the usage of version information</a></p></li>
 <li><p><a class="reference external" href="https://github.com/nextcloud/server/blob/a374d8837d6de459500e619cf608e0721ea14574/apps/encryption/lib/Crypto/Crypt.php#L504">Sourcecode: Creation of the Message Authentication Code</a></p></li>
 <li><p><a class="reference external" href="https://github.com/nextcloud/server/blob/a374d8837d6de459500e619cf608e0721ea14574/apps/encryption/lib/Crypto/Crypt.php#L346">Sourcecode: Derivation of the Encryption Key</a></p></li>
@@ -562,14 +567,14 @@ $encrypted[$n].&quot;00iv00&quot;.$iv[$n].&quot;00sig00&quot;.$signature[$n].&qu
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="encryption_configuration.html" class="btn btn-neutral float-left" title="Server-side encryption configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="encryption_configuration.html" class="btn btn-neutral float-left" title="Server-side Encryption" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="encryption_migration.html" class="btn btn-neutral float-right" title="Server-side encryption migration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -583,7 +588,7 @@ $encrypted[$n].&quot;00iv00&quot;.$iv[$n].&quot;00sig00&quot;.$signature[$n].&qu
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -593,10 +598,8 @@ $encrypted[$n].&quot;00iv00&quot;.$iv[$n].&quot;00sig00&quot;.$signature[$n].&qu
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -604,31 +607,25 @@ $encrypted[$n].&quot;00iv00&quot;.$iv[$n].&quot;00sig00&quot;.$signature[$n].&qu
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

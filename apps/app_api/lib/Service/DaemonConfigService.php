@@ -31,14 +31,28 @@ class DaemonConfigService {
 	) {
 	}
 
+	/**
+	 * Validate that a string does not contain control characters.
+	 * Control characters (0x00-0x1F and 0x7F) can cause issues with URL routing and display.
+	 */
+	private function containsControlCharacters(string $value): bool {
+		return preg_match('/[\x00-\x1F\x7F]/', $value) === 1;
+	}
+
 	public function registerDaemonConfig(array $params): ?DaemonConfig {
+		$name = $params['name'] ?? '';
+		if ($name === '' || $this->containsControlCharacters($name)) {
+			$this->logger->error('Failed to register daemon configuration: `name` contains invalid characters or is empty.');
+			return null;
+		}
+
 		if (!isset($params['deploy_config']['net'])) {
 			$this->logger->error('Failed to register daemon configuration: `net` key should be present in the deploy config.');
 			return null;
 		}
 		$bad_patterns = ['http', 'https', 'tcp', 'udp', 'ssh'];
 		$docker_host = (string)$params['host'];
-		$frp_host = (string)($params['harp']['frp_address'] ?? '');
+		$frp_host = (string)($params['deploy_config']['harp']['frp_address'] ?? '');
 		foreach ($bad_patterns as $bad_pattern) {
 			if (str_starts_with($docker_host, $bad_pattern . '://')) {
 				$this->logger->error('Failed to register daemon configuration. `host` must not include a protocol.');
@@ -133,6 +147,12 @@ class DaemonConfigService {
 	}
 
 	public function updateDaemonConfig(DaemonConfig $daemonConfig): ?DaemonConfig {
+		$name = $daemonConfig->getName() ?? '';
+		if ($name === '' || $this->containsControlCharacters($name)) {
+			$this->logger->error('Failed to update daemon configuration: `name` contains invalid characters or is empty.');
+			return null;
+		}
+
 		try {
 			return $this->mapper->update($daemonConfig);
 		} catch (Exception $e) {

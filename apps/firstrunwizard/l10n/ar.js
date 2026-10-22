@@ -55,8 +55,8 @@ OC.L10N.register(
     "Download For Windows, Mac OS and Linux." : "التنزيل لويندوز، و ماك، و لينكس.",
     "Calendar and contacts ↗" : "التقويم و جهات الاتصال",
     "Connect your calendar and contacts with your devices." : "أوصِل جهات اتصالك و تقويماتك مع أجهزتك",
-    "Introducing Nextcloud Hub {version}" : "تقديم نقطة التواصل لنكست كلاود {version}",
     "Welcome to {cloudName}!" : "أهلا بكم في {cloudName}!",
+    "Skip" : "تخطي",
     "This Nextcloud is on version {version}" : "رقم الإصدار لنكست كلاود هذه هو {version}",
     "A collaboration platform that puts you in control" : "منصة تعاونية تتيح لك التحكم",
     "Privacy" : "الخصوصية",
@@ -90,17 +90,7 @@ OC.L10N.register(
     "What's new?" : "مالجديد؟",
     "Nextcloud on all your devices" : "نكست كلاود على جميع أجهزتك",
     "Nextcloud Hub {version}" : "نكست كلاود هب {version}",
-    "Read more" : "إقرأ أكثر",
     "Share on social media" : "البحث في وسائط التواصل الاجتماعي",
-    "Get started!" : "إبدَأ!",
-    "End-to-end encryption in calls and web" : "التشفير من الحدّ للحدّ في المكالمات والوِب",
-    "Performance improvements across all our products" : "تحسين الأداء في جميع منتجاتنا",
-    "Thousands of tweaks for improved UX and stability" : "آلاف التحسينات في المظهر والاستقرار",
-    "Your own new personal assistant" : "مُساعِدُك الخاصُّ الجديد",
-    "Seamless file conversions" : "تحويلات سلسة للملفات",
-    "Smarter team sharing with Team folders" : "مشاركة أكثر ذكاءً للفريق مع مجلدات الفريق",
-    "Schedule meetings directly in Talk" : "جدولة الاجتماع مباشرة على تطبيق \"المحادثة\" Talk",
-    "Mail you love again: translations, summaries, and mentions" : "البريد الإلكتروني الذي تحبُّه مجدداً: ترجمات، وملخصات، وإشارات",
-    "Nextcloud Hub 10 is here – your modular & unified digital workspace! 💫" : "الإصدار 10 من نكست كلود \"هَبْ Hub\" - فضاؤك الرقمي الانتقائي المُوحَّد  💫."
+    "Get started!" : "إبدَأ!"
 },
 "nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;");

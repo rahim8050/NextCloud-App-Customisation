@@ -26,7 +26,8 @@
 
 /* Replace default "Download" icon in "Download / Save" button with a "Save"
  * icon. */
-.toolbarButton#download::before {
+.toolbarButton#downloadButton::before,
+#secondaryToolbar #secondaryToolbarButtonContainer #secondaryDownload::before {
 	-webkit-mask-image: url(../img/toolbarButton-secondaryToolbarSave.svg);
 	mask-image: url(../img/toolbarButton-secondaryToolbarSave.svg);
 }
@@ -66,6 +67,13 @@
 	transform-origin: center;
 	border: 2px solid var(--color-loading-light);
 	border-top-color: var(--color-loading-dark);
+}
+
+/* Place the loading icon on the secondary toolbar icon by using the same
+ * inset-inline-start of the secondary toolbar icon (12px) and correcting the
+ * margin from the loading icon (8px). */
+.toolbarButton.labeled.icon-loading-small:after {
+	inset-inline-start: 20px;
 }
 
 @keyframes rotate {

@@ -41,6 +41,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\L10N\IFactory;
 use OCP\Lock\LockedException;
+use OCP\Security\IRemoteHostValidator;
 use OCP\SpeechToText\ISpeechToTextProvider;
 use OCP\SpeechToText\ISpeechToTextProviderWithId;
 use OCP\TaskProcessing\EShapeType;
@@ -123,6 +124,7 @@ class Manager implements IManager {
 		private IUserSession $userSession,
 		ICacheFactory $cacheFactory,
 		private IFactory $l10nFactory,
+		private IRemoteHostValidator $remoteHostValidator,
 	) {
 		$this->appData = $appDataFactory->get('core');
 		$this->distributedCache = $cacheFactory->createDistributed('task_processing::');
@@ -303,13 +305,18 @@ class Manager implements IManager {
 		$oldProviders = $this->textToImageManager->getProviders();
 		$newProviders = [];
 		foreach ($oldProviders as $oldProvider) {
-			$newProvider = new class($oldProvider, $this->appData) implements IProvider, ISynchronousProvider {
+			$newProvider = new class($oldProvider, $this->appData, $this->l10nFactory, $this->userManager) implements IProvider, ISynchronousProvider {
 				private \OCP\TextToImage\IProvider $provider;
 				private IAppData $appData;
+				private IFactory $l10nFactory;
 
-				public function __construct(\OCP\TextToImage\IProvider $provider, IAppData $appData) {
+				private IUserManager $userManager;
+
+				public function __construct(\OCP\TextToImage\IProvider $provider, IAppData $appData, IFactory $l10nFactory, IUserManager $userManager) {
 					$this->provider = $provider;
 					$this->appData = $appData;
+					$this->l10nFactory = $l10nFactory;
+					$this->userManager = $userManager;
 				}
 
 				public function getId(): string {
@@ -341,6 +348,16 @@ class Manager implements IManager {
 						$folder = $this->appData->getFolder('text2image');
 					} catch (\OCP\Files\NotFoundException) {
 						$folder = $this->appData->newFolder('text2image');
+					}
+					if ($input['numberOfImages'] > 12) {
+						throw new ProcessingException(
+							'numberOfImages cannot be greater than 12'
+						);
+					}
+					if ($input['numberOfImages'] < 1) {
+						throw new ProcessingException(
+							'numberOfImages must be greater than 0'
+						);
 					}
 					$resources = [];
 					$files = [];
@@ -846,7 +863,13 @@ class Manager implements IManager {
 		if ($this->availableTaskTypes === null) {
 			$cachedValue = $this->distributedCache->get($cacheKey);
 			if ($cachedValue !== null) {
-				$this->availableTaskTypes = unserialize($cachedValue);
+				$this->availableTaskTypes = unserialize($cachedValue, [
+					'allowed_classes' => [
+						ShapeDescriptor::class,
+						ShapeEnumValue::class,
+						EShapeType::class,
+					],
+				]);
 			}
 		}
 		// Either we have no cache or showDisabled is turned on, which we don't want to cache, ever.
@@ -1311,7 +1334,7 @@ class Manager implements IManager {
 				$file = $folder->newFile(time() . '-' . rand(1, 100000), $output[$key]);
 				$newOutput[$key] = $file->getId(); // polymorphic call to SimpleFile
 			} else {
-				$newOutput = [];
+				$newOutput[$key] = [];
 				foreach ($output[$key] as $item) {
 					/** @var SimpleFile $file */
 					$file = $folder->newFile(time() . '-' . rand(1, 100000), $item);
@@ -1368,7 +1391,7 @@ class Manager implements IManager {
 	}
 
 	/**
-	 * Validate input, fill input default values, set completionExpectedAt, set scheduledAt
+	 * Validate input and webhook, fill input default values, set completionExpectedAt, set scheduledAt
 	 *
 	 * @param Task $task
 	 * @return void
@@ -1405,6 +1428,8 @@ class Manager implements IManager {
 			$this->validateFileId($fileId);
 			$this->validateUserAccessToFile($fileId, $task->getUserId());
 		}
+		// validate the webhook configuration
+		$this->validateWebhook($task);
 		// remove superfluous keys and set input
 		$input = $this->removeSuperfluousArrayKeys($task->getInput(), $inputShape, $optionalInputShape);
 		$inputWithDefaults = $this->fillInputDefaults($input, $inputShapeDefaults, $optionalInputShapeDefaults);
@@ -1415,6 +1440,79 @@ class Manager implements IManager {
 		$completionExpectedAt = new \DateTime('now');
 		$completionExpectedAt->add(new \DateInterval('PT' . $provider->getExpectedRuntime() . 'S'));
 		$task->setCompletionExpectedAt($completionExpectedAt);
+	}
+
+	/**
+	 * Validate the webhook URI and webhook method of a task
+	 *
+	 * Both values are optional, but if one is set, the other one has to be set as well.
+	 * Supported methods are `HTTP:<GET|POST|PUT|DELETE>`, which require an absolute
+	 * http(s) URI pointing at a non-local host, and `AppAPI:<exAppId>:<GET|POST|PUT|DELETE>`,
+	 * which requires an absolute path as URI.
+	 *
+	 * @param Task $task
+	 * @return void
+	 * @throws ValidationException
+	 */
+	private function validateWebhook(Task $task): void {
+		$uri = $task->getWebhookUri();
+		$method = $task->getWebhookMethod();
+
+		if (($uri === null || $uri === '') && ($method === null || $method === '')) {
+			return;
+		}
+		if ($uri === null || $uri === '') {
+			throw new ValidationException('Webhook URI is required when a webhook method is set');
+		}
+		if ($method === null || $method === '') {
+			throw new ValidationException('Webhook method is required when a webhook URI is set');
+		}
+		if (mb_strlen($uri) > 4000) {
+			throw new ValidationException('Webhook URI is too long, maximum length is 4000 characters');
+		}
+		if (mb_strlen($method) > 64) {
+			throw new ValidationException('Webhook method is too long, maximum length is 64 characters');
+		}
+
+		if (str_starts_with($method, 'HTTP:')) {
+			if (!in_array($method, ['HTTP:GET', 'HTTP:POST', 'HTTP:PUT', 'HTTP:DELETE'], true)) {
+				throw new ValidationException('Invalid webhook method: ' . $method);
+			}
+			if (filter_var($uri, FILTER_VALIDATE_URL) === false) {
+				throw new ValidationException('Invalid webhook URI: ' . $uri);
+			}
+			$parsedUri = parse_url($uri);
+			if ($parsedUri === false || !isset($parsedUri['scheme']) || !isset($parsedUri['host']) || $parsedUri['host'] === '') {
+				throw new ValidationException('Invalid webhook URI: ' . $uri);
+			}
+			if (!in_array(strtolower($parsedUri['scheme']), ['http', 'https'], true)) {
+				throw new ValidationException('Invalid webhook URI scheme, only http and https are supported: ' . $uri);
+			}
+			if (!$this->remoteHostValidator->isValid($parsedUri['host'])) {
+				throw new ValidationException('Invalid webhook URI, the host is not allowed to be connected to: ' . $uri);
+			}
+			return;
+		}
+
+		if (str_starts_with($method, 'AppAPI:')) {
+			$parsedMethod = explode(':', $method);
+			if (count($parsedMethod) !== 3) {
+				throw new ValidationException('Invalid webhook method: ' . $method);
+			}
+			[, $exAppId, $httpMethod] = $parsedMethod;
+			if (preg_match('/^[a-z][a-z0-9_-]*$/', $exAppId) !== 1) {
+				throw new ValidationException('Invalid ExApp ID in webhook method: ' . $method);
+			}
+			if (!in_array($httpMethod, ['GET', 'POST', 'PUT', 'DELETE'], true)) {
+				throw new ValidationException('Invalid webhook method: ' . $method);
+			}
+			if (!str_starts_with($uri, '/')) {
+				throw new ValidationException('Invalid webhook URI, an absolute path is required for AppAPI webhooks: ' . $uri);
+			}
+			return;
+		}
+
+		throw new ValidationException('Invalid webhook method: ' . $method);
 	}
 
 	/**

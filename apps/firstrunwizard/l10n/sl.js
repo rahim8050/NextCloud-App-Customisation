@@ -47,8 +47,8 @@ OC.L10N.register(
     "Download For Windows, Mac OS and Linux." : "Namestitvene datoteke za okolja Windows, Mac OS in Linux.",
     "Calendar and contacts ↗" : "Koledar in stiki ↗",
     "Connect your calendar and contacts with your devices." : "Povezovanje koledarja in stikov z različnimi napravami.",
-    "Introducing Nextcloud Hub {version}" : "Predstavljamo vam Nextcloud Hub {version}",
     "Welcome to {cloudName}!" : "Dobrodošli v oblaku {cloudName}!",
+    "Skip" : "Preskoči",
     "A collaboration platform that puts you in control" : "Sodelovalno okolje, v katerem imate vi nadzor",
     "Privacy" : "Zasebnost",
     "Host your data and files where you decide." : "Shranjujte podatke in datoteke, kjer sami želite",
@@ -73,7 +73,6 @@ OC.L10N.register(
     "What's new?" : "Kaj je novega?",
     "Nextcloud on all your devices" : "Oblak Nextcloud na vseh vaših napravah",
     "Nextcloud Hub {version}" : "Nextcloud Hub {version}",
-    "Read more" : "Več o tem",
     "Share on social media" : "Objava na družbenem omrežju",
     "Get started!" : "Začnite!"
 },

@@ -110,12 +110,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nextcloud-deps/ocp.git",
-                "reference": "30c298deccb6d52cf55e56a2a379edabe27421fd"
+                "reference": "de6afa1f730d92792886fcdf7eacb09323fbe0bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/30c298deccb6d52cf55e56a2a379edabe27421fd",
-                "reference": "30c298deccb6d52cf55e56a2a379edabe27421fd",
+                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/de6afa1f730d92792886fcdf7eacb09323fbe0bd",
+                "reference": "de6afa1f730d92792886fcdf7eacb09323fbe0bd",
                 "shasum": ""
             },
             "require": {
@@ -150,7 +150,7 @@
                 "issues": "https://github.com/nextcloud-deps/ocp/issues",
                 "source": "https://github.com/nextcloud-deps/ocp/tree/stable32"
             },
-            "time": "2025-10-17T00:48:59+00:00"
+            "time": "2026-08-30T02:15:57+00:00"
         },
         {
             "name": "php-cs-fixer/shim",
@@ -453,5 +453,5 @@
     "platform-overrides": {
         "php": "8.1"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

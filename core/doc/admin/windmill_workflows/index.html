@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Windmill Workflows &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Windmill Workflows &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/windmill_workflows/index.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="File sharing and management" href="../configuration_files/index.html" />
-    <link rel="prev" title="Webhook Listeners" href="../webhook_listeners/index.html" /> 
+    <link rel="prev" title="Webhook Listeners" href="../webhook_listeners/index.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -150,7 +155,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -219,7 +224,7 @@ If the wrong workspace is selected on the first run, it is always possible to sw
 If you are using the ExApp-packaged Windmill, it will automatically register webhooks for the workflows you build using the following mechanism.
 If you are not using the ExApp-packaged windmill install then you will have to register
 webhooks for your workflows manually via the webhook_listeners API:
-see <a class="reference external" href="https://docs.nextcloud.com/server/latest/developer_manual/_static/openapi.html#/operations/webhook_listeners-webhooks-index">https://docs.nextcloud.com/server/latest/developer_manual/_static/openapi.html#/operations/webhook_listeners-webhooks-index</a></p>
+see <a class="reference external" href="https://docs.nextcloud.com/server/32/developer_manual/_static/openapi.html#/operations/webhook_listeners-webhooks-index">https://docs.nextcloud.com/server/32/developer_manual/_static/openapi.html#/operations/webhook_listeners-webhooks-index</a></p>
 <section id="the-magic-listener-script">
 <h3>The magic listener script<a class="headerlink" href="#the-magic-listener-script" title="Link to this heading"></a></h3>
 <p>The first script (after the “Input” block) in any workflow you build that should listen to a Nextcloud webhook must have “Summary” set to the exact, literal string <code class="docutils literal notranslate"><span class="pre">CORE:LISTEN_TO_EVENT</span></code>. It must be an empty script with two parameters that you should fill statically: <code class="docutils literal notranslate"><span class="pre">events</span></code>, which is a list of event IDs to listen to and <code class="docutils literal notranslate"><span class="pre">filters</span></code> a filter condition that allows more fine grained filtering for which events should be used. The filter condition as well as the available events with their payloads is documented in <a class="reference internal" href="../webhook_listeners/index.html#id1"><span class="std std-ref">the webhook_listeners documentation</span></a>.</p>
@@ -240,7 +245,7 @@ you can run a flow named “Synchronize Hub Resource types with instance” in t
 <p>You can create your own Nextcloud-related scripts by taking one of the existing ones as example.
 In a script, when sending a request to Nextcloud, make sure that the <code class="docutils literal notranslate"><span class="pre">EX-APP-ID</span></code> header is set to <code class="docutils literal notranslate"><span class="pre">flow</span></code>.
 Your custom scripts can make requests to any endpoint of the
-<a class="reference external" href="https://docs.nextcloud.com/server/latest/developer_manual/_static/openapi.html">Nextcloud OCS API</a> .</p>
+<a class="reference external" href="https://docs.nextcloud.com/server/32/developer_manual/_static/openapi.html">Nextcloud OCS API</a> .</p>
 <p>All the scripts we provide have a set of common input parameters:</p>
 <ul class="simple">
 <li><p>nextcloudResource: This should be set to the path of the Windmill resource that was automatically created and contains what is necessary to authenticate against Nextcloud with the AppAPI authentication method. For example “u/wapp_user/appapi_nextcloud”. You can find this path by looking at the resource list in Windmill.</p></li>
@@ -287,7 +292,7 @@ which allows creating a beautiful temporary approval page with a custom message 
 <p>If the Windmill Hub does not contain any script to perform the action you have in mind,
 you can take an existing Nextcloud script as example and create your own.
 Your custom scripts can make requests to any endpoint of the
-<a class="reference external" href="https://docs.nextcloud.com/server/latest/developer_manual/_static/openapi.html">Nextcloud OCS API</a> .</p>
+<a class="reference external" href="https://docs.nextcloud.com/server/32/developer_manual/_static/openapi.html">Nextcloud OCS API</a> .</p>
 </section>
 </section>
 </section>
@@ -303,7 +308,7 @@ Your custom scripts can make requests to any endpoint of the
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -317,7 +322,7 @@ Your custom scripts can make requests to any endpoint of the
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -327,10 +332,8 @@ Your custom scripts can make requests to any endpoint of the
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -338,31 +341,25 @@ Your custom scripts can make requests to any endpoint of the
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

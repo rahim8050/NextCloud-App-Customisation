@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Канал обновлён",
     "Web updater is disabled" : "Веб обновление отключено",
+    "Configuration is read-only" : "Конфигурация доступна только для чтения",
     "App updated" : "Приложение обновлено",
     "See what's new" : "Просмотреть нововведения",
     "{app} updated to version {version}" : "Приложение «{app}» обновлено до версии {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Для приложения {app} доступно обновление до версии %s.",
     "Update notification" : "Уведомление об обновлении",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Отображает уведомления об обновлениях для Nextcloud, обновлениях приложений и предоставляет единый вход для программы обновления.",
-    "Give feedback" : "Обратная связь",
-    "Get started" : "Начать",
-    "No changelog available" : "Список изменений недоступен",
-    "What's new in {app} {version}" : "Новшества {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "Доступна новая версия: <strong>{newVersionString}</strong> ",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Обратите внимание, что уведомление о возможности обновления появляется только после первого дополнительного выпуска или позже. Мы выпускаем новые версии с разбивкой по времени и иногда пропускаем версию при обнаружении проблем. Узнайте больше об обновлениях и каналах выпуска на {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Проверено {lastCheckedDate}. Открыть журнал изменений.",
@@ -56,11 +53,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Доступны только уведомления об обновлениях приложений.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Выбранный канал обновлений высылает специальные уведомления, если сервер устарел.",
     "The selected update channel does not support updates of the server." : "Выбранный канал обновлений не поддерживает обновление сервера.",
+    "Give feedback" : "Обратная связь",
+    "Get started" : "Начать",
+    "No changelog available" : "Список изменений недоступен",
+    "What's new in {app} {version}" : "Новшества {app} {version}",
     "Changelog for app {app}" : "Журнал изменений приложения «{app}»",
     "What's new in {app} version {version}" : "Новшества {app} версии {version}",
-    "{version} is available. Get more information on how to update." : "Доступна версия {version}. Получить дополнительную информацию о способе обновления.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Все</strong> приложения имеют версию, совместимую с этой версией Nextcloud.",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["У <strong>%n</strong> приложения нет версии, совместимой с этой версией Nextcloud.","У <strong>%n</strong> приложений нет версии, совместимой с этой версией Nextcloud.","У <strong>%n</strong> приложений нет версии, совместимой с этой версией Nextcloud.","У <strong>%n</strong> приложений нет версии, совместимой с этой версией Nextcloud."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Для корпоративного использования. Всегда обеспечивает самый последний уровень исправлений, но не будет немедленно обновляться до следующего основного выпуска. Обновление произойдет, когда Nextcloud GmbH проведут дополнительное тестирование для крупномасштабных и критически важных развертываний. Этот канал доступен только для клиентов и предоставляет пакет Nextcloud Enterprise."
+    "{version} is available. Get more information on how to update." : "Доступна версия {version}. Получить дополнительную информацию о способе обновления."
 },
 "nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);");

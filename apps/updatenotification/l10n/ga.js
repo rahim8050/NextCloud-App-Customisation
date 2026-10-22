@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Nuashonraíodh an cainéal",
     "Web updater is disabled" : "Tá an nuashonrú Gréasáin díchumasaithe",
+    "Configuration is read-only" : "Is inléite amháin atá an chumraíocht",
     "App updated" : "Nuashonraíodh an app",
     "See what's new" : "Féach cad atá nua",
     "{app} updated to version {version}" : "Nuashonraíodh {app} go leagan {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Tá nuashonrú do {app} go leagan %s ar fáil.",
     "Update notification" : "Fógra nuashonraithe",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Taispeánann sé fógraí nuashonraithe do Nextcloud, nuashonruithe aipeanna, agus soláthraíonn sé an SSO don nuashonróir.",
-    "Give feedback" : "Tabhair aiseolas",
-    "Get started" : "Tosaigh",
-    "No changelog available" : "Níl aon loga athraithe ar fáil",
-    "What's new in {app} {version}" : "A bhfuil nua in {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "Tá leagan nua ar fáil: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Tabhair faoi deara nach dtaispeánfar an nuashonrú tar éis eisiúint nua ach amháin tar éis an chéad mhioneisiúint nó níos déanaí. Déanaimid leaganacha nua a rolladh amach thar am agus uaireanta ní dhéanaimid iarracht leagan nuair a aimsítear ceisteanna. Foghlaim tuilleadh faoi nuashonruithe agus cainéil eisithe ag {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Ticeáilte ar {lastCheckedDate} - Open changelog",
@@ -56,11 +53,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Níl ach fógraí le haghaidh nuashonruithe aip ar fáil.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Déanann an cainéal nuashonraithe roghnaithe fógraí tiomnaithe don fhreastalaí as feidhm.",
     "The selected update channel does not support updates of the server." : "Ní thacaíonn an cainéal nuashonraithe roghnaithe le nuashonruithe an fhreastalaí.",
+    "Give feedback" : "Tabhair aiseolas",
+    "Get started" : "Tosaigh",
+    "No changelog available" : "Níl aon loga athraithe ar fáil",
+    "What's new in {app} {version}" : "A bhfuil nua in {app} {version}",
     "Changelog for app {app}" : "Changelog don aip {app}",
     "What's new in {app} version {version}" : "A bhfuil nua i {app} leagan {version}",
-    "{version} is available. Get more information on how to update." : "Tá {version} ar fáil. Faigh tuilleadh eolais faoi conas nuashonrú a dhéanamh.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "Tá leagan comhoiriúnach don leagan seo de Nextcloud ar fáil do gach<strong>All</strong>",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["Níl leagan comhoiriúnach don leagan seo de Nextcloud ar fáil ag<strong>%n</strong>.","Níl leagan comhoiriúnach don leagan seo de Nextcloud ar fáil ag<strong>%n</strong>.","Níl leagan comhoiriúnach don leagan seo de Nextcloud ar fáil ag<strong>%n</strong>. ","Níl leagan comhoiriúnach don leagan seo de Nextcloud ar fáil ag<strong>%n</strong>.","Níl leagan comhoiriúnach don leagan seo de Nextcloud ar fáil ag<strong>%n</strong>."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Le haghaidh úsáide fiontair. Soláthraíonn sé an leibhéal paiste is déanaí i gcónaí, ach ní nuashonróidh sé go dtí an chéad scaoileadh mór eile láithreach. Tarlaíonn an nuashonrú sin nuair a bheidh cruaite agus tástáil bhreise déanta ag Nextcloud GmbH le haghaidh imlonnaithe ar scála mór agus atá ríthábhachtach do mhisin. Níl an cainéal seo ar fáil ach do chustaiméirí agus soláthraíonn sé an pacáiste Nextcloud Enterprise."
+    "{version} is available. Get more information on how to update." : "Tá {version} ar fáil. Faigh tuilleadh eolais faoi conas nuashonrú a dhéanamh."
 },
 "nplurals=5; plural=(n==1 ? 0 : n==2 ? 1 : n<7 ? 2 : n<11 ? 3 : 4);");

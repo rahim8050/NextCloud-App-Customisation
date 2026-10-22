@@ -19,6 +19,6 @@
     "No deleted files" : "Ei poistettuja tiedostoja",
     "Files and folders you have deleted will show up here" : "Poistamasi tiedostot ja kansiot näkyvät täällä",
     "All files have been permanently deleted" : "Kaikki tiedostot on poistettu pysyvästi",
-    "Deletion cancelled" : "Poistaminen peruttu"
+    "Failed to empty deleted files" : "Poistettujen tiedostojen tyhjentäminen epäonnistui"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

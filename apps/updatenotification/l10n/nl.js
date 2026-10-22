@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Kanaal bijgewerkt",
     "Web updater is disabled" : "Web-updater is uitgeschakeld",
+    "Configuration is read-only" : "Configuratie is alleen lezen",
     "App updated" : "App bijgewerkt",
     "See what's new" : "Wat is nieuw?",
     "{app} updated to version {version}" : "{app} bijgewerkt naar versie {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Update voor {app} naar versie %s is beschikbaar.",
     "Update notification" : "Bijwerkmelding",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Toont updatemeldingen voor Nextcloud en zorgt voor SSO voor de updater.",
-    "Give feedback" : "Geef feedback",
-    "Get started" : "Aan de slag",
-    "No changelog available" : "Geen wijzigingsoverzicht beschikbaar",
-    "What's new in {app} {version}" : "Wat is nieuw in {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "Er is een nieuwe versie beschikbaar: <strong>{newVersionString}</strong>",
     "Checked on {lastCheckedDate} - Open changelog" : "Gecontroleerd op {lastCheckedDate} - Open wijzigingsoverzicht",
     "Checking apps for compatible versions" : "Apps controleren op compatibele versies.",
@@ -50,10 +47,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Er zijn alleen meldingen voor apps beschikbaar.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Het geselecteerde updatekanaal maakt overbodig om serverspecifieke meldingen apart te genereren.",
     "The selected update channel does not support updates of the server." : "Het geselecteerde updatekanaal ondersteunt geen updates voor de server.",
+    "Give feedback" : "Geef feedback",
+    "Get started" : "Aan de slag",
+    "No changelog available" : "Geen wijzigingsoverzicht beschikbaar",
+    "What's new in {app} {version}" : "Wat is nieuw in {app} {version}",
     "Changelog for app {app}" : "Wijzigingsoverzicht voor app {app}",
     "What's new in {app} version {version}" : "Wat is nieuw in {app} versie {version}",
-    "{version} is available. Get more information on how to update." : "{version} is beschikbaar. Meer informatie over het bijwerken.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Alle</strong> apps hebben een compatibele versie voor deze Nextcloud versie beschikbaar",
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Voor zakelijk gebruik. Biedt altijd het laatste patch level, maar zal niet meteen naar de laatste hoofdrelease bijwerken. Die update vindt pas plaats nadat Nextcloud GmbH aanvullende hardening en tests voor grootschalige en bedrijfskritische installaties heeft uitgevoerd. Dit kanaal is alleen beschikbaar voor klanten en levert het Nextcloud Enterprise pakket."
+    "{version} is available. Get more information on how to update." : "{version} is beschikbaar. Meer informatie over het bijwerken."
 },
 "nplurals=2; plural=(n != 1);");

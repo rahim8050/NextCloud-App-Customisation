@@ -16,9 +16,18 @@ OC.L10N.register(
     "Confirm" : "ยืนยัน",
     "Undo" : "เลิกทำ",
     "Custom" : "กำหนดเอง",
+    "Blur" : "เบลอ",
     "Text" : "ข้อความ",
     "Size" : "ขนาด",
     "Position" : "ตำแหน่ง",
-    "Menu" : "เมนู"
+    "Menu" : "เมนู",
+    "Play" : "เล่น",
+    "Pause" : "หยุดชั่วคราว",
+    "Volume" : "ระดับเสียง",
+    "Settings" : "การตั้งค่า",
+    "Normal" : "ปกติ",
+    "All" : "ทั้งหมด",
+    "Disabled" : "ปิดใช้งาน",
+    "Enabled" : "เปิดใช้งาน"
 },
 "nplurals=1; plural=0;");

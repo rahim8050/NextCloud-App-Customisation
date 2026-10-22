@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade to Nextcloud 30 &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Upgrade to Nextcloud 30 &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/release_notes/upgrade_to_30.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Upgrade to Nextcloud 28" href="upgrade_to_28.html" />
-    <link rel="prev" title="Upgrade to Nextcloud 31" href="upgrade_to_31.html" /> 
+    <link rel="prev" title="Upgrade to Nextcloud 31" href="upgrade_to_31.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul class="current">
@@ -76,6 +81,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#previews-for-pdf-files-with-imaginary">Previews for PDF files with Imaginary</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#automated-clean-up-of-app-password">Automated clean-up of app password</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitoring-counting-of-active-users">Monitoring: Counting of active users</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#appapi-app-api-is-now-a-default-app">AppAPI (app_api) is now a default app</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="upgrade_to_28.html">Upgrade to Nextcloud 28</a></li>
@@ -151,7 +157,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -209,6 +215,12 @@ Add the new preview provider <code class="docutils literal notranslate"><span cl
 <h2>Monitoring: Counting of active users<a class="headerlink" href="#monitoring-counting-of-active-users" title="Link to this heading"></a></h2>
 <p>Starting with Nextcloud 30.0.12 the monitoring app was adjusted to count the active users in the same way as occ user:report and the support app.</p>
 </section>
+<section id="appapi-app-api-is-now-a-default-app">
+<h2>AppAPI (app_api) is now a default app<a class="headerlink" href="#appapi-app-api-is-now-a-default-app" title="Link to this heading"></a></h2>
+<p>Starting with Nextcloud 30.0.1, the AppAPI app is included and enabled by default. See <a class="reference internal" href="../exapps_management/index.html"><span class="doc">ExApps management</span></a> for details.</p>
+<p>You can disable this app in the standard manner via the <em>Apps</em> menu if you do not expect to use AppAPI integrations in the near future.</p>
+<p>If AppAPI is disabled, other apps that depend on it will not be visible in the app store. AppAPI-related setup checks will also be deactivated.</p>
+</section>
 </section>
 
 
@@ -222,7 +234,7 @@ Add the new preview provider <code class="docutils literal notranslate"><span cl
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -236,7 +248,7 @@ Add the new preview provider <code class="docutils literal notranslate"><span cl
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -246,10 +258,8 @@ Add the new preview provider <code class="docutils literal notranslate"><span cl
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -257,31 +267,25 @@ Add the new preview provider <code class="docutils literal notranslate"><span cl
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

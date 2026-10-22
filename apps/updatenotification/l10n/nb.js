@@ -13,10 +13,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Oppdatering for {app} til versjon %s er tilgjengelig.",
     "Update notification" : "Oppdateringsvarsel",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Viser oppdateringsvarsler for Nextcloud, appoppdateringer og gir SSO for oppdateringsprogrammet.",
-    "Give feedback" : "Gi tilbakemelding",
-    "Get started" : "Kom i gang",
-    "No changelog available" : "Ingen endringslogg tilgjengelig",
-    "What's new in {app} {version}" : "Hva er nytt i {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "En ny versjon er tilgjengelig: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Merk at etter en ny utgivelse vises oppdateringen først etter den første mindre utgivelsen eller senere. Vi ruller ut nye versjoner spredt over tid til brukerne våre og hopper noen ganger over en versjon når problemer blir funnet. Finn ut mer om oppdateringer og utgivelseskanaler på {link}.",
     "Checked on {lastCheckedDate} - Open changelog" : "Sist sjekket {lastCheckedDate} - Åpne endringslogg",
@@ -51,11 +47,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Bare varsler for appoppdateringer er tilgjengelige.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Den valgte oppdateringskanalen gjør dedikerte varsler til denne serveren utdatert.",
     "The selected update channel does not support updates of the server." : "Den valgte oppdateringskanalen tilbyr ikke oppdateringer av serveren.",
+    "Give feedback" : "Gi tilbakemelding",
+    "Get started" : "Kom i gang",
+    "No changelog available" : "Ingen endringslogg tilgjengelig",
+    "What's new in {app} {version}" : "Hva er nytt i {app} {version}",
     "Changelog for app {app}" : "Endringslogg for app {app}",
     "What's new in {app} version {version}" : "Hva er nytt i {app} versjon {version}",
-    "{version} is available. Get more information on how to update." : "{version} er tilgjengelig. Få mer informasjon om å oppdatere.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Alle</strong> apper har en kompatibel versjon for denne Nextcloud-versjonen tilgjengelig.",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["<strong>%n</strong> apper har ingen kompatibel versjon for denne Nextcloud-versjonen tilgjengelig.","<strong>%n</strong> apper har ingen kompatibel versjon for denne Nextcloud-versjonen tilgjengelig."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "For bedriftsbruk. Tilbyr alltid det siste oppdateringsnivået, men oppdateres ikke til neste store utgivelse umiddelbart. Denne oppdateringen skjer når Nextcloud GmbH har gjort ytterligere herding og testing for store og oppdragskritiske distribusjoner. Denne kanalen er bare tilgjengelig for kunder og tilbyr Nextcloud Enterprise-pakken."
+    "{version} is available. Get more information on how to update." : "{version} er tilgjengelig. Få mer informasjon om å oppdatere."
 },
 "nplurals=2; plural=(n != 1);");

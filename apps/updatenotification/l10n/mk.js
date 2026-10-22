@@ -13,10 +13,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Достапно е ажурирање за {app} во верзија %s.",
     "Update notification" : "Известување за ажурирање",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Прикажува известувања за ажурирање и овозможува SSO за надградувачот.",
-    "Give feedback" : "Дајте повратни информации",
-    "Get started" : "Започнете",
-    "No changelog available" : "Нема достапен дневник за промени",
-    "What's new in {app} {version}" : "Што е ново во {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "Достапна е нова верзија: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Можно е да треба некое време додека новата верзија се прикаже овде. Ние испорачуваме нови до нашите корисници но од време на време некој верзии ги прескокнуваме поради пројандени проблеми во истите. Повеќе информации може да се пронајдат на {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Проверено на {lastCheckedDate} - Отвори дневник за промени",
@@ -51,11 +47,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Известувања само за достапни ажурирања на апликации.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "Избраниот канал за ажурирање ќе овозможи известувања за застарениот сервер.",
     "The selected update channel does not support updates of the server." : "Избраниот канал за ажурирање не поддржува ажурирање за серверот.",
+    "Give feedback" : "Дајте повратни информации",
+    "Get started" : "Започнете",
+    "No changelog available" : "Нема достапен дневник за промени",
+    "What's new in {app} {version}" : "Што е ново во {app} {version}",
     "Changelog for app {app}" : "Дневник на промени за апликацијата {app}",
     "What's new in {app} version {version}" : "Што е ново во {app} верзија {version}",
-    "{version} is available. Get more information on how to update." : "Достапна е нова верзија {version}. Видете ги информациите како да ја ажурирате.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Сите</strong> апликации се компатибилни за оваа верзија",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["1 апликација нема компатибилност со оваа веријза","<strong>%n</strong> апликации немаат компатибилност со оваа веријза"],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "За професионална употреба. Овозможува секогаш најново ниво на ажурирање, но нема веднаш да се ажурира на следното големо издание. Ова ажурирање се случува откако Nextcloud GmbH ќе направи дополнително тестирање за големи и критични сервери. Овој канал е достапен само за клиентите и го имаат пакетот Nextcloud Enterprise."
+    "{version} is available. Get more information on how to update." : "Достапна е нова верзија {version}. Видете ги информациите како да ја ажурирате."
 },
 "nplurals=2; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : 1;");

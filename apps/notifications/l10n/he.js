@@ -4,6 +4,8 @@ OC.L10N.register(
     "User not found" : "המשתמש לא נמצא",
     "Hello %s" : "שלום %s",
     "Hello %s," : "שלום %s,",
+    "You can change the frequency of these emails or disable them in the <a href=\"%s\">settings</a>." : "אתה יכול לשנות את תדירות של האימיילים האלו או לבטל אותם<a href=\"%s\">בהגדרות</a>.",
+    "You can change the frequency of these emails or disable them in the settings: %s" : "אתה יכול לשנות או לבטל את התדירות של האימיילים האלה בהגדרות: %s",
     "Admin notifications" : "התרעות למנהלים",
     "Notifications" : "התרעות",
     "This app provides a backend and frontend for the notification API available in Nextcloud." : "יישומון זה מספק מנגנון ומנשק משתמש ל־API של ההתראות שזמין ב־Nextcloud.",
@@ -25,7 +27,6 @@ OC.L10N.register(
     "Play sound when a new notification arrives" : "השמעת צליל כאשר התרעה חדשה מגיעה",
     "Play sound when a call started (requires Nextcloud Talk)" : "השמעת צליל כאשר נכנסת שיחה (דורש Nextcloud Talk)",
     "None" : "ללא",
-    "You need to set up your email address before you can receive notification emails." : "יש להגדיר כתובת דואר אלקטרוני לפני שניתן יהיה לקבל דיווחים.",
-    "seconds ago" : "לפני מספר שניות"
+    "You need to set up your email address before you can receive notification emails." : "יש להגדיר כתובת דואר אלקטרוני לפני שניתן יהיה לקבל דיווחים."
 },
 "nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;");

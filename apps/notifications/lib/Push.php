@@ -16,6 +16,7 @@ use OC\Security\IdentityProof\Key;
 use OC\Security\IdentityProof\Manager;
 use OCA\Notifications\AppInfo\Application;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Services\IAppConfig;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IToken;
@@ -41,6 +42,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Push {
 	protected ICache $cache;
 	protected ?OutputInterface $output = null;
+	protected bool $limitedOutput = true;
+
 	/**
 	 * @psalm-var array<string, list<string>>
 	 */
@@ -76,6 +79,7 @@ class Push {
 		protected IDBConnection $db,
 		protected INotificationManager $notificationManager,
 		protected IConfig $config,
+		protected IAppConfig $appConfig,
 		protected IProvider $tokenProvider,
 		protected Manager $keyManager,
 		protected IClientService $clientService,
@@ -89,13 +93,17 @@ class Push {
 		$this->cache = $cacheFactory->createDistributed('pushtokens');
 	}
 
-	public function setOutput(OutputInterface $output): void {
+	public function setOutput(OutputInterface $output, bool $limitedOutput = true): void {
 		$this->output = $output;
+		$this->limitedOutput = $limitedOutput;
 	}
 
-	protected function printInfo(string $message): void {
+	protected function printInfo(string $message, string $verboseMessage = ''): void {
 		if ($this->output) {
 			$this->output->writeln($message);
+			if ($verboseMessage !== '' && !$this->limitedOutput) {
+				$this->output->writeln($verboseMessage);
+			}
 		}
 	}
 
@@ -196,7 +204,7 @@ class Push {
 		return $talkDevices;
 	}
 
-	public function pushToDevice(int $id, INotification $notification, ?OutputInterface $output = null): void {
+	public function pushToDevice(int $id, INotification $notification): void {
 		if (!$this->config->getSystemValueBool('has_internet_connection', true)) {
 			$this->printInfo('<error>Internet connectivity is disabled in configuration file - no push notifications will be sent</error>');
 
@@ -288,7 +296,7 @@ class Push {
 			}
 
 			try {
-				$payload = json_encode($this->encryptAndSign($userKey, $device, $id, $notification, $isTalkNotification), JSON_THROW_ON_ERROR);
+				$payload = json_encode($this->encryptAndSign($userKey->getPrivate(), $device, $id, $notification, $isTalkNotification), JSON_THROW_ON_ERROR);
 
 				$proxyServer = rtrim($device['proxyserver'], '/');
 				if (!isset($this->payloadsToSend[$proxyServer])) {
@@ -385,7 +393,7 @@ class Push {
 				}
 
 				if ($deleteAll) {
-					$data = $this->encryptAndSignDelete($userKey, $device, null);
+					$data = $this->encryptAndSignDelete($userKey->getPrivate(), $device, null);
 					try {
 						$this->payloadsToSend[$proxyServer][] = json_encode($data['payload'], JSON_THROW_ON_ERROR);
 					} catch (\JsonException $e) {
@@ -395,7 +403,7 @@ class Push {
 					$temp = $notificationIds;
 
 					while (!empty($temp)) {
-						$data = $this->encryptAndSignDelete($userKey, $device, $temp);
+						$data = $this->encryptAndSignDelete($userKey->getPrivate(), $device, $temp);
 						$temp = $data['remaining'];
 						try {
 							$this->payloadsToSend[$proxyServer][] = json_encode($data['payload'], JSON_THROW_ON_ERROR);
@@ -455,7 +463,12 @@ class Push {
 					$requestData['headers']['X-Nextcloud-Subscription-Key'] = $subscriptionKey;
 				}
 
+				$postStartTime = microtime(true);
 				$response = $client->post($proxyServer . '/notifications', $requestData);
+				$postEndTime = microtime(true);
+
+				$this->printInfo('<comment>Request to push proxy [' . $proxyServer . '] took ' . (string)round($postEndTime - $postStartTime, 2) . 's</comment>');
+
 				$status = $response->getStatusCode();
 				$body = (string)$response->getBody();
 				try {
@@ -485,7 +498,7 @@ class Push {
 					'app' => 'notifications',
 				]);
 
-				$this->printInfo('<error>Could not send notification to push server [' . $proxyServer . ']: ' . $error . '</error>');
+				$this->printInfo('<error>Could not send notification to push server [' . $proxyServer . ']</error>', '<error>' . $error . '</error>');
 				continue;
 			} catch (\Exception $e) {
 				$this->log->error($e->getMessage(), [
@@ -493,7 +506,7 @@ class Push {
 				]);
 
 				$error = $e->getMessage() ?: 'no reason given';
-				$this->printInfo('<error>Could not send notification to push server [' . $e::class . ']: ' . $error . '</error>');
+				$this->printInfo('<error>Could not send notification to push server [' . $e::class . ']</error>', '<error>' . $error . '</error>');
 				continue;
 			}
 
@@ -501,8 +514,8 @@ class Push {
 				if (is_array($bodyData['unknown'])) {
 					// Proxy returns null when the array is empty
 					foreach ($bodyData['unknown'] as $unknownDevice) {
-						$this->printInfo('<comment>Deleting device because it is unknown by the push server: ' . $unknownDevice . '</comment>');
-						$this->deletePushTokenByDeviceIdentifier($unknownDevice);
+						$this->printInfo('<comment>Deleting device because it is unknown by the push server [' . $proxyServer . ']: ' . $unknownDevice . '</comment>');
+						$this->deletePushTokenByDeviceIdentifier($proxyServer, $unknownDevice);
 					}
 				}
 
@@ -516,7 +529,7 @@ class Push {
 					$this->config->setAppValue(Application::APP_ID, 'rate_limit_reached', (string)$this->timeFactory->getTime());
 				}
 				$error = $body && $bodyData === null ? $body : 'no reason given';
-				$this->printInfo('<error>Could not send notification to push server [' . $proxyServer . ']: ' . $error . '</error>');
+				$this->printInfo('<error>Could not send notification to push server [' . $proxyServer . ']</error>', '<error>' . $error . '</error>');
 				$this->log->warning('Could not send notification to push server [{url}]: {error}', [
 					'error' => $error,
 					'url' => $proxyServer,
@@ -524,7 +537,7 @@ class Push {
 				]);
 			} else {
 				$error = $body && $bodyData === null ? $body : 'no reason given';
-				$this->printInfo('<comment>Push notification sent but response was not parsable, using an outdated push proxy? [' . $proxyServer . ']: ' . $error . '</comment>');
+				$this->printInfo('<comment>Push notification sent but response was not parsable, using an outdated push proxy? [' . $proxyServer . ']</comment>', '<comment>' . $error . '</comment>');
 				$this->log->info('Push notification sent but response was not parsable, using an outdated push proxy? [{url}]: {error}', [
 					'error' => $error,
 					'url' => $proxyServer,
@@ -594,7 +607,7 @@ class Push {
 	}
 
 	/**
-	 * @param Key $userKey
+	 * @param string $userPrivateKey
 	 * @param array $device
 	 * @param int $id
 	 * @param INotification $notification
@@ -604,7 +617,7 @@ class Push {
 	 * @throws InvalidTokenException
 	 * @throws \InvalidArgumentException
 	 */
-	protected function encryptAndSign(Key $userKey, array $device, int $id, INotification $notification, bool $isTalkNotification): array {
+	protected function encryptAndSign(string $userPrivateKey, array $device, int $id, INotification $notification, bool $isTalkNotification): array {
 		$data = [
 			'nid' => $id,
 			'app' => $notification->getApp(),
@@ -615,7 +628,7 @@ class Push {
 
 		// Max length of encryption is ~240, so we need to make sure the subject is shorter.
 		// Also, subtract two for encapsulating quotes will be added.
-		$maxDataLength = 200 - strlen(json_encode($data)) - 2;
+		$maxDataLength = 200 - strlen((string)json_encode($data)) - 2;
 		$data['subject'] = Util::shortenMultibyteString($notification->getParsedSubject(), $maxDataLength);
 		if ($notification->getParsedSubject() !== $data['subject']) {
 			$data['subject'] .= '…';
@@ -632,17 +645,20 @@ class Push {
 			$type = 'alert';
 		}
 
-		$this->printInfo('Device public key size: ' . strlen($device['devicepublickey']));
-		$this->printInfo('Data to encrypt is: ' . json_encode($data));
+		$jsonData = (string)json_encode($data);
 
-		if (!openssl_public_encrypt(json_encode($data), $encryptedSubject, $device['devicepublickey'], OPENSSL_PKCS1_PADDING)) {
-			$error = openssl_error_string();
+		$this->printInfo('Device public key size: ' . strlen($device['devicepublickey']));
+		$this->printInfo('Data to encrypt is: ' . $jsonData);
+
+		$padding = $this->appConfig->getAppValueString('push_encryption_padding', 'PKCS1') === 'OAEP' ? OPENSSL_PKCS1_OAEP_PADDING : OPENSSL_PKCS1_PADDING;
+		if (!openssl_public_encrypt($jsonData, $encryptedSubject, $device['devicepublickey'], $padding)) {
+			$error = openssl_error_string() ?: 'Unknown OpenSSL error';
 			$this->log->error($error, ['app' => 'notifications']);
 			$this->printInfo('<error>Error while encrypting data: "' . $error . '"</error>');
 			throw new \InvalidArgumentException('Failed to encrypt message for device');
 		}
 
-		if (openssl_sign($encryptedSubject, $signature, $userKey->getPrivate(), OPENSSL_ALGO_SHA512)) {
+		if (openssl_sign($encryptedSubject, $signature, $userPrivateKey, OPENSSL_ALGO_SHA512)) {
 			$this->printInfo('Signed encrypted push subject');
 		} else {
 			$this->printInfo('<error>Failed to signed encrypted push subject</error>');
@@ -661,15 +677,15 @@ class Push {
 	}
 
 	/**
-	 * @param Key $userKey
+	 * @param string $userPrivateKey
 	 * @param array $device
 	 * @param ?int[] $ids
 	 * @return array
-	 * @psalm-return array{remaining: list<int>, payload: array{deviceIdentifier: string, pushTokenHash: string, subject: string, signature: string, priority: string, type: string}}
+	 * @psalm-return array{remaining: array<array-key, int>, payload: array{deviceIdentifier: string, pushTokenHash: string, subject: string, signature: string, priority: string, type: string}}
 	 * @throws InvalidTokenException
 	 * @throws \InvalidArgumentException
 	 */
-	protected function encryptAndSignDelete(Key $userKey, array $device, ?array $ids): array {
+	protected function encryptAndSignDelete(string $userPrivateKey, array $device, ?array $ids): array {
 		$remainingIds = [];
 		if ($ids === null) {
 			$data = [
@@ -688,12 +704,14 @@ class Push {
 			];
 		}
 
-		if (!openssl_public_encrypt(json_encode($data), $encryptedSubject, $device['devicepublickey'], OPENSSL_PKCS1_PADDING)) {
-			$this->log->error(openssl_error_string(), ['app' => 'notifications']);
+		$padding = $this->appConfig->getAppValueString('push_encryption_padding', 'PKCS1') === 'OAEP' ? OPENSSL_PKCS1_OAEP_PADDING : OPENSSL_PKCS1_PADDING;
+		if (!openssl_public_encrypt(json_encode($data, JSON_THROW_ON_ERROR), $encryptedSubject, $device['devicepublickey'], $padding)) {
+			$error = openssl_error_string() ?: 'Unknown OpenSSL error';
+			$this->log->error($error, ['app' => 'notifications']);
 			throw new \InvalidArgumentException('Failed to encrypt message for device');
 		}
 
-		openssl_sign($encryptedSubject, $signature, $userKey->getPrivate(), OPENSSL_ALGO_SHA512);
+		openssl_sign($encryptedSubject, $signature, $userPrivateKey, OPENSSL_ALGO_SHA512);
 		$base64EncryptedSubject = base64_encode($encryptedSubject);
 		$base64Signature = base64_encode($signature);
 
@@ -769,10 +787,11 @@ class Push {
 	 * @param string $deviceIdentifier
 	 * @return bool
 	 */
-	protected function deletePushTokenByDeviceIdentifier(string $deviceIdentifier): bool {
+	protected function deletePushTokenByDeviceIdentifier(string $proxyServer, string $deviceIdentifier): bool {
 		$query = $this->db->getQueryBuilder();
 		$query->delete('notifications_pushhash')
-			->where($query->expr()->eq('deviceidentifier', $query->createNamedParameter($deviceIdentifier)));
+			->where($query->expr()->eq('proxyserver', $query->createNamedParameter($proxyServer)))
+			->andWhere($query->expr()->eq('deviceidentifier', $query->createNamedParameter($deviceIdentifier)));
 
 		return $query->executeStatement() !== 0;
 	}

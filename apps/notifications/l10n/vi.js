@@ -6,6 +6,7 @@ OC.L10N.register(
     "Hello %s," : "Xin chào %s,",
     "_New notification for %s_::_%n new notifications for %s_" : ["%n thông báo mới cho %s"],
     "_You have a new notification for %s_::_You have %n new notifications for %s_" : ["Bạn có %n thông báo mới cho %s"],
+    "You can change the frequency of these emails or disable them in the <a href=\"%s\">settings</a>." : "Bạn có thể điều chỉnh tần suất gửi hoặc vô hiệu hóa các email này trong <a href=\"%s\">cài đặt</a>.",
     "You can change the frequency of these emails or disable them in the settings: %s" : "Bạn có thể thay đổi tần suất nhận những email này hoặc tắt chúng trong cài đặt: %s",
     "Admin notifications" : "Thông báo quản trị",
     "Notifications" : "Thông báo",
@@ -34,8 +35,6 @@ OC.L10N.register(
     "Play sound when a new notification arrives" : "Phát âm thanh khi có thông báo mới",
     "Play sound when a call started (requires Nextcloud Talk)" : "Phát âm thanh khi cuộc gọi bắt đầu (yêu cầu Talk)",
     "None" : "Không có",
-    "You need to set up your email address before you can receive notification emails." : "Bạn cần phải thiết lập địa chỉ email trước khi nhận được email thông báo.",
-    "seconds ago" : "vài giây trước",
-    "Configure the default notification settings for new users" : "Định cấu hình cài đặt thông báo mặc định cho người dùng mới"
+    "You need to set up your email address before you can receive notification emails." : "Bạn cần phải thiết lập địa chỉ email trước khi nhận được email thông báo."
 },
 "nplurals=1; plural=0;");

@@ -13,6 +13,7 @@
     "Do you want to help us to improve Nextcloud by providing some anonymized data about your setup and usage? You can disable it at any time in the admin settings again." : "Предоставляя обезличенную информацию о своих настройках и статистике использования, Вы помогаете нам улучшить Nextcloud. Отключить передачу данных можно в любое время в настройках администратора.",
     "Send usage" : "Отправить информацию об использовании",
     "Not now" : "Не сейчас",
+    "Never ask again" : "Никогда больше не спрашивать",
     "Never" : "Никогда",
     "Sends anonymized data to Nextcloud to help us to improve Nextcloud." : "Отправляет анонимные данные в Nextcloud, чтобы помочь нам улучшить Nextcloud.",
     "Sends anonymized data to Nextcloud to help us to improve Nextcloud. You\n\t\talways have full control over the content sent to Nextcloud and can disable\n\t\tit again at any time." : "Отправлять обезличенные данные в Nextcloud, чтобы помочь нам\nулучшить Nextcloud. Вы всегда имеете полный контроль над\nсодержимым, отправляемым в Nextcloud, и можете отключить\nего передачу в любое время.",
@@ -21,7 +22,7 @@
     "Send new report now" : "Отправить отчёт сейчас",
     "Send usage survey monthly" : "Отправлять информацию об использовании ежемесячно",
     "Data to send" : "Данные для отправки",
-    "Last report sent on: %s" : "Последний отчёт отправлен: %s",
-    "Last report" : "Последний отчёт"
+    "Last report" : "Последний отчёт",
+    "Last report sent on: %s" : "Последний отчёт отправлен: %s"
 },"pluralForm" :"nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);"
 }

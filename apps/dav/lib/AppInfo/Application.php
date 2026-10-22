@@ -14,6 +14,7 @@ use OCA\DAV\CalDAV\CachedSubscriptionProvider;
 use OCA\DAV\CalDAV\CalendarManager;
 use OCA\DAV\CalDAV\CalendarProvider;
 use OCA\DAV\CalDAV\Federation\CalendarFederationProvider;
+use OCA\DAV\CalDAV\Federation\FederatedCalendarInviteNotifier;
 use OCA\DAV\CalDAV\Reminder\NotificationProvider\AudioProvider;
 use OCA\DAV\CalDAV\Reminder\NotificationProvider\EmailProvider;
 use OCA\DAV\CalDAV\Reminder\NotificationProvider\PushProvider;
@@ -87,6 +88,7 @@ use OCP\Contacts\IManager as IContactsManager;
 use OCP\DB\Events\AddMissingIndicesEvent;
 use OCP\Federation\Events\TrustedServerRemovedEvent;
 use OCP\Federation\ICloudFederationProviderManager;
+use OCP\Group\Events\GroupDeletedEvent;
 use OCP\IUserSession;
 use OCP\Server;
 use OCP\Settings\Events\DeclarativeSettingsGetValueEvent;
@@ -202,6 +204,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(UserCreatedEvent::class, UserEventsListener::class);
 		$context->registerEventListener(UserChangedEvent::class, UserEventsListener::class);
 		$context->registerEventListener(UserUpdatedEvent::class, UserEventsListener::class);
+		$context->registerEventListener(GroupDeletedEvent::class, UserEventsListener::class);
 
 		$context->registerEventListener(SabrePluginAuthInitEvent::class, SabrePluginAuthInitListener::class);
 
@@ -210,6 +213,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(CalendarObjectDeletedEvent::class, CalendarFederationNotificationListener::class);
 
 		$context->registerNotifierService(Notifier::class);
+		$context->registerNotifierService(FederatedCalendarInviteNotifier::class);
 
 		$context->registerCalendarProvider(CalendarProvider::class);
 		$context->registerCalendarProvider(CachedSubscriptionProvider::class);

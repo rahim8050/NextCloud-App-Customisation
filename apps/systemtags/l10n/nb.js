@@ -45,6 +45,7 @@ OC.L10N.register(
     "Collaborative tags" : "Samarbeidsmerkelapper",
     "Collaborative tagging functionality which shares tags among people." : "Samarbeidsmerkelapp-funksjonalitet som deler merkelapper mellom brukere.",
     "Collaborative tagging functionality which shares tags among people. Great for teams.\n\t(If you are a provider with a multi-tenancy installation, it is advised to deactivate this app as tags are shared.)" : "Samarbeidsmerkelapp-funksjonalitet som deler merkelapper mellom brukere. Flott for team.\n\t(Hvis du er en leverandør med en installasjon av flere leieforhold, anbefales det å deaktivere denne appen ettersom merkelapper deles.)",
+    "Search tags" : "Søk i merkelapper",
     "Public" : "Offentlig",
     "Restricted" : "Begrenset",
     "Invisible" : "Usynlig",
@@ -79,6 +80,7 @@ OC.L10N.register(
     "Search or create collaborative tags" : "Søk etter eller opprett samarbeidende merkelapper",
     "No tags to select, type to create a new tag" : "Ingen merkelapper å velge, skriv for å opprette en ny merkelapp",
     "Collaborative tags are available for all users. Restricted tags are visible to users but cannot be assigned by them. Invisible tags are for internal use, since users cannot see or assign them." : "Samarbeidsmerkelapper er tilgjengelige for alle brukere. Begrensede merkelapper er synlige for brukere, men kan ikke tildeles av dem. Usynlige merkelapper er for intern bruk, siden brukere ikke kan se eller tildele dem.",
+    "Add tags" : "Legg til merker",
     "Assigned collaborative tags" : "Tildelt samarbeidstagger",
     "Open in Files" : "Åpne i Filer",
     "List of tags and their associated files and folders." : "Liste over merkelapper og deres assosierte filer og mapper.",
@@ -93,9 +95,6 @@ OC.L10N.register(
     "Failed to delete tag for file" : "Sletting av merkelappen for filen feilet",
     "Collaborative tags …" : "Samarbeidende merkelapper...",
     "Loading …" : "Laster ...",
-    "File tags modification canceled" : "Endring av merkelapper for fil ble avbrutt",
-    "Select or create tags to apply to all selected files" : "Velg eller opprett merkelapp for alle valgte filer",
-    "Apply changes" : "Utfør endringer",
     "Loading collaborative tags …" : "Laster samarbeidende merkelapper..."
 },
 "nplurals=2; plural=(n != 1);");

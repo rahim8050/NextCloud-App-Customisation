@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App: Local Whisper Speech-To-Text (stt_whisper2) &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>App: Local Whisper Speech-To-Text (stt_whisper2) &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/ai/app_stt_whisper2.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="App: Local Image Generation (text2image_stablediffusion2)" href="app_text2image_stablediffusion2.html" />
-    <link rel="prev" title="App: Local large language model (llm2)" href="app_llm2.html" /> 
+    <link rel="prev" title="App: Local large language model (llm2)" href="app_llm2.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -158,7 +163,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -179,7 +184,7 @@
              
   <section id="app-local-whisper-speech-to-text-stt-whisper2">
 <h1>App: Local Whisper Speech-To-Text (stt_whisper2)<a class="headerlink" href="#app-local-whisper-speech-to-text-stt-whisper2" title="Link to this heading"></a></h1>
-<p id="ai-app-stt-whisper2">The <em>stt_whisper2</em> app is one of the apps that provide Speech-To-Text functionality in Nextcloud and act as a media transcription backend for the <a class="reference internal" href="app_assistant.html#ai-app-assistant"><span class="std std-ref">Nextcloud Assistant app</span></a>, the <em>talk</em> app and <a class="reference internal" href="overview.html#stt-consumer-apps"><span class="std std-ref">other apps making use of the core Translation API</span></a>. The <em>stt_whisper2</em> app specifically runs only open source models and does so entirely on-premises. Nextcloud can provide customer support upon request, please talk to your account manager for the possibilities.</p>
+<p id="ai-app-stt-whisper2">The <em>stt_whisper2</em> app is one of the apps that provide Speech-To-Text functionality in Nextcloud and act as a media transcription backend for the <a class="reference internal" href="app_assistant.html#ai-app-assistant"><span class="std std-ref">Nextcloud Assistant app</span></a>, the <em>talk</em> app and <a class="reference internal" href="overview.html#stt-consumer-apps"><span class="std std-ref">other apps making use of the core Speech-To-Text API</span></a>. The <em>stt_whisper2</em> app specifically runs only open source models and does so entirely on-premises. Nextcloud can provide customer support upon request, please talk to your account manager for the possibilities.</p>
 <p>This app supports input and output in languages other than English if the underlying model supports the language.</p>
 <p>This app uses <a class="reference external" href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a> under the hood. Output quality will differ depending on which model you use, we recommend the following models:</p>
 <blockquote>
@@ -271,7 +276,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -285,7 +290,7 @@
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -295,10 +300,8 @@
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -306,31 +309,25 @@
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

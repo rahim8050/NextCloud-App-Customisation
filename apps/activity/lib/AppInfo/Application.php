@@ -5,6 +5,7 @@
  * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
  * SPDX-License-Identifier: AGPL-3.0-only
  */
+
 namespace OCA\Activity\AppInfo;
 
 use OC\DB\ConnectionAdapter;
@@ -16,6 +17,7 @@ use OCA\Activity\Dashboard\ActivityWidget;
 use OCA\Activity\Data;
 use OCA\Activity\FilesHooksStatic;
 use OCA\Activity\GroupHelper;
+use OCA\Activity\Listener\AddMissingIndicesListener;
 use OCA\Activity\Listener\LoadSidebarScripts;
 use OCA\Activity\Listener\SetUserDefaults;
 use OCA\Activity\Listener\ShareEventListener;
@@ -29,6 +31,8 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\DB\Events\AddMissingIndicesEvent;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IDateTimeFormatter;
 use OCP\IDBConnection;
@@ -80,12 +84,12 @@ class Application extends App implements IBootstrap {
 			$systemConfig = $c->get(SystemConfig::class);
 			$configPrefix = 'activity_';
 
-			if ($systemConfig->getValue($configPrefix . 'dbuser', null) === null &&
-				$systemConfig->getValue($configPrefix . 'dbpassword', null) === null &&
-				$systemConfig->getValue($configPrefix . 'dbname', null) === null &&
-				$systemConfig->getValue($configPrefix . 'dbhost', null) === null &&
-				$systemConfig->getValue($configPrefix . 'dbport', null) === null &&
-				$systemConfig->getValue($configPrefix . 'dbdriveroptions', null) === null) {
+			if ($systemConfig->getValue($configPrefix . 'dbuser', null) === null
+				&& $systemConfig->getValue($configPrefix . 'dbpassword', null) === null
+				&& $systemConfig->getValue($configPrefix . 'dbname', null) === null
+				&& $systemConfig->getValue($configPrefix . 'dbhost', null) === null
+				&& $systemConfig->getValue($configPrefix . 'dbport', null) === null
+				&& $systemConfig->getValue($configPrefix . 'dbdriveroptions', null) === null) {
 				return $c->get(IDBConnection::class);
 			}
 
@@ -113,6 +117,7 @@ class Application extends App implements IBootstrap {
 				$c->get(IFactory::class),
 				$c->get(IManager::class),
 				$c->get(IValidator::class),
+				$c->get(IAppConfig::class),
 				$c->get(IConfig::class),
 				$c->get(LoggerInterface::class),
 				$c->get(Data::class),
@@ -127,6 +132,7 @@ class Application extends App implements IBootstrap {
 		}, false);
 
 		$context->registerCapability(Capabilities::class);
+		$context->registerEventListener(AddMissingIndicesEvent::class, AddMissingIndicesListener::class);
 		$context->registerEventListener(LoadSidebar::class, LoadSidebarScripts::class);
 		$context->registerEventListener(UserDeletedEvent::class, UserDeleted::class);
 		$context->registerEventListener(PostLoginEvent::class, SetUserDefaults::class);

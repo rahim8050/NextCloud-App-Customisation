@@ -1,5 +1,6 @@
 { "translations": {
     "Public link" : "Public link",
+    "Clear search" : "ძებნის გასუფთავება",
     "Videos" : "Videos",
     "People" : "People",
     "Favorites" : "Favorites",
@@ -14,13 +15,23 @@
     "An error occurred" : "An error occurred",
     "Favorite" : "Favorite",
     "Go back" : "Go back",
-    "Home" : "მთავარი",
-    "View" : "View",
-    "Unselect all" : "Unselect all",
     "Remove from favorites" : "Remove from favorites",
+    "Add to favorites" : "Add to favorites",
+    "Share" : "გაზიარება",
+    "Delete" : "წაშლა",
+    "Cancel" : "Cancel",
+    "Filename" : "Filename",
+    "Location" : "Location",
+    "Add" : "დამატება",
+    "Home" : "მთავარი",
+    "General" : "General",
+    "Unselect all" : "Unselect all",
+    "Default" : "Default",
     "Last week" : "Last week",
-    "Details" : "Details",
+    "Camera" : "Camera",
     "Group" : "Group",
-    "Add" : "Add"
+    "View" : "View",
+    "Details" : "Details",
+    "Confirm" : "Confirm"
 },"pluralForm" :"nplurals=2; plural=(n!=1);"
 }

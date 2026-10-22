@@ -3,7 +3,11 @@ OC.L10N.register(
     {
     "Brute-force settings" : "Väsytyshyökkäyksen asetukset",
     "Whitelist IPs" : "Sallitut IP:t",
-    "Brute-force IP whitelist" : "Turvallisten IP-osoitteiden lista",
-    "Add" : "Lisää"
+    "Add new IP address" : "Lisää uusi IP-osoite",
+    "IP address" : "IP-osoite",
+    "Mask" : "Maski",
+    "Comment" : "Kommentti",
+    "Add" : "Lisää",
+    "Save" : "Tallenna"
 },
 "nplurals=2; plural=(n != 1);");

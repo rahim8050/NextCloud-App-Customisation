@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Patching Nextcloud &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Patching Nextcloud &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/issues/applying_patch.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Code signing" href="code_signing.html" />
-    <link rel="prev" title="General troubleshooting" href="general_troubleshooting.html" /> 
+    <link rel="prev" title="General troubleshooting" href="general_troubleshooting.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -111,13 +116,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Issues and troubleshooting</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="general_troubleshooting.html">General troubleshooting</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Patching Nextcloud</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#obtaining-a-patch">Obtaining a patch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#applying-a-patch">Applying a patch</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#patching-server">Patching server</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#patching-apps">Patching apps</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#reverting-a-patch">Reverting a patch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#getting-a-patch-from-a-github-pull-request">Getting a patch from a GitHub pull request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes-and-troubleshooting">Notes and troubleshooting</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="code_signing.html">Code signing</a></li>
@@ -145,7 +151,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -166,28 +172,47 @@
              
   <section id="patching-nextcloud">
 <h1>Patching Nextcloud<a class="headerlink" href="#patching-nextcloud" title="Link to this heading"></a></h1>
+<section id="obtaining-a-patch">
+<h2>Obtaining a patch<a class="headerlink" href="#obtaining-a-patch" title="Link to this heading"></a></h2>
+<p>If you found a related pull request on GitHub that solves your issue, or you want to help developers and verify a fix works, you can get a patch for the pull request.</p>
+<ol class="arabic simple">
+<li><p>Using <a class="reference external" href="https://github.com/nextcloud/server/pull/26396">https://github.com/nextcloud/server/pull/26396</a> as an example.</p></li>
+<li><p>Append <code class="docutils literal notranslate"><span class="pre">.diff</span></code> to the URL: <a class="reference external" href="https://github.com/nextcloud/server/pull/26396.diff">https://github.com/nextcloud/server/pull/26396.diff</a></p></li>
+<li><p>Download the patch to your server e.g. via <code class="docutils literal notranslate"><span class="pre">wget</span> <span class="pre">https://github.com/nextcloud/server/pull/26396.diff</span></code> (this will place <code class="docutils literal notranslate"><span class="pre">26396.diff</span></code> in the local directory)</p></li>
+<li><p>Follow the <a class="reference internal" href="#applying-a-patch">Applying a patch</a> steps.</p></li>
+<li><p>If you are on an older Nextcloud version, you might first need to go to the correct backported patch for your version.</p></li>
+</ol>
+<img alt="backportbot-nextcloud linking to the pull request for an older version." src="../_images/getting-a-patch-from-github.png" />
+<ol class="arabic simple" start="6">
+<li><p>You can find the appropriate version by looking for a link posted by <code class="docutils literal notranslate"><span class="pre">backportbot-nextcloud</span></code> to the backport pull request for your release, or by checking for a developer comment with a manual backport link. Use the <code class="docutils literal notranslate"><span class="pre">.diff</span></code> URL of that backport PR.</p></li>
+</ol>
+</section>
 <section id="applying-a-patch">
 <h2>Applying a patch<a class="headerlink" href="#applying-a-patch" title="Link to this heading"></a></h2>
 <section id="patching-server">
 <h3>Patching server<a class="headerlink" href="#patching-server" title="Link to this heading"></a></h3>
 <ol class="arabic">
-<li><p>Navigate into your Nextcloud server’s root directory (contains the <code class="docutils literal notranslate"><span class="pre">status.php</span></code> file)</p></li>
-<li><p>Now apply the patch with the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">patch</span> <span class="o">-</span><span class="n">p</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">file</span><span class="o">.</span><span class="n">patch</span>
+<li><p>Navigate to your Nextcloud server’s root directory (the one that contains the <code class="docutils literal notranslate"><span class="pre">status.php</span></code> file).</p></li>
+<li><p>Download the patch to your server e.g. via <code class="docutils literal notranslate"><span class="pre">wget</span> <span class="pre">https://github.com/nextcloud/server/pull/26396.diff</span></code> (this will place <code class="docutils literal notranslate"><span class="pre">26396.diff</span></code> in the local directory)</p></li>
+<li><p>Apply the patch with the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">patch</span> <span class="o">-</span><span class="n">p</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="o">./</span><span class="mf">26396.</span><span class="n">diff</span>
+</pre></div>
+</div>
+</li>
+<li><p>Alternatively, if the patch command is not available, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">apply</span> <span class="o">--</span><span class="n">check</span> <span class="o">./</span><span class="mf">26396.</span><span class="n">diff</span>
+<span class="n">git</span> <span class="n">apply</span> <span class="o">./</span><span class="mf">26396.</span><span class="n">diff</span>
 </pre></div>
 </div>
 </li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There can be errors about not found files, especially when you take a patch from GitHub there might be development or test files included in the patch. when the files are in build/ or a tests/ subdirectory it is mostly being</p>
-</div>
 </section>
 <section id="patching-apps">
 <h3>Patching apps<a class="headerlink" href="#patching-apps" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
-<li><p>Navigate to the root of this app (mostly <code class="docutils literal notranslate"><span class="pre">apps/[APPID]/</span></code>), if you can not find the app there use the <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span> <span class="pre">-u</span> <span class="pre">www-data</span> <span class="pre">php</span> <span class="pre">occ</span> <span class="pre">app:getpath</span> <span class="pre">APPID</span></code> command to find the path.</p></li>
-<li><p>Now apply the patch with the same command as in <a class="reference internal" href="#patching-server">Patching server</a></p></li>
+<li><p>Navigate to the root of the app (usually <code class="docutils literal notranslate"><span class="pre">apps/[APPID]/</span></code>). If you cannot find the app there, use the <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span> <span class="pre">-u</span> <span class="pre">www-data</span> <span class="pre">php</span> <span class="pre">occ</span> <span class="pre">app:getpath</span> <span class="pre">APPID</span></code> command to find the path.</p></li>
+<li><p>Download the patch to your server e.g. via <code class="docutils literal notranslate"><span class="pre">wget</span> <span class="pre">https://github.com/nextcloud/&lt;app&gt;/pull/26396.diff</span></code> (this will place <code class="docutils literal notranslate"><span class="pre">26396.diff</span></code> in the local directory)</p></li>
+<li><p>Apply the patch with the same command as in <a class="reference internal" href="#patching-server">Patching server</a>.</p></li>
 </ol>
 </section>
 </section>
@@ -196,14 +221,19 @@
 <ol class="arabic">
 <li><p>Navigate to the directory where you applied the patch.</p></li>
 <li><p>Now revert the patch with the <code class="docutils literal notranslate"><span class="pre">-R</span></code> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">patch</span> <span class="o">-</span><span class="n">R</span> <span class="o">-</span><span class="n">p</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">file</span><span class="o">.</span><span class="n">patch</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">patch</span> <span class="o">-</span><span class="n">R</span> <span class="o">-</span><span class="n">p</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="o">./</span><span class="mf">26396.</span><span class="n">diff</span>
+</pre></div>
+</div>
+</li>
+<li><p>Alternatively, if the patch command is not available, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">apply</span> <span class="o">--</span><span class="n">reverse</span> <span class="o">./</span><span class="mf">26396.</span><span class="n">diff</span>
 </pre></div>
 </div>
 </li>
 </ol>
 </section>
-<section id="getting-a-patch-from-a-github-pull-request">
-<h2>Getting a patch from a GitHub pull request<a class="headerlink" href="#getting-a-patch-from-a-github-pull-request" title="Link to this heading"></a></h2>
+<section id="notes-and-troubleshooting">
+<h2>Notes and troubleshooting<a class="headerlink" href="#notes-and-troubleshooting" title="Link to this heading"></a></h2>
 <p>If you found a related pull request on GitHub that solves your issue, or you want to help developers and verify a fix works, you can get a patch for the pull request.</p>
 <ol class="arabic simple">
 <li><p>Using <a class="reference external" href="https://github.com/nextcloud/server/pull/26396">https://github.com/nextcloud/server/pull/26396</a> as an example.</p></li>
@@ -229,7 +259,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -243,7 +273,7 @@
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -253,10 +283,8 @@
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -264,31 +292,25 @@
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

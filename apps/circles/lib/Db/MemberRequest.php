@@ -20,6 +20,9 @@ use OCA\Circles\Model\FederatedUser;
 use OCA\Circles\Model\Member;
 use OCA\Circles\Model\Probes\CircleProbe;
 use OCA\Circles\Model\Probes\MemberProbe;
+use OCA\Circles\Service\ConfigService;
+use OCA\Circles\Service\TimezoneService;
+use OCP\IDBConnection;
 
 /**
  * Class MemberRequest
@@ -27,6 +30,15 @@ use OCA\Circles\Model\Probes\MemberProbe;
  * @package OCA\Circles\Db
  */
 class MemberRequest extends MemberRequestBuilder {
+
+	public function __construct(
+		private IDBConnection $db,
+		TimezoneService $timezoneService,
+		ConfigService $configService,
+	) {
+		parent::__construct($timezoneService, $configService);
+	}
+
 	/**
 	 * @param Member $member
 	 *
@@ -187,9 +199,48 @@ class MemberRequest extends MemberRequestBuilder {
 
 
 	/**
+	 * @return ?Member old owner or null if old owner was not found
+	 */
+	public function promoteToOwner(Member $member): ?Member {
+		try {
+			$this->db->beginTransaction();
+
+			$qb = $this->getMemberSelectSql();
+			$qb->limitToCircleId($member->getCircleId());
+			$qb->limitInt('level', Member::LEVEL_OWNER);
+			// forUpdate locks the owner row until transaction is commited, forcing concurrent
+			// requests to wait and read the updated current owner, preventing multiple owners
+			$qb->forUpdate();
+
+			try {
+				$oldOwner = $this->getItemFromRequest($qb);
+			} catch (MemberNotFoundException) {
+				$oldOwner = null;
+			}
+
+			$this->updateLevel($member);
+
+			if ($oldOwner !== null && $oldOwner->getId() !== $member->getId()) {
+				$oldOwner->setLevel(Member::LEVEL_ADMIN);
+				$this->updateLevel($oldOwner);
+			}
+
+			$this->db->commit();
+
+			return $oldOwner;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
+	}
+
+	/**
 	 * @param string $singleId
 	 * @param IFederatedUser|null $initiator
 	 * @param MemberProbe|null $probe
+	 * @param int $limit
+	 * @param bool $fullDetails
+	 * @param string $search
 	 *
 	 * @return Member[]
 	 * @throws RequestBuilderException
@@ -200,6 +251,7 @@ class MemberRequest extends MemberRequestBuilder {
 		?MemberProbe $probe = null,
 		int $limit = 0,
 		bool $fullDetails = false,
+		string $search = '',
 	): array {
 		if (is_null($probe)) {
 			$probe = new MemberProbe();
@@ -207,6 +259,11 @@ class MemberRequest extends MemberRequestBuilder {
 
 		$qb = $this->getMemberSelectSql($initiator);
 		$qb->limitToCircleId($singleId);
+
+		if (!empty($search)) {
+			$qb->searchInDBField('user_id', '%' . $search . '%');
+		}
+
 		if ($limit > 0) {
 			$qb->chunk(0, $limit);
 		}
@@ -222,6 +279,16 @@ class MemberRequest extends MemberRequestBuilder {
 		if ($fullDetails) {
 			$qb->leftJoinCircle(CoreQueryBuilder::MEMBER, $initiator);
 			$qb->leftJoinInvitedBy(CoreQueryBuilder::MEMBER);
+		} elseif (!is_null($initiator)) {
+			// still need to confirm initiator level in relation to the circle
+			$aliasCircle = $qb->generateAlias(CoreQueryBuilder::MEMBER, CoreQueryBuilder::CIRCLE, $options);
+			$qb->leftJoin(
+				CoreQueryBuilder::MEMBER,
+				CoreRequestBuilder::TABLE_CIRCLE,
+				$aliasCircle,
+				$qb->expr()->eq($aliasCircle . '.unique_id', CoreQueryBuilder::MEMBER . '.circle_id')
+			);
+			$qb->limitToInitiator($aliasCircle, $initiator);
 		}
 
 		if ($probe->hasFilterRemoteInstance()) {
@@ -317,6 +384,19 @@ class MemberRequest extends MemberRequestBuilder {
 		if (!is_null($initiator)) {
 			$qb->leftJoinCircle(CoreQueryBuilder::MEMBER, $initiator);
 		}
+
+		return $this->getItemFromRequest($qb);
+	}
+
+
+	/**
+	 * @throws MemberNotFoundException
+	 * @throws RequestBuilderException
+	 */
+	public function getMemberByUserId(string $circleId, string $userId): Member {
+		$qb = $this->getMemberSelectSql();
+		$qb->limitToCircleId($circleId);
+		$qb->limitToUserId($userId);
 
 		return $this->getItemFromRequest($qb);
 	}

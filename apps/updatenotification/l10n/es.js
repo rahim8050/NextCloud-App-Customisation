@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Channel updated" : "Canal actualizado",
     "Web updater is disabled" : "El actualizador web está desactivado",
+    "Configuration is read-only" : "La configuración es de solo lectura",
     "App updated" : "Aplicación actualizada",
     "See what's new" : "Novedades",
     "{app} updated to version {version}" : "{app} actualizada a la versión {version}",
@@ -13,10 +14,6 @@ OC.L10N.register(
     "Update for {app} to version %s is available." : "Actualización de {app} a la versión %s está disponible.",
     "Update notification" : "Notificación de actualización",
     "Displays update notifications for Nextcloud, app updates, and provides the SSO for the updater." : "Muestra las notificaciones de actualización para Nextcloud, actualizaciones de apps y proporciona el SSO para el actualizador.",
-    "Give feedback" : "Dar opinión",
-    "Get started" : "Comenzar",
-    "No changelog available" : "No hay un registro de cambios disponible",
-    "What's new in {app} {version}" : "Novedades en {app} {version}",
     "A new version is available: <strong>{newVersionString}</strong>" : "La nueva versión está disponible: <strong>{newVersionString}</strong>",
     "Note that after a new release the update only shows up after the first minor release or later. We roll out new versions spread out over time and sometimes skip a version when issues are found. Learn more about updates and release channels at {link}" : "Tenga en cuenta que tras un nuevo lanzamiento, la actualización sólo se mostrará después de la primera versión menor o posterior. Las nuevas versiones se distribuyen a lo largo del tiempo y a veces se omiten versiones cuando se encuentran problemas. Obtenga  más información acerca de las actualizaciones y los canales de lanzamiento en {link}",
     "Checked on {lastCheckedDate} - Open changelog" : "Comprobado en {lastCheckedDate} - Abrir registro de cambios",
@@ -56,11 +53,12 @@ OC.L10N.register(
     "Only notifications for app updates are available." : "Solo están disponibles las notificaciones para actualizaciones de apps.",
     "The selected update channel makes dedicated notifications for the server obsolete." : "El canal de actualización seleccionado hace obsoletas las notificaciones dedicadas para el servidor.",
     "The selected update channel does not support updates of the server." : "El canal de actualización seleccionado no soporta actualizaciones del servidor",
+    "Give feedback" : "Dar opinión",
+    "Get started" : "Comenzar",
+    "No changelog available" : "No hay un registro de cambios disponible",
+    "What's new in {app} {version}" : "Novedades en {app} {version}",
     "Changelog for app {app}" : "Registro de cambios para la aplicación {app}",
     "What's new in {app} version {version}" : "Novedades en {app} versión {version}",
-    "{version} is available. Get more information on how to update." : "{version} está disponible. Obtenga más información sobre cómo actualizar.",
-    "<strong>All</strong> apps have a compatible version for this Nextcloud version available." : "<strong>Todas</strong> las apps son compatibles con esta versión de Nextcloud.",
-    "_<strong>%n</strong> app has no compatible version for this Nextcloud version available._::_<strong>%n</strong> apps have no compatible version for this Nextcloud version available._" : ["<strong>%n</strong> app no es compatible con esta versión de Nextcloud.","<strong>%n</strong> apps no son compatibles con la versión de Nextcloud.","<strong>%n</strong> apps no son compatibles con la versión de Nextcloud."],
-    "For enterprise use. Provides always the latest patch level, but will not update to the next major release immediately. That update happens once Nextcloud GmbH has done additional hardening and testing for large-scale and mission-critical deployments. This channel is only available to customers and provides the Nextcloud Enterprise package." : "Para uso empresarial. Proporciona siempre el último nivel de actualización, pero no realiza inmediatamente la actualización a la siguiente versión mayor. La actualización ocurre cuando Nextcloud GmbH ha realizado una revisión dedicada, pruebas para despliegues a gran escala y servicios críticos. Este canal está disponible únicamente para los clientes del paquete Nextcloud Enterprise."
+    "{version} is available. Get more information on how to update." : "{version} está disponible. Obtenga más información sobre cómo actualizar."
 },
 "nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");

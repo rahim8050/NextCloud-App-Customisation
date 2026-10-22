@@ -15,6 +15,7 @@ use NCU\Security\Signature\Exceptions\SignatureException;
 use NCU\Security\Signature\Exceptions\SignatureNotFoundException;
 use NCU\Security\Signature\IIncomingSignedRequest;
 use NCU\Security\Signature\ISignatureManager;
+use OC\AppFramework\Http\Attributes\FederationRateLimit;
 use OC\OCM\OCMSignatoryManager;
 use OCA\CloudFederationAPI\Config;
 use OCA\CloudFederationAPI\Db\FederatedInviteMapper;
@@ -105,15 +106,30 @@ class RequestHandlerController extends Controller {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'receiveFederatedShare')]
+	#[FederationRateLimit(limit: 5, period: 1200)]
 	public function addShare($shareWith, $name, $description, $providerId, $owner, $ownerDisplayName, $sharedBy, $sharedByDisplayName, $protocol, $shareType, $resourceType) {
-		try {
-			// if request is signed and well signed, no exception are thrown
-			// if request is not signed and host is known for not supporting signed request, no exception are thrown
-			$signedRequest = $this->getSignedRequest();
-			$this->confirmSignedOrigin($signedRequest, 'owner', $owner);
-		} catch (IncomingRequestException $e) {
-			$this->logger->warning('incoming request exception', ['exception' => $e]);
-			return new JSONResponse(['message' => $e->getMessage(), 'validationErrors' => []], Http::STATUS_BAD_REQUEST);
+		// quick patch to flatten the protocol entry 'multi' to the previous 'webdav'. this is 32 only and a better implementation is expected for 33
+		/** @psalm-suppress InvalidArrayOffset */
+		if ((($protocol['name'] ?? '') === 'multi') && (is_array($protocol['webdav'] ?? ''))) {
+			$protocol = [
+				'name' => 'webdav',
+				'options' => [
+					'sharedSecret' => $protocol['webdav']['sharedSecret'] ?? '',
+					'permissions' => '{http://open-cloud-mesh.org/ns}share-permissions',
+				],
+			];
+		}
+
+		if (!$this->appConfig->getValueBool('core', OCMSignatoryManager::APPCONFIG_SIGN_DISABLED, lazy: true)) {
+			try {
+				// if request is signed and well signed, no exceptions are thrown
+				// if request is not signed and host is known for not supporting signed request, no exceptions are thrown
+				$signedRequest = $this->getSignedRequest();
+				$this->confirmSignedOrigin($signedRequest, 'owner', $owner);
+			} catch (IncomingRequestException $e) {
+				$this->logger->warning('incoming request exception', ['exception' => $e]);
+				return new JSONResponse(['message' => $e->getMessage(), 'validationErrors' => []], Http::STATUS_BAD_REQUEST);
+			}
 		}
 
 		// check if all required parameters are set
@@ -189,6 +205,28 @@ class RequestHandlerController extends Controller {
 			$sharedByDisplayName = $ownerDisplayName;
 		}
 
+		$ownerDomain = str_contains($owner, '@') ? substr(strrchr($owner, '@'), 1) : null;
+		$sharedByDomain = str_contains($sharedBy, '@') ? substr(strrchr($sharedBy, '@'), 1) : null;
+		$domainsToCheck = array_unique(array_filter([$ownerDomain, $sharedByDomain]));
+		if (count($domainsToCheck) !== 0) {
+			$spoofChecker = new \Spoofchecker();
+			foreach ($domainsToCheck as $domain) {
+				// detect suspicious chars (e.g. "pаypаl" spelled with Cyrillic "а" characters)
+				// see https://www.php.net/manual/en/spoofchecker.issuspicious.php
+				if ($spoofChecker->isSuspicious($domain)) {
+					$response = new JSONResponse(
+						[
+							'message' => 'Suspicious domain detected on owner or sharedBy field',
+							'validationErrors' => [],
+						],
+						Http::STATUS_BAD_REQUEST
+					);
+					$response->throttle();
+					return $response;
+				}
+			}
+		}
+
 		try {
 			$provider = $this->cloudFederationProviderManager->getCloudFederationProvider($resourceType);
 			$share = $this->factory->getCloudFederationShare($shareWith, $name, $description, $providerId, $owner, $ownerDisplayName, $sharedBy, $sharedByDisplayName, '', $shareType, $resourceType);
@@ -236,7 +274,7 @@ class RequestHandlerController extends Controller {
 	 *
 	 * @param string $recipientProvider The address of the recipent's provider
 	 * @param string $token The token used for the invitation
-	 * @param string $userId The userId of the recipient at the recipient's provider
+	 * @param string $userID The userID of the recipient at the recipient's provider
 	 * @param string $email The email address of the recipient
 	 * @param string $name The display name of the recipient
 	 *
@@ -251,8 +289,8 @@ class RequestHandlerController extends Controller {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[BruteForceProtection(action: 'inviteAccepted')]
-	public function inviteAccepted(string $recipientProvider, string $token, string $userId, string $email, string $name): JSONResponse {
-		$this->logger->debug('Processing share invitation for ' . $userId . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
+	public function inviteAccepted(string $recipientProvider, string $token, string $userID, string $email, string $name): JSONResponse {
+		$this->logger->debug('Processing share invitation for ' . $userID . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
 
 		$updated = $this->timeFactory->getTime();
 
@@ -309,7 +347,7 @@ class RequestHandlerController extends Controller {
 		$invitation->setRecipientEmail($email);
 		$invitation->setRecipientName($name);
 		$invitation->setRecipientProvider($recipientProvider);
-		$invitation->setRecipientUserId($userId);
+		$invitation->setRecipientUserId($userID);
 		$invitation->setAcceptedAt($updated);
 		$invitation = $this->federatedInviteMapper->update($invitation);
 
@@ -354,14 +392,16 @@ class RequestHandlerController extends Controller {
 			);
 		}
 
-		try {
-			// if request is signed and well signed, no exception are thrown
-			// if request is not signed and host is known for not supporting signed request, no exception are thrown
-			$signedRequest = $this->getSignedRequest();
-			$this->confirmNotificationIdentity($signedRequest, $resourceType, $notification);
-		} catch (IncomingRequestException $e) {
-			$this->logger->warning('incoming request exception', ['exception' => $e]);
-			return new JSONResponse(['message' => $e->getMessage(), 'validationErrors' => []], Http::STATUS_BAD_REQUEST);
+		if (!$this->appConfig->getValueBool('core', OCMSignatoryManager::APPCONFIG_SIGN_DISABLED, lazy: true)) {
+			try {
+				// if request is signed and well signed, no exception are thrown
+				// if request is not signed and host is known for not supporting signed request, no exception are thrown
+				$signedRequest = $this->getSignedRequest();
+				$this->confirmNotificationIdentity($signedRequest, $resourceType, $notification);
+			} catch (IncomingRequestException $e) {
+				$this->logger->warning('incoming request exception', ['exception' => $e]);
+				return new JSONResponse(['message' => $e->getMessage(), 'validationErrors' => []], Http::STATUS_BAD_REQUEST);
+			}
 		}
 
 		try {

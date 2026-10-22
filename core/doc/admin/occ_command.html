@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Using the occ command &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Using the occ command &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/occ_command.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f4332903"></script>
+      <script src="_static/documentation_options.js?v=a49d5d77"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Reference management" href="reference/index.html" />
-    <link rel="prev" title="Theming" href="configuration_server/theming.html" /> 
+    <link rel="prev" title="Theming" href="configuration_server/theming.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -77,12 +82,12 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_server/index.html">Nextcloud configuration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Using the occ command</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#occ-command-directory">occ command Directory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-occ-as-your-http-user">Run occ as your HTTP user</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-occ">Running occ</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment variables</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#enabling-autocompletion">Enabling autocompletion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-commands-in-maintenance-mode">Run commands in maintenance mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limitations-in-maintenance-mode">Limitations in maintenance mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#apps-commands">Apps commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#background-jobs-selector">Background jobs selector</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#config-commands">Config commands</a><ul>
@@ -104,6 +109,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#create-a-calendar-for-a-user">Create a calendar for a user</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#delete-a-calendar-for-a-user">Delete a calendar for a user</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#move-a-calendar-of-a-user">Move a calendar of a user</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#export-a-calendar-of-a-user">Export a calendar of a user</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#import-a-calendar-to-a-user">Import a calendar to a user</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#misc">Misc</a></li>
 </ul>
 </li>
@@ -240,7 +247,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="contents.html">Nextcloud latest Administration Manual</a>
+          <a href="contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -271,8 +278,8 @@ on your Nextcloud files and directories.</p>
 <section id="occ-command-directory">
 <h2>occ command Directory<a class="headerlink" href="#occ-command-directory" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#http-user-label"><span class="std std-ref">Run occ as your HTTP user</span></a></p></li>
-<li><p><a class="reference internal" href="#run-commands-in-maintenance-mode"><span class="std std-ref">Run commands in maintenance mode</span></a></p></li>
+<li><p><a class="reference internal" href="#http-user-label"><span class="std std-ref">Running occ</span></a></p></li>
+<li><p><a class="reference internal" href="#run-commands-in-maintenance-mode"><span class="std std-ref">Limitations in maintenance mode</span></a></p></li>
 <li><p><a class="reference internal" href="#apps-commands-label"><span class="std std-ref">Apps commands</span></a></p></li>
 <li><p><a class="reference internal" href="#background-jobs-selector-label"><span class="std std-ref">Background jobs selector</span></a></p></li>
 <li><p><a class="reference internal" href="#config-commands-label"><span class="std std-ref">Config commands</span></a></p></li>
@@ -304,8 +311,10 @@ on your Nextcloud files and directories.</p>
 <li><p><a class="reference internal" href="#debugging">Debugging</a></p></li>
 </ul>
 </section>
-<section id="run-occ-as-your-http-user">
-<span id="http-user-label"></span><h2>Run occ as your HTTP user<a class="headerlink" href="#run-occ-as-your-http-user" title="Link to this heading"></a></h2>
+<section id="running-occ">
+<span id="http-user-label"></span><h2>Running occ<a class="headerlink" href="#running-occ" title="Link to this heading"></a></h2>
+<p>You must run <code class="docutils literal notranslate"><span class="pre">occ</span></code> as your HTTP user so that the file ownership and permissions
+on your Nextcloud data directory stay consistent with the web server.</p>
 <p>The HTTP user is different on the various Linux distributions:</p>
 <ul class="simple">
 <li><p>The HTTP user and group in Debian/Ubuntu is www-data.</p></li>
@@ -421,12 +430,14 @@ The default is plain text, but it can also be <code class="docutils literal notr
 and <code class="docutils literal notranslate"><span class="pre">encryption:list-modules</span></code></p>
 <section id="environment-variables">
 <h3>Environment variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">sudo</span></code> does not forward environment variables by default. Put the variables before the <code class="docutils literal notranslate"><span class="pre">php</span></code> command:</p>
+<p><code class="docutils literal notranslate"><span class="pre">sudo</span></code> does not forward environment variables by default. You can prepend the
+variable and use the <code class="docutils literal notranslate"><span class="pre">-E</span></code> switch to pass it through:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NC_debug</span><span class="o">=</span><span class="n">true</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">status</span>
 </pre></div>
 </div>
-<p>Alternatively, you can <code class="docutils literal notranslate"><span class="pre">export</span></code> the variable or use the <code class="docutils literal notranslate"><span class="pre">-E</span></code> switch for <code class="docutils literal notranslate"><span class="pre">sudo</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NC_debug</span><span class="o">=</span><span class="n">true</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">status</span>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">export</span></code> the variable first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">NC_debug</span><span class="o">=</span><span class="n">true</span>
+<span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">status</span>
 </pre></div>
 </div>
 </section>
@@ -456,18 +467,18 @@ you need to specify <code class="docutils literal notranslate"><span class="pre"
 <p>If you want the completion to apply automatically for all new shell sessions, add the command to your
 shell’s profile (eg. <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.zshrc</span></code>).</p>
 </section>
-<section id="run-commands-in-maintenance-mode">
-<span id="id1"></span><h2>Run commands in maintenance mode<a class="headerlink" href="#run-commands-in-maintenance-mode" title="Link to this heading"></a></h2>
-<p>In maintenance mode, apps are not loaded <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, so commands from apps are unavailable. Commands integrated into Nextcloud server are available in maintenance mode.</p>
+<section id="limitations-in-maintenance-mode">
+<span id="run-commands-in-maintenance-mode"></span><h2>Limitations in maintenance mode<a class="headerlink" href="#limitations-in-maintenance-mode" title="Link to this heading"></a></h2>
+<p>In maintenance mode, apps are not loaded <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, so commands from apps are unavailable. Commands integrated into Nextcloud server are available in maintenance mode.</p>
 <p>We discourage the use of maintenance mode unless the command explicitly prompts you to do so or unless the commands’ documentation explicitly states that maintenance mode should be used.</p>
-<p>A command may use events to communicate with other apps. An app can only react to an event when loaded. Example: The command user:delete deletes a user account. UserDeletedEvent is emitted. Calendar app implements an event listener to delete user data <a class="footnote-reference brackets" href="#id5" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. In maintenance mode, the Calendar app is not loaded, and hence the user data not deleted.</p>
+<p>A command may use events to communicate with other apps. An app can only react to an event when loaded. Example: The command user:delete deletes a user account. UserDeletedEvent is emitted. Calendar app implements an event listener to delete user data <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. In maintenance mode, the Calendar app is not loaded, and hence the user data not deleted.</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id4" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>Exception: <a class="reference external" href="https://github.com/nextcloud/server/blob/75f17b60945e15effc3eea41393eef2b13937226/lib/base.php#L780">The settings app is loaded</a></p>
 </aside>
-<aside class="footnote brackets" id="id5" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
 <p><a class="reference external" href="https://github.com/nextcloud/calendar/blob/87e8586971a8676dc15a90f0cd969274678b7009/lib/Listener/UserDeletedListener.php">Calendar app event listener for UserDeletedEvent</a></p>
 </aside>
 </aside>
@@ -572,23 +583,23 @@ enabled or disabled:</p>
 </section>
 <section id="background-jobs-selector">
 <span id="background-jobs-selector-label"></span><h2>Background jobs selector<a class="headerlink" href="#background-jobs-selector" title="Link to this heading"></a></h2>
-<p>Use the <code class="docutils literal notranslate"><span class="pre">background</span></code> command to select which scheduler you want to use for
-controlling background jobs, Ajax, Webcron, or Cron. This is the same as using
+<p>Use the <code class="docutils literal notranslate"><span class="pre">background</span></code> commands to select which scheduler you want to use for
+controlling background jobs. This is the same as using
 the <strong>Cron</strong> section on your Nextcloud Admin page:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">background</span>
- <span class="n">background</span><span class="p">:</span><span class="n">ajax</span>       <span class="n">Use</span> <span class="n">ajax</span> <span class="n">to</span> <span class="n">run</span> <span class="n">background</span> <span class="n">jobs</span>
- <span class="n">background</span><span class="p">:</span><span class="n">cron</span>       <span class="n">Use</span> <span class="n">cron</span> <span class="n">to</span> <span class="n">run</span> <span class="n">background</span> <span class="n">jobs</span>
- <span class="n">background</span><span class="p">:</span><span class="n">webcron</span>    <span class="n">Use</span> <span class="n">webcron</span> <span class="n">to</span> <span class="n">run</span> <span class="n">background</span> <span class="n">jobs</span>
+ <span class="n">background</span><span class="p">:</span><span class="n">cron</span>       <span class="n">Set</span> <span class="n">background</span> <span class="n">jobs</span> <span class="n">to</span> <span class="n">cron</span> <span class="n">mode</span>
+ <span class="n">background</span><span class="p">:</span><span class="n">ajax</span>       <span class="n">Set</span> <span class="n">background</span> <span class="n">jobs</span> <span class="n">to</span> <span class="n">ajax</span> <span class="n">mode</span>
+ <span class="n">background</span><span class="p">:</span><span class="n">webcron</span>    <span class="n">Set</span> <span class="n">background</span> <span class="n">jobs</span> <span class="n">to</span> <span class="n">webcron</span> <span class="n">mode</span>
 </pre></div>
 </div>
-<p>This example selects Ajax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">background</span><span class="p">:</span><span class="n">ajax</span>
-  <span class="n">Set</span> <span class="n">mode</span> <span class="k">for</span> <span class="n">background</span> <span class="n">jobs</span> <span class="n">to</span> <span class="s1">&#39;ajax&#39;</span>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">background</span><span class="p">:</span><span class="n">cron</span>
+  <span class="n">Set</span> <span class="n">mode</span> <span class="k">for</span> <span class="n">background</span> <span class="n">jobs</span> <span class="n">to</span> <span class="s1">&#39;cron&#39;</span>
 </pre></div>
 </div>
 <p>The other two commands are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">background:cron</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background:ajax</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">background:webcron</span></code></p></li>
 </ul>
 <p>See <a class="reference internal" href="configuration_server/background_jobs_configuration.html"><span class="doc">Background jobs</span></a> to learn more.</p>
@@ -619,7 +630,7 @@ the <strong>Cron</strong> section on your Nextcloud Admin page:</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>See <a class="reference external" href="https://docs.nextcloud.com/server/latest/developer_manual/digging_deeper/config/appconfig.html#concept-overview">Appconfig Concepts</a> to learn more about <cite>typed value</cite>, <cite>lazy</cite> and <cite>sensitive</cite> flag.</p>
+<p>See <a class="reference external" href="https://docs.nextcloud.com/server/32/developer_manual/digging_deeper/config/appconfig.html#concept-overview">Appconfig Concepts</a> to learn more about <cite>typed value</cite>, <cite>lazy</cite> and <cite>sensitive</cite> flag.</p>
 </div>
 <p>You can list all configuration values with one command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">config</span><span class="p">:</span><span class="nb">list</span>
@@ -627,7 +638,7 @@ the <strong>Cron</strong> section on your Nextcloud Admin page:</p>
 </div>
 <p>By default, passwords and other sensitive data are omitted from the report, so
 the output can be posted publicly (e.g. as part of a bug report). In order to
-generate a full backport of all configuration values the <code class="docutils literal notranslate"><span class="pre">--private</span></code> flag
+generate a full export of all configuration values the <code class="docutils literal notranslate"><span class="pre">--private</span></code> flag
 needs to be set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">config</span><span class="p">:</span><span class="nb">list</span> <span class="o">--</span><span class="n">private</span>
 </pre></div>
@@ -775,8 +786,7 @@ before. If you want to be notified in that case, set the
 <code class="docutils literal notranslate"><span class="pre">--error-if-not-exists</span></code> flag:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">config</span><span class="p">:</span><span class="n">system</span><span class="p">:</span><span class="n">delete</span> <span class="n">doesnotexist</span>
 <span class="o">--</span><span class="n">error</span><span class="o">-</span><span class="k">if</span><span class="o">-</span><span class="ow">not</span><span class="o">-</span><span class="n">exists</span>
-<span class="n">Config</span> <span class="n">provisioning_api</span> <span class="n">of</span> <span class="n">app</span> <span class="n">appname</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">deleted</span> <span class="n">because</span> <span class="n">it</span> <span class="n">did</span> <span class="ow">not</span>
-<span class="n">exist</span>
+<span class="n">System</span> <span class="n">config</span> <span class="n">value</span> <span class="n">doesnotexist</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">deleted</span> <span class="n">because</span> <span class="n">it</span> <span class="n">did</span> <span class="ow">not</span> <span class="n">exist</span>
 </pre></div>
 </div>
 </section>
@@ -800,6 +810,9 @@ before. If you want to be notified in that case, set the
  <span class="n">dav</span><span class="p">:</span><span class="n">send</span><span class="o">-</span><span class="n">event</span><span class="o">-</span><span class="n">reminders</span>        <span class="n">Sends</span> <span class="n">event</span> <span class="n">reminders</span>
  <span class="n">dav</span><span class="p">:</span><span class="n">sync</span><span class="o">-</span><span class="n">birthday</span><span class="o">-</span><span class="n">calendar</span>      <span class="n">Synchronizes</span> <span class="n">the</span> <span class="n">birthday</span> <span class="n">calendar</span>
  <span class="n">dav</span><span class="p">:</span><span class="n">sync</span><span class="o">-</span><span class="n">system</span><span class="o">-</span><span class="n">addressbook</span>     <span class="n">Synchronizes</span> <span class="n">users</span> <span class="n">to</span> <span class="n">the</span> <span class="n">system</span> <span class="n">addressbook</span>
+<span class="n">calendar</span>
+ <span class="n">calendar</span><span class="p">:</span><span class="n">export</span>                 <span class="n">Export</span> <span class="n">a</span> <span class="n">calendar</span> <span class="n">of</span> <span class="n">a</span> <span class="n">user</span>
+ <span class="n">calendar</span><span class="p">:</span><span class="kn">import</span><span class="w">                 </span><span class="nn">Import</span> <span class="n">a</span> <span class="n">calendar</span> <span class="n">to</span> <span class="n">a</span> <span class="n">user</span>
 </pre></div>
 </div>
 <section id="manage-addressbooks">
@@ -863,6 +876,65 @@ specified) of the user <code class="docutils literal notranslate"><span class="p
 <p><code class="docutils literal notranslate"><span class="pre">dav:move-calendar</span> <span class="pre">[-f|--force]</span> <span class="pre">[--]</span> <span class="pre">&lt;name&gt;</span> <span class="pre">&lt;sourceuid&gt;</span> <span class="pre">&lt;destinationuid&gt;</span></code> allows the admin to move a calendar named <code class="docutils literal notranslate"><span class="pre">name</span></code> from a user <code class="docutils literal notranslate"><span class="pre">sourceuid</span></code> to the user <code class="docutils literal notranslate"><span class="pre">destinationuid</span></code>. You can use the force option <cite>-f</cite> to enforce the move if there are conflicts with existing shares. The system will also generate a new unique calendar name in case there is a conflict over the destination user.</p>
 <p>This example will move calendar named personal from user dennis to user sabine:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">dav</span><span class="p">:</span><span class="n">move</span><span class="o">-</span><span class="n">calendar</span> <span class="n">personal</span> <span class="n">dennis</span> <span class="n">sabine</span>
+</pre></div>
+</div>
+</section>
+<section id="export-a-calendar-of-a-user">
+<h4>Export a calendar of a user<a class="headerlink" href="#export-a-calendar-of-a-user" title="Link to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">calendar:export</span> <span class="pre">[--format</span> <span class="pre">FORMAT]</span> <span class="pre">[--location</span> <span class="pre">LOCATION]</span> <span class="pre">[--]</span> <span class="pre">&lt;uid&gt;</span> <span class="pre">&lt;uri&gt;</span></code> exports the calendar entries from a calendar with the given <code class="docutils literal notranslate"><span class="pre">uri</span></code> of user <code class="docutils literal notranslate"><span class="pre">uid</span></code>.</p>
+<p><strong>Arguments:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">uid</span></code> (mandatory): User ID whose calendar will be exported.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cid</span></code> (mandatory): Calendar URI to export.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--format</span> <span class="pre">FORMAT</span></code> (optional, defaults to <code class="docutils literal notranslate"><span class="pre">ical</span></code>): Output format. One of <code class="docutils literal notranslate"><span class="pre">ical</span></code>, <code class="docutils literal notranslate"><span class="pre">xcal</span></code>, or <code class="docutils literal notranslate"><span class="pre">jcal</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--location</span> <span class="pre">&lt;file</span> <span class="pre">path&gt;</span></code> (optional, defaults to stdout): Path to the file to export to. If omitted, output is written to standard output.</p></li>
+</ul>
+<p>The output format can be specified with the <code class="docutils literal notranslate"><span class="pre">--format</span></code> option. Valid formats are <code class="docutils literal notranslate"><span class="pre">ical</span></code> standard format (RFC 5545), <code class="docutils literal notranslate"><span class="pre">xcal</span></code> XML iCalendar (RFC 6321), and <code class="docutils literal notranslate"><span class="pre">jcal</span></code> JSON iCalendar (RFC 7265).</p>
+<p>This example will export the calendar named personal of user dennis to a file named personal.ics in standard format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="n">export</span> <span class="n">dennis</span> <span class="n">personal</span> <span class="o">--</span><span class="n">location</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">ics</span>
+</pre></div>
+</div>
+<p>This example will export the calendar in XML iCalendar format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="n">export</span> <span class="n">dennis</span> <span class="n">personal</span> <span class="o">--</span><span class="nb">format</span> <span class="n">xcal</span> <span class="o">--</span><span class="n">location</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">xcal</span>
+</pre></div>
+</div>
+<p>This example will export the calendar in JSON iCalendar format to standard output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="n">export</span> <span class="n">dennis</span> <span class="n">personal</span> <span class="o">--</span><span class="nb">format</span> <span class="n">jcal</span>
+</pre></div>
+</div>
+</section>
+<section id="import-a-calendar-to-a-user">
+<h4>Import a calendar to a user<a class="headerlink" href="#import-a-calendar-to-a-user" title="Link to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">calendar:import</span> <span class="pre">[--format</span> <span class="pre">FORMAT]</span> <span class="pre">[--errors</span> <span class="pre">ERRORS]</span> <span class="pre">[--validation</span> <span class="pre">VALIDATION]</span> <span class="pre">[--supersede]</span> <span class="pre">[--show-created]</span> <span class="pre">[--show-updated]</span> <span class="pre">[--show-skipped]</span> <span class="pre">[--show-errors]</span> <span class="pre">[--]</span> <span class="pre">&lt;uid&gt;</span> <span class="pre">&lt;uri&gt;</span> <span class="pre">[&lt;location&gt;]</span></code> imports a calendar entries to the calendar with the given <code class="docutils literal notranslate"><span class="pre">uri</span></code> of user <code class="docutils literal notranslate"><span class="pre">uid</span></code>.</p>
+<p><strong>Arguments:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">uid</span></code> (mandatory): User ID to import the calendar for.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uri</span></code> (mandatory): Calendar URI to import into.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">location</span></code> (optional, defaults to stdin): Path to the file to import. If omitted, reads from standard input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--format</span> <span class="pre">FORMAT</span></code> (optional, defaults to <code class="docutils literal notranslate"><span class="pre">ical</span></code>): Input format. One of <code class="docutils literal notranslate"><span class="pre">ical</span></code>, <code class="docutils literal notranslate"><span class="pre">xcal</span></code>, or <code class="docutils literal notranslate"><span class="pre">jcal</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--supersede</span></code> (optional): Force override of existing objects with the same UID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--show-created</span></code> (optional): Show UID of created objects after import.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--show-updated</span></code> (optional): Show UID of updated objects after import.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--show-skipped</span></code> (optional): Show UID of skipped objects (e.g., duplicates or invalid entries).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--show-errors</span></code> (optional): Show UID of objects with errors during import.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--errors</span> <span class="pre">ERRORS</span></code> (optional): How to handle errors. <code class="docutils literal notranslate"><span class="pre">0</span></code> = continue on error, <code class="docutils literal notranslate"><span class="pre">1</span></code> = fail on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--validation</span> <span class="pre">VALIDATION</span></code> (optional): How to handle object validation. <code class="docutils literal notranslate"><span class="pre">0</span></code> = no validation, <code class="docutils literal notranslate"><span class="pre">1</span></code> = validate and skip on issue, <code class="docutils literal notranslate"><span class="pre">2</span></code> = validate and fail on issue.</p></li>
+</ul>
+<p>The input format can be specified with the <code class="docutils literal notranslate"><span class="pre">--format</span></code> option, valid formats are <code class="docutils literal notranslate"><span class="pre">ical</span></code> standard format (RFC 5545), <code class="docutils literal notranslate"><span class="pre">xcal</span></code> XML iCalendar (RFC 6321) and <code class="docutils literal notranslate"><span class="pre">jcal</span></code> JSON iCalendar (RFC 7265), the default is <code class="docutils literal notranslate"><span class="pre">ical</span></code>.</p>
+<p>This example will import from a file named personal.ics in standard format to the calendar named personal of user dennis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="kn">import</span><span class="w"> </span><span class="nn">dennis</span> <span class="n">personal</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">ics</span>
+</pre></div>
+</div>
+<p>This example will import from a file named personal.xcal in XML iCalendar format to the calendar named personal of user dennis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="kn">import</span><span class="w"> </span><span class="o">--</span><span class="nb">format</span> <span class="n">xcal</span> <span class="n">dennis</span> <span class="n">personal</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">xcal</span>
+</pre></div>
+</div>
+<p>This example will import from a file named personal.jcal in JSON iCalendar format to the calendar named personal of user dennis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="kn">import</span><span class="w"> </span><span class="o">--</span><span class="nb">format</span> <span class="n">jcal</span> <span class="n">dennis</span> <span class="n">personal</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">jcal</span>
+</pre></div>
+</div>
+<p>This example will import from standard input to the calendar named personal of user dennis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cat</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">personal</span><span class="o">.</span><span class="n">ics</span> <span class="o">|</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">calendar</span><span class="p">:</span><span class="kn">import</span><span class="w"> </span><span class="nn">dennis</span> <span class="n">personal</span>
 </pre></div>
 </div>
 </section>
@@ -940,8 +1012,6 @@ convert from SQLite to one of these other databases.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">db</span>
  <span class="n">db</span><span class="p">:</span><span class="n">convert</span><span class="o">-</span><span class="nb">type</span>           <span class="n">Convert</span> <span class="n">the</span> <span class="n">Nextcloud</span> <span class="n">database</span> <span class="n">to</span> <span class="n">the</span> <span class="n">newly</span>
                            <span class="n">configured</span> <span class="n">one</span>
- <span class="n">db</span><span class="p">:</span><span class="n">generate</span><span class="o">-</span><span class="n">change</span><span class="o">-</span><span class="n">script</span> <span class="n">generates</span> <span class="n">the</span> <span class="n">change</span> <span class="n">script</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span> <span class="n">current</span>
-                           <span class="n">connected</span> <span class="n">db</span> <span class="n">to</span> <span class="n">db_structure</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
 <p>You need:</p>
@@ -1040,7 +1110,7 @@ be quite slow as it needs to rewrite each encrypted file. If you do not do it fi
 will be migrated to drop their legacy filekey on the first modification. If you have
 old files from Nextcloud&lt;25 still using base64 encoding this will migrate them to the
 binary format and save about 33% disk space.</p>
-<p>See <a class="reference internal" href="configuration_files/encryption_configuration.html"><span class="doc">Server-side encryption configuration</span></a> to learn more.</p>
+<p>See <a class="reference internal" href="configuration_files/encryption_configuration.html"><span class="doc">Server-side Encryption</span></a> to learn more.</p>
 </section>
 <section id="federation-sync">
 <span id="federation-sync-label"></span><h2>Federation sync<a class="headerlink" href="#federation-sync" title="Link to this heading"></a></h2>
@@ -1251,7 +1321,7 @@ before removing a user:</p>
 </pre></div>
 </div>
 <p>Users may also transfer files or folders selectively by themselves.
-See <a class="reference external" href="https://docs.nextcloud.com/server/latest/user_manual/en/files/transfer_ownership.html">user documentation</a> for details.</p>
+See <a class="reference external" href="https://docs.nextcloud.com/server/32/user_manual/en/files/transfer_ownership.html">user documentation</a> for details.</p>
 </section>
 <section id="toggle-windows-compatibility">
 <span id="occ-files-windows-filenames"></span><h3>Toggle Windows compatibility<a class="headerlink" href="#toggle-windows-compatibility" title="Link to this heading"></a></h3>
@@ -1330,7 +1400,7 @@ and to copy external mount configurations to another Nextcloud server.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">integrity</span><span class="p">:</span><span class="n">check</span><span class="o">-</span><span class="n">app</span> <span class="o">--</span><span class="n">path</span><span class="o">=/</span><span class="n">pathto</span><span class="o">/</span><span class="n">app</span> <span class="n">appname</span>
 </pre></div>
 </div>
-<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.com/server/latest/developer_manual/app_publishing_maintenance/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.</p>
+<p>When it returns nothing, your app is signed correctly. When it returns a message then there is an error. See <a class="reference external" href="https://docs.nextcloud.com/server/32/developer_manual/app_publishing_maintenance/code_signing.html#how-to-get-your-app-signed">Code Signing</a> in the Developer manual for more detailed information.</p>
 <p><code class="docutils literal notranslate"><span class="pre">integrity:sign-core</span></code> is for Nextcloud core developers only.</p>
 <p>See <a class="reference internal" href="issues/code_signing.html"><span class="doc">Code signing</span></a> to learn more.</p>
 </section>
@@ -1499,7 +1569,7 @@ The configuration is valid and the connection could be established!
 </section>
 <section id="ldap-show-remnants">
 <h3>ldap:show-remnants<a class="headerlink" href="#ldap-show-remnants" title="Link to this heading"></a></h3>
-<p>Used to cleaning up the LDAP mappings table, and is
+<p>Used to clean up the LDAP mappings table, and is
 documented in <a class="reference internal" href="configuration_user/user_auth_ldap_cleanup.html"><span class="doc">LDAP user cleanup</span></a>.</p>
 </section>
 </section>
@@ -1791,9 +1861,8 @@ variable. This prevents the password from being exposed to all users via the
 process list, and will only be visible in the history of the user (root)
 running the command. This also permits creating scripts for adding multiple new
 users.</p>
-<p>To use <code class="docutils literal notranslate"><span class="pre">password-from-env</span></code> you must run as “real” root, rather than <code class="docutils literal notranslate"><span class="pre">sudo</span></code>,
-because <code class="docutils literal notranslate"><span class="pre">sudo</span></code> strips environment variables. This example adds new user Fred
-Jones:</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">sudo</span></code> strips environment variables by default; the <code class="docutils literal notranslate"><span class="pre">-E</span></code> flag preserves
+them, as shown in the example below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">OC_PASS</span><span class="o">=</span><span class="n">newpassword</span>
 <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">user</span><span class="p">:</span><span class="n">add</span> <span class="o">--</span><span class="n">password</span><span class="o">-</span><span class="n">from</span><span class="o">-</span><span class="n">env</span> <span class="o">--</span><span class="n">display</span><span class="o">-</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fred Jones&quot;</span> <span class="o">--</span><span class="n">group</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="n">fred</span>
 <span class="n">The</span> <span class="n">user</span> <span class="s2">&quot;fred&quot;</span> <span class="n">was</span> <span class="n">created</span> <span class="n">successfully</span>
@@ -1993,29 +2062,29 @@ groups, display a list of all users in a group:</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">gid</span></code> corresponds to the group name you entering after clicking
 “Add group” on the Users page in your Nextcloud Web UI. This example adds new
-group “beer”:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">add</span> <span class="n">beer</span>
+group “milliways”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">add</span> <span class="n">milliways</span>
 </pre></div>
 </div>
-<p>Add an existing user to the specified group with the <code class="docutils literal notranslate"><span class="pre">group:adduser</span></code>
+<p>Add one or more existing users to the specified group with the <code class="docutils literal notranslate"><span class="pre">group:adduser</span></code>
 command. The syntax is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">group</span><span class="p">:</span><span class="n">adduser</span> <span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="p">[</span><span class="n">uid</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">adduser</span> <span class="o">&lt;</span><span class="n">gid</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">uid1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">uid2</span> <span class="o">...</span> <span class="n">uidN</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>This example adds the user “denis” to the existing group “beer”:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">adduser</span> <span class="n">beer</span> <span class="n">denis</span>
+<p>This example adds the users “denis”, “dora” and “daisy” to the existing group “milliways”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">adduser</span> <span class="n">milliways</span> <span class="n">denis</span> <span class="n">dora</span> <span class="n">daisy</span>
 </pre></div>
 </div>
-<p>You can remove user from the group with the <code class="docutils literal notranslate"><span class="pre">group:removeuser</span></code> command.
-This example removes the existing user “denis” from the existing
-group “beer”:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">removeuser</span> <span class="n">beer</span> <span class="n">denis</span>
+<p>You can remove one or more users from the group with the <code class="docutils literal notranslate"><span class="pre">group:removeuser</span></code> command.
+This example removes the existing users “denis”, “dora” and “daisy” from the existing
+group “milliways”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">removeuser</span> <span class="n">milliways</span> <span class="n">denis</span> <span class="n">dora</span> <span class="n">daisy</span>
 </pre></div>
 </div>
 <p>Remove a group with the <code class="docutils literal notranslate"><span class="pre">group:delete</span></code> command. Removing a group doesn’t
 remove users in a group. You cannot remove the “admin” group. This example
-removes the existing group “beer”:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">delete</span> <span class="n">beer</span>
+removes the existing group “milliways”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">group</span><span class="p">:</span><span class="n">delete</span> <span class="n">milliways</span>
 </pre></div>
 </div>
 <p>List configured groups via the <code class="docutils literal notranslate"><span class="pre">group:list</span></code> command. The syntax is:</p>
@@ -2296,6 +2365,10 @@ check for that user via the occ command:</p>
 </section>
 <section id="antivirus">
 <span id="antivirus-commands-label"></span><h2>Antivirus<a class="headerlink" href="#antivirus" title="Link to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These commands require the <a class="reference external" href="https://apps.nextcloud.com/apps/files_antivirus">files_antivirus</a> app to be installed and enabled.</p>
+</div>
 <p>Get info about files in the scan queue:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">files_antivirus</span><span class="p">:</span><span class="n">status</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span>
 </pre></div>
@@ -2362,7 +2435,7 @@ sharee, shared file and more.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -2376,7 +2449,7 @@ sharee, shared file and more.</p>
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -2386,10 +2459,8 @@ sharee, shared file and more.</p>
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -2397,31 +2468,25 @@ sharee, shared file and more.</p>
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

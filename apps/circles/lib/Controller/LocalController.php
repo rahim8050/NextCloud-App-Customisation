@@ -15,10 +15,12 @@ use Exception;
 use OCA\Circles\Exceptions\FederatedUserException;
 use OCA\Circles\Exceptions\FederatedUserNotFoundException;
 use OCA\Circles\Exceptions\FrontendException;
+use OCA\Circles\Exceptions\InsufficientPermissionException;
 use OCA\Circles\Exceptions\InvalidIdException;
 use OCA\Circles\Exceptions\MemberNotFoundException;
 use OCA\Circles\Exceptions\RequestBuilderException;
 use OCA\Circles\Exceptions\SingleCircleNotFoundException;
+use OCA\Circles\Model\Circle;
 use OCA\Circles\Model\FederatedUser;
 use OCA\Circles\Model\Member;
 use OCA\Circles\Model\Probes\BasicProbe;
@@ -32,6 +34,10 @@ use OCA\Circles\Service\PermissionService;
 use OCA\Circles\Service\SearchService;
 use OCA\Circles\Tools\Traits\TDeserialize;
 use OCA\Circles\Tools\Traits\TNCLogger;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCS\OCSException;
 use OCP\AppFramework\OCSController;
@@ -113,19 +119,15 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $name
-	 * @param bool $personal
-	 * @param bool $local
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
 	public function create(string $name, bool $personal = false, bool $local = false): DataResponse {
 		try {
+			if (!$this->configService->isGSAvailable() && $local === true) {
+				throw new OCSException('circle configuration not supported', 400);
+			}
 			$this->setCurrentFederatedUser();
+
 			$this->permissionService->confirmCircleCreation();
 
 			$circle = $this->circleService->create($name, null, $personal, $local);
@@ -138,21 +140,22 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'destroy')]
 	public function destroy(string $circleId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeOwner($memberUser);
+
 			$circle = $this->circleService->destroy($circleId);
 
 			return new DataResponse($this->serializeArray($circle));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -160,14 +163,7 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $term
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
 	public function search(string $term): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
@@ -180,22 +176,21 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[BruteForceProtection(action: 'circleDetails')]
 	public function circleDetails(string $circleId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
+
+			$this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
 
 			$probe = new CircleProbe();
 			$probe->includeNonVisibleCircles();
 
 			return new DataResponse($this->serialize($this->circleService->getCircle($circleId, $probe)));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -203,34 +198,38 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $userId
-	 * @param int $type
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'memberAdd')]
 	public function memberAdd(string $circleId, string $userId, int $type): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
-			// exception in Contact
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			if (!$this->circleService->getCircle($circleId)->isConfig(Circle::CFG_FRIEND)) {
+				$this->permissionService->memberMustBeAtLeastModerator($memberUser);
+			}
+
 			if ($type === Member::TYPE_CONTACT) {
 				$currentUser = $this->federatedUserService->getCurrentUser();
 				if (!$this->configService->isLocalInstance($currentUser->getInstance())) {
 					throw new OCSException('works only from local instance', 404);
 				}
-
+				// prefix with current user id to scope contact lookup to this user
 				$userId = $currentUser->getUserId() . '/' . $userId;
+			}
+
+			if ($type === Member::TYPE_CIRCLE) {
+				$this->circleService->getCircle($userId);
 			}
 
 			$federatedUser = $this->federatedUserService->generateFederatedUser($userId, $type);
 			$result = $this->memberService->addMember($circleId, $federatedUser);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'userId' => $userId, 'type' => $type]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -238,26 +237,40 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param array $members
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'membersAdd')]
 	public function membersAdd(string $circleId, array $members): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			if (!$this->circleService->getCircle($circleId)->isConfig(Circle::CFG_FRIEND)) {
+				$this->permissionService->memberMustBeAtLeastModerator($memberUser);
+			}
+
 			$federatedUsers = [];
 			foreach ($members as $member) {
+				$userId = $this->get('id', $member);
+				$type = $this->getInt('type', $member);
+
+				if ($type === Member::TYPE_CONTACT) {
+					$currentUser = $this->federatedUserService->getCurrentUser();
+					if (!$this->configService->isLocalInstance($currentUser->getInstance())) {
+						throw new OCSException('works only from local instance', 404);
+					}
+					// prefix with current user id to scope contact lookup to this user
+					$userId = $currentUser->getUserId() . '/' . $userId;
+				}
+
+				if ($type === Member::TYPE_CIRCLE) {
+					$this->circleService->getCircle($userId);
+				}
+
 				// TODO: generate Multiple FederatedUsers using a single SQL request
 				try {
 					$federatedUsers[] = $this->federatedUserService->generateFederatedUser(
-						$this->get('id', $member),
-						$this->getInt('type', $member)
+						$userId,
+						$type,
 					);
 				} catch (MemberNotFoundException) {
 				}
@@ -266,6 +279,10 @@ class LocalController extends OCSController {
 			$result = $this->memberService->addMembers($circleId, $federatedUsers);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'members' => $members]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -273,14 +290,7 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
 	public function circleJoin(string $circleId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
@@ -295,21 +305,21 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'circleLeave')]
 	public function circleLeave(string $circleId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+
 			$result = $this->circleService->circleLeave($circleId);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -317,19 +327,14 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $memberId
-	 * @param string|int $level
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'memberLevel')]
 	public function memberLevel(string $circleId, string $memberId, $level): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
+
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastAdmin($memberUser);
 
 			if (is_int($level)) {
 				$level = Member::parseLevelInt($level);
@@ -341,6 +346,10 @@ class LocalController extends OCSController {
 			$result = $this->memberService->memberLevel($memberId, $level);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'memberId' => $memberId, 'level' => $level]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -348,18 +357,16 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $memberId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'memberConfirm')]
 	public function memberConfirm(string $circleId, string $memberId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
+
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			if (!$this->circleService->getCircle($circleId)->isConfig(Circle::CFG_FRIEND)) {
+				$this->permissionService->memberMustBeAtLeastModerator($memberUser);
+			}
 
 			$member = $this->memberService->getMemberById($memberId, $circleId);
 			$federatedUser = new FederatedUser();
@@ -368,6 +375,10 @@ class LocalController extends OCSController {
 			$result = $this->memberService->addMember($circleId, $federatedUser);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'memberId' => $memberId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -375,23 +386,23 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $memberId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'memberRemove')]
 	public function memberRemove(string $circleId, string $memberId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
-			$this->memberService->getMemberById($memberId, $circleId);
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastModerator($memberUser);
+			$this->permissionService->memberMustBeHigherLevelThan($memberUser, $memberId);
+
 			$result = $this->memberService->removeMember($memberId);
 
 			return new DataResponse($this->serializeArray($result));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'memberId' => $memberId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -399,15 +410,7 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param int $limit
-	 * @param int $offset
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
 	public function circles(int $limit = -1, int $offset = 0): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
@@ -419,7 +422,20 @@ class LocalController extends OCSController {
 				->setItemsLimit($limit)
 				->setItemsOffset($offset);
 
-			return new DataResponse($this->serializeArray($this->circleService->getCircles($probe)));
+			// hide full config of "visible to everyone" circles for non-members
+			$circles = (array_map(function (Circle $circle) {
+				if ($circle->isConfig(Circle::CFG_VISIBLE) && !$circle->hasInitiator()) {
+					// return only configs needed by frontend
+					$circleConfig = Circle::CFG_VISIBLE;
+					if ($circle->isConfig(Circle::CFG_OPEN)) {
+						$circleConfig += Circle::CFG_OPEN;
+					}
+					$circle->setConfig($circleConfig);
+				}
+				return $circle;
+			}, $this->circleService->getCircles($probe)));
+
+			return new DataResponse($this->serializeArray($circles));
 		} catch (Exception $e) {
 			$this->e($e);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -427,15 +443,7 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param int $limit
-	 * @param int $offset
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
 	public function probeCircles(int $limit = -1, int $offset = 0): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
@@ -455,20 +463,19 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param bool $fullDetails
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
-	public function members(string $circleId, bool $fullDetails = false): DataResponse {
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'members')]
+	public function members(string $circleId, bool $fullDetails = false, int $limit = 0, string $search = ''): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
-			return new DataResponse($this->serializeArray($this->memberService->getMembers($circleId, $fullDetails)));
+			$this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+
+			return new DataResponse($this->serializeArray($this->memberService->getMembers($circleId, $fullDetails, $limit, $search)));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -476,22 +483,22 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $value
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'editName')]
 	public function editName(string $circleId, string $value): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastAdmin($memberUser);
+
 			$outcome = $this->circleService->updateName($circleId, $value);
 
 			return new DataResponse($this->serializeArray($outcome));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'value' => $value]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -499,22 +506,22 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $value
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'editDescription')]
 	public function editDescription(string $circleId, string $value): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastAdmin($memberUser);
+
 			$outcome = $this->circleService->updateDescription($circleId, $value);
 
 			return new DataResponse($this->serializeArray($outcome));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'value' => $value]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -522,23 +529,22 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $setting
-	 * @param string|null $value
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'editSetting')]
 	public function editSetting(string $circleId, string $setting, ?string $value = null): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastAdmin($memberUser);
+
 			$outcome = $this->circleService->updateSetting($circleId, $setting, $value);
 
 			return new DataResponse($this->serializeArray($outcome));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'setting' => $setting, 'value' => $value]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -546,22 +552,22 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param int $value
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'editConfig')]
 	public function editConfig(string $circleId, int $value): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
 
+			$memberUser = $this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+			$this->permissionService->memberMustBeAtLeastAdmin($memberUser);
+
 			$outcome = $this->circleService->updateConfig($circleId, $value);
 
 			return new DataResponse($this->serializeArray($outcome));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'value' => $value]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
@@ -569,30 +575,28 @@ class LocalController extends OCSController {
 	}
 
 
-	/**
-	 * @NoAdminRequired
-	 *
-	 * @param string $circleId
-	 * @param string $singleId
-	 *
-	 * @return DataResponse
-	 * @throws OCSException
-	 */
+	#[NoAdminRequired]
+	#[BruteForceProtection(action: 'link')]
 	public function link(string $circleId, string $singleId): DataResponse {
 		try {
 			$this->setCurrentFederatedUser();
+
+			$this->permissionService->userMustBeMember($this->userSession->getUser()->getUID(), $circleId);
+
 			$membership = $this->membershipService->getMembership($circleId, $singleId, true);
 
 			return new DataResponse($this->serialize($membership));
+		} catch (InsufficientPermissionException $e) {
+			$response = new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+			$response->throttle();
+			return $response;
 		} catch (Exception $e) {
 			$this->e($e, ['circleId' => $circleId, 'singleId' => $singleId]);
 			throw new OCSException($e->getMessage(), (int)$e->getCode());
 		}
 	}
 
-
 	/**
-	 * @return void
 	 * @throws FederatedUserException
 	 * @throws FederatedUserNotFoundException
 	 * @throws FrontendException

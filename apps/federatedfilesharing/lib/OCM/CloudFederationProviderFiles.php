@@ -108,7 +108,7 @@ class CloudFederationProviderFiles implements ISignedCloudFederationProvider {
 
 		$token = $share->getShareSecret();
 		$name = $share->getResourceName();
-		$owner = $share->getOwnerDisplayName();
+		$owner = $share->getOwnerDisplayName() ?: $share->getOwner();
 		$sharedBy = $share->getSharedByDisplayName();
 		$shareWith = $share->getShareWith();
 		$remoteId = $share->getProviderId();
@@ -410,8 +410,8 @@ class CloudFederationProviderFiles implements ISignedCloudFederationProvider {
 	 * @param IShare $share
 	 * @throws ShareNotFound
 	 */
-	protected function executeDeclineShare(IShare $share) {
-		$this->federatedShareProvider->removeShareFromTable($share);
+	protected function executeDeclineShare(IShare $share): void {
+		$this->federatedShareProvider->removeShareFromTable((int)$share->getId());
 
 		try {
 			$fileId = (int)$share->getNode()->getId();
@@ -448,7 +448,7 @@ class CloudFederationProviderFiles implements ISignedCloudFederationProvider {
 		$share = $this->federatedShareProvider->getShareById($id);
 
 		$this->verifyShare($share, $token);
-		$this->federatedShareProvider->removeShareFromTable($share);
+		$this->federatedShareProvider->removeShareFromTable((int)$share->getId());
 		return [];
 	}
 

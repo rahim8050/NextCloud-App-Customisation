@@ -7,7 +7,7 @@
   <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; Nextcloud latest Administration Manual latest documentation</title>
+  <title>Overview &mdash; Nextcloud 32 Administration Manual</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,9 +16,10 @@
       <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
 
   
+    <link rel="canonical" href="https://docs.nextcloud.com/server/stable/admin_manual/ai/overview.html" />
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f4332903"></script>
+      <script src="../_static/documentation_options.js?v=a49d5d77"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +31,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Nextcloud Assistant" href="app_assistant.html" />
-    <link rel="prev" title="Artificial Intelligence" href="index.html" /> 
+    <link rel="prev" title="Artificial Intelligence" href="index.html" />
+   
+  <meta name="robots" content="noindex, follow" />
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -62,6 +66,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_schedule.html">Maintenance and release schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gdpr/index.html">GDPR-compliance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../declarations/index.html">Declarations</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release notes</span></p>
 <ul>
@@ -171,7 +176,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../contents.html">Nextcloud latest Administration Manual</a>
+          <a href="../contents.html">Nextcloud 32 Administration Manual</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -193,7 +198,7 @@
   <section id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
 <p>We strive to bring Artificial Intelligence features to Nextcloud. This section highlights these features, how they work and where to find them.
-All of these features are completely optional. If you want to have them on your server, you need install them via separate Nextcloud Apps.</p>
+All of these features are completely optional. If you want to have them on your server, you need to install them via separate Nextcloud Apps.</p>
 <section id="overview-of-ai-features">
 <h2>Overview of AI features<a class="headerlink" href="#overview-of-ai-features" title="Link to this heading"></a></h2>
 <p>Nextcloud uses modularity to separate raw AI functionality from the Graphical User interfaces and apps that make use of said functionality. Each instance can thus make use of various backends that provide the functionality for the same frontends and the same functionality can be implemented by multiple apps using on-premises processing or third-party AI service providers.</p>
@@ -818,15 +823,18 @@ This functionality is available in the assistant app and made possible by the Ne
 <p>Most AI tasks will be run as part of the background job system in Nextcloud which only runs jobs every 5 minutes by default.
 To pick up scheduled jobs faster you can set up background job workers inside your Nextcloud main server/container that process AI tasks as soon as they are scheduled.
 If the PHP code or the Nextcloud settings values are changed while a worker is running, those changes won’t be effective inside the runner. For that reason, the worker needs to be restarted regularly. It is done with a timeout of N seconds which means any changes to the settings or the code will be picked up after N seconds (worst case scenario). This timeout does not, in any way, affect the processing or the timeout of the AI tasks.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 32.0.7: </span>The command to run the worker has changed from <code class="docutils literal notranslate"><span class="pre">background-job:worker</span></code> to <code class="docutils literal notranslate"><span class="pre">taskprocessing:worker</span></code>. If you are running an older version of Nextcloud, please use the old command.</p>
+</div>
 <section id="screen-or-tmux-session">
 <h3>Screen or tmux session<a class="headerlink" href="#screen-or-tmux-session" title="Link to this heading"></a></h3>
 <p>Run the following occ command inside a screen or a tmux session, preferably 4 or more times for parallel processing of multiple requests by different or the same user (and as a requirement for some apps like context_chat).
 It would be best to run one command per screen session or per tmux window/pane to keep the logs visible and the worker easily restartable.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="o">-</span><span class="n">e</span><span class="p">;</span> <span class="k">while</span> <span class="n">true</span><span class="p">;</span> <span class="n">do</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">background</span><span class="o">-</span><span class="n">job</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span> <span class="s2">&quot;OC\TaskProcessing\SynchronousBackgroundJob&quot;</span><span class="p">;</span> <span class="n">done</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="o">-</span><span class="n">e</span><span class="p">;</span> <span class="k">while</span> <span class="n">true</span><span class="p">;</span> <span class="n">do</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">taskprocessing</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span><span class="p">;</span> <span class="n">done</span>
 </pre></div>
 </div>
 <p>For Nextcloud-AIO you should use this command on the host server.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="o">-</span><span class="n">e</span><span class="p">;</span> <span class="k">while</span> <span class="n">true</span><span class="p">;</span> <span class="n">do</span> <span class="n">docker</span> <span class="n">exec</span> <span class="o">-</span><span class="n">it</span> <span class="n">nextcloud</span><span class="o">-</span><span class="n">aio</span><span class="o">-</span><span class="n">nextcloud</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">background</span><span class="o">-</span><span class="n">job</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span> <span class="s2">&quot;OC\TaskProcessing\SynchronousBackgroundJob&quot;</span><span class="p">;</span> <span class="n">done</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span> <span class="o">-</span><span class="n">e</span><span class="p">;</span> <span class="k">while</span> <span class="n">true</span><span class="p">;</span> <span class="n">do</span> <span class="n">docker</span> <span class="n">exec</span> <span class="o">-</span><span class="n">it</span> <span class="n">nextcloud</span><span class="o">-</span><span class="n">aio</span><span class="o">-</span><span class="n">nextcloud</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">taskprocessing</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span><span class="p">;</span> <span class="n">done</span>
 </pre></div>
 </div>
 <p>You may want to adjust the number of workers and the timeout (in seconds) to your needs.
@@ -857,7 +865,7 @@ The logs of the worker can be checked by attaching to the screen or tmux session
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/sh</span>
 <span class="n">echo</span> <span class="s2">&quot;Starting Nextcloud AI Worker $1&quot;</span>
 <span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">nextcloud</span>
-<span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">background</span><span class="o">-</span><span class="n">job</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span> <span class="s1">&#39;OC\TaskProcessing\SynchronousBackgroundJob&#39;</span>
+<span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span> <span class="n">www</span><span class="o">-</span><span class="n">data</span> <span class="n">php</span> <span class="n">occ</span> <span class="n">taskprocessing</span><span class="p">:</span><span class="n">worker</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">t</span> <span class="mi">60</span>
 </pre></div>
 </div>
 <p>You may want to adjust the timeout to your needs (in seconds).</p>
@@ -907,7 +915,7 @@ The logs of the worker can be checked by attaching to the screen or tmux session
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2016-2025 Nextcloud GmbH and Nextcloud contributors.</p>
+    <p>&#169; Copyright 2016-2026 Nextcloud GmbH and Nextcloud contributors.</p>
   </div>
 
    
@@ -921,7 +929,7 @@ The logs of the worker can be checked by attaching to the screen or tmux session
 
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-      ☁️ latest
+      ☁️ 32
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
@@ -931,10 +939,8 @@ The logs of the worker can be checked by attaching to the screen or tmux session
         <dd style="width: 32%">
           <a href="https://docs.nextcloud.com/server/latest/admin_manual"
              
-             style="color: var(--dark-link-color);"
-             
           >
-            latest
+            35 (latest)
           </a>
         </dd>
         
@@ -942,31 +948,25 @@ The logs of the worker can be checked by attaching to the screen or tmux session
           <a href="https://docs.nextcloud.com/server/stable/admin_manual"
              
           >
-            stable
+            34 (stable)
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/31/admin_manual"
+          <a href="https://docs.nextcloud.com/server/33/admin_manual"
              
           >
-            31
+            33
           </a>
         </dd>
         
         <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/30/admin_manual"
+          <a href="https://docs.nextcloud.com/server/32/admin_manual"
+             
+             style="color: var(--dark-link-color);"
              
           >
-            30
-          </a>
-        </dd>
-        
-        <dd style="width: 32%">
-          <a href="https://docs.nextcloud.com/server/29/admin_manual"
-             
-          >
-            29
+            32
           </a>
         </dd>
         

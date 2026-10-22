@@ -5,6 +5,7 @@ OC.L10N.register(
     "Edit" : "Änneren",
     "Download" : "Eroflueden",
     "Delete" : "Läschen",
+    "View" : "Usiicht",
     "Name" : "Numm",
     "Save" : "Späicheren",
     "Back" : "Zeréck",
@@ -12,8 +13,18 @@ OC.L10N.register(
     "Apply" : "Uwenden",
     "Warning" : "Warnung",
     "Confirm" : "Konfirméieren",
+    "Filters" : "Filteren",
     "Custom" : "Individualiséier",
+    "Value" : "Wäert",
+    "Text" : "Text",
     "Size" : "Gréisst",
-    "Menu" : "Menü"
+    "Menu" : "Menü",
+    "Play" : "Ofspillen",
+    "Pause" : "Paus",
+    "Duration" : "Dauer",
+    "Settings" : "Astellungen",
+    "All" : "All",
+    "Disabled" : "Deaktivéiert",
+    "Enabled" : "Aktivéiert"
 },
 "nplurals=2; plural=(n != 1);");

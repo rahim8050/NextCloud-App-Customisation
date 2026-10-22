@@ -19,6 +19,7 @@ use OCP\Cache\CappedMemoryCache;
 use OCP\Constants;
 use OCP\Files\FileInfo;
 use OCP\Files\IMimeTypeDetector;
+use OCP\Files\NotPermittedException;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\ITempManager;
@@ -31,26 +32,21 @@ class AmazonS3 extends Common {
 
 	private LoggerInterface $logger;
 
-	public function needsPartFile(): bool {
-		return false;
-	}
-
 	/** @var CappedMemoryCache<array|false> */
 	private CappedMemoryCache $objectCache;
-
 	/** @var CappedMemoryCache<bool> */
 	private CappedMemoryCache $directoryCache;
-
 	/** @var CappedMemoryCache<array> */
 	private CappedMemoryCache $filesCache;
 
 	private IMimeTypeDetector $mimeDetector;
-	private ?bool $versioningEnabled = null;
 	private ICache $memCache;
+	private ?bool $versioningEnabled = null;
 
 	public function __construct(array $parameters) {
 		parent::__construct($parameters);
 		$this->parseParams($parameters);
+		// @todo: using `key` here may be problematic with different authentication methods and/or key rotation...
 		$this->id = 'amazon::external::' . md5($this->params['hostname'] . ':' . $this->params['bucket'] . ':' . $this->params['key']);
 		$this->objectCache = new CappedMemoryCache();
 		$this->directoryCache = new CappedMemoryCache();
@@ -65,7 +61,7 @@ class AmazonS3 extends Common {
 	private function normalizePath(string $path): string {
 		$path = trim($path, '/');
 
-		if (!$path) {
+		if ($path === '') {
 			$path = '.';
 		}
 
@@ -263,13 +259,16 @@ class AmazonS3 extends Common {
 			// to delete all objects prefixed with the path.
 			do {
 				// instead of the iterator, manually loop over the list ...
-				$objects = $connection->listObjects($params);
+				$objects = $connection->listObjectsV2($params);
 				// ... so we can delete the files in batches
 				if (isset($objects['Contents'])) {
 					$connection->deleteObjects([
 						'Bucket' => $this->bucket,
 						'Delete' => [
-							'Objects' => $objects['Contents']
+							'Quiet' => true,
+							'Objects' => array_map(fn (array $object) => [
+								'Key' => $object['Key'],
+							], $objects['Contents'])
 						]
 					]);
 					$this->testTimeout();
@@ -647,6 +646,12 @@ class AmazonS3 extends Common {
 			// sub folders
 			if (is_array($result['CommonPrefixes'])) {
 				foreach ($result['CommonPrefixes'] as $prefix) {
+					if (preg_match('/\/{2,}$/', $prefix['Prefix'])) {
+						$this->logger->warning('Detected a repeating delimiter in prefix \'' . $prefix['Prefix']
+											   . '\'. This is unsupported and its contents have been ignored.');
+						continue;
+					}
+
 					$dir = $this->getDirectoryMetaData($prefix['Prefix']);
 					if ($dir) {
 						yield $dir;
@@ -738,6 +743,11 @@ class AmazonS3 extends Common {
 		}
 	}
 
+	public function needsPartFile(): bool {
+		// handled natively by the S3 backend/client integration
+		return false;
+	}
+
 	public function writeStream(string $path, $stream, ?int $size = null): int {
 		if ($size === null) {
 			$size = 0;
@@ -752,7 +762,15 @@ class AmazonS3 extends Common {
 		}
 
 		$path = $this->normalizePath($path);
-		$this->writeObject($path, $stream, $this->mimeDetector->detectPath($path));
+		try {
+			$this->writeObject($path, $stream, $this->mimeDetector->detectPath($path));
+		} catch (S3Exception $exception) {
+			$this->logger->error($exception->getMessage(), [
+				'app' => 'files_external',
+				'exception' => $exception,
+			]);
+			throw new NotPermittedException($exception->getMessage(), $exception->getCode(), $exception);
+		}
 		$this->invalidateCache($path);
 
 		return $size;
