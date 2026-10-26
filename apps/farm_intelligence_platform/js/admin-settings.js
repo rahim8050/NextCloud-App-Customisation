@@ -2528,6 +2528,8 @@
 			let timeseriesLRviState = null
 			let latestNisarSmiState = null
 			let timeseriesNisarSmiState = null
+			let latestNisarFloodState = null
+			let timeseriesNisarFloodState = null
 			let latestNdreState = null
 			let timeseriesNdreState = null
 			let latestBiomassState = null
@@ -3817,6 +3819,8 @@
 				timeseriesLRviState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestNisarSmiState = reduceLatestState(null, { type: 'reset' })
 				timeseriesNisarSmiState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
+				latestNisarFloodState = reduceLatestState(null, { type: 'reset' })
+				timeseriesNisarFloodState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestNdreState = reduceLatestState(null, { type: 'reset' })
 				timeseriesNdreState = reduceTimeseriesState(null, { type: 'reset' }, null, null)
 				latestBiomassState = reduceLatestState(null, { type: 'reset' })
