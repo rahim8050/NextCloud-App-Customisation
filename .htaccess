@@ -51,6 +51,10 @@
         <Else>
             Header set Cache-Control "max-age=15778463"
         </Else>
+        <If "%{REQUEST_URI} =~ m#^/nextcloud/apps/[^/]+/js/.*\.(js|mjs)$#">
+            Header unset Cache-Control
+            Header set Cache-Control "no-cache"
+        </If>
     </FilesMatch>
 
     # Let browsers cache OTF and WOFF files for a week
